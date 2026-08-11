@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import * as Icons from 'lucide-react';
 import { BUZZWORDS_DATA } from '../data/buzzwordsData';
 import { formatCurrency } from '../utils/formatters';
@@ -353,7 +354,7 @@ export function BuzzwordAlbum({
       </div>
 
       {/* 🎬 BOOSTER PACK OPENING MODAL */}
-      {openingState !== 'CLOSED' && pulledCard && (
+      {openingState !== 'CLOSED' && pulledCard && createPortal(
         <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
           <div className="relative max-w-sm w-full bg-slate-900 border-2 border-amber-400/80 rounded-2xl p-6 shadow-2xl flex flex-col items-center text-center overflow-hidden">
             {/* Background Glow */}
@@ -419,7 +420,8 @@ export function BuzzwordAlbum({
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 🔍 CARD INSPECT MODAL */}
@@ -428,7 +430,7 @@ export function BuzzwordAlbum({
         const isBought = boughtBuzzwords.includes(bw.id);
         const canAffordDirect = valuation >= bw.cost && !isBought;
 
-        return (
+        return createPortal(
           <div
             className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn"
             onClick={() => setSelectedCard(null)}
@@ -517,7 +519,8 @@ export function BuzzwordAlbum({
                 </button>
               )}
             </div>
-          </div>
+          </div>,
+          document.body
         );
       })()}
     </div>
