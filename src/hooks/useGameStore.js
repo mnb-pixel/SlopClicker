@@ -260,11 +260,16 @@ export function useGameStore() {
     return gwCount * 0.001;
   }, [boughtGreenwashingLayoffs]);
 
+  // Burn is a continuous % decay of the CURRENT stock every tick (not of production),
+  // so it compounds fast: at the old 2-6.5%/s base, valuation halved every ~11-35s even
+  // while idle, wiping the player out within a couple of minutes of inactivity. Tuned down
+  // 10x (0.2-0.65%/s base, ~10% cap instead of 90%) so idle/short-inattention periods are
+  // forgiving while burn still meaningfully matters over longer idle stretches.
   const burnRate = useMemo(() => {
-    const base = 0.02 + (hypeTier - 1) * 0.005;
-    const bubbleBonus = bubblePopTimer > 0 ? 0.05 : 0;
+    const base = 0.002 + (hypeTier - 1) * 0.0005;
+    const bubbleBonus = bubblePopTimer > 0 ? 0.005 : 0;
     const total = base + idealistBurnDelta + cynicBurnDelta - greenwashingDiscount + bubbleBonus;
-    return Math.max(0.0, Math.min(0.90, total));
+    return Math.max(0.0, Math.min(0.10, total));
   }, [hypeTier, idealistBurnDelta, cynicBurnDelta, greenwashingDiscount, bubblePopTimer]);
 
   // Buzzwords VPS Multiplier Bonus
@@ -433,7 +438,7 @@ export function useGameStore() {
         });
       }
 
-      // 4. Bubble-Pop Burn-Rate-Bonus Timer (+5% Burn Rate für 30s)
+      // 4. Bubble-Pop Burn-Rate-Bonus Timer (+0.5% Burn Rate für 30s)
       if (bubblePopTimer > 0) {
         setBubblePopTimer((prev) => Math.max(0, prev - deltaSec));
       }
@@ -458,7 +463,7 @@ export function useGameStore() {
           addLog(`🎁 Free Buzzword Card: "${gift.name}" (+${Math.round(gift.bonus * 100)}% VPS)!`, 'success');
           return [...prevBought, gift.id];
         });
-      // 7. Bubble Pop (0.04%/Tick@200ms): -15% Tokens sofort, +5% Burn Rate für 30s
+      // 7. Bubble Pop (0.04%/Tick@200ms): -15% Tokens sofort, +0.5% Burn Rate für 30s
       } else if (!activeEvent && Math.random() < BUBBLE_CHANCE_PER_200MS * tickScale) {
         const id = BUBBLE_EVENT_IDS[Math.floor(Math.random() * BUBBLE_EVENT_IDS.length)];
         setActiveEvent({ id, kind: 'bubble', expiresAt: now + 4000 });
