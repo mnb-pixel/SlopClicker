@@ -114,6 +114,10 @@ export const TRANSLATIONS = {
     multiplierLabel: 'Multiplikator:',
     showBoughtUpgrades: 'Gekaufte Upgrades anzeigen',
     hideBoughtUpgrades: 'Gekaufte Upgrades ausblenden',
+    boughtCorporateTitle: 'Ausgeführte Corporate Actions',
+    noBoughtCorporate: 'Noch keine Corporate Actions ausgeführt.',
+    showBoughtCorporate: 'Ausgeführte anzeigen',
+    hideBoughtCorporate: 'Ausgeführte ausblenden',
 
     // Events / Meme Banners
     claimMemeBtn: '⚡ MEME SICHERN!',
@@ -237,6 +241,10 @@ export const TRANSLATIONS = {
     multiplierLabel: 'Multiplier:',
     showBoughtUpgrades: 'Show Bought Upgrades',
     hideBoughtUpgrades: 'Hide Bought Upgrades',
+    boughtCorporateTitle: 'Executed Corporate Actions',
+    noBoughtCorporate: 'No Corporate Actions executed yet.',
+    showBoughtCorporate: 'Show Executed',
+    hideBoughtCorporate: 'Hide Executed',
 
     // Events / Meme Banners
     claimMemeBtn: '⚡ CLAIM MEME!',

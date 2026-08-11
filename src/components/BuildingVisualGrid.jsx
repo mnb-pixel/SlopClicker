@@ -66,10 +66,9 @@ export function BuildingVisualGrid({ buildings, boughtUpgrades = [], boughtGreen
           boughtGreenwashingLayoffs.forEach((itemId) => {
             const gw = GREENWASHING_LAYOFFS_DATA.find((g) => g.id === itemId);
             if (gw && gw.buildingId === b.id) {
-              if (gw.id.endsWith('_2')) bMult *= 1.10;
-              if (gw.id.endsWith('_3')) bMult *= 1.15;
-              if (gw.id.startsWith('lay_') && gw.tier === 1) bMult *= 1.20;
-              if (gw.id.startsWith('lay_') && gw.tier === 2) bMult *= 1.35;
+              if (gw.type === 'greenwashing' && gw.tier === 2) bMult *= 1.10;
+              if (gw.type === 'layoff' && gw.tier === 1) bMult *= 1.20;
+              if (gw.type === 'layoff' && gw.tier === 2) bMult *= 1.15;
             }
           });
 

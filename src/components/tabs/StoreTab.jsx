@@ -27,6 +27,7 @@ export function StoreTab({
 }) {
   const [storeSection, setStoreSection] = useState('engines'); // 'engines' | 'upgrades' | 'corporate' | 'buzzwords'
   const [showBoughtUpgrades, setShowBoughtUpgrades] = useState(false);
+  const [showBoughtCorporate, setShowBoughtCorporate] = useState(false);
   const [hoveredUpgradeId, setHoveredUpgradeId] = useState(null);
   const [hoveredBoughtUpgradeId, setHoveredBoughtUpgradeId] = useState(null);
   const tr = t || ((k) => k);
@@ -178,6 +179,10 @@ export function StoreTab({
 
   const boughtUpgradesObjects = boughtUpgrades
     .map((upId) => UPGRADES_DATA.find((u) => u.id === upId))
+    .filter(Boolean);
+
+  const boughtCorporateObjects = boughtGreenwashingLayoffs
+    .map((itemId) => GREENWASHING_LAYOFFS_DATA.find((g) => g.id === itemId))
     .filter(Boolean);
 
   return (
@@ -687,6 +692,62 @@ export function StoreTab({
               );
             })
           )}
+
+          {/* BOUGHT CORPORATE ACTIONS ACCORDION SECTION (same principle as Bought Upgrades) */}
+          <div className="mt-2 bg-slate-900/80 rounded-xl border border-slate-800 overflow-hidden">
+            <button
+              onClick={() => setShowBoughtCorporate((prev) => !prev)}
+              className="w-full p-3 flex items-center justify-between font-extrabold text-xs text-emerald-400 hover:bg-slate-800/60 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Icons.CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>{tr('boughtCorporateTitle')} ({boughtCorporateObjects.length})</span>
+              </div>
+              <span className="text-[10px] font-mono font-bold text-slate-400">
+                {showBoughtCorporate ? tr('hideBoughtCorporate') : tr('showBoughtCorporate')}
+              </span>
+            </button>
+
+            {showBoughtCorporate && (
+              <div className="p-2 border-t border-slate-800 bg-slate-950/60 flex flex-col gap-2">
+                {boughtCorporateObjects.length === 0 ? (
+                  <div className="text-center py-4 text-slate-500 text-xs italic">
+                    {tr('noBoughtCorporate')}
+                  </div>
+                ) : (
+                  boughtCorporateObjects.map((item) => {
+                    const b = BUILDINGS_DATA.find((itemB) => itemB.id === item.buildingId);
+                    return (
+                      <div
+                        key={item.id}
+                        className="p-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 flex items-center justify-between opacity-90"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className={`p-2 rounded-lg border shrink-0 ${
+                            item.type === 'greenwashing' ? 'bg-emerald-950 border-emerald-500/40 text-emerald-400' : 'bg-rose-950 border-rose-500/40 text-rose-400'
+                          }`}>
+                            {renderIcon(item.icon || (item.type === 'greenwashing' ? 'Recycle' : 'UserX'), 'w-4 h-4')}
+                          </div>
+                          <div>
+                            <div className="font-extrabold text-xs text-slate-100 flex items-center gap-2">
+                              <span>{gwName(item)}</span>
+                              <span className="text-[10px] text-slate-400 font-mono font-normal">({b ? buildingName(b.id) : ''})</span>
+                            </div>
+                            <div className="text-[10px] text-amber-400 font-mono font-bold mt-1 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30 inline-block">
+                              {gwEffectDesc(item)}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="flex items-center gap-1 text-emerald-400 font-black text-[10px] shrink-0 ml-2">
+                          <Icons.CheckCircle2 className="w-3.5 h-3.5" /> Ausgeführt
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
