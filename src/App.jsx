@@ -56,6 +56,7 @@ export default function App() {
         onOpenManual={() => setIsManualOpen(true)}
         lang={store.lang}
         setLang={store.setLang}
+        logs={store.logs}
         t={store.t}
       />
 
