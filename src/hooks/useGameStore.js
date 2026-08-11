@@ -4,7 +4,7 @@ import { UPGRADES_DATA, getAvailableUpgrades } from '../data/upgradesData';
 import { HEAVENLY_UPGRADES_DATA } from '../data/heavenlyUpgradesData';
 import { ACHIEVEMENTS_DATA } from '../data/achievementsData';
 import { BUZZWORDS_DATA, getBoosterPackCost } from '../data/buzzwordsData';
-import { GREENWASHING_LAYOFFS_DATA } from '../data/greenwashingLayoffsData';
+import { GREENWASHING_LAYOFFS_DATA, getCorporateActionCost } from '../data/greenwashingLayoffsData';
 import { IDEALIST_PATH, CYNIC_PATH, EPOCHS } from '../data/credibilityTreeData';
 import { GOLDEN_EVENT_IDS, BUBBLE_EVENT_IDS } from '../i18n/content/events.content';
 import { TRANSLATIONS } from '../i18n/translations';
@@ -96,6 +96,14 @@ export function useGameStore() {
   const [offlineReport, setOfflineReport] = useState(null); // { amount, elapsedSec } | null
   const [pendingAscendBoost, setPendingAscendBoost] = useState(false);
   const [pendingPivotBoost, setPendingPivotBoost] = useState(false);
+
+  // Kurzes Bestätigungs-Toast nach abgeschlossener Rewarded Ad ("Bonus jetzt erhalten!") -
+  // ergänzt den Log-Eintrag um eine unübersehbare, selbst-verschwindende Rückmeldung.
+  const [adRewardToast, setAdRewardToast] = useState(null); // { id, message } | null
+  const flashAdReward = useCallback((message) => {
+    setAdRewardToast({ id: Date.now() + Math.random(), message });
+  }, []);
+  const dismissAdRewardToast = useCallback(() => setAdRewardToast(null), []);
 
   // Tab-Aktivität (Punkt 1): 'active' (Tab sichtbar & fokussiert) = 100% Rate,
   // 'inactive' (Tab sichtbar, aber Fenster/Browser nicht fokussiert) = 20%,
@@ -822,8 +830,13 @@ export function useGameStore() {
     return Math.max(0, Math.ceil(((adCooldowns[type] || 0) - Date.now()) / 1000));
   }, [adCooldowns]);
 
-  // Watch Simulated Rewarded Ad. `onComplete` lässt Aufrufer eigene Belohnungslogik
-  // anhängen (z.B. Booster-Pack-Reveal), die nicht generisch genug für den Switch unten ist.
+  // Reward-Vorschauwerte, die schon VOR dem Ansehen im Popup/Button genannt werden -
+  // dieselbe Formel wird unten bei der tatsächlichen Gutschrift verwendet.
+  const grantAdPreview = useMemo(() => Math.max(500, vps * 100), [vps]);
+  const scheduledAdPreview = useMemo(() => Math.max(250, vps * 60), [vps]);
+
+  // Watch Rewarded Ad. `onComplete` lässt Aufrufer eigene Belohnungslogik anhängen
+  // (z.B. Booster-Pack-Reveal), die nicht generisch genug für den Switch unten ist.
   const startAd = useCallback((type, onComplete) => {
     if (adState) return; // schon eine Ad am Laufen
     if (Date.now() < (adCooldowns[type] || 0)) {
@@ -832,7 +845,7 @@ export function useGameStore() {
     }
 
     setAdState({ type, timer: 3 });
-    addLog('▶️ Watching simulated 3-second Rewarded Ad...', 'info');
+    addLog('▶️ Watching 3-second Rewarded Ad...', 'info');
 
     let count = 3;
     const adInterval = setInterval(() => {
@@ -851,34 +864,48 @@ export function useGameStore() {
         if (type === 'nitrogen') {
           setGpuTemp(0);
           setIsOverheated(false);
-          addLog('🧊 Nitrogen Cooling applied! GPU reset to 0°C + 2x Click Power!', 'success');
+          const msg = '🧊 Bonus erhalten: Nitrogen Cooling! GPU auf 0°C + 2x Click Power!';
+          addLog(msg, 'success');
+          flashAdReward(msg);
         } else if (type === 'grant') {
-          const reward = Math.max(500, vps * 100);
+          const reward = grantAdPreview;
           setValuation((prev) => prev + reward);
           setTotalValuation((prev) => prev + reward);
-          addLog(`💰 Government AI Grant awarded! Earned +$${Math.floor(reward).toLocaleString()}!`, 'success');
+          const msg = `💰 Bonus erhalten: Government AI Grant +$${Math.floor(reward).toLocaleString()}!`;
+          addLog(msg, 'success');
+          flashAdReward(msg);
         } else if (type === 'power_click') {
           setPowerClicks((prev) => prev + 1);
-          addLog('⚡ Bonus Power Click per Ad gutgeschrieben!', 'success');
+          const msg = '⚡ Bonus erhalten: +1 Power Click!';
+          addLog(msg, 'success');
+          flashAdReward(msg);
         } else if (type === 'ascend_boost') {
           setPendingAscendBoost(true);
-          addLog('🚀 Nächste Singularity Ascension gewährt +20% Heavenly Chips!', 'success');
+          const msg = '🚀 Bonus erhalten: Nächste Singularity Ascension gewährt +20% Heavenly Chips!';
+          addLog(msg, 'success');
+          flashAdReward(msg);
         } else if (type === 'pivot_boost') {
           setPendingPivotBoost(true);
-          addLog('🚀 Nächster Pivot gewährt +20% Credibility!', 'success');
+          const msg = '🚀 Bonus erhalten: Nächster Pivot gewährt +20% Credibility!';
+          addLog(msg, 'success');
+          flashAdReward(msg);
         } else if (type === 'golden_extend') {
           setActiveEvent((prev) => (prev && prev.kind === 'golden' ? { ...prev, expiresAt: prev.expiresAt + 15000 } : prev));
-          addLog('✨ Golden Headline um 15s verlängert!', 'success');
+          const msg = '✨ Bonus erhalten: Golden Headline um 15s verlängert!';
+          addLog(msg, 'success');
+          flashAdReward(msg);
         } else if (type === 'bubble_clear') {
           setActiveEvent((prev) => (prev && prev.kind === 'bubble' ? null : prev));
           setBubblePopTimer(0);
-          addLog('🛡️ Bubble-Pop-Debuff sofort beendet!', 'success');
+          const msg = '🛡️ Bonus erhalten: Bubble-Pop-Debuff sofort beendet!';
+          addLog(msg, 'success');
+          flashAdReward(msg);
         }
 
         if (onComplete) onComplete();
       }
     }, 1000);
-  }, [vps, addLog, adState, adCooldowns]);
+  }, [addLog, adState, adCooldowns, grantAdPreview, flashAdReward]);
 
   // Offline-Ertrag einsammeln (optional per Ad verdoppelt)
   const claimOfflineEarnings = useCallback((doubled = false) => {
@@ -887,8 +914,10 @@ export function useGameStore() {
     setValuation((prev) => prev + amount);
     setTotalValuation((prev) => prev + amount);
     setOfflineReport(null);
-    addLog(`💰 Offline-Ertrag eingesammelt: +$${Math.floor(amount).toLocaleString()}${doubled ? ' (2x per Ad)' : ''}!`, 'success');
-  }, [offlineReport, addLog]);
+    const msg = `💰 ${doubled ? 'Bonus erhalten: ' : ''}Offline-Ertrag eingesammelt: +$${Math.floor(amount).toLocaleString()}${doubled ? ' (2x per Ad)' : ''}!`;
+    addLog(msg, 'success');
+    if (doubled) flashAdReward(msg);
+  }, [offlineReport, addLog, flashAdReward]);
 
   // AFK-Report schließen (Punkt 1): "nur einsammeln" (nichts extra, Wert wurde schon
   // während der Abwesenheit live gutgeschrieben) oder per Ad verdoppeln.
@@ -900,21 +929,25 @@ export function useGameStore() {
     if (!afkReport) return;
     setValuation((prev) => prev + afkReport.amount);
     setTotalValuation((prev) => prev + afkReport.amount);
-    addLog(`💰 AFK-Bonus per Ad verdoppelt: +$${Math.floor(afkReport.amount).toLocaleString()}!`, 'success');
+    const msg = `💰 Bonus erhalten: AFK-Bonus per Ad verdoppelt: +$${Math.floor(afkReport.amount).toLocaleString()}!`;
+    addLog(msg, 'success');
+    flashAdReward(msg);
     setAfkReport(null);
-  }, [afkReport, addLog]);
+  }, [afkReport, addLog, flashAdReward]);
 
   // Geplantes Ad-Popup (Punkt 9): jetzt ansehen (sofortige Belohnung) oder auf später
   // verschieben (Button erscheint im Menü, keine feste Verfallszeit).
   const watchScheduledAdNow = useCallback(() => {
     setPendingScheduledAd(false);
     startAd('scheduled_bonus', () => {
-      const reward = Math.max(250, vps * 60);
+      const reward = scheduledAdPreview;
       setValuation((prev) => prev + reward);
       setTotalValuation((prev) => prev + reward);
-      addLog(`💰 Bonus-Werbung eingelöst! Erhalten: +$${Math.floor(reward).toLocaleString()}!`, 'success');
+      const msg = `💰 Bonus erhalten: Bonus-Werbung eingelöst! +$${Math.floor(reward).toLocaleString()}!`;
+      addLog(msg, 'success');
+      flashAdReward(msg);
     });
-  }, [vps, addLog, startAd]);
+  }, [scheduledAdPreview, addLog, startAd, flashAdReward]);
 
   const deferScheduledAd = useCallback(() => {
     setPendingScheduledAd(false);
@@ -924,12 +957,14 @@ export function useGameStore() {
   const claimUnlockedScheduledAd = useCallback(() => {
     setScheduledAdUnlocked(false);
     startAd('scheduled_bonus', () => {
-      const reward = Math.max(250, vps * 60);
+      const reward = scheduledAdPreview;
       setValuation((prev) => prev + reward);
       setTotalValuation((prev) => prev + reward);
-      addLog(`💰 Bonus-Werbung eingelöst! Erhalten: +$${Math.floor(reward).toLocaleString()}!`, 'success');
+      const msg = `💰 Bonus erhalten: Bonus-Werbung eingelöst! +$${Math.floor(reward).toLocaleString()}!`;
+      addLog(msg, 'success');
+      flashAdReward(msg);
     });
-  }, [vps, addLog, startAd]);
+  }, [scheduledAdPreview, addLog, startAd, flashAdReward]);
 
   // Chips, die eine Ascension JETZT bringen würde (ohne Ad-Boost) - von SpecialTab fürs
   // Anzeigen/Deaktivieren des Buttons genutzt, damit die Formel nur an einer Stelle steht.
@@ -1059,7 +1094,7 @@ export function useGameStore() {
 
     const b = BUILDINGS_DATA.find((itemB) => itemB.id === item.buildingId);
     const baseCost = b ? b.baseCost : 15;
-    const cost = item.costMult * baseCost;
+    const cost = getCorporateActionCost(item, baseCost, boughtGreenwashingLayoffs.length);
 
     if (valuation < cost) {
       addLog('Not enough valuation for this action!', 'danger');
@@ -1175,6 +1210,7 @@ export function useGameStore() {
     unlockedAchievements,
     activeEvent, dismissEvent,
     adState, startAd, isAdReady, getAdCooldownRemaining,
+    adRewardToast, dismissAdRewardToast, grantAdPreview, scheduledAdPreview,
     offlineReport, claimOfflineEarnings,
     pageActivity, afkReport, dismissAfkReport, claimAfkBonus,
     pendingScheduledAd, watchScheduledAdNow, deferScheduledAd,

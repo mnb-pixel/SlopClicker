@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import * as Icons from 'lucide-react';
 import { AdBanner } from '../AdBanner';
+import { formatCurrency } from '../../utils/formatters';
 
 export function MiscTab({
   adState,
@@ -10,6 +11,8 @@ export function MiscTab({
   resetSave,
   scheduledAdUnlocked,
   claimUnlockedScheduledAd,
+  grantAdPreview = 0,
+  scheduledAdPreview = 0,
 }) {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
 
@@ -36,16 +39,16 @@ export function MiscTab({
     <div className="p-4 pb-20 max-w-md mx-auto flex flex-col gap-5">
 
 
-      {/* Simulated Rewarded Ad Monocle */}
+      {/* Rewarded Ad Monocle */}
       <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
         <div className="flex items-center gap-2">
           <Icons.Tv className="w-5 h-5 text-amber-400" />
           <div>
             <h3 className="font-black text-sm uppercase text-slate-200">
-              Simulated Rewarded Ads
+              Rewarded Ads
             </h3>
             <div className="text-[10px] text-slate-400">
-              Watch a 3-second fake ad for instant venture boosts!
+              Watch a 3-second ad for instant venture boosts!
             </div>
           </div>
         </div>
@@ -70,7 +73,7 @@ export function MiscTab({
                     🎁 Bonus-Werbung verfügbar
                   </div>
                   <div className="text-[11px] text-slate-400 mt-0.5">
-                    Verschobene Bonus-Anzeige jetzt ansehen & einsammeln.
+                    Verschobene Bonus-Anzeige jetzt ansehen & +{formatCurrency(scheduledAdPreview)} einsammeln.
                   </div>
                 </div>
                 <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black px-2 py-1 rounded border border-amber-500/30 group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors shrink-0">
@@ -110,7 +113,7 @@ export function MiscTab({
                   💰 Government AI Grant
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5">
-                  Receives an instant non-dilutive government payout of (VPS × 100).
+                  Receives an instant non-dilutive government payout of +{formatCurrency(grantAdPreview)}.
                 </div>
               </div>
               {renderAdCta('grant') || (

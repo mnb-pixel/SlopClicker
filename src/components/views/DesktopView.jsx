@@ -87,6 +87,8 @@ export function DesktopView({ store, setIsPitchDeckOpen }) {
             resetSave={store.resetSave}
             scheduledAdUnlocked={store.scheduledAdUnlocked}
             claimUnlockedScheduledAd={store.claimUnlockedScheduledAd}
+            grantAdPreview={store.grantAdPreview}
+            scheduledAdPreview={store.scheduledAdPreview}
           />
         </div>
       </div>

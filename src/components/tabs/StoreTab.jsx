@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import * as Icons from 'lucide-react';
 import { BUILDINGS_DATA } from '../../data/buildingsData';
 import { UPGRADES_DATA, getAvailableUpgrades } from '../../data/upgradesData';
-import { GREENWASHING_LAYOFFS_DATA } from '../../data/greenwashingLayoffsData';
+import { GREENWASHING_LAYOFFS_DATA, getCorporateActionCost } from '../../data/greenwashingLayoffsData';
 import { formatCurrency, formatNumber, getBuildingCost, getBuildingBulkCost, getMaxAffordableBuildings } from '../../utils/formatters';
 import { BuzzwordAlbum } from '../BuzzwordAlbum';
 
@@ -642,7 +642,7 @@ export function StoreTab({
             availableCorporate.map((item) => {
               const b = BUILDINGS_DATA.find((itemB) => itemB.id === item.buildingId);
               const baseCost = b ? b.baseCost : 15;
-              const cost = item.costMult * baseCost;
+              const cost = getCorporateActionCost(item, baseCost, boughtGreenwashingLayoffs.length);
               const canAfford = valuation >= cost;
 
               return (

@@ -1,11 +1,12 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Tv, Clock } from 'lucide-react';
+import { formatCurrency } from '../../utils/formatters';
 
 // Punkt 9: Popups zu festen Zeitpunkten seit App-Start (5min, 15min, 30min, ...), die eine
 // Rewarded Ad anbieten. "Später" schaltet statt einer harten Zeitgrenze einen Button im
 // Menü frei, der jederzeit nachträglich eingelöst werden kann.
-export function ScheduledAdModal({ pendingScheduledAd, adState, watchScheduledAdNow, deferScheduledAd }) {
+export function ScheduledAdModal({ pendingScheduledAd, adState, watchScheduledAdNow, deferScheduledAd, scheduledAdPreview = 0 }) {
   if (!pendingScheduledAd) return null;
 
   const isAdPlaying = !!adState && adState.type === 'scheduled_bonus';
@@ -22,7 +23,7 @@ export function ScheduledAdModal({ pendingScheduledAd, adState, watchScheduledAd
             Bonus-Werbung verfügbar
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Schau dir jetzt ein kurzes Video für einen Bonus an, oder hol es dir später aus dem Menü.
+            Schau dir jetzt ein kurzes Video an und erhalte +{formatCurrency(scheduledAdPreview)}, oder hol es dir später aus dem Menü.
           </p>
         </div>
 

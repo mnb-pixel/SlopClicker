@@ -33,3 +33,13 @@ export const GREENWASHING_LAYOFFS_DATA = BUILDINGS_DATA.flatMap((b) => [
     icon: t.icon,
   })),
 ]);
+
+// Zusätzlich zum Gebäude-Basiskosten-Multiplikator (costMult) steigt der Preis mit JEDER
+// bereits gekauften Corporate Action global um 15% - ohne das würde die Teuerung rein aus
+// den Gebäude-Tier-Kosten kommen und über die Spielzeit kaum spürbar zunehmen (Kritik:
+// "Teuerung noch nicht steil genug"). Bei 20 gekauften Aktionen macht das bereits ~16x,
+// bei 50 ~1080x - spürbar steiler, aber pro Gebäude+Tier weiterhin nur einmal kaufbar.
+const CORPORATE_ESCALATION = 1.15;
+export function getCorporateActionCost(item, baseCost, boughtCount) {
+  return Math.floor(item.costMult * baseCost * Math.pow(CORPORATE_ESCALATION, boughtCount));
+}

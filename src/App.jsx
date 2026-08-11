@@ -9,6 +9,7 @@ import { SpecialTab } from './components/tabs/SpecialTab';
 import { StatsTab } from './components/tabs/StatsTab';
 import { MiscTab } from './components/tabs/MiscTab';
 import { GoldenMemeBanner } from './components/GoldenMemeBanner';
+import { AdRewardToast } from './components/AdRewardToast';
 import { AdBanner } from './components/AdBanner';
 import { PitchDeckModal } from './components/modals/PitchDeckModal';
 import { ManualModal } from './components/modals/ManualModal';
@@ -84,6 +85,11 @@ export default function App() {
         t={store.t}
       />
 
+      <AdRewardToast
+        adRewardToast={store.adRewardToast}
+        dismissAdRewardToast={store.dismissAdRewardToast}
+      />
+
       {/* Willkommen-zurück Offline-Ertrag Screen */}
       <OfflineEarningsModal
         offlineReport={store.offlineReport}
@@ -107,6 +113,7 @@ export default function App() {
         adState={store.adState}
         watchScheduledAdNow={store.watchScheduledAdNow}
         deferScheduledAd={store.deferScheduledAd}
+        scheduledAdPreview={store.scheduledAdPreview}
       />
 
       {/* WEB DESKTOP ALL-IN-ONE VIEW (Everything on 1 Page in 3 Columns) */}
@@ -211,6 +218,8 @@ export default function App() {
                 resetSave={store.resetSave}
                 scheduledAdUnlocked={store.scheduledAdUnlocked}
                 claimUnlockedScheduledAd={store.claimUnlockedScheduledAd}
+                grantAdPreview={store.grantAdPreview}
+                scheduledAdPreview={store.scheduledAdPreview}
               />
             )}
           </main>

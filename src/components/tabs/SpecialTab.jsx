@@ -119,7 +119,7 @@ export function SpecialTab({
           <Icons.RotateCw className="w-4 h-4" />
           {tr('executePivot')}{credGain} Credibility & Rotate Epoch)
         </button>
-        {renderAdBoost('pivot_boost', 'Video ansehen: +20% Credibility', pendingPivotBoost)}
+        {renderAdBoost('pivot_boost', `Video ansehen: +20% Credibility (+${Math.max(0, Math.floor(credGain * 1.2) - credGain)} mehr)`, pendingPivotBoost)}
       </div>
 
       {/* Path Selector Tabs */}
@@ -330,7 +330,7 @@ export function SpecialTab({
                 Execute Singularity Reset (+{pendingChips} Chips)
               </button>
               <div className="relative z-10">
-                {renderAdBoost('ascend_boost', 'Video ansehen: +20% Heavenly Chips', pendingAscendBoost)}
+                {renderAdBoost('ascend_boost', `Video ansehen: +20% Heavenly Chips (+${Math.max(0, Math.floor(pendingChips * 1.2) - pendingChips)} mehr)`, pendingAscendBoost)}
               </div>
             </div>
 
