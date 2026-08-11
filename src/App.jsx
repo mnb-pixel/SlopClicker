@@ -54,6 +54,7 @@ export default function App() {
         setSoundEnabled={store.setSoundEnabled}
         setActiveTab={store.setActiveTab}
         onOpenManual={() => setIsManualOpen(true)}
+        onOpenPitchDeck={() => setIsPitchDeckOpen(true)}
         lang={store.lang}
         setLang={store.setLang}
         logs={store.logs}
@@ -183,11 +184,14 @@ export default function App() {
         isOpen={isPitchDeckOpen}
         onClose={() => setIsPitchDeckOpen(false)}
         startupName={store.startupName}
+        hasAiDomainBonus={store.hasAiDomainBonus}
         valuation={store.valuation}
         vps={store.vps}
         slopCount={store.slopCount}
         overheatCount={store.stats.overheatCount}
         prestigeLevel={store.prestigeLevel}
+        hypeTier={store.hypeTier}
+        buildings={store.buildings}
       />
 
       {/* Interactive Form S-1 Game Manual Modal */}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, Edit3, Sparkles, Zap, ShieldAlert, Cpu, LayoutGrid, Smartphone, Volume2, VolumeX, BookOpen, Globe } from 'lucide-react';
+import { Flame, Edit3, Sparkles, Zap, ShieldAlert, Cpu, LayoutGrid, Smartphone, Volume2, VolumeX, BookOpen, Globe, Share2 } from 'lucide-react';
 import { formatCurrency, formatExactValuation, formatNumber } from '../utils/formatters';
 import { NewsTicker } from './NewsTicker';
 
@@ -26,6 +26,7 @@ export function Header({
   setSoundEnabled,
   setActiveTab,
   onOpenManual,
+  onOpenPitchDeck,
   lang = 'de',
   setLang,
   logs,
@@ -190,6 +191,16 @@ export function Header({
                   <span>{tr('viewDesktop')}</span>
                 </>
               )}
+            </button>
+
+            {/* Top Bar Prominent Virality SHARE Button */}
+            <button
+              onClick={onOpenPitchDeck}
+              title="Share Startup Pitch Deck"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-400 via-fuchsia-500 to-cyan-400 text-slate-950 hover:brightness-110 active:scale-95 shadow-md shadow-fuchsia-500/20 transition-all border border-amber-300/60"
+            >
+              <Share2 className="w-3.5 h-3.5 text-slate-950" />
+              <span>🚀 SHARE</span>
             </button>
 
             {/* Power Click Badge */}
