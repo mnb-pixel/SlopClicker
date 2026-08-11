@@ -27,7 +27,7 @@ export function SpecialTab({
   pendingPivotBoost = false,
   t,
 }) {
-  const [activePathTab, setActivePathTab] = useState('idealist'); // 'idealist' | 'cynic' | 'heavenly'
+  const [activePathTab, setActivePathTab] = useState('pivot'); // 'pivot' | 'idealist' | 'cynic' | 'heavenly'
   const tr = t || ((k) => k);
 
   const renderIcon = (iconName, className = 'w-5 h-5') => {
@@ -76,54 +76,27 @@ export function SpecialTab({
   const pendingChips = pendingHeavenlyChips;
   const currentBonus = prestigeLevel * (boughtHeavenlyUpgrades.includes('heaven_synergy_1') ? 2 : 1);
 
+  // Ascension löscht unwiderruflich Valuation, Engines & Store-Upgrades - vor dem Klick
+  // nochmal explizit gegenchecken lassen, kein versehentliches Zurücksetzen.
+  const handleAscendClick = () => {
+    const confirmMsg = tr('ascendConfirm').replace('{chips}', pendingChips);
+    if (window.confirm(confirmMsg)) {
+      ascend();
+    }
+  };
+
   return (
     <div className="p-4 pb-20 max-w-md mx-auto">
-      {/* Pivot & Epoch Rotation Card */}
-      <div className="bg-gradient-to-br from-[#1C2B3A] via-slate-900 to-[#14202C] p-4 rounded-2xl border-2 border-[#8A6A1F] shadow-2xl mb-6 relative overflow-hidden">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <Icons.RotateCw className="w-5 h-5 text-[#8A6A1F] animate-spin" />
-            <h2 className="text-base font-black text-[#EAE7DA] uppercase font-serif">
-              {tr('pivotTitle')}
-            </h2>
-          </div>
-          <span className="text-[10px] font-mono font-bold bg-[#8A6A1F] text-slate-950 px-2 py-0.5 rounded">
-            {currentEpoch.name}
-          </span>
-        </div>
-
-        <p className="text-xs text-[#EAE7DA]/90 mb-3 bg-[#14202C]/80 p-2.5 rounded-xl border border-[#8A6A1F]/30">
-          {tr('pivotDesc')}
-        </p>
-
-        <div className="grid grid-cols-2 gap-2 bg-[#14202C] p-2.5 rounded-xl border border-[#8A6A1F]/40 mb-3 text-xs font-mono">
-          <div>
-            <div className="text-slate-400 text-[10px]">{tr('credBalance')}</div>
-            <div className="text-[#8A6A1F] font-extrabold text-base">{credibility.toFixed(1)}</div>
-          </div>
-          <div>
-            <div className="text-slate-400 text-[10px]">{tr('pivotGain')}</div>
-            <div className="text-emerald-400 font-extrabold text-base">+{credGain} Credibility</div>
-          </div>
-        </div>
-
+      {/* Path Selector Tabs */}
+      <div className="grid grid-cols-4 gap-1 mb-4 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-bold">
         <button
-          onClick={pivot}
-          disabled={credGain < 5}
-          className={`w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xl ${
-            credGain > 0
-              ? 'bg-[#8A6A1F] text-slate-950 hover:bg-[#C59B3F] active:scale-95'
-              : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+          onClick={() => setActivePathTab('pivot')}
+          className={`py-1.5 rounded-lg transition-all ${
+            activePathTab === 'pivot' ? 'bg-[#8A6A1F] text-slate-950' : 'text-slate-400'
           }`}
         >
-          <Icons.RotateCw className="w-4 h-4" />
-          {tr('executePivot')}{credGain} Credibility & Rotate Epoch)
+          {tr('pathPivot')}
         </button>
-        {renderAdBoost('pivot_boost', `Video ansehen: +20% Credibility (+${Math.max(0, Math.floor(credGain * 1.2) - credGain)} mehr)`, pendingPivotBoost)}
-      </div>
-
-      {/* Path Selector Tabs */}
-      <div className="grid grid-cols-3 gap-1 mb-4 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-bold">
         <button
           onClick={() => setActivePathTab('idealist')}
           className={`py-1.5 rounded-lg transition-all ${
@@ -149,6 +122,52 @@ export function SpecialTab({
           {tr('pathAscension')}
         </button>
       </div>
+
+      {/* PIVOT & EPOCH ROTATION TAB */}
+      {activePathTab === 'pivot' && (
+        <div className="bg-gradient-to-br from-[#1C2B3A] via-slate-900 to-[#14202C] p-4 rounded-2xl border-2 border-[#8A6A1F] shadow-2xl relative overflow-hidden">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Icons.RotateCw className="w-5 h-5 text-[#8A6A1F] animate-spin" />
+              <h2 className="text-base font-black text-[#EAE7DA] uppercase font-serif">
+                {tr('pivotTitle')}
+              </h2>
+            </div>
+            <span className="text-[10px] font-mono font-bold bg-[#8A6A1F] text-slate-950 px-2 py-0.5 rounded">
+              {currentEpoch.name}
+            </span>
+          </div>
+
+          <p className="text-xs text-[#EAE7DA]/90 mb-3 bg-[#14202C]/80 p-2.5 rounded-xl border border-[#8A6A1F]/30">
+            {tr('pivotDesc')}
+          </p>
+
+          <div className="grid grid-cols-2 gap-2 bg-[#14202C] p-2.5 rounded-xl border border-[#8A6A1F]/40 mb-3 text-xs font-mono">
+            <div>
+              <div className="text-slate-400 text-[10px]">{tr('credBalance')}</div>
+              <div className="text-[#8A6A1F] font-extrabold text-base">{credibility.toFixed(1)}</div>
+            </div>
+            <div>
+              <div className="text-slate-400 text-[10px]">{tr('pivotGain')}</div>
+              <div className="text-emerald-400 font-extrabold text-base">+{credGain} Credibility</div>
+            </div>
+          </div>
+
+          <button
+            onClick={pivot}
+            disabled={credGain < 5}
+            className={`w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xl ${
+              credGain > 0
+                ? 'bg-[#8A6A1F] text-slate-950 hover:bg-[#C59B3F] active:scale-95'
+                : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+            }`}
+          >
+            <Icons.RotateCw className="w-4 h-4" />
+            {tr('executePivot')}{credGain} Credibility & Rotate Epoch)
+          </button>
+          {renderAdBoost('pivot_boost', `Video ansehen: +20% Credibility (+${Math.max(0, Math.floor(credGain * 1.2) - credGain)} mehr)`, pendingPivotBoost)}
+        </div>
+      )}
 
       {/* IDEALIST PATH TREE (Only show unlocked + 1 single next locked level) */}
       {activePathTab === 'idealist' && (
@@ -317,8 +336,15 @@ export function SpecialTab({
                 </div>
               </div>
 
+              <div className="relative z-10 flex items-start gap-2 bg-rose-950/80 border-2 border-rose-500 rounded-xl p-2.5 mb-3 shadow-lg shadow-rose-500/20">
+                <Icons.ShieldAlert className="w-8 h-8 text-rose-400 shrink-0 animate-pulse" />
+                <p className="text-[11px] text-rose-200 font-bold leading-snug">
+                  {tr('ascendWarning')}
+                </p>
+              </div>
+
               <button
-                onClick={ascend}
+                onClick={handleAscendClick}
                 disabled={pendingChips <= 0}
                 className={`relative z-10 w-full py-3 rounded-xl font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xl ${
                   pendingChips > 0 || prestigeLevel > 0

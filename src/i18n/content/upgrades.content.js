@@ -324,4 +324,8 @@ export const UPGRADES_CONTENT = {
 };
 
 export const UPGRADE_THRESHOLDS = [1, 5, 10, 25, 50, 100, 150, 200, 250, 300, 400, 500, 750];
-export const UPGRADE_MULTIPLIERS = [2, 2, 1.5, 2, 2.5, 4, 2, 2.5, 2, 3, 3, 3, 5];
+// Cookie-Clicker-Style: kleine Prozent-Boni pro Upgrade statt X-facher Multiplikatoren -
+// bei 13 Stufen pro Gebäude summierten sich frühere Werte (bis zu 5x einzeln) multiplikativ
+// auf bis zu 162.000x Gesamt-Multiplikator für ein einziges voll ausgebautes Gebäude.
+// Diese Werte kompoundieren bei Vollausbau auf ca. 11-12x - spürbar, aber nicht absurd.
+export const UPGRADE_MULTIPLIERS = [1.10, 1.10, 1.12, 1.15, 1.15, 1.18, 1.20, 1.20, 1.25, 1.25, 1.30, 1.35, 1.40];

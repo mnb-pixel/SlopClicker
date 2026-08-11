@@ -64,6 +64,7 @@ export const TRANSLATIONS = {
     pivotGain: 'Pivot Gewinn:',
     executePivot: 'Pivot Ausführen (+',
 
+    pathPivot: '🔄 Pivot',
     pathIdealist: '😇 Idealist',
     pathCynic: '😈 Zyniker',
     pathAscension: '🌌 Singularität',
@@ -75,6 +76,8 @@ export const TRANSLATIONS = {
     prestigeLevelText: 'Prestige Level:',
     heavenlyChipsText: 'Heavenly Chips:',
     executeAscend: 'Singularity Reset Ausführen (+',
+    ascendWarning: '⚠️ UNWIDERRUFLICH: Löscht ALLE Engines, Store-Upgrades & deine komplette Valuation (zurück auf $0)! Nur Prestige Level, Heavenly Chips & Heavenly Upgrades bleiben erhalten.',
+    ascendConfirm: '⚠️ SINGULARITY ASCENSION\n\nDas setzt deine Valuation auf $0 zurück und entfernt ALLE Engines/Gebäude sowie alle gekauften Store-Upgrades unwiderruflich!\n\nNur Prestige Level, Heavenly Chips und Heavenly Upgrades bleiben erhalten.\n\nDu erhältst dafür +{chips} Heavenly Chips.\n\nBist du sicher?',
 
     // Stats Tab
     statsTitle: 'Startup Bilanz & Audit Logs',
@@ -184,6 +187,7 @@ export const TRANSLATIONS = {
     pivotGain: 'Pivot Gain:',
     executePivot: 'Execute Pivot (+',
 
+    pathPivot: '🔄 Pivot',
     pathIdealist: '😇 Idealist',
     pathCynic: '😈 Cynic',
     pathAscension: '🌌 Singularity',
@@ -195,6 +199,8 @@ export const TRANSLATIONS = {
     prestigeLevelText: 'Prestige Level:',
     heavenlyChipsText: 'Heavenly Chips:',
     executeAscend: 'Execute Singularity Reset (+',
+    ascendWarning: '⚠️ IRREVERSIBLE: Deletes ALL Engines, Store Upgrades & your entire Valuation (back to $0)! Only Prestige Level, Heavenly Chips & Heavenly Upgrades are kept.',
+    ascendConfirm: '⚠️ SINGULARITY ASCENSION\n\nThis resets your Valuation to $0 and irreversibly removes ALL Engines/Buildings and every purchased Store Upgrade!\n\nOnly Prestige Level, Heavenly Chips and Heavenly Upgrades are kept.\n\nYou will earn +{chips} Heavenly Chips for this.\n\nAre you sure?',
 
     // Stats Tab
     statsTitle: 'Startup Balance Sheet & Audit Logs',

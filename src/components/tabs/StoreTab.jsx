@@ -74,7 +74,7 @@ export function StoreTab({
   const upgradeQuote = (up) => (up.type === 'building' ? tr(`upgrade_${up.id}_quote`) : up.quote);
   const upgradeDescription = (up) => {
     if (up.type !== 'building') return up.description;
-    return `${buildingName(up.buildingId)} produce ${up.effect.value}x more Valuation!`;
+    return `${buildingName(up.buildingId)} produce +${Math.round((up.effect.value - 1) * 100)}% more Valuation!`;
   };
 
   // Für die 100 Greenwashing/Layoff-Aktionen: Name/Flavor über t(), effectDesc dynamisch.
