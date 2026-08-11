@@ -1,0 +1,101 @@
+import React from 'react';
+import * as Icons from 'lucide-react';
+import { BUILDINGS_DATA } from '../data/buildingsData';
+import { formatCurrency, formatNumber } from '../utils/formatters';
+
+export function BuildingVisualGrid({ buildings }) {
+  const renderItemArtwork = (b, sizeClass = 'w-6 h-6') => {
+    if (b && b.image) {
+      return (
+        <img
+          src={b.image}
+          alt={b.name}
+          className={`${sizeClass} rounded-md object-cover border border-cyan-400/60 shadow-md`}
+        />
+      );
+    }
+    const IconComp = Icons[b?.icon] || Icons.Server;
+    return <IconComp className="w-3.5 h-3.5 text-cyan-400" />;
+  };
+
+  // Filter owned buildings
+  const ownedBuildings = BUILDINGS_DATA.filter((b) => (buildings[b.id] || 0) > 0);
+
+  if (ownedBuildings.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 text-center my-4 backdrop-blur-md">
+        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+          ⚡ AI Compute Matrix (Empty)
+        </div>
+        <div className="text-[11px] text-slate-600 italic">
+          No AI Engines deployed yet. Head to the Store to deploy your first Auto-Prompt Cursors & Prompt Engineers!
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-3.5 shadow-2xl my-4 backdrop-blur-md w-full">
+      <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
+        <span className="text-xs font-extrabold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
+          <Icons.Cpu className="w-4 h-4 text-cyan-400" />
+          Deployed AI Engines ({ownedBuildings.length} types)
+        </span>
+        <span className="text-[10px] text-slate-400 font-mono">
+          Total Count: {Object.values(buildings).reduce((a, b) => a + b, 0)}
+        </span>
+      </div>
+
+      {/* Visual Building Rows (Cookie Clicker Style) */}
+      <div className="flex flex-col gap-2.5 max-h-[320px] overflow-y-auto pr-1">
+        {ownedBuildings.map((b) => {
+          const count = buildings[b.id] || 0;
+          const totalVps = count * b.baseCps;
+          const displayCount = Math.min(15, count);
+
+          return (
+            <div
+              key={b.id}
+              className="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/90 flex flex-col gap-1.5 hover:border-cyan-500/40 transition-all shadow-md group"
+            >
+              {/* Row Header */}
+              <div className="flex items-center justify-between text-xs font-extrabold">
+                <div className="flex items-center gap-2 text-slate-200">
+                  <div className="p-0.5 rounded bg-slate-800 border border-slate-700">
+                    {renderItemArtwork(b, 'w-6 h-6')}
+                  </div>
+                  <span>{b.name}</span>
+                  <span className="bg-cyan-500/20 text-cyan-300 text-[10px] font-black px-1.5 py-0.1 rounded border border-cyan-500/30">
+                    x{count}
+                  </span>
+                </div>
+                <span className="text-emerald-400 font-mono text-[11px]">
+                  +{formatCurrency(totalVps)}/s
+                </span>
+              </div>
+
+              {/* Animated Miniature Sprites Cluster */}
+              <div className="flex flex-wrap gap-1.5 pt-1 items-center">
+                {Array.from({ length: displayCount }).map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="w-6 h-6 rounded-lg bg-slate-900 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-inner transform group-hover:scale-105 transition-transform animate-pulse overflow-hidden"
+                    style={{ animationDelay: `${(idx % 5) * 200}ms` }}
+                    title={`${b.name} #${idx + 1}`}
+                  >
+                    {renderItemArtwork(b, 'w-full h-full')}
+                  </div>
+                ))}
+                {count > 15 && (
+                  <span className="text-[10px] font-mono text-slate-500 pl-1 font-bold">
+                    +{count - 15} more
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

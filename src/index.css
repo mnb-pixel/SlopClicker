@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-100 font-sans antialiased selection:bg-cyan-500 selection:text-black min-h-screen overflow-x-hidden;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.15), transparent 70%),
+      radial-gradient(circle at 0% 100%, rgba(168, 85, 247, 0.1), transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(236, 72, 153, 0.1), transparent 50%);
+  }
+}
+
+/* Floating animation for click text particles */
+@keyframes floatUpFade {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateY(-40px) scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-80px) scale(0.9);
+  }
+}
+
+.animate-float-particle {
+  animation: floatUpFade 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Pulsing cyber glow animation */
+@keyframes cyberGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.4), inset 0 0 15px rgba(6, 182, 212, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(168, 85, 247, 0.6), inset 0 0 25px rgba(168, 85, 247, 0.3);
+  }
+}
+
+.cyber-glow {
+  animation: cyberGlow 3s infinite ease-in-out;
+}
+
+/* Overheat alert pulse */
+@keyframes overheatPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4);
+    border-color: rgba(239, 68, 68, 1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(249, 115, 22, 0.9), 0 0 60px rgba(249, 115, 22, 0.6);
+    border-color: rgba(249, 115, 22, 1);
+  }
+}
+
+.overheat-pulse {
+  animation: overheatPulse 1s infinite ease-in-out;
+}
+
+/* Glitch visual effect for LLM Hallucination event */
+@keyframes glitchAnim {
+  0% { transform: translate(0); }
+  20% { transform: translate(-3px, 3px) skewX(2deg); filter: hue-rotate(90deg); }
+  40% { transform: translate(3px, -3px) skewX(-2deg); filter: hue-rotate(180deg); }
+  60% { transform: translate(-2px, 1px); }
+  80% { transform: translate(2px, -2px) skewX(1deg); filter: hue-rotate(270deg); }
+  100% { transform: translate(0); }
+}
+
+.glitch-mode {
+  animation: glitchAnim 0.3s infinite ease-in-out;
+}
+
+/* Golden meme popup pulse */
+@keyframes goldenPulse {
+  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 10px rgba(234, 179, 8, 0.8)); }
+  50% { transform: scale(1.1) rotate(4deg); filter: drop-shadow(0 0 25px rgba(250, 204, 21, 1)); }
+}
+
+.golden-meme-pulse {
+  animation: goldenPulse 1.5s infinite ease-in-out;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.8);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.3);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.6);
+}
+
+/* W-9 FORM / SEC TAX PROSPECTUS RETRO BUREAUCRATIC THEME STYLES */
+.sec-w9-theme {
+  background-color: #F4F1EA !important;
+  color: #0F172A !important;
+  font-family: Georgia, 'Times New Roman', Times, serif !important;
+  background-image: linear-gradient(#E5E0D5 1px, transparent 1px), linear-gradient(to right, #E5E0D5 1px, #F4F1EA 1px) !important;
+  background-size: 20px 20px !important;
+}
+
+.sec-w9-theme div, 
+.sec-w9-theme span, 
+.sec-w9-theme p, 
+.sec-w9-theme h1, 
+.sec-w9-theme h2, 
+.sec-w9-theme h3, 
+.sec-w9-theme h4, 
+.sec-w9-theme button, 
+.sec-w9-theme input {
+  font-family: Georgia, 'Times New Roman', Times, serif !important;
+}
+
+/* W-9 Form Card Container */
+.sec-w9-theme .bg-slate-900,
+.sec-w9-theme .bg-slate-950,
+.sec-w9-theme .bg-slate-900\/80,
+.sec-w9-theme .bg-slate-900\/95,
+.sec-w9-theme .bg-slate-900\/90,
+.sec-w9-theme .bg-slate-950\/90 {
+  background-color: #FBF9F5 !important;
+  color: #0F172A !important;
+  border-color: #0F172A !important;
+  box-shadow: 3px 3px 0px 0px #0F172A !important;
+}
+
+/* W-9 Form Borders */
+.sec-w9-theme .border-slate-800,
+.sec-w9-theme .border-slate-700,
+.sec-w9-theme .border-slate-900 {
+  border-color: #0F172A !important;
+}
+
+/* W-9 Text Overrides */
+.sec-w9-theme .text-slate-100,
+.sec-w9-theme .text-slate-200,
+.sec-w9-theme .text-slate-300 {
+  color: #0F172A !important;
+}
+
+.sec-w9-theme .text-slate-400,
+.sec-w9-theme .text-slate-500 {
+  color: #475569 !important;
+}
+
+.sec-w9-theme .text-cyan-400,
+.sec-w9-theme .text-cyan-300 {
+  color: #0369A1 !important;
+}
+
+.sec-w9-theme .text-amber-400,
+.sec-w9-theme .text-amber-300 {
+  color: #854D0E !important;
+}
+
+.sec-w9-theme .text-emerald-400,
+.sec-w9-theme .text-emerald-300 {
+  color: #166534 !important;
+}
+
+.sec-w9-theme .text-rose-400,
+.sec-w9-theme .text-rose-300 {
+  color: #991B1B !important;
+}
+
+/* W-9 Form Buttons */
+.sec-w9-theme button {
+  border-radius: 4px !important;
+  border: 1.5px solid #0F172A !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+}
+
+.sec-w9-theme button.bg-amber-500,
+.sec-w9-theme button.bg-cyan-500,
+.sec-w9-theme button.bg-gradient-to-r {
+  background-color: #E2E8F0 !important;
+  background-image: none !important;
+  color: #0F172A !important;
+  box-shadow: 2px 2px 0px 0px #0F172A !important;
+}
+
+.sec-w9-theme button.bg-amber-500:hover,
+.sec-w9-theme button.bg-cyan-500:hover {
+  background-color: #CBD5E1 !important;
+}
+
+/* W-9 Official Stamp Watermark */
+.w9-watermark {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(15, 23, 42, 0.03),
+    rgba(15, 23, 42, 0.03) 15px,
+    transparent 15px,
+    transparent 30px
+  );
+}
+
