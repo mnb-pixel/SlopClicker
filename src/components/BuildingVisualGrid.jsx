@@ -1,9 +1,11 @@
 import React from 'react';
 import * as Icons from 'lucide-react';
 import { BUILDINGS_DATA } from '../data/buildingsData';
+import { UPGRADES_DATA } from '../data/upgradesData';
+import { GREENWASHING_LAYOFFS_DATA } from '../data/greenwashingLayoffsData';
 import { formatCurrency, formatNumber } from '../utils/formatters';
 
-export function BuildingVisualGrid({ buildings }) {
+export function BuildingVisualGrid({ buildings, boughtUpgrades = [], boughtGreenwashingLayoffs = [] }) {
   const renderItemArtwork = (b, sizeClass = 'w-6 h-6') => {
     if (b && b.image) {
       return (
@@ -46,11 +48,31 @@ export function BuildingVisualGrid({ buildings }) {
         </span>
       </div>
 
-      {/* Visual Building Rows (Cookie Clicker Style) */}
+      {/* Visual Building Rows */}
       <div className="flex flex-col gap-2.5 max-h-[320px] overflow-y-auto pr-1">
         {ownedBuildings.map((b) => {
           const count = buildings[b.id] || 0;
-          const totalVps = count * b.baseCps;
+
+          // Apply purchased Upgrade & Corporate Action multipliers, same as the Store tab
+          let bMult = 1.0;
+          boughtUpgrades.forEach((upId) => {
+            const up = UPGRADES_DATA.find((u) => u.id === upId);
+            if (up && up.type === 'building' && up.buildingId === b.id) {
+              bMult *= up.effect.value;
+            }
+          });
+          boughtGreenwashingLayoffs.forEach((itemId) => {
+            const gw = GREENWASHING_LAYOFFS_DATA.find((g) => g.id === itemId);
+            if (gw && gw.buildingId === b.id) {
+              if (gw.id.endsWith('_2')) bMult *= 1.10;
+              if (gw.id.endsWith('_3')) bMult *= 1.15;
+              if (gw.id.startsWith('lay_') && gw.tier === 1) bMult *= 1.20;
+              if (gw.id.startsWith('lay_') && gw.tier === 2) bMult *= 1.35;
+            }
+          });
+
+          const unitVps = b.baseCps * bMult;
+          const totalVps = count * unitVps;
           const displayCount = Math.min(15, count);
 
           return (
@@ -68,6 +90,11 @@ export function BuildingVisualGrid({ buildings }) {
                   <span className="bg-cyan-500/20 text-cyan-300 text-[10px] font-black px-1.5 py-0.1 rounded border border-cyan-500/30">
                     x{count}
                   </span>
+                  {bMult > 1 && (
+                    <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black px-1.5 py-0.1 rounded border border-amber-500/30">
+                      {bMult.toFixed(1)}x upgraded
+                    </span>
+                  )}
                 </div>
                 <span className="text-emerald-400 font-mono text-[11px]">
                   +{formatCurrency(totalVps)}/s

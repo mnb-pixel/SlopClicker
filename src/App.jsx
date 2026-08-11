@@ -85,6 +85,8 @@ export default function App() {
                 particles={store.particles}
                 bounceGPU={store.bounceGPU}
                 buildings={store.buildings}
+                boughtUpgrades={store.boughtUpgrades}
+                boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}
                 themeMode={store.themeMode}
                 t={store.t}
               />

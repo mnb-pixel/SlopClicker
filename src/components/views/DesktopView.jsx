@@ -24,6 +24,8 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenManual }) {
           particles={store.particles}
           bounceGPU={store.bounceGPU}
           buildings={store.buildings}
+          boughtUpgrades={store.boughtUpgrades}
+          boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}
           themeMode={store.themeMode}
           t={store.t}
         />

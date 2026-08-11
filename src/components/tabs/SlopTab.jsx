@@ -14,6 +14,8 @@ export function SlopTab({
   particles,
   bounceGPU,
   buildings,
+  boughtUpgrades,
+  boughtGreenwashingLayoffs,
   themeMode,
   t,
 }) {
@@ -158,8 +160,12 @@ export function SlopTab({
         </button>
       </div>
 
-      {/* Visual Building Grid (Cookie Clicker Owned Items Display in Middle) */}
-      <BuildingVisualGrid buildings={buildings || {}} />
+      {/* Visual Building Grid (Owned Items Display in Middle) */}
+      <BuildingVisualGrid
+        buildings={buildings || {}}
+        boughtUpgrades={boughtUpgrades || []}
+        boughtGreenwashingLayoffs={boughtGreenwashingLayoffs || []}
+      />
     </div>
   );
 }
