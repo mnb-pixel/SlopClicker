@@ -77,14 +77,33 @@ export function StoreTab({
   };
 
   // Für die 100 Greenwashing/Layoff-Aktionen: Name/Flavor über t(), effectDesc dynamisch.
-  const gwName = (item) => tr(`gw_${item.id}_name`);
-  const gwQuote = (item) => tr(`gw_${item.id}_quote`);
+  const gwName = (item) => {
+    const key = `gw_${item.id}_name`;
+    const val = tr(key);
+    if (val && val !== key) return val;
+    const b = BUILDINGS_DATA.find((itemB) => itemB.id === item.buildingId);
+    const bName = b ? b.name : 'KI-Engine';
+    if (item.type === 'greenwashing') {
+      return `Greenwashing Protokoll Stufe ${item.tier} (${bName})`;
+    }
+    return `Massenentlassung Stufe ${item.tier} (${bName})`;
+  };
+
+  const gwQuote = (item) => {
+    const key = `gw_${item.id}_quote`;
+    const val = tr(key);
+    if (val && val !== key) return val;
+    return item.type === 'greenwashing'
+      ? 'Offiziell als nachhaltige Initiative deklariert.'
+      : 'Effizienzsteigerung durch KI-gestützte Restrukturierung.';
+  };
+
   const gwEffectDesc = (item) => {
-    if (item.type === 'greenwashing' && item.tier === 1) return 'Burn Rate -0.1%';
-    if (item.type === 'greenwashing' && item.tier === 2) return 'Engine VPS +10%';
-    if (item.type === 'greenwashing' && item.tier === 3) return 'Cosmetic only (no numeric effect)';
-    if (item.type === 'layoff' && item.tier === 1) return 'Engine VPS +20%';
-    if (item.type === 'layoff' && item.tier === 2) return 'Engine VPS +15%';
+    if (item.type === 'greenwashing' && item.tier === 1) return '🔥 Burn Rate -0.1%';
+    if (item.type === 'greenwashing' && item.tier === 2) return '⚡ Engine VPS Output +10%';
+    if (item.type === 'greenwashing' && item.tier === 3) return '✨ Kosmetischer ESG-Hype Boost';
+    if (item.type === 'layoff' && item.tier === 1) return '⚡ Engine VPS Output +20%';
+    if (item.type === 'layoff' && item.tier === 2) return '⚡ Engine VPS Output +15%';
     return '';
   };
 
@@ -585,11 +604,13 @@ export function StoreTab({
                       </div>
                       <div>
                         <div className="font-extrabold text-xs text-slate-100 flex items-center gap-2">
-                          <span>{item.name}</span>
+                          <span>{gwName(item)}</span>
                           <span className="text-[10px] text-slate-400 font-mono font-normal">({b?.name})</span>
                         </div>
-                        <div className="text-[11px] text-slate-400 italic">"{item.quote}"</div>
-                        <div className="text-[10px] text-amber-400 font-mono font-bold mt-0.5">{item.effectDesc}</div>
+                        <div className="text-[11px] text-slate-300 italic">"{gwQuote(item)}"</div>
+                        <div className="text-[10px] text-amber-400 font-mono font-bold mt-1 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30 inline-block">
+                          {gwEffectDesc(item)}
+                        </div>
                         
                         {/* Clear Error or Success Requirement Text */}
                         {!canAfford ? (
