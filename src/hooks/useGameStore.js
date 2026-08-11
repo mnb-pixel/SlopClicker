@@ -263,7 +263,9 @@ export function useGameStore() {
   // forgiving while burn still meaningfully matters over longer idle stretches.
   const burnRate = useMemo(() => {
     const base = 0.002 + (hypeTier - 1) * 0.0005;
-    const bubbleBonus = bubblePopTimer > 0 ? 0.005 : 0;
+    // Bubble Pop no longer takes an instant cut of the stock - it's a pure rate hit instead
+    // (this burn spike + the matching VPS cut below), so it needs to be clearly noticeable.
+    const bubbleBonus = bubblePopTimer > 0 ? 0.015 : 0;
     const total = base + idealistBurnDelta + cynicBurnDelta - greenwashingDiscount + bubbleBonus;
     return Math.max(0.0, Math.min(0.10, total));
   }, [hypeTier, idealistBurnDelta, cynicBurnDelta, greenwashingDiscount, bubblePopTimer]);
@@ -351,8 +353,12 @@ export function useGameStore() {
     // Golden Headline: 5x TPS für 15 Sekunden (Konzept Abschnitt 4)
     const goldenMult = activeEvent?.kind === 'golden' ? 5 : 1.0;
 
-    return totalCps * globalMult * syndicateBoost * pathMult * prestigeBonus * powerSurgeMult * goldenMult;
-  }, [buildings, boughtUpgrades, boughtGreenwashingLayoffs, boughtHeavenlyUpgrades, unlockedAchievements, buzzwordBonus, idealistLevel, cynicLevel, prestigeLevel, powerClickActive, powerClickSurgeTimer, activeEvent]);
+    // Bubble Pop: -35% VPS for 30s (bubblePopTimer, not activeEvent - the event banner itself
+    // only shows for 4s but the rate penalty runs the full 30s, matching the burn-rate spike).
+    const bubbleMult = bubblePopTimer > 0 ? 0.65 : 1.0;
+
+    return totalCps * globalMult * syndicateBoost * pathMult * prestigeBonus * powerSurgeMult * goldenMult * bubbleMult;
+  }, [buildings, boughtUpgrades, boughtGreenwashingLayoffs, boughtHeavenlyUpgrades, unlockedAchievements, buzzwordBonus, idealistLevel, cynicLevel, prestigeLevel, powerClickActive, powerClickSurgeTimer, activeEvent, bubblePopTimer]);
 
   // vps = gross production rate (Konzept: Gesamt-TPS, vor Burn Rate - Burn frisst den Bestand, nicht den Fluss)
   const vps = grossVps;
@@ -434,7 +440,7 @@ export function useGameStore() {
         });
       }
 
-      // 4. Bubble-Pop Burn-Rate-Bonus Timer (+0.5% Burn Rate für 30s)
+      // 4. Bubble-Pop Rate-Penalty Timer (+1.5% Burn Rate & -35% VPS für 30s)
       if (bubblePopTimer > 0) {
         setBubblePopTimer((prev) => Math.max(0, prev - deltaSec));
       }
@@ -444,27 +450,20 @@ export function useGameStore() {
         setActiveEvent(null);
       }
 
-      // 6. Golden Headline (0.06%/Tick@200ms): 5x TPS 15s + 1 zufälliges Buzzword gratis, auto-claim
+      // 6. Golden Headline (0.06%/Tick@200ms): purely a temporary rate boost - 5x TPS for 15s.
+      // No item reward: Buzzword cards are earned only via booster packs / direct purchase now.
       if (!activeEvent && Math.random() < GOLDEN_CHANCE_PER_200MS * tickScale) {
         const id = GOLDEN_EVENT_IDS[Math.floor(Math.random() * GOLDEN_EVENT_IDS.length)];
         setActiveEvent({ id, kind: 'golden', expiresAt: now + GOLDEN_DURATION_SEC * 1000 });
         setStats((s) => ({ ...s, goldenCaught: s.goldenCaught + 1 }));
         playSound('golden', soundEnabled);
         addLog(`${t(`event_${id}_title`)} - ${t(`event_${id}_desc`)}`, 'warning');
-
-        setBoughtBuzzwords((prevBought) => {
-          const unclaimed = BUZZWORDS_DATA.filter((bw) => !prevBought.includes(bw.id));
-          if (unclaimed.length === 0) return prevBought;
-          const gift = unclaimed[Math.floor(Math.random() * unclaimed.length)];
-          addLog(`🎁 Free Buzzword Card: "${gift.name}" (+${Math.round(gift.bonus * 100)}% VPS)!`, 'success');
-          return [...prevBought, gift.id];
-        });
-      // 7. Bubble Pop (0.04%/Tick@200ms): -15% Tokens sofort, +0.5% Burn Rate für 30s
+      // 7. Bubble Pop (0.04%/Tick@200ms): purely a temporary rate hit for 30s - VPS production
+      // cut and burn rate spiked. No instant stock loss, same "rates only" rule as Golden Headline.
       } else if (!activeEvent && Math.random() < BUBBLE_CHANCE_PER_200MS * tickScale) {
         const id = BUBBLE_EVENT_IDS[Math.floor(Math.random() * BUBBLE_EVENT_IDS.length)];
         setActiveEvent({ id, kind: 'bubble', expiresAt: now + 4000 });
         setBubblePopTimer(BUBBLE_BURN_DURATION_SEC);
-        setValuation((prev) => prev * 0.85);
         playSound('overheat', soundEnabled);
         addLog(`${t(`event_${id}_title`)} - ${t(`event_${id}_desc`)}`, 'danger');
       }
