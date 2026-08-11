@@ -489,7 +489,7 @@ export function useGameStore() {
             prestigeLevel, heavenlyChips, idealistLevel, cynicLevel, epoch, vps,
           };
           if (ach.check(currentState)) {
-            setUnlockedAchievements((prev) => [...prev, ach.id]);
+            setUnlockedAchievements((prev) => Array.from(new Set([...prev, ach.id])));
             playSound('golden', soundEnabled);
             addLog(`🏆 ACHIEVEMENT UNLOCKED: "${t(`ach_${ach.id}_name`)}"`, 'achievement');
           }

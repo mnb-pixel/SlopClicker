@@ -24,7 +24,7 @@ export function StatsTab({
     return <IconComp className={className} />;
   };
 
-  const unlockedCount = unlockedAchievements.length;
+  const unlockedCount = new Set(unlockedAchievements).size;
   const totalCount = ACHIEVEMENTS_DATA.length;
   const hypePct = Math.min(100, Math.floor((unlockedCount / totalCount) * 100));
 
