@@ -36,7 +36,7 @@ export function useGameStore() {
   const [heavenlyChips, setHeavenlyChips] = useState(0);
 
   // SEC Form S-1 & Hype Ledger Features
-  const [themeMode, setThemeMode] = useState('sec_prospectus'); // 'sec_prospectus' | 'cyberpunk'
+  const [themeMode, setThemeMode] = useState('cyberpunk'); // 'sec_prospectus' | 'cyberpunk'
   const [boughtBuzzwords, setBoughtBuzzwords] = useState([]);
   const [boughtGreenwashingLayoffs, setBoughtGreenwashingLayoffs] = useState([]);
   const [epoch, setEpoch] = useState(2); // 0: Blockchain, 1: Metaverse, 2: AI, 3: Quantum

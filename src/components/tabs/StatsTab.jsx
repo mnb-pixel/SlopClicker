@@ -22,7 +22,7 @@ export function StatsTab({
 
   const unlockedCount = unlockedAchievements.length;
   const totalCount = ACHIEVEMENTS_DATA.length;
-  const milkPct = Math.min(100, Math.floor((unlockedCount / totalCount) * 100));
+  const hypePct = Math.min(100, Math.floor((unlockedCount / totalCount) * 100));
 
   return (
     <div className="p-4 pb-20 max-w-md mx-auto">
@@ -57,18 +57,18 @@ export function StatsTab({
       {/* OVERVIEW STATS */}
       {statsSection === 'overview' && (
         <div className="flex flex-col gap-3">
-          {/* Hype Milk Level Banner */}
+          {/* Hype Index Banner */}
           <div className="bg-slate-900 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
             <div>
               <div className="text-xs font-extrabold text-cyan-300 uppercase tracking-wider">
-                Hype Milk Quality ({milkPct}%)
+                Hype Index ({hypePct}%)
               </div>
               <div className="text-[11px] text-slate-400">
                 Unlocked milestones boost Board Syndicate Upgrades!
               </div>
             </div>
             <div className="w-12 h-12 bg-slate-950 rounded-full border-2 border-cyan-500/40 flex items-center justify-center text-cyan-400 font-black text-sm">
-              {milkPct}%
+              {hypePct}%
             </div>
           </div>
 

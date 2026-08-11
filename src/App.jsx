@@ -46,7 +46,6 @@ export default function App() {
         layoutMode={layoutMode}
         setLayoutMode={setLayoutMode}
         themeMode={store.themeMode}
-        toggleThemeMode={store.toggleThemeMode}
         hypeTier={store.hypeTier}
         burnRate={store.burnRate}
         soundEnabled={store.soundEnabled}

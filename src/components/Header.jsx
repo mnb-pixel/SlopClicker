@@ -17,7 +17,6 @@ export function Header({
   layoutMode,
   setLayoutMode,
   themeMode,
-  toggleThemeMode,
   hypeTier,
   burnRate,
   soundEnabled,
@@ -162,18 +161,6 @@ export function Header({
               className="p-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700 hover:border-cyan-400 text-xs transition-all"
             >
               <Cpu className="w-3.5 h-3.5" />
-            </button>
-
-            {/* Theme Toggle Button */}
-            <button
-              onClick={toggleThemeMode}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold transition-all border ${
-                isSecTheme
-                  ? 'bg-[#8A6A1F] text-slate-950 border-[#8A6A1F]'
-                  : 'bg-slate-800 text-amber-300 border-amber-500/40 hover:border-amber-400'
-              }`}
-            >
-              <span>{isSecTheme ? tr('themeLedger') : tr('themeCyber')}</span>
             </button>
 
             {/* View Switcher Button */}
