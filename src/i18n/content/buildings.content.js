@@ -6,7 +6,7 @@ export const BUILDINGS_CONTENT = {
   gpu_rack: { de: { name: 'GPU-Rack' }, en: { name: 'GPU Rack' } },
   datacenter: { de: { name: 'Rechenzentrum' }, en: { name: 'Data Center' } },
   web_scraper: { de: { name: 'Web-Scraper' }, en: { name: 'Web Scraper' } },
-  thought_leader: { de: { name: 'LinkedIn-Thought-Leader' }, en: { name: 'LinkedIn Thought Leader' } },
+  thought_leader: { de: { name: 'ProNet-Thought-Leader' }, en: { name: 'ProNet Thought Leader' } },
   vc_firm: { de: { name: 'VC-Firma' }, en: { name: 'VC Firm' } },
   hype_journalist: { de: { name: 'Hype-Journalist' }, en: { name: 'Hype Journalist' } },
   keynote_stage: { de: { name: 'Keynote-Bühne' }, en: { name: 'Keynote Stage' } },
@@ -17,7 +17,7 @@ export const BUILDINGS_CONTENT = {
   agi_clock: { de: { name: 'AGI-Countdown-Uhr' }, en: { name: 'AGI Countdown Clock' } },
   gray_market_dc: { de: { name: 'Grauer-Markt-Rechenzentrum' }, en: { name: 'Gray-Market Data Center' } },
   nuclear_reactor: { de: { name: 'Kleiner Atomreaktor' }, en: { name: 'Small Nuclear Reactor' } },
-  metaverse_city: { de: { name: 'Metaverse-Geisterstadt' }, en: { name: 'Metaverse Ghost Town' } },
+  metaverse_city: { de: { name: '3D-Welt-Geisterstadt' }, en: { name: 'Virtual-World Ghost Town' } },
   excel_sheet: { de: { name: 'Selbstbewusste Excel-Tabelle' }, en: { name: 'Self-Aware Spreadsheet' } },
   singularity: { de: { name: 'Die Singularity' }, en: { name: 'The Singularity' } },
 };

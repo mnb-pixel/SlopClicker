@@ -16,7 +16,7 @@ export function GoldenMemeBanner({ activeEvent, dismissEvent, adState, startAd, 
   const adReady = !startAd || !isAdReady || isAdReady(adType);
 
   return (
-    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl px-4 pointer-events-auto animate-bounce">
+    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl px-4 pointer-events-auto">
       <div
         className={`w-full p-4 rounded-2xl border-4 shadow-2xl transition-all golden-meme-pulse ${
           isBubble

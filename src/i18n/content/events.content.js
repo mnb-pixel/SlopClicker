@@ -2,7 +2,7 @@
 export const EVENTS_CONTENT = {
   golden_1: { de: { title: "🟢 Elon erwähnt euch in einem Tweet", desc: "5x TPS für 15 Sekunden!" }, en: { title: "🟢 Elon Mentions You in a Tweet", desc: "5x TPS for 15 seconds!" } },
   golden_2: { de: { title: "🟢 Analyst nennt euch 'das nächste große Ding'", desc: "5x TPS für 15 Sekunden!" }, en: { title: "🟢 Analyst Calls You 'The Next Big Thing'", desc: "5x TPS for 15 seconds!" } },
-  golden_3: { de: { title: "🟢 Y-Combinator-DM schickt Glückwünsche", desc: "5x TPS für 15 Sekunden!" }, en: { title: "🟢 Y Combinator DM Sends Congratulations", desc: "5x TPS for 15 seconds!" } },
+  golden_3: { de: { title: "🟢 Hype-Accelerator-DM schickt Glückwünsche", desc: "5x TPS für 15 Sekunden!" }, en: { title: "🟢 Hype Accelerator DM Sends Congratulations", desc: "5x TPS for 15 seconds!" } },
   golden_4: { de: { title: "🟢 Forbes-30-unter-30-Nominierung eingegangen", desc: "5x TPS für 15 Sekunden!" }, en: { title: "🟢 Forbes 30 Under 30 Nomination Arrives", desc: "5x TPS for 15 seconds!" } },
   golden_5: { de: { title: "🟢 Wettbewerber kopiert euer Feature – PR-Erfolg", desc: "5x TPS für 15 Sekunden!" }, en: { title: "🟢 A Competitor Copies Your Feature – PR Win", desc: "5x TPS for 15 seconds!" } },
   golden_6: { de: { title: "🟢 Prominenter Investor retweetet euren Launch", desc: "5x TPS für 15 Sekunden!" }, en: { title: "🟢 A Prominent Investor Retweets Your Launch", desc: "5x TPS for 15 seconds!" } },
@@ -14,7 +14,7 @@ export const EVENTS_CONTENT = {
   golden_12: { de: { title: "🟢 Branchenpreis verliehen, ganz ohne Bewerbung", desc: "5x TPS für 15 Sekunden!" }, en: { title: "🟢 Industry Award Given, No Application Needed", desc: "5x TPS for 15 seconds!" } },
   golden_13: { de: { title: "🟢 Podcast-Host nennt euch 'unterbewertet'", desc: "5x TPS für 15 Sekunden!" }, en: { title: "🟢 Podcast Host Calls You 'Undervalued'", desc: "5x TPS for 15 seconds!" } },
   golden_14: { de: { title: "🟢 Analysten-Upgrade auf 'Buy'", desc: "5x TPS für 15 Sekunden!" }, en: { title: "🟢 Analyst Upgrade to 'Buy'", desc: "5x TPS for 15 seconds!" } },
-  golden_15: { de: { title: "🟢 Mitarbeiter postet stolz auf LinkedIn", desc: "5x TPS für 15 Sekunden!" }, en: { title: "🟢 An Employee Proudly Posts on LinkedIn", desc: "5x TPS for 15 seconds!" } },
+  golden_15: { de: { title: "🟢 Mitarbeiter postet stolz auf ProNet", desc: "5x TPS für 15 Sekunden!" }, en: { title: "🟢 An Employee Proudly Posts on ProNet", desc: "5x TPS for 15 seconds!" } },
 
   bubble_1: { de: { title: "🔴 Untersuchung durch Aufsichtsbehörde eingeleitet", desc: "-35% VPS-Produktion & Burn Rate +1,5% für 30 Sekunden!" }, en: { title: "🔴 Regulator Opens an Investigation", desc: "-35% VPS output & Burn Rate +1.5% for 30 seconds!" } },
   bubble_2: { de: { title: "🔴 Kritischer Artikel über eure Burn Rate", desc: "-35% VPS-Produktion & Burn Rate +1,5% für 30 Sekunden!" }, en: { title: "🔴 Critical Article About Your Burn Rate", desc: "-35% VPS output & Burn Rate +1.5% for 30 seconds!" } },

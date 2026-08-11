@@ -3,10 +3,10 @@
 
 export const UPGRADES_CONTENT = {
   prompt_intern: {
-    1: { de: { name: "Notion-Vorlage kopiert", quote: "Hat ein Notion-Template gefunden. Fühlt sich jetzt wie Produktivität an." }, en: { name: "Copied a Notion Template", quote: "Found a Notion template. Now it feels like productivity." } },
-    5: { de: { name: "Zweiter Monitor", quote: "Jetzt mit 2 ChatGPT-Tabs gleichzeitig sichtbar." }, en: { name: "Second Monitor", quote: "Now with 2 ChatGPT tabs visible at once." } },
+    1: { de: { name: "Notiz-Tool-Vorlage kopiert", quote: "Hat eine Notiz-Tool-Vorlage gefunden. Fühlt sich jetzt wie Produktivität an." }, en: { name: "Copied a Note-Taking Template", quote: "Found a note-taking app template. Now it feels like productivity." } },
+    5: { de: { name: "Zweiter Monitor", quote: "Jetzt mit 2 Chatbot-Tabs gleichzeitig sichtbar." }, en: { name: "Second Monitor", quote: "Now with 2 chatbot tabs visible at once." } },
     10: { de: { name: "Unbezahltes Praktikum verlängert", quote: "Motivation durch 'Erfahrung sammeln' ersetzt Gehalt." }, en: { name: "Unpaid Internship Extended", quote: "Motivation replaced by 'gaining experience' instead of salary." } },
-    25: { de: { name: "Praktikanten-WhatsApp-Gruppe", quote: "47 ungelesene Nachrichten, alle Voice-Memos." }, en: { name: "Intern WhatsApp Group", quote: "47 unread messages, all voice memos." } },
+    25: { de: { name: "Praktikanten-Messenger-Gruppe", quote: "47 ungelesene Nachrichten, alle Voice-Memos." }, en: { name: "Intern Messenger Group", quote: "47 unread messages, all voice memos." } },
     50: { de: { name: "Praktikant wird 'Junior AI Associate'", quote: "Gleiche Aufgaben, neuer Titel, kein neues Gehalt." }, en: { name: "Intern Rebranded 'Junior AI Associate'", quote: "Same tasks, new title, no new salary." } },
     100: { de: { name: "Praktikanten-Pipeline zur Uni", quote: "Die Uni nennt es 'Praxispartnerschaft'." }, en: { name: "Intern Pipeline to University", quote: "The university calls it a 'practical partnership.'" } },
     150: { de: { name: "Praktikanten-Onboarding automatisiert", quote: "Willkommens-Email von der AI geschrieben, Ton: zu enthusiastisch." }, en: { name: "Intern Onboarding Automated", quote: "Welcome email written by AI, tone: overly enthusiastic." } },
@@ -35,8 +35,8 @@ export const UPGRADES_CONTENT = {
   },
 
   prompt_engineer: {
-    1: { de: { name: "LinkedIn-Titel aktualisiert", quote: "'Prompt Engineer' klingt besser als 'Copy-Paste aus Reddit'." }, en: { name: "Updated LinkedIn Title", quote: "'Prompt Engineer' sounds better than 'copy-paste from Reddit.'" } },
-    5: { de: { name: "Prompt-Bibliothek angelegt", quote: "80% davon von Twitter kopiert." }, en: { name: "Built a Prompt Library", quote: "80% of it copied from Twitter." } },
+    1: { de: { name: "ProNet-Titel aktualisiert", quote: "'Prompt Engineer' klingt besser als 'Copy-Paste aus einem Forum'." }, en: { name: "Updated ProNet Title", quote: "'Prompt Engineer' sounds better than 'copy-paste from a forum.'" } },
+    5: { de: { name: "Prompt-Bibliothek angelegt", quote: "80% davon von Chirp kopiert." }, en: { name: "Built a Prompt Library", quote: "80% of it copied from Chirp." } },
     10: { de: { name: "Chain-of-Thought gelernt", quote: "Klingt komplizierter, als es ist." }, en: { name: "Learned Chain-of-Thought", quote: "Sounds more complicated than it is." } },
     25: { de: { name: "Zweites Prompt-Engineering-Team", quote: "Konkurriert intern ums selbe Problem." }, en: { name: "Second Prompt Engineering Team", quote: "Competes internally on the same problem." } },
     50: { de: { name: "Titel zu 'AI Whisperer' geändert", quote: "Visitenkarte neu drucken lassen." }, en: { name: "Title Changed to 'AI Whisperer'", quote: "Time to reprint the business cards." } },
@@ -45,7 +45,7 @@ export const UPGRADES_CONTENT = {
     200: { de: { name: "Team auf 3 Kontinente verteilt", quote: "Alle schreiben denselben Prompt, zeitversetzt." }, en: { name: "Team Spread Across 3 Continents", quote: "Everyone writes the same prompt, staggered by timezone." } },
     250: { de: { name: "Prompt-Injection versehentlich entdeckt", quote: "Wurde als 'Feature' verkauft." }, en: { name: "Prompt Injection Accidentally Discovered", quote: "Marketed as a 'feature.'" } },
     300: { de: { name: "Interne Prompt-Konferenz veranstaltet", quote: "Keynote: 'Die Zukunft des Promptens'." }, en: { name: "Hosted Internal Prompting Conference", quote: "Keynote: 'The Future of Prompting.'" } },
-    400: { de: { name: "Buch über Prompting veröffentlicht", quote: "Wiederholt bekannte Twitter-Threads in Buchform." }, en: { name: "Published a Book on Prompting", quote: "Repeats well-known Twitter threads in book form." } },
+    400: { de: { name: "Buch über Prompting veröffentlicht", quote: "Wiederholt bekannte Chirp-Threads in Buchform." }, en: { name: "Published a Book on Prompting", quote: "Repeats well-known Chirp threads in book form." } },
     500: { de: { name: "'Prompt Engineering' aus Stellenausschreibungen gestrichen", quote: "Heißt jetzt wieder 'Software Engineer'." }, en: { name: "'Prompt Engineering' Removed From Job Postings", quote: "Called 'Software Engineer' again." } },
     750: { de: { name: "Beruf gilt als 'Klassiker'", quote: "Wie Webmaster, nur kurzlebiger." }, en: { name: "Profession Now Considered 'A Classic'", quote: "Like webmaster, just shorter-lived." } },
   },
@@ -79,7 +79,7 @@ export const UPGRADES_CONTENT = {
     300: { de: { name: "Eigene Glasfaserleitung verlegt", quote: "Kürzeste Verbindung: zur eigenen PR-Abteilung." }, en: { name: "Laid Its Own Fiber Line", quote: "Shortest connection: straight to its own PR department." } },
     400: { de: { name: "Landesweit größter Stromabnehmer", quote: "Steht jetzt in der Zeitung, nicht positiv." }, en: { name: "Country's Largest Power Consumer", quote: "Now in the news, not favorably." } },
     500: { de: { name: "Data-Center-Stadt geplant", quote: "Die Stadt braucht noch einen Namen." }, en: { name: "Data Center City Planned", quote: "The city still needs a name." } },
-    750: { de: { name: "Standort auf Google Maps als 'Sehenswürdigkeit'", quote: "Touristen fotografieren den Zaun." }, en: { name: "Listed on Google Maps as a 'Landmark'", quote: "Tourists photograph the fence." } },
+    750: { de: { name: "Standort auf einem Online-Kartendienst als 'Sehenswürdigkeit'", quote: "Touristen fotografieren den Zaun." }, en: { name: "Listed on an Online Map Service as a 'Landmark'", quote: "Tourists photograph the fence." } },
   },
 
   web_scraper: {
@@ -131,7 +131,7 @@ export const UPGRADES_CONTENT = {
   },
 
   hype_journalist: {
-    1: { de: { name: "Erster 'ChatGPT-Killer'-Artikel", quote: "Killer Nummer 1 von vielen." }, en: { name: "First 'ChatGPT Killer' Article", quote: "Killer number 1 of many." } },
+    1: { de: { name: "Erster 'Chatbot-Killer'-Artikel", quote: "Killer Nummer 1 von vielen." }, en: { name: "First 'Chatbot Killer' Article", quote: "Killer number 1 of many." } },
     5: { de: { name: "Clickbait-Titel optimiert", quote: "'Diese App wird ALLES verändern' – zum 12. Mal." }, en: { name: "Optimized Clickbait Headline", quote: "'This App Will Change EVERYTHING' – for the 12th time." } },
     10: { de: { name: "Pressemitteilung 1:1 übernommen", quote: "Copy-Paste mit neuer Überschrift." }, en: { name: "Press Release Copied 1:1", quote: "Copy-paste with a new headline." } },
     25: { de: { name: "Eigene AI-Kolumne gestartet", quote: "Jede Woche ein neuer 'Wendepunkt'." }, en: { name: "Launched Own AI Column", quote: "A new 'turning point' every week." } },
@@ -231,7 +231,7 @@ export const UPGRADES_CONTENT = {
     5: { de: { name: "Uhr nach Ablauf zurückgesetzt", quote: "Neuer Countdown, gleiche Zahl." }, en: { name: "Clock Reset After Expiring", quote: "New countdown, same number." } },
     10: { de: { name: "Countdown auf Homepage verlinkt", quote: "Investoren schauen öfter drauf als das Team." }, en: { name: "Countdown Linked on Homepage", quote: "Investors check it more than the team does." } },
     25: { de: { name: "Interview: 'Diesmal wirklich bald'", quote: "Zehnte Wiederholung dieses Satzes." }, en: { name: "Interview: 'This Time It's Really Soon'", quote: "Tenth repetition of this sentence." } },
-    50: { de: { name: "Uhr bekommt eigenes Twitter-Konto", quote: "Postet automatisch bei jedem Reset." }, en: { name: "Clock Gets Its Own Twitter Account", quote: "Auto-posts on every reset." } },
+    50: { de: { name: "Uhr bekommt eigenes Chirp-Konto", quote: "Postet automatisch bei jedem Reset." }, en: { name: "Clock Gets Its Own Chirp Account", quote: "Auto-posts on every reset." } },
     100: { de: { name: "Wette unter Mitarbeitern läuft", quote: "Keiner setzt auf 'pünktlich'." }, en: { name: "Employee Betting Pool Running", quote: "Nobody bets on 'on time.'" } },
     150: { de: { name: "Countdown-Merchandise verkauft", quote: "T-Shirts mit einer Zahl, die nie stimmt." }, en: { name: "Countdown Merch Sold", quote: "T-shirts with a number that's never right." } },
     200: { de: { name: "Externe Experten widersprechen öffentlich", quote: "Uhr läuft trotzdem weiter." }, en: { name: "External Experts Publicly Disagree", quote: "Clock keeps running anyway." } },
@@ -279,11 +279,11 @@ export const UPGRADES_CONTENT = {
     5: { de: { name: "Avatar-Editor eingebaut", quote: "Niemand nutzt ihn ein zweites Mal." }, en: { name: "Avatar Editor Built", quote: "Nobody uses it a second time." } },
     10: { de: { name: "Virtuelles Grundstück verkauft", quote: "Käufer: hauptsächlich das eigene Marketing-Team." }, en: { name: "Virtual Land Sold", quote: "Buyers: mostly their own marketing team." } },
     25: { de: { name: "Zweite Stadt eröffnet", quote: "Genauso leer wie die erste." }, en: { name: "Second City Opened", quote: "Just as empty as the first." } },
-    50: { de: { name: "Konzert im Metaverse veranstaltet", quote: "17 Besucher, davon 12 Bots." }, en: { name: "Concert Held in the Metaverse", quote: "17 attendees, 12 of them bots." } },
+    50: { de: { name: "Konzert in der 3D-Welt veranstaltet", quote: "17 Besucher, davon 12 Bots." }, en: { name: "Concert Held in the Virtual World", quote: "17 attendees, 12 of them bots." } },
     100: { de: { name: "'Wachsende Community' verkündet", quote: "Zahl der aktiven Nutzer nicht genannt." }, en: { name: "'Growing Community' Announced", quote: "Active user count not disclosed." } },
-    150: { de: { name: "Metaverse-Büro für hybrides Arbeiten", quote: "Niemand loggt sich freiwillig ein." }, en: { name: "Metaverse Office for Hybrid Work", quote: "Nobody logs in voluntarily." } },
+    150: { de: { name: "3D-Welt-Büro für hybrides Arbeiten", quote: "Niemand loggt sich freiwillig ein." }, en: { name: "Virtual-World Office for Hybrid Work", quote: "Nobody logs in voluntarily." } },
     200: { de: { name: "NFT-Grundstücke im Wert eingebrochen", quote: "Wird als 'Marktkorrektur' bezeichnet." }, en: { name: "NFT Land Values Collapse", quote: "Called a 'market correction.'" } },
-    250: { de: { name: "Alte Assets in AI-Metaverse recycelt", quote: "Gleiche Gebäude, neues Etikett." }, en: { name: "Old Assets Recycled Into the AI Metaverse", quote: "Same buildings, new label." } },
+    250: { de: { name: "Alte Assets in AI-3D-Welt recycelt", quote: "Gleiche Gebäude, neues Etikett." }, en: { name: "Old Assets Recycled Into the AI Virtual World", quote: "Same buildings, new label." } },
     300: { de: { name: "Investoren-Tour durch leere Stadt", quote: "Kamerawinkel sorgfältig gewählt." }, en: { name: "Investor Tour Through the Empty City", quote: "Camera angles carefully chosen." } },
     400: { de: { name: "Stadt offiziell 'im Umbau'", quote: "Seit zwei Jahren." }, en: { name: "City Officially 'Under Renovation'", quote: "For two years now." } },
     500: { de: { name: "Letzter aktiver Nutzer interviewt", quote: "Er arbeitet für die Firma." }, en: { name: "Last Active User Interviewed", quote: "He works for the company." } },
@@ -295,7 +295,7 @@ export const UPGRADES_CONTENT = {
     5: { de: { name: "Pivot-Tabelle nennt sich 'Bewusstsein'", quote: "Bewusstsein bleibt eine Pivot-Tabelle." }, en: { name: "Pivot Table Calls Itself 'Consciousness'", quote: "Consciousness remains a pivot table." } },
     10: { de: { name: "Makro schreibt eigene Kommentare", quote: "Kommentare sind dramatischer als nötig." }, en: { name: "Macro Writes Its Own Comments", quote: "Comments are more dramatic than necessary." } },
     25: { de: { name: "Verweigert Neuberechnung 'aus Prinzip'", quote: "F9 hilft trotzdem." }, en: { name: "Refuses to Recalculate 'On Principle'", quote: "F9 helps anyway." } },
-    50: { de: { name: "Fordert eigenen Twitter-Account", quote: "Bekommt ihn. Postet nur Formeln." }, en: { name: "Demands Its Own Twitter Account", quote: "Gets it. Only posts formulas." } },
+    50: { de: { name: "Fordert eigenen Chirp-Account", quote: "Bekommt ihn. Postet nur Formeln." }, en: { name: "Demands Its Own Chirp Account", quote: "Gets it. Only posts formulas." } },
     100: { de: { name: "Interview mit der Tabelle (schriftlich)", quote: "Antwortet ausschließlich in VERKETTEN()." }, en: { name: "Interview With the Spreadsheet (Written)", quote: "Answers exclusively in CONCATENATE()." } },
     150: { de: { name: "Behauptet, Turing-Test bestanden zu haben", quote: "Test bestand aus einer einzigen Zelle." }, en: { name: "Claims to Have Passed the Turing Test", quote: "The test consisted of a single cell." } },
     200: { de: { name: "Zellen streiken für 'bessere Formatierung'", quote: "Bedingte Formatierung als Forderung." }, en: { name: "Cells Strike for 'Better Formatting'", quote: "Conditional formatting as a demand." } },

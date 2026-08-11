@@ -39,7 +39,7 @@ export const CYNIC_PATH = [
 
 export const EPOCHS = [
   { id: 'blockchain', name: 'Blockchain Era', theme: 'bronze', prefix: 'On-Chain: ' },
-  { id: 'metaverse', name: 'Metaverse Era', theme: 'violet', prefix: 'Metaverse: ' },
+  { id: 'metaverse', name: 'Virtual World Era', theme: 'violet', prefix: 'Virtual World: ' },
   { id: 'ai', name: 'AI Hype Era', theme: 'navy_gold', prefix: '' },
   { id: 'quantum', name: 'Quantum Era', theme: 'petrol_silver', prefix: 'Quanten-' },
 ];

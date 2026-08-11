@@ -207,25 +207,21 @@ export function getAvailableUpgrades(buildings, boughtUpgrades, valuation, total
   return UPGRADES_DATA.filter((up) => {
     if (boughtUpgrades.includes(up.id)) return false;
 
-    // RULE: Upgrades orient on current value (valuation) and only become visible when player has at least 90% of the cost (10% before sum)
-    if (valuation < up.cost * 0.90) return false;
-
     if (up.type === 'building') {
       // STRICT RULE: Must own at least 1 of this building engine!
       const ownedCount = buildings[up.buildingId] || 0;
       if (ownedCount < 1) return false;
 
-      // Must be the next lowest unbought tier for this owned building engine
+      // Always show the next lowest unbought tier per owned engine, regardless of
+      // cost/count - affordability is purely a "greyed out" UI concern (the tile grid
+      // already dims + still shows the price when valuation < up.cost).
       const nextUp = lowestUnboughtBuildingUpgrade.get(up.buildingId);
-      if (!nextUp || nextUp.id !== up.id) return false;
-
-      // Building count requirement check
-      const reqCount = up.req?.buildingCount?.count || 1;
-      if (ownedCount < Math.max(1, Math.floor(reqCount * 0.4))) {
-        return false;
-      }
-      return true;
+      return !!nextUp && nextUp.id === up.id;
     }
+
+    // Non-building upgrades (Click, Syndicate, Global) have no natural "next per X"
+    // grouping, so they keep the original "roughly affordable" visibility rule.
+    if (valuation < up.cost * 0.90) return false;
 
     // Global VPS upgrades require owning at least 1 engine/building
     if (up.type === 'global' && (up.effect?.type === 'globalMult' || up.effect?.type === 'vpsMult')) {

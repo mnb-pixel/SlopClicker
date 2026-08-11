@@ -45,12 +45,12 @@ export const GREENWASHING_CONTENT = {
   lay_web_scraper_1: { de: { name: "10% des Rechtsteams durch AI-Vertragsprüfung ersetzt", quote: "Prüft schneller, versteht dabei weniger." }, en: { name: "10% of Legal Team Replaced by AI Contract Review", quote: "Reviews faster, understands less." } },
   lay_web_scraper_2: { de: { name: "Kündigung mit gescrapten Textbausteinen verfasst", quote: "Ironie nicht beabsichtigt." }, en: { name: "Termination Written Using Scraped Text Snippets", quote: "Irony not intended." } },
 
-  // --- LinkedIn-Thought-Leader ---
+  // --- ProNet-Thought-Leader ---
   gw_thought_leader_1: { de: { name: "Post über 'nachhaltige Innovation' abgesetzt", quote: "Kein Bezug zum eigenen Fußabdruck." }, en: { name: "Posted About 'Sustainable Innovation'", quote: "No connection to his own footprint." } },
   gw_thought_leader_2: { de: { name: "Alter Content 'recycelt' mit neuem Intro", quote: "Gleicher Post, drittes Mal in zwei Jahren." }, en: { name: "Old Content 'Recycled' With a New Intro", quote: "Same post, third time in two years." } },
   gw_thought_leader_3: { de: { name: "'Circular Content Strategy' ausgerufen", quote: "Bedeutet: denselben Gedanken wiederholt posten." }, en: { name: "'Circular Content Strategy' Proclaimed", quote: "Means: posting the same thought repeatedly." } },
   lay_thought_leader_1: { de: { name: "10% der Social-Media-Redaktion durch AI ersetzt", quote: "Posts klingen jetzt gleichmäßig generisch." }, en: { name: "10% of Social Media Team Replaced by AI", quote: "Posts now sound uniformly generic." } },
-  lay_thought_leader_2: { de: { name: "Kündigung als LinkedIn-Post verarbeitet", quote: "'Spannendes neues Kapitel für alle Beteiligten.'" }, en: { name: "Layoff Turned Into a LinkedIn Post", quote: "'An exciting new chapter for everyone involved.'" } },
+  lay_thought_leader_2: { de: { name: "Kündigung als ProNet-Post verarbeitet", quote: "'Spannendes neues Kapitel für alle Beteiligten.'" }, en: { name: "Layoff Turned Into a ProNet Post", quote: "'An exciting new chapter for everyone involved.'" } },
 
   // --- VC-Firma ---
   gw_vc_firm_1: { de: { name: "'ESG-Fonds' als Zusatz ausgewiesen", quote: "Kriterien nirgends genau definiert." }, en: { name: "'ESG Fund' Label Added", quote: "Criteria never precisely defined anywhere." } },
@@ -122,11 +122,11 @@ export const GREENWASHING_CONTENT = {
   lay_nuclear_reactor_1: { de: { name: "10% des Sicherheitsteams durch AI-Überwachung ersetzt", quote: "Überwacht gründlicher, meldet seltener." }, en: { name: "10% of Security Team Replaced by AI Surveillance", quote: "Monitors more thoroughly, reports less often." } },
   lay_nuclear_reactor_2: { de: { name: "Kündigung mit Verweis auf 'Automatisierung'", quote: "Anlage ist noch nicht ganz automatisiert." }, en: { name: "Layoff Attributed to 'Automation'", quote: "The facility isn't fully automated yet." } },
 
-  // --- Metaverse-Geisterstadt ---
+  // --- 3D-Welt-Geisterstadt ---
   gw_metaverse_city_1: { de: { name: "Stadt als 'digital nachhaltig' beworben", quote: "Serverkosten trotzdem real und hoch." }, en: { name: "City Advertised as 'Digitally Sustainable'", quote: "Server costs still real and high." } },
   gw_metaverse_city_2: { de: { name: "Alte 3D-Assets 'recycelt'", quote: "Gebäude von 2022, neues Türschild." }, en: { name: "Old 3D Assets 'Recycled'", quote: "2022 buildings, new door sign." } },
   gw_metaverse_city_3: { de: { name: "'Circular Virtual Economy' zur Vision", quote: "Dieselben Nutzer kaufen sich gegenseitig Land ab." }, en: { name: "'Circular Virtual Economy' as the Vision", quote: "The same users buying land off each other." } },
-  lay_metaverse_city_1: { de: { name: "10% des Metaverse-Teams durch AI-Weltgeneratoren ersetzt", quote: "Stadt wächst schneller, bleibt trotzdem leer." }, en: { name: "10% of Metaverse Team Replaced by AI World Generators", quote: "City grows faster, stays just as empty." } },
+  lay_metaverse_city_1: { de: { name: "10% des 3D-Welt-Teams durch AI-Weltgeneratoren ersetzt", quote: "Stadt wächst schneller, bleibt trotzdem leer." }, en: { name: "10% of Virtual-World Team Replaced by AI World Generators", quote: "City grows faster, stays just as empty." } },
   lay_metaverse_city_2: { de: { name: "Kündigung als virtuelles Event angekündigt", quote: "Teilnehmerzahl: die Person selbst." }, en: { name: "Layoff Announced as a Virtual Event", quote: "Attendance: the person themself." } },
 
   // --- Selbstbewusste Excel-Tabelle ---

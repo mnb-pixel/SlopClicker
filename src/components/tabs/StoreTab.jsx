@@ -521,59 +521,73 @@ export function StoreTab({
                     </div>
                   ) : (
                     <>
-                      {/* Hover-Inspector: zeigt die Wirkung des gerade gehovten gekauften Upgrades */}
+                      {/* Fixe Spaltenzahl (statt responsive sm:/md:), damit sich Zeilen eindeutig
+                          bestimmen lassen - der Inspector wird direkt über der Zeile mit der
+                          angeklickten Kachel eingefügt, nicht fix oben an der Sektion. */}
                       {(() => {
-                        const hoveredBought = boughtUpgradesObjects.find((u) => u.id === hoveredBoughtUpgradeId);
-                        if (!hoveredBought) return null;
-                        return (
-                          <div className="mb-2 bg-slate-950/95 border-2 border-emerald-400/80 rounded-xl p-3 shadow-xl flex flex-col gap-1.5 text-xs text-slate-100 animate-fadeIn">
-                            <div className="flex items-center justify-between font-extrabold text-emerald-300 border-b border-slate-800 pb-1">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <div className="p-1 rounded bg-slate-900 border border-slate-800 shrink-0">
-                                  {renderItemArtwork(hoveredBought, 'Check')}
+                        const BOUGHT_COLS = 4;
+                        const boughtRows = [];
+                        for (let i = 0; i < boughtUpgradesObjects.length; i += BOUGHT_COLS) {
+                          boughtRows.push(boughtUpgradesObjects.slice(i, i + BOUGHT_COLS));
+                        }
+
+                        return boughtRows.map((row, rowIdx) => {
+                          const activeItem = row.find((u) => u.id === hoveredBoughtUpgradeId);
+
+                          return (
+                            <div key={rowIdx} className="flex flex-col gap-2 mb-2">
+                              {activeItem && (
+                                <div className="bg-slate-950/95 border-2 border-emerald-400/80 rounded-xl p-3 shadow-xl flex flex-col gap-1.5 text-xs text-slate-100 animate-fadeIn">
+                                  <div className="flex items-center justify-between font-extrabold text-emerald-300 border-b border-slate-800 pb-1">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <div className="p-1 rounded bg-slate-900 border border-slate-800 shrink-0">
+                                        {renderItemArtwork(activeItem, 'Check')}
+                                      </div>
+                                      <span className="truncate">{upgradeName(activeItem)}</span>
+                                    </div>
+                                    <span className="flex items-center gap-1 text-emerald-400 font-black text-[10px] shrink-0 ml-2">
+                                      <Icons.CheckCircle2 className="w-3.5 h-3.5" /> Gekauft
+                                    </span>
+                                  </div>
+
+                                  <div className="text-[10px] font-mono text-cyan-300 font-bold">
+                                    {getTargetBadge(activeItem)}
+                                  </div>
+
+                                  {upgradeQuote(activeItem) && (
+                                    <div className="text-slate-300 italic text-[11px] bg-slate-900/60 p-1.5 rounded border border-slate-800/80">
+                                      "{upgradeQuote(activeItem)}"
+                                    </div>
+                                  )}
+
+                                  <div className="text-emerald-300 font-bold text-[11px] pt-1">
+                                    ⚡ {upgradeDescription(activeItem)}
+                                  </div>
                                 </div>
-                                <span className="truncate">{upgradeName(hoveredBought)}</span>
+                              )}
+
+                              <div className="grid grid-cols-4 gap-2">
+                                {row.map((up) => (
+                                  <div
+                                    key={up.id}
+                                    onMouseEnter={() => setHoveredBoughtUpgradeId(up.id)}
+                                    onClick={() => setHoveredBoughtUpgradeId(up.id)}
+                                    className={`w-full aspect-square rounded-xl bg-emerald-950/30 border p-1.5 flex flex-col items-center justify-center text-emerald-400 opacity-90 hover:opacity-100 cursor-pointer transition-all ${
+                                      hoveredBoughtUpgradeId === up.id
+                                        ? 'ring-2 ring-emerald-400 border-emerald-300 scale-105 shadow-lg shadow-emerald-500/20'
+                                        : 'border-emerald-500/40 hover:border-emerald-400'
+                                    }`}
+                                    title={`${upgradeName(up)}: ${upgradeDescription(up)}`}
+                                  >
+                                    {renderItemArtwork(up, 'Check')}
+                                    <span className="text-[9px] font-mono font-bold text-emerald-400/80 mt-0.5">✓</span>
+                                  </div>
+                                ))}
                               </div>
-                              <span className="flex items-center gap-1 text-emerald-400 font-black text-[10px] shrink-0 ml-2">
-                                <Icons.CheckCircle2 className="w-3.5 h-3.5" /> Gekauft
-                              </span>
                             </div>
-
-                            <div className="text-[10px] font-mono text-cyan-300 font-bold">
-                              {getTargetBadge(hoveredBought)}
-                            </div>
-
-                            {upgradeQuote(hoveredBought) && (
-                              <div className="text-slate-300 italic text-[11px] bg-slate-900/60 p-1.5 rounded border border-slate-800/80">
-                                "{upgradeQuote(hoveredBought)}"
-                              </div>
-                            )}
-
-                            <div className="text-emerald-300 font-bold text-[11px] pt-1">
-                              ⚡ {upgradeDescription(hoveredBought)}
-                            </div>
-                          </div>
-                        );
+                          );
+                        });
                       })()}
-
-                      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
-                        {boughtUpgradesObjects.map((up) => (
-                          <div
-                            key={up.id}
-                            onMouseEnter={() => setHoveredBoughtUpgradeId(up.id)}
-                            onClick={() => setHoveredBoughtUpgradeId(up.id)}
-                            className={`w-full aspect-square rounded-xl bg-emerald-950/30 border p-1.5 flex flex-col items-center justify-center text-emerald-400 opacity-90 hover:opacity-100 cursor-pointer transition-all ${
-                              hoveredBoughtUpgradeId === up.id
-                                ? 'ring-2 ring-emerald-400 border-emerald-300 scale-105 shadow-lg shadow-emerald-500/20'
-                                : 'border-emerald-500/40 hover:border-emerald-400'
-                            }`}
-                            title={`${upgradeName(up)}: ${upgradeDescription(up)}`}
-                          >
-                            {renderItemArtwork(up, 'Check')}
-                            <span className="text-[9px] font-mono font-bold text-emerald-400/80 mt-0.5">✓</span>
-                          </div>
-                        ))}
-                      </div>
                     </>
                   )}
                 </div>

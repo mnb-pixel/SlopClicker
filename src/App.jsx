@@ -243,6 +243,9 @@ export default function App() {
         prestigeLevel={store.prestigeLevel}
         hypeTier={store.hypeTier}
         buildings={store.buildings}
+        unlockedAchievements={store.unlockedAchievements}
+        boughtBuzzwords={store.boughtBuzzwords}
+        t={store.t}
       />
 
       {/* Interactive Form S-1 Game Manual Modal */}

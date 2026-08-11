@@ -27,7 +27,7 @@ export const ACHIEVEMENTS_CONTENT = {
   b_gpu_rack: { de: { name: "Lärmendes Serverrack", quote: "Mindestens 1x GPU-Serverrack besessen." }, en: { name: "Loud GPU Server Rack", quote: "Own at least 1x GPU Server Rack." } },
   b_datacenter: { de: { name: "Hyperscale Festung", quote: "Mindestens 1x Rechenzentrum besessen." }, en: { name: "Hyperscale Fortress", quote: "Own at least 1x Data Center." } },
   b_web_scraper: { de: { name: "Daten-Staubsauger", quote: "Mindestens 1x Web Scraper besessen." }, en: { name: "Data Vacuum", quote: "Own at least 1x Web Scraper." } },
-  b_thought_leader: { de: { name: "LinkedIn Prominenz", quote: "Mindestens 1x Thought Leader besessen." }, en: { name: "LinkedIn Elite", quote: "Own at least 1x Thought Leader." } },
+  b_thought_leader: { de: { name: "ProNet Prominenz", quote: "Mindestens 1x Thought Leader besessen." }, en: { name: "ProNet Elite", quote: "Own at least 1x Thought Leader." } },
   b_vc_firm: { de: { name: "Risikokapitalgeber", quote: "Mindestens 1x VC-Investmentfirma besessen." }, en: { name: "Venture Capitalist", quote: "Own at least 1x VC Firm." } },
   b_hype_journalist: { de: { name: "Titelseiten-Garantie", quote: "Mindestens 1x Hype-Journalist besessen." }, en: { name: "Front Page Guarantee", quote: "Own at least 1x Hype Journalist." } },
   b_keynote_stage: { de: { name: "Hologramm-Show", quote: "Mindestens 1x Keynote-Bühne besessen." }, en: { name: "Hologram Show", quote: "Own at least 1x Keynote Stage." } },

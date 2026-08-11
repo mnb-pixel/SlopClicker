@@ -76,7 +76,7 @@ export function useGameStore() {
   const [themeMode, setThemeMode] = useState('cyberpunk'); // 'sec_prospectus' | 'cyberpunk'
   const [boughtBuzzwords, setBoughtBuzzwords] = useState([]);
   const [boughtGreenwashingLayoffs, setBoughtGreenwashingLayoffs] = useState([]);
-  const [epoch, setEpoch] = useState(2); // 0: Blockchain, 1: Metaverse, 2: AI, 3: Quantum
+  const [epoch, setEpoch] = useState(2); // 0: Blockchain, 1: Virtual World, 2: AI, 3: Quantum
   const [idealistLevel, setIdealistLevel] = useState(0);
   const [cynicLevel, setCynicLevel] = useState(0);
   const [credibility, setCredibility] = useState(0);
