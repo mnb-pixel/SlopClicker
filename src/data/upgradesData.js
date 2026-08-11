@@ -207,6 +207,9 @@ export function getAvailableUpgrades(buildings, boughtUpgrades, valuation, total
   return UPGRADES_DATA.filter((up) => {
     if (boughtUpgrades.includes(up.id)) return false;
 
+    // RULE: Upgrades orient on current value (valuation) and only become visible when player has at least 90% of the cost (10% before sum)
+    if (valuation < up.cost * 0.90) return false;
+
     if (up.type === 'building') {
       // STRICT RULE: Must own at least 1 of this building engine!
       const ownedCount = buildings[up.buildingId] || 0;

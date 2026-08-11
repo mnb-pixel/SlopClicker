@@ -532,8 +532,33 @@ export function StoreTab({
             </div>
 
             {availableCorporate.length === 0 ? (
-              <div className="text-center py-8 bg-slate-900/40 rounded-xl border border-slate-800/80 text-slate-400 text-xs italic">
-                Keine verfügbaren Corporate Actions. Kaufe mehr KI-Engines im Store, um Protokolle freizuschalten!
+              <div className="flex flex-col gap-2">
+                <div className="text-center py-4 bg-slate-900/40 rounded-xl border border-slate-800/80 text-slate-400 text-xs italic">
+                  Keine neuen Corporate Actions für deine gekauften KI-Engines. Kaufe mehr KI-Engines, um neue Protokolle freizuschalten!
+                </div>
+                {/* Teaser for next locked corporate protocol */}
+                {BUILDINGS_DATA.filter((b) => (buildings[b.id] || 0) < 1).slice(0, 2).map((b) => (
+                  <div
+                    key={`teaser_${b.id}`}
+                    className="p-3 rounded-xl border border-slate-800/80 bg-slate-950/60 flex items-center justify-between opacity-60 backdrop-blur-sm"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-600">
+                        <Icons.Lock className="w-4 h-4 text-slate-500" />
+                      </div>
+                      <div>
+                        <div className="font-extrabold text-xs text-slate-400">??? Sperr-Protokoll ({b.name})</div>
+                        <div className="text-[11px] text-rose-400/90 font-bold mt-0.5 flex items-center gap-1">
+                          <Icons.Lock className="w-3 h-3 text-rose-400 shrink-0" />
+                          <span>FEHLER: Erfordert den Kauf von mindestens 1x {b.name}!</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="px-2.5 py-1 rounded text-[10px] font-black bg-slate-900 text-slate-500 border border-slate-800">
+                      GESPERRT
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               availableCorporate.map((item) => {
@@ -541,6 +566,7 @@ export function StoreTab({
                 const baseCost = b ? b.baseCost : 15;
                 const cost = item.costMult * baseCost;
                 const canAfford = valuation >= cost;
+                const missingValuation = cost - valuation;
 
                 return (
                   <div
@@ -548,7 +574,7 @@ export function StoreTab({
                     className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
                       canAfford
                         ? 'bg-slate-900/90 border-amber-500/40 hover:border-amber-400 shadow-md'
-                        : 'bg-slate-950/60 border-slate-800 opacity-70'
+                        : 'bg-slate-950/60 border-slate-800 opacity-80'
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
@@ -558,22 +584,38 @@ export function StoreTab({
                         {renderIcon(item.icon || (item.type === 'greenwashing' ? 'Recycle' : 'UserX'), 'w-4 h-4')}
                       </div>
                       <div>
-                        <div className="font-extrabold text-xs text-slate-100">{item.name}</div>
+                        <div className="font-extrabold text-xs text-slate-100 flex items-center gap-2">
+                          <span>{item.name}</span>
+                          <span className="text-[10px] text-slate-400 font-mono font-normal">({b?.name})</span>
+                        </div>
                         <div className="text-[11px] text-slate-400 italic">"{item.quote}"</div>
                         <div className="text-[10px] text-amber-400 font-mono font-bold mt-0.5">{item.effectDesc}</div>
+                        
+                        {/* Clear Error or Success Requirement Text */}
+                        {!canAfford ? (
+                          <div className="text-[10px] font-bold text-rose-400 mt-1 flex items-center gap-1">
+                            <Icons.Lock className="w-3 h-3 text-rose-400 shrink-0" />
+                            <span>FEHLER: Benötigt {formatCurrency(cost)} (Fehlen: {formatCurrency(missingValuation)})</span>
+                          </div>
+                        ) : (
+                          <div className="text-[10px] font-bold text-emerald-400 mt-1 flex items-center gap-1">
+                            <Icons.CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                            <span>✓ Bereit zur Ausführung</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     <button
                       onClick={() => buyGreenwashingLayoff(item.id)}
                       disabled={!canAfford}
-                      className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all ${
+                      className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all shrink-0 ml-2 ${
                         canAfford
                           ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 active:scale-95 shadow-sm'
-                          : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                          : 'bg-slate-800 text-rose-400/80 cursor-not-allowed border border-slate-700'
                       }`}
                     >
-                      {formatCurrency(cost)}
+                      {canAfford ? formatCurrency(cost) : '🔒 ZU TEUER'}
                     </button>
                   </div>
                 );
