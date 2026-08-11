@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import * as Icons from 'lucide-react';
 import { ACHIEVEMENTS_DATA } from '../../data/achievementsData';
 import { formatCurrency, formatNumber } from '../../utils/formatters';
+import { BadgesModal } from '../modals/BadgesModal';
 
 export function StatsTab({
   stats,
@@ -14,6 +15,7 @@ export function StatsTab({
   logs,
 }) {
   const [statsSection, setStatsSection] = useState('overview'); // 'overview' | 'log' | 'achievements'
+  const [isBadgesModalOpen, setIsBadgesModalOpen] = useState(false);
 
   const renderIcon = (iconName, className = 'w-4 h-4') => {
     const IconComp = Icons[iconName] || Icons.Award;
@@ -26,31 +28,47 @@ export function StatsTab({
 
   return (
     <div className="p-4 pb-20 max-w-md mx-auto">
+      {isBadgesModalOpen && (
+        <BadgesModal
+          unlockedAchievements={unlockedAchievements}
+          onClose={() => setIsBadgesModalOpen(false)}
+        />
+      )}
+
       {/* Sub-tab switcher */}
       <div className="grid grid-cols-3 gap-1.5 mb-4 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-extrabold">
         <button
           onClick={() => setStatsSection('overview')}
-          className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1 ${
-            statsSection === 'overview' ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
+          className={`py-1.5 rounded-lg transition-all ${
+            statsSection === 'overview'
+              ? 'bg-cyan-500 text-slate-950 shadow-md'
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          <Icons.BarChart2 className="w-3.5 h-3.5" /> Stats
+          KPI Stats
         </button>
         <button
           onClick={() => setStatsSection('log')}
-          className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1 ${
-            statsSection === 'log' ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
+          className={`py-1.5 rounded-lg transition-all ${
+            statsSection === 'log'
+              ? 'bg-cyan-500 text-slate-950 shadow-md'
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          <Icons.List className="w-3.5 h-3.5" /> Log ({logs.length})
+          VC Audit Log
         </button>
         <button
-          onClick={() => setStatsSection('achievements')}
-          className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1 ${
-            statsSection === 'achievements' ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
+          onClick={() => {
+            setStatsSection('achievements');
+            setIsBadgesModalOpen(true);
+          }}
+          className={`py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 ${
+            statsSection === 'achievements'
+              ? 'bg-amber-400 text-slate-950 font-black shadow-md'
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          <Icons.Trophy className="w-3.5 h-3.5" /> Badges ({unlockedCount}/{totalCount})
+          🏆 Badges ({unlockedCount})
         </button>
       </div>
 
@@ -134,84 +152,28 @@ export function StatsTab({
         </div>
       )}
 
-      {/* ACHIEVEMENTS / BADGE WALL */}
+      {/* ACHIEVEMENTS / BADGE WALL LAUNCHER CARD */}
       {statsSection === 'achievements' && (
-        <div className="flex flex-col gap-2">
-          <div className="bg-cyan-950/40 p-3 rounded-xl border border-cyan-500/40 mb-1 text-xs">
-            <div className="font-extrabold text-cyan-300 flex items-center gap-1.5 mb-1">
-              <Icons.Trophy className="w-4 h-4 text-cyan-400" />
-              Achievement Badge Wall
-            </div>
-            <div className="text-slate-300/80">
-              Locked badges stay blurred until you hit the milestone that unlocks them.
-            </div>
-            <div className="text-[10px] text-cyan-400 font-mono font-bold mt-1">
-              Badges Unlocked: {unlockedCount} / {totalCount}
-            </div>
+        <div className="bg-gradient-to-br from-amber-950/60 via-slate-900 to-slate-950 border-2 border-amber-500/50 rounded-2xl p-5 shadow-2xl flex flex-col items-center text-center gap-3">
+          <div className="p-3.5 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-400/60 shadow-xl">
+            <Icons.Trophy className="w-8 h-8 text-amber-400 animate-pulse" />
+          </div>
+          <div>
+            <h3 className="font-black text-sm uppercase tracking-wider text-slate-100">
+              🏆 SEC Certified Badges Wall
+            </h3>
+            <p className="text-xs text-slate-300 mt-1">
+              Badges freigeschaltet: <span className="text-amber-400 font-mono font-black">{unlockedCount} / {totalCount}</span>
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            {ACHIEVEMENTS_DATA.map((ach) => {
-              const isUnlocked = unlockedAchievements.includes(ach.id);
-
-              if (!isUnlocked) {
-                return (
-                  <div
-                    key={ach.id}
-                    className="relative p-2.5 rounded-xl border border-slate-800 bg-slate-950/70 flex flex-col justify-between opacity-70 backdrop-blur-sm overflow-hidden"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-700">
-                        <Icons.Lock className="w-3.5 h-3.5" />
-                      </div>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-slate-900 text-slate-600 border border-slate-800">
-                        LOCKED
-                      </span>
-                    </div>
-                    <div className="text-xs font-bold text-slate-600 blur-[3px] select-none truncate">
-                      ????????????
-                    </div>
-                    <div className="text-[10px] text-slate-700 italic mt-0.5 blur-[2px] select-none">
-                      "?????????????????"
-                    </div>
-                  </div>
-                );
-              }
-
-              return (
-                <div
-                  key={ach.id}
-                  className={`p-2.5 rounded-xl border flex flex-col justify-between transition-all ${
-                    ach.isShadow
-                      ? 'bg-fuchsia-950/40 border-fuchsia-500/50 text-fuchsia-200 shadow-lg'
-                      : 'bg-slate-900/90 border-slate-700 text-slate-200 shadow-md'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <div
-                      className={`p-2 rounded-lg border ${
-                        ach.isShadow
-                          ? 'bg-fuchsia-900 border-fuchsia-400 text-fuchsia-300 animate-pulse'
-                          : 'bg-cyan-950 border-cyan-500/40 text-cyan-400'
-                      }`}
-                    >
-                      {renderIcon(ach.icon)}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {ach.isShadow && (
-                        <span className="bg-fuchsia-500/20 text-fuchsia-300 text-[9px] font-black px-1.5 py-0.2 rounded border border-fuchsia-500/30">
-                          SHADOW
-                        </span>
-                      )}
-                      <Icons.CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    </div>
-                  </div>
-                  <div className="font-extrabold text-xs">{ach.name}</div>
-                  <div className="text-[10px] text-slate-400 italic mt-0.5">"{ach.quote}"</div>
-                </div>
-              );
-            })}
-          </div>
+          <button
+            onClick={() => setIsBadgesModalOpen(true)}
+            className="w-full py-3 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-slate-950 hover:brightness-110 active:scale-95 shadow-xl transition-all flex items-center justify-center gap-2"
+          >
+            <Icons.Sparkles className="w-4 h-4 text-slate-950" />
+            <span>✨ BADGES POPUP ÖFFNEN ({unlockedCount}/{totalCount})</span>
+          </button>
         </div>
       )}
     </div>

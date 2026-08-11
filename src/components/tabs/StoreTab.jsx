@@ -5,6 +5,7 @@ import { UPGRADES_DATA } from '../../data/upgradesData';
 import { BUZZWORDS_DATA } from '../../data/buzzwordsData';
 import { GREENWASHING_LAYOFFS_DATA } from '../../data/greenwashingLayoffsData';
 import { formatCurrency, formatNumber, getBuildingCost, getBuildingBulkCost, getMaxAffordableBuildings } from '../../utils/formatters';
+import { BuzzwordAlbum } from '../BuzzwordAlbum';
 
 export function StoreTab({
   valuation,
@@ -19,6 +20,8 @@ export function StoreTab({
   totalValuation,
   boughtBuzzwords = [],
   buyBuzzword,
+  buyBoosterPack,
+  addCardToAlbum,
   boughtGreenwashingLayoffs = [],
   buyGreenwashingLayoff,
   t,
@@ -460,25 +463,32 @@ export function StoreTab({
         </div>
       )}
 
-      {/* CORPORATE ACTIONS SECTION (Greenwashing & Layoffs - Progressive Discovery) */}
+      {/* CORPORATE ACTIONS SECTION (Greenwashing & Layoffs - Strict Owned Engines & Progressive Tiers) */}
       {storeSection === 'corporate' && (() => {
-        const visibleCorporate = [];
-        let foundFirstLocked = false;
+        const lowestUnboughtCorporateItem = new Map();
 
         GREENWASHING_LAYOFFS_DATA.forEach((item) => {
           const isBought = boughtGreenwashingLayoffs.includes(item.id);
-          const b = BUILDINGS_DATA.find((itemB) => itemB.id === item.buildingId);
-          const baseCost = b ? b.baseCost : 15;
-          const cost = item.costMult * baseCost;
-          const currentCount = buildings[item.buildingId] || 0;
-          const isUnlocked = isBought || currentCount >= 1 || totalValuation >= cost * 0.15;
-
-          if (isUnlocked && !foundFirstLocked) {
-            visibleCorporate.push({ ...item, isTeaser: false, cost });
-          } else if (!foundFirstLocked) {
-            visibleCorporate.push({ ...item, isTeaser: true, cost });
-            foundFirstLocked = true;
+          const ownedCount = buildings[item.buildingId] || 0;
+          if (ownedCount >= 1 && !isBought) {
+            const key = `${item.buildingId}_${item.type}`;
+            if (!lowestUnboughtCorporateItem.has(key)) {
+              lowestUnboughtCorporateItem.set(key, item);
+            }
           }
+        });
+
+        const availableCorporate = GREENWASHING_LAYOFFS_DATA.filter((item) => {
+          if (boughtGreenwashingLayoffs.includes(item.id)) return false;
+
+          // STRICT: Must own at least 1 of this building engine!
+          const ownedCount = buildings[item.buildingId] || 0;
+          if (ownedCount < 1) return false;
+
+          // Must be the lowest unbought tier for this building & type
+          const key = `${item.buildingId}_${item.type}`;
+          const nextItem = lowestUnboughtCorporateItem.get(key);
+          return nextItem && nextItem.id === item.id;
         });
 
         return (
@@ -493,189 +503,69 @@ export function StoreTab({
               </div>
             </div>
 
-            {visibleCorporate.map((item) => {
-              if (item.isTeaser) {
+            {availableCorporate.length === 0 ? (
+              <div className="text-center py-8 bg-slate-900/40 rounded-xl border border-slate-800/80 text-slate-400 text-xs italic">
+                Keine verfügbaren Corporate Actions. Kaufe mehr KI-Engines im Store, um Protokolle freizuschalten!
+              </div>
+            ) : (
+              availableCorporate.map((item) => {
+                const b = BUILDINGS_DATA.find((itemB) => itemB.id === item.buildingId);
+                const baseCost = b ? b.baseCost : 15;
+                const cost = item.costMult * baseCost;
+                const canAfford = valuation >= cost;
+
                 return (
                   <div
                     key={item.id}
-                    className="p-3 rounded-xl border border-slate-800 bg-slate-950/70 flex items-center justify-between opacity-50 backdrop-blur-sm"
+                    className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
+                      canAfford
+                        ? 'bg-slate-900/90 border-amber-500/40 hover:border-amber-400 shadow-md'
+                        : 'bg-slate-950/60 border-slate-800 opacity-70'
+                    }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className="bg-slate-900 p-2 rounded-lg border border-slate-800 text-slate-600">
-                        <Icons.Lock className="w-4 h-4" />
+                      <div className={`p-2 rounded-lg border shrink-0 ${
+                        item.type === 'greenwashing' ? 'bg-emerald-950 border-emerald-500/40 text-emerald-400' : 'bg-rose-950 border-rose-500/40 text-rose-400'
+                      }`}>
+                        {item.type === 'greenwashing' ? <Icons.Recycle className="w-4 h-4" /> : <Icons.UserX className="w-4 h-4" />}
                       </div>
                       <div>
-                        <div className="font-bold text-xs text-slate-500">
-                          ??? Locked Corporate Protocol
-                        </div>
-                        <div className="text-[11px] text-slate-500 italic mt-0.5">
-                          Requires higher valuation or related AI Engine.
-                        </div>
+                        <div className="font-extrabold text-xs text-slate-100">{item.name}</div>
+                        <div className="text-[11px] text-slate-400 italic">"{item.quote}"</div>
+                        <div className="text-[10px] text-amber-400 font-mono font-bold mt-0.5">{item.effectDesc}</div>
                       </div>
-                    </div>
-                    <div className="px-2.5 py-1 rounded text-[10px] font-black bg-slate-900 text-slate-600 border border-slate-800">
-                      LOCKED
-                    </div>
-                  </div>
-                );
-              }
-
-              const isBought = boughtGreenwashingLayoffs.includes(item.id);
-              const canAfford = valuation >= item.cost && !isBought;
-
-              return (
-                <div
-                  key={item.id}
-                  className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
-                    isBought
-                      ? 'bg-slate-950/40 border-slate-900 opacity-50'
-                      : canAfford
-                      ? 'bg-slate-900/90 border-amber-500/40 hover:border-amber-400 shadow-md'
-                      : 'bg-slate-950/60 border-slate-800 opacity-70'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className={`p-2 rounded-lg border shrink-0 ${
-                      item.type === 'greenwashing' ? 'bg-emerald-950 border-emerald-500/40 text-emerald-400' : 'bg-rose-950 border-rose-500/40 text-rose-400'
-                    }`}>
-                      {item.type === 'greenwashing' ? <Icons.Recycle className="w-4 h-4" /> : <Icons.UserX className="w-4 h-4" />}
-                    </div>
-                    <div>
-                      <div className="font-extrabold text-xs text-slate-100">{item.name}</div>
-                      <div className="text-[11px] text-slate-400 italic">"{item.quote}"</div>
-                      <div className="text-[10px] text-amber-400 font-mono font-bold mt-0.5">{item.effectDesc}</div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => buyGreenwashingLayoff(item.id)}
-                    disabled={!canAfford || isBought}
-                    className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all ${
-                      isBought
-                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                        : canAfford
-                        ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 active:scale-95 shadow-sm'
-                        : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                    }`}
-                  >
-                    {isBought ? 'EXECUTED' : formatCurrency(item.cost)}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        );
-      })()}
-
-      {/* BUZZWORDS DECK SECTION (80 Collectible Cards - Progressive Discovery) */}
-      {storeSection === 'buzzwords' && (() => {
-        const visibleBuzzwords = [];
-        let foundFirstLocked = false;
-
-        BUZZWORDS_DATA.forEach((bw) => {
-          const isBought = boughtBuzzwords.includes(bw.id);
-          const isUnlocked = isBought || totalValuation >= bw.cost * 0.15;
-
-          if (isUnlocked && !foundFirstLocked) {
-            visibleBuzzwords.push({ ...bw, isTeaser: false });
-          } else if (!foundFirstLocked) {
-            visibleBuzzwords.push({ ...bw, isTeaser: true });
-            foundFirstLocked = true;
-          }
-        });
-
-        return (
-          <div className="flex flex-col gap-2">
-            <div className="bg-fuchsia-950/40 p-3 rounded-xl border border-fuchsia-500/40 mb-2 text-xs">
-              <div className="font-extrabold text-fuchsia-300 flex items-center gap-1.5 mb-1">
-                <Icons.Layers className="w-4 h-4 text-fuchsia-400" />
-                80 Collectible Buzzword Cards Portfolio
-              </div>
-              <div className="text-[#EAE7DA]/80">
-                Collect all 80 AI Buzzwords (Common +1%, Uncommon +2%, Rare +5%, Legendary +10%) for up to +190% cumulative VPS!
-              </div>
-              <div className="text-[10px] text-fuchsia-400 font-mono font-bold mt-1">
-                Portfolio Collected: {boughtBuzzwords.length} / 80 Cards
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {visibleBuzzwords.map((bw) => {
-                if (bw.isTeaser) {
-                  return (
-                    <div
-                      key={bw.id}
-                      className="p-3 rounded-xl border border-slate-800 bg-slate-950/70 flex items-center justify-between opacity-50 backdrop-blur-sm sm:col-span-2"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="bg-slate-900 p-2 rounded-lg border border-slate-800 text-slate-600">
-                          <Icons.Lock className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="font-bold text-xs text-slate-500">
-                            ??? Hidden Buzzword Card
-                          </div>
-                          <div className="text-[11px] text-slate-500 italic mt-0.5">
-                            Requires higher valuation to unlock next buzzword.
-                          </div>
-                        </div>
-                      </div>
-                      <div className="px-2.5 py-1 rounded text-[10px] font-black bg-slate-900 text-slate-600 border border-slate-800">
-                        LOCKED
-                      </div>
-                    </div>
-                  );
-                }
-
-                const isBought = boughtBuzzwords.includes(bw.id);
-                const canAfford = valuation >= bw.cost && !isBought;
-
-                let rarityColor = 'border-slate-700 text-slate-300';
-                if (bw.rarity === 'Legendary') rarityColor = 'border-amber-400 text-amber-300 bg-amber-950/30';
-                else if (bw.rarity === 'Rare') rarityColor = 'border-purple-400 text-purple-300 bg-purple-950/30';
-                else if (bw.rarity === 'Uncommon') rarityColor = 'border-cyan-400 text-cyan-300 bg-cyan-950/30';
-
-                return (
-                  <div
-                    key={bw.id}
-                    className={`p-2.5 rounded-xl border flex flex-col justify-between transition-all ${rarityColor} ${
-                      isBought
-                        ? 'opacity-50 grayscale'
-                        : canAfford
-                        ? 'hover:scale-[1.02] shadow-md'
-                        : 'opacity-70'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between text-xs font-bold mb-1">
-                      <span className="truncate">{bw.name}</span>
-                      <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800">
-                        {bw.rarity}
-                      </span>
-                    </div>
-                    <div className="text-[10px] font-mono text-emerald-400 font-bold mb-2">
-                      +{Math.round(bw.bonus * 100)}% Global VPS
                     </div>
 
                     <button
-                      onClick={() => buyBuzzword(bw.id)}
-                      disabled={!canAfford || isBought}
-                      className={`w-full py-1 rounded font-black text-xs transition-all ${
-                        isBought
-                          ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                          : canAfford
-                          ? 'bg-fuchsia-500 text-slate-950 hover:bg-fuchsia-400 active:scale-95'
+                      onClick={() => buyGreenwashingLayoff(item.id)}
+                      disabled={!canAfford}
+                      className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all ${
+                        canAfford
+                          ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 active:scale-95 shadow-sm'
                           : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                       }`}
                     >
-                      {isBought ? 'COLLECTED' : formatCurrency(bw.cost)}
+                      {formatCurrency(cost)}
                     </button>
                   </div>
                 );
-              })}
-            </div>
+              })
+            )}
           </div>
         );
       })()}
+
+      {/* BUZZWORDS TRADING CARD ALBUM & BOOSTER PACK SHOP */}
+      {storeSection === 'buzzwords' && (
+        <BuzzwordAlbum
+          valuation={valuation}
+          boughtBuzzwords={boughtBuzzwords}
+          buyBuzzword={buyBuzzword}
+          buyBoosterPack={buyBoosterPack}
+          addCardToAlbum={addCardToAlbum}
+          t={t}
+        />
+      )}
     </div>
   );
 }

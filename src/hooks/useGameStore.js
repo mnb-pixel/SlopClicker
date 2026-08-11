@@ -751,21 +751,59 @@ export function useGameStore() {
     addLog(`🔄 PIVOT EXECUTED! Epoch rotated to ${EPOCHS[(epoch + 1) % EPOCHS.length].name}! Earned +${credGain} Credibility!`, 'achievement');
   }, [totalValuation, epoch, soundEnabled, addLog]);
 
-  // Buy Buzzword Card
+  // Buy Buzzword Card Directly
   const buyBuzzword = useCallback((buzzId) => {
     const bw = BUZZWORDS_DATA.find((item) => item.id === buzzId);
-    if (!bw || boughtBuzzwords.includes(buzzId)) return;
+    if (!bw || boughtBuzzwords.includes(buzzId)) return false;
 
     if (valuation < bw.cost) {
-      addLog(`Not enough valuation for Buzzword "${bw.name}"!`, 'danger');
-      return;
+      addLog(`Nicht genug Valuation für Buzzword "${bw.name}"!`, 'danger');
+      return false;
     }
 
     setValuation((prev) => prev - bw.cost);
     setBoughtBuzzwords((prev) => [...prev, buzzId]);
     playSound('buy', soundEnabled);
-    addLog(`Collected Buzzword Card "${bw.name}" (+${Math.round(bw.bonus * 100)}% VPS)!`, 'success');
+    addLog(`✨ Buzzword-Karte "${bw.name}" (+${Math.round(bw.bonus * 100)}% VPS) ins Album gelegt!`, 'success');
+    return true;
   }, [boughtBuzzwords, valuation, soundEnabled, addLog]);
+
+  // Buy Trading Card Booster Pack (Deducts cost & returns random uncollected card)
+  const buyBoosterPack = useCallback(() => {
+    const uncollected = BUZZWORDS_DATA.filter((bw) => !boughtBuzzwords.includes(bw.id));
+    if (uncollected.length === 0) {
+      addLog('Du hast bereits alle 80 Buzzword-Karten im Sammelalbum vervollständigt!', 'info');
+      return null;
+    }
+
+    // Pack price increases with each collected card
+    const packCost = Math.floor(600 * Math.pow(1.20, boughtBuzzwords.length));
+
+    if (valuation < packCost) {
+      addLog(`Nicht genug Valuation für ein Trading Card Booster Pack ($${packCost.toLocaleString()})!`, 'danger');
+      return null;
+    }
+
+    // Random uncollected card selection (duplication protection!)
+    const randomIndex = Math.floor(Math.random() * uncollected.length);
+    const pulledCard = uncollected[randomIndex];
+
+    setValuation((prev) => prev - packCost);
+    playSound('golden', soundEnabled);
+
+    return pulledCard;
+  }, [boughtBuzzwords, valuation, soundEnabled, addLog]);
+
+  // Add Pulled Card to Album
+  const addCardToAlbum = useCallback((cardId) => {
+    if (!cardId || boughtBuzzwords.includes(cardId)) return;
+    const bw = BUZZWORDS_DATA.find((item) => item.id === cardId);
+    setBoughtBuzzwords((prev) => [...prev, cardId]);
+    playSound('buy', soundEnabled);
+    if (bw) {
+      addLog(`🎴 Buzzword-Karte "${bw.name}" (+${Math.round(bw.bonus * 100)}% VPS) ins Album einsortiert!`, 'achievement');
+    }
+  }, [boughtBuzzwords, soundEnabled, addLog]);
 
   // Buy Corporate Greenwashing & Layoff Action
   const buyGreenwashingLayoff = useCallback((itemId) => {
@@ -897,7 +935,7 @@ export function useGameStore() {
     // SEC Form S-1 & Hype Ledger Features
     themeMode, toggleThemeMode,
     hypeTier, burnRate,
-    boughtBuzzwords, buyBuzzword,
+    boughtBuzzwords, buyBuzzword, buyBoosterPack, addCardToAlbum,
     boughtGreenwashingLayoffs, buyGreenwashingLayoff,
     epoch, idealistLevel, buyIdealistLevel, cynicLevel, buyCynicLevel, credibility, pivot,
   };
