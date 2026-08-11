@@ -196,13 +196,37 @@ export function useGameStore() {
     }
   }, [addLog]);
 
-  // Auto-save interval (every 8 seconds, matches concept's autosave cadence)
+  // Auto-save interval (every 8 seconds, matches concept's autosave cadence).
+  // saveGame's identity changes on almost every tick (valuation, gpuTemp, etc. are all
+  // dependencies), so the interval is read through a ref that's kept up to date instead
+  // of being a direct effect dependency — otherwise the effect would tear down and
+  // recreate the interval every ~100ms and it would never accumulate to 8s, meaning
+  // autosave would effectively never fire during active play.
+  const saveGameRef = useRef(saveGame);
+  useEffect(() => {
+    saveGameRef.current = saveGame;
+  }, [saveGame]);
+
   useEffect(() => {
     const saveTimer = setInterval(() => {
-      saveGame();
+      saveGameRef.current();
     }, 8000);
     return () => clearInterval(saveTimer);
-  }, [saveGame]);
+  }, []);
+
+  // Also save on tab close/backgrounding/refresh so nothing since the last 8s tick is lost.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') saveGameRef.current();
+    };
+    const handlePageHide = () => saveGameRef.current();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handlePageHide);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handlePageHide);
+    };
+  }, []);
 
   // --- HYPE TIER & BURN RATE CALCULATIONS (Konzept Abschnitt 4) ---
   const hypeTier = useMemo(() => {
