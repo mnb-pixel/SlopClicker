@@ -5,7 +5,7 @@ import { SpecialTab } from '../tabs/SpecialTab';
 import { StatsTab } from '../tabs/StatsTab';
 import { MiscTab } from '../tabs/MiscTab';
 
-export function DesktopView({ store, setIsPitchDeckOpen, onOpenManual }) {
+export function DesktopView({ store, setIsPitchDeckOpen }) {
   return (
     <div className="w-full max-w-7xl mx-auto p-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
       {/* LEFT COLUMN: Main GPU Clicker, Heat Bar, Golden Memes, Owned Visual Items Grid (4 cols) */}
@@ -84,8 +84,6 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenManual }) {
             startAd={store.startAd}
             isAdReady={store.isAdReady}
             getAdCooldownRemaining={store.getAdCooldownRemaining}
-            onOpenPitchDeck={() => setIsPitchDeckOpen(true)}
-            onOpenManual={onOpenManual}
             resetSave={store.resetSave}
           />
         </div>

@@ -83,7 +83,7 @@ export default function App() {
       {/* WEB DESKTOP ALL-IN-ONE VIEW (Everything on 1 Page in 3 Columns) */}
       {layoutMode === 'desktop' ? (
         <main className="flex-1 pb-10">
-          <DesktopView store={store} setIsPitchDeckOpen={setIsPitchDeckOpen} onOpenManual={() => setIsManualOpen(true)} />
+          <DesktopView store={store} setIsPitchDeckOpen={setIsPitchDeckOpen} />
         </main>
       ) : (
         /* MOBILE 5-TAB VIEW */
@@ -184,8 +184,6 @@ export default function App() {
                 startAd={store.startAd}
                 isAdReady={store.isAdReady}
                 getAdCooldownRemaining={store.getAdCooldownRemaining}
-                onOpenPitchDeck={() => setIsPitchDeckOpen(true)}
-                onOpenManual={() => setIsManualOpen(true)}
                 resetSave={store.resetSave}
               />
             )}

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import * as Icons from 'lucide-react';
-import { formatCurrency } from '../../utils/formatters';
 import { AdBanner } from '../AdBanner';
 
 export function MiscTab({
@@ -8,8 +7,6 @@ export function MiscTab({
   startAd,
   isAdReady,
   getAdCooldownRemaining,
-  onOpenPitchDeck,
-  onOpenManual,
   resetSave,
 }) {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
@@ -35,25 +32,6 @@ export function MiscTab({
 
   return (
     <div className="p-4 pb-20 max-w-md mx-auto flex flex-col gap-5">
-
-      {/* Game Manual Banner */}
-      <div className="bg-gradient-to-r from-[#1C2B3A] via-slate-900 to-[#14202C] p-4 rounded-2xl border-2 border-[#8A6A1F] shadow-2xl flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <Icons.BookOpen className="w-5 h-5 text-[#8A6A1F]" />
-          <h3 className="font-serif font-black text-sm uppercase tracking-wide text-[#EAE7DA]">
-            Investor & Game Manual
-          </h3>
-        </div>
-        <p className="text-xs text-slate-300">
-          Learn how Valuation, Token Burn Rate, Pivots, Epochen-Rotation, Credibility-Trees & Singularity Ascension work!
-        </p>
-        <button
-          onClick={onOpenManual}
-          className="mt-1 w-full py-2.5 rounded-xl font-serif font-black text-xs uppercase tracking-wider bg-[#8A6A1F] text-slate-950 hover:bg-[#C59B3F] active:scale-95 shadow-lg transition-all flex items-center justify-center gap-2"
-        >
-          <Icons.BookOpen className="w-4 h-4" /> Open Full Game Manual
-        </button>
-      </div>
 
 
       {/* Simulated Rewarded Ad Monocle */}
