@@ -25,7 +25,7 @@ export function MiscTab({
         <div className="flex items-center gap-2">
           <Icons.BookOpen className="w-5 h-5 text-[#8A6A1F]" />
           <h3 className="font-serif font-black text-sm uppercase tracking-wide text-[#EAE7DA]">
-            SEC Form S-1 Investor & Game Manual
+            Investor & Game Manual
           </h3>
         </div>
         <p className="text-xs text-slate-300">

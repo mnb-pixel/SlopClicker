@@ -162,7 +162,7 @@ export function StatsTab({
           </div>
           <div>
             <h3 className="font-black text-sm uppercase tracking-wider text-slate-100">
-              🏆 SEC Certified Badges Wall
+              🏆 Board Certified Badges Wall
             </h3>
             <p className="text-xs text-slate-300 mt-1">
               Badges freigeschaltet: <span className="text-amber-400 font-mono font-black">{unlockedCount} / {totalCount}</span>

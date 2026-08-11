@@ -5,15 +5,15 @@ import { buildContentTranslations } from './mergeContent';
 export const TRANSLATIONS = {
   de: {
     // Header
-    formHeader: 'FORMULAR W-9 / S-1 | DEPARTEMENT DER FINANZEN — INTERNAL REVENUE SERVICE & SEC FILING',
-    confidentialTicker: 'CONFIDENTIAL DRAFT S-1 FILING • SEC FORM S-1 REGISTRATION • HYPE-STUFE',
+    formHeader: 'FINANZ PROSPEKT | UNTERNEHMENS-PROFIL & AUDIT',
+    confidentialTicker: 'CONFIDENTIAL DRAFT FILING • REGISTRATION • HYPE-STUFE',
     burnRate: '🔥 Burn:',
     netVps: 'Netto-VPS:',
     slopCount: 'Slop:',
     powerTap: 'Power Tap:',
     viewDesktop: 'Web All-in-One',
     viewMobile: 'Mobile 5-Tabs',
-    themeLedger: '📜 S-1 Ledger',
+    themeLedger: '📜 Investor Ledger',
     themeCyber: '📱 Cyberpunk',
     openManual: 'Handbuch',
 
@@ -25,9 +25,9 @@ export const TRANSLATIONS = {
     tabMisc: 'Settings',
 
     // Slop Tab
-    watermark: 'CONFIDENTIAL DRAFT S-1',
+    watermark: 'CONFIDENTIAL DRAFT',
     sealTitle: '★ OFFICIAL AUTHORIZATION SEAL ★',
-    sealHeader: 'W-9 ZEILE 1: TAXPAYER AUTHORIZATION',
+    sealHeader: 'ZEILE 1: TAXPAYER AUTHORIZATION',
     sealPart: 'TEIL I',
     sealButtonText: 'PROMPT & TOKENS AUTHORISIEREN',
     perTap: '/ Tap',
@@ -93,7 +93,7 @@ export const TRANSLATIONS = {
     yesWipe: 'JA, SP IELSTAND LÖSCHEN',
     cancel: 'ABBRECHEN',
     pitchDeck: 'Meme Pitch Deck Exportieren',
-    manualTitle: 'SEC Form S-1 Investor Handbuch',
+    manualTitle: 'Investor & Startup Handbuch',
 
     // Language Selector
     language: 'Sprache / Lang:',
@@ -125,15 +125,15 @@ export const TRANSLATIONS = {
 
   en: {
     // Header
-    formHeader: 'FORM W-9 / S-1 | DEPARTMENT OF THE TREASURY — INTERNAL REVENUE SERVICE & SEC FILING',
-    confidentialTicker: 'CONFIDENTIAL DRAFT S-1 FILING • SEC FORM S-1 REGISTRATION • HYPE TIER',
+    formHeader: 'FINANCIAL PROSPECTUS | COMPANY PROFILE & AUDIT',
+    confidentialTicker: 'CONFIDENTIAL DRAFT FILING • REGISTRATION • HYPE TIER',
     burnRate: '🔥 Burn:',
     netVps: 'Net VPS:',
     slopCount: 'Slop:',
     powerTap: 'Power Tap:',
     viewDesktop: 'Web All-in-One',
     viewMobile: 'Mobile 5-Tabs',
-    themeLedger: '📜 S-1 Ledger',
+    themeLedger: '📜 Investor Ledger',
     themeCyber: '📱 Cyberpunk',
     openManual: 'Manual',
 
@@ -145,9 +145,9 @@ export const TRANSLATIONS = {
     tabMisc: 'Settings',
 
     // Slop Tab
-    watermark: 'CONFIDENTIAL DRAFT S-1',
+    watermark: 'CONFIDENTIAL DRAFT',
     sealTitle: '★ OFFICIAL AUTHORIZATION SEAL ★',
-    sealHeader: 'W-9 LINE 1: TAXPAYER AUTHORIZATION',
+    sealHeader: 'LINE 1: TAXPAYER AUTHORIZATION',
     sealPart: 'PART I',
     sealButtonText: 'AUTHORIZE PROMPT & TOKENS',
     perTap: '/ tap',
@@ -213,7 +213,7 @@ export const TRANSLATIONS = {
     yesWipe: 'YES, WIPE SAVE',
     cancel: 'CANCEL',
     pitchDeck: 'Export Meme Pitch Deck',
-    manualTitle: 'SEC Form S-1 Investor Manual',
+    manualTitle: 'Investor & Startup Manual',
 
     // Language Selector
     language: 'Language / Lang:',
@@ -245,15 +245,15 @@ export const TRANSLATIONS = {
 
   fr: {
     // Header
-    formHeader: 'FORMULAIRE W-9 / S-1 | DÉPARTEMENT DU TRÉSOR — SERVICE DES IMPÔTS ET DE LA SEC',
-    confidentialTicker: 'DÉPÔT CONFIDENTIEL S-1 • ENREGISTREMENT SEC FORM S-1 • NIVEAU HYPE',
+    formHeader: 'PROSPECTUS FINANCIER | PROFIL DE L\'ENTREPRISE ET AUDIT',
+    confidentialTicker: 'DÉPÔT CONFIDENTIEL • ENREGISTREMENT • NIVEAU HYPE',
     burnRate: '🔥 Burn:',
     netVps: 'Net VPS:',
     slopCount: 'Slop:',
     powerTap: 'Power Tap:',
     viewDesktop: 'Web Tout-en-un',
     viewMobile: 'Mobile 5-Onglets',
-    themeLedger: '📜 S-1 Ledger',
+    themeLedger: '📜 Investor Ledger',
     themeCyber: '📱 Cyberpunk',
     openManual: 'Manuel',
 
@@ -265,9 +265,9 @@ export const TRANSLATIONS = {
     tabMisc: 'Paramètres',
 
     // Slop Tab
-    watermark: 'PROJET CONFIDENTIEL S-1',
+    watermark: 'PROJET CONFIDENTIEL',
     sealTitle: '★ SCEAU OFFICIEL D\'AUTORISATION ★',
-    sealHeader: 'W-9 LIGNE 1: AUTORISATION DU CONTRIBUABLE',
+    sealHeader: 'LIGNE 1: AUTORISATION DU CONTRIBUABLE',
     sealPart: 'PARTIE I',
     sealButtonText: 'AUTORISER PROMPT ET JETONS',
     perTap: '/ tap',
@@ -333,7 +333,7 @@ export const TRANSLATIONS = {
     yesWipe: 'OUI, EFFACER LA SAUVEGARDE',
     cancel: 'ANNULER',
     pitchDeck: 'Exporter le Pitch Deck Meme',
-    manualTitle: 'Manuel Investisseur SEC Form S-1',
+    manualTitle: 'Manuel Investisseur et Startup',
 
     // Language Selector
     language: 'Langue / Lang:',
@@ -365,15 +365,15 @@ export const TRANSLATIONS = {
 
   es: {
     // Header
-    formHeader: 'FORMULARIO W-9 / S-1 | DEPARTAMENTO DEL TESORO — SERVICIO DE IMPUESTOS Y SEC',
-    confidentialTicker: 'REGISTRO CONFIDENCIAL S-1 • FORMULARIO SEC S-1 • NIVEL DE HYPE',
+    formHeader: 'PROSPECTO FINANCIERO | PERFIL DE LA EMPRESA Y AUDITORÍA',
+    confidentialTicker: 'REGISTRO CONFIDENCIAL • REGISTRO DE INVERSOR • NIVEL DE HYPE',
     burnRate: '🔥 Burn:',
     netVps: 'Net VPS:',
     slopCount: 'Slop:',
     powerTap: 'Power Tap:',
     viewDesktop: 'Web Todo-en-uno',
     viewMobile: 'Móvil 5-Pestañas',
-    themeLedger: '📜 S-1 Ledger',
+    themeLedger: '📜 Investor Ledger',
     themeCyber: '📱 Cyberpunk',
     openManual: 'Manual',
 
@@ -385,9 +385,9 @@ export const TRANSLATIONS = {
     tabMisc: 'Ajustes',
 
     // Slop Tab
-    watermark: 'BORRADOR CONFIDENCIAL S-1',
+    watermark: 'BORRADOR CONFIDENCIAL',
     sealTitle: '★ SELLO OFICIAL DE AUTORIZACIÓN ★',
-    sealHeader: 'W-9 LÍNEA 1: AUTORIZACIÓN DEL CONTRIBUYENTE',
+    sealHeader: 'LÍNEA 1: AUTORIZACIÓN DEL CONTRIBUYENTE',
     sealPart: 'PARTE I',
     sealButtonText: 'AUTORIZAR PROMPT Y TOKENS',
     perTap: '/ tap',
@@ -453,7 +453,7 @@ export const TRANSLATIONS = {
     yesWipe: 'SÍ, BORRAR GUARDADO',
     cancel: 'CANCELAR',
     pitchDeck: 'Exportar Pitch Deck Meme',
-    manualTitle: 'Manual del Inversor SEC Form S-1',
+    manualTitle: 'Manual del Inversor y Startup',
 
     // Language Selector
     language: 'Idioma / Lang:',

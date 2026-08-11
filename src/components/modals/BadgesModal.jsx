@@ -49,7 +49,7 @@ export function BadgesModal({ isOpen, onClose, unlockedAchievements = [] }) {
             </div>
             <div>
               <h2 className="text-base font-black uppercase tracking-wider text-slate-100 flex items-center gap-2">
-                🏆 SEC Certified Badge Wall
+                🏆 Board Certified Badge Wall
               </h2>
               <p className="text-xs text-slate-400 font-mono">
                 Erreichte Meilensteine & Auszeichnungen ({unlockedCount} / {totalCount} Badges)

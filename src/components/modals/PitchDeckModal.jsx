@@ -80,11 +80,11 @@ export function PitchDeckModal({
       ctx.lineWidth = 3;
       ctx.strokeRect(52, 52, 976, 1816);
 
-      // 2. Top Header Banner: SEC Prospectus & Watermark
+      // 2. Top Header Banner: Prospectus & Watermark
       ctx.fillStyle = '#f59e0b'; // amber-500
       ctx.font = '900 36px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText('CONFIDENTIAL SEC FORM S-1 INVESTOR PITCH DECK', 540, 130);
+      ctx.fillText('CONFIDENTIAL INVESTOR PITCH DECK', 540, 130);
 
       ctx.fillStyle = '#94a3b8';
       ctx.font = '700 28px sans-serif';
@@ -358,14 +358,14 @@ export function PitchDeckModal({
             {/* Stamp Badge Overlay */}
             <div className="absolute top-3 right-3 opacity-20 pointer-events-none select-none">
               <div className="border-4 border-amber-400 text-amber-300 font-black text-xs p-2 rounded-xl -rotate-12 uppercase tracking-widest text-center">
-                SEC APPROVED
+                VC APPROVED
               </div>
             </div>
 
             {/* Startup Header */}
             <div className="border-b border-slate-800 pb-2">
               <div className="text-[10px] text-amber-400 font-black uppercase tracking-widest">
-                FORM S-1 PROSPECTUS
+                INVESTOR PROSPECTUS
               </div>
               <div className="text-base font-black text-slate-100 flex items-center justify-between">
                 <span>{startupName.toUpperCase()}</span>

@@ -64,16 +64,16 @@ export function Header({
         : 'bg-slate-900/95 backdrop-blur-md border-b border-cyan-500/20 text-slate-100'
     } sticky top-0 z-40 p-3 w-full transition-colors`}>
       <div className="max-w-7xl mx-auto flex flex-col gap-2">
-        {/* W-9 Official Header Banner in SEC Mode */}
+        {/* Official Header Banner in Ledger Mode */}
         {isSecTheme && (
           <div className="border-2 border-slate-900 bg-[#F4F1EA] p-2 flex items-center justify-between text-[11px] font-serif font-bold uppercase tracking-wider border-b-2">
             <div className="flex items-center gap-2">
               <span className="bg-slate-900 text-[#F4F1EA] px-2 py-0.5 font-mono text-[10px] font-black">
-                FORM W-9 / S-1
+                PROSPECTUS
               </span>
               <span>{tr('formHeader')}</span>
             </div>
-            <span className="font-mono text-[10px]">OMB No. 1545-0074</span>
+            <span className="font-mono text-[10px]">AUDIT VERIFIED</span>
           </div>
         )}
 

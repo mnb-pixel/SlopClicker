@@ -22,7 +22,7 @@ export function SlopTab({
 
   return (
     <div className="flex flex-col items-center justify-start gap-2 p-2 relative overflow-hidden">
-      {/* SEC Form S-1 Confidential Watermark */}
+      {/* Confidential Watermark */}
       {isSecTheme && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden opacity-15 select-none z-0">
           <div className="text-5xl md:text-7xl font-black font-serif text-[#8A6A1F] -rotate-12 tracking-widest text-center border-8 border-dashed border-[#8A6A1F] p-6">

@@ -967,7 +967,7 @@ export function useGameStore() {
     vps, grossVps, netFlow, clickValue, handleTapAGI,
     resetSave, particles,
 
-    // SEC Form S-1 & Hype Ledger Features
+    // Investor Ledger & Hype Features
     themeMode, toggleThemeMode,
     hypeTier, burnRate,
     boughtBuzzwords, buyBuzzword, buyBoosterPack, addCardToAlbum,

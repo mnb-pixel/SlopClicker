@@ -12,7 +12,7 @@ export function ManualModal({ isOpen, onClose }) {
           <div className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-[#8A6A1F]" />
             <h2 className="font-serif font-black text-lg tracking-wide uppercase text-[#EAE7DA]">
-              Form S-1 Confidential Investor Prospectus
+              Confidential Investor Prospectus
             </h2>
           </div>
           <button
