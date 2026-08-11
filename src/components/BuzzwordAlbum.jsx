@@ -127,14 +127,14 @@ export function BuzzwordAlbum({
         <button
           onClick={handleBuyBoosterPack}
           disabled={!canAffordPack}
-          className={`w-full sm:w-auto px-5 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg min-w-[170px] ${
+          className={`w-full sm:w-auto px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shrink-0 ${
             canAffordPack
               ? 'bg-gradient-to-r from-amber-400 via-fuchsia-500 to-cyan-400 text-slate-950 hover:brightness-110 active:scale-95 shadow-fuchsia-500/30'
               : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
           }`}
         >
-          <Icons.Sparkles className="w-4 h-4" />
-          <span>{boughtCount >= totalCards ? 'ALLES GESAMMELT' : `PACK ÖFFNEN (${formatCurrency(packCost)})`}</span>
+          <Icons.Sparkles className="w-4 h-4 shrink-0" />
+          <span className="truncate">{boughtCount >= totalCards ? 'ALLES GESAMMELT' : `PACK ÖFFNEN (${formatCurrency(packCost)})`}</span>
         </button>
       </div>
 
@@ -356,7 +356,7 @@ export function BuzzwordAlbum({
       {/* 🎬 BOOSTER PACK OPENING MODAL */}
       {openingState !== 'CLOSED' && pulledCard && createPortal(
         <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
-          <div className="relative max-w-sm w-full bg-slate-900 border-2 border-amber-400/80 rounded-2xl p-6 shadow-2xl flex flex-col items-center text-center overflow-hidden">
+          <div className="relative max-w-sm w-full max-h-[90vh] overflow-y-auto my-auto bg-slate-900 border-2 border-amber-400/80 rounded-2xl p-4 sm:p-6 shadow-2xl flex flex-col items-center text-center">
             {/* Background Glow */}
             <div className="absolute inset-0 bg-gradient-to-b from-amber-500/10 via-fuchsia-500/10 to-slate-950 pointer-events-none" />
 
