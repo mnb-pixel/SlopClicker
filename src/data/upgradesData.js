@@ -184,3 +184,46 @@ const MISC_UPGRADES_DATA = [
 ];
 
 export const UPGRADES_DATA = [...BUILDING_UPGRADES_DATA, ...MISC_UPGRADES_DATA];
+
+// Eligibility filter shared by the Upgrades tile grid (StoreTab) and "BUY ALL" (useGameStore),
+// so bulk-buying can never purchase an upgrade the UI wouldn't otherwise show/allow.
+export function getAvailableUpgrades(buildings, boughtUpgrades, valuation, totalValuation) {
+  const lowestUnboughtBuildingUpgrade = new Map();
+  UPGRADES_DATA.forEach((up) => {
+    if (up.type === 'building' && !boughtUpgrades.includes(up.id)) {
+      const ownedCount = buildings[up.buildingId] || 0;
+      if (ownedCount >= 1 && !lowestUnboughtBuildingUpgrade.has(up.buildingId)) {
+        lowestUnboughtBuildingUpgrade.set(up.buildingId, up);
+      }
+    }
+  });
+
+  return UPGRADES_DATA.filter((up) => {
+    if (boughtUpgrades.includes(up.id)) return false;
+
+    if (up.type === 'building') {
+      // STRICT RULE: Must own at least 1 of this building engine!
+      const ownedCount = buildings[up.buildingId] || 0;
+      if (ownedCount < 1) return false;
+
+      // Must be the next lowest unbought tier for this owned building engine
+      const nextUp = lowestUnboughtBuildingUpgrade.get(up.buildingId);
+      if (!nextUp || nextUp.id !== up.id) return false;
+
+      // Building count requirement check
+      const reqCount = up.req?.buildingCount?.count || 1;
+      if (ownedCount < Math.max(1, Math.floor(reqCount * 0.4))) {
+        return false;
+      }
+      return true;
+    }
+
+    // Misc Upgrades (Click, Syndicate, Global)
+    if (up.req && up.req.totalValuation) {
+      if (totalValuation < up.req.totalValuation * 0.5 && valuation < up.cost * 0.3) {
+        return false;
+      }
+    }
+    return true;
+  });
+}

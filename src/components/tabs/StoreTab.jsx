@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import * as Icons from 'lucide-react';
 import { BUILDINGS_DATA } from '../../data/buildingsData';
-import { UPGRADES_DATA } from '../../data/upgradesData';
+import { UPGRADES_DATA, getAvailableUpgrades } from '../../data/upgradesData';
 import { GREENWASHING_LAYOFFS_DATA } from '../../data/greenwashingLayoffsData';
 import { formatCurrency, getBuildingCost, getBuildingBulkCost, getMaxAffordableBuildings } from '../../utils/formatters';
 import { BuzzwordAlbum } from '../BuzzwordAlbum';
@@ -19,7 +19,6 @@ export function StoreTab({
   boughtBuzzwords = [],
   buyBuzzword,
   buyBoosterPack,
-  addCardToAlbum,
   boughtGreenwashingLayoffs = [],
   buyGreenwashingLayoff,
   t,
@@ -126,45 +125,9 @@ export function StoreTab({
     }
   });
 
-  // Upgrades List Filtering (ONLY for engines the player ALREADY OWNS!)
-  const lowestUnboughtBuildingUpgrade = new Map();
-  UPGRADES_DATA.forEach((up) => {
-    if (up.type === 'building' && !boughtUpgrades.includes(up.id)) {
-      const ownedCount = buildings[up.buildingId] || 0;
-      if (ownedCount >= 1 && !lowestUnboughtBuildingUpgrade.has(up.buildingId)) {
-        lowestUnboughtBuildingUpgrade.set(up.buildingId, up);
-      }
-    }
-  });
-
-  const availableUpgrades = UPGRADES_DATA.filter((up) => {
-    if (boughtUpgrades.includes(up.id)) return false;
-
-    if (up.type === 'building') {
-      // STRICT RULE: Must own at least 1 of this building engine!
-      const ownedCount = buildings[up.buildingId] || 0;
-      if (ownedCount < 1) return false;
-
-      // Must be the next lowest unbought tier for this owned building engine
-      const nextUp = lowestUnboughtBuildingUpgrade.get(up.buildingId);
-      if (!nextUp || nextUp.id !== up.id) return false;
-
-      // Building count requirement check
-      const reqCount = up.req?.buildingCount?.count || 1;
-      if (ownedCount < Math.max(1, Math.floor(reqCount * 0.4))) {
-        return false;
-      }
-      return true;
-    }
-
-    // Misc Upgrades (Click, Syndicate, Global)
-    if (up.req && up.req.totalValuation) {
-      if (totalValuation < up.req.totalValuation * 0.5 && valuation < up.cost * 0.3) {
-        return false;
-      }
-    }
-    return true;
-  });
+  // Upgrades List Filtering (ONLY for engines the player ALREADY OWNS!) — shared with
+  // buyAllUpgrades() in useGameStore.js so "BUY ALL" can never buy what isn't shown here.
+  const availableUpgrades = getAvailableUpgrades(buildings, boughtUpgrades, valuation, totalValuation);
 
   const boughtUpgradesObjects = boughtUpgrades
     .map((upId) => UPGRADES_DATA.find((u) => u.id === upId))
@@ -384,7 +347,7 @@ export function StoreTab({
                   <Icons.Sparkles className="w-4 h-4 text-amber-400" />
                   <span>Verfügbare Upgrades ({availableUpgrades.length})</span>
                 </div>
-                <div className="text-[10px] text-slate-400">Fahre über eine Kachel für Details. Klicke zum Kaufen!</div>
+                <div className="text-[10px] text-slate-400">Kachel antippen für Details, dann unten "KAUFEN" drücken.</div>
               </div>
               <button
                 onClick={buyAllUpgrades}
@@ -455,10 +418,7 @@ export function StoreTab({
                     <div
                       key={up.id}
                       onMouseEnter={() => setHoveredUpgradeId(up.id)}
-                      onClick={() => {
-                        setHoveredUpgradeId(up.id);
-                        if (canAfford) buyUpgrade(up.id);
-                      }}
+                      onClick={() => setHoveredUpgradeId(up.id)}
                       className={`w-full aspect-square rounded-xl border flex flex-col items-center justify-between p-1.5 cursor-pointer transition-all ${
                         isHovered
                           ? 'ring-2 ring-amber-400 border-amber-300 bg-amber-950/40 scale-105 shadow-lg shadow-amber-500/20'
@@ -641,7 +601,6 @@ export function StoreTab({
           boughtBuzzwords={boughtBuzzwords}
           buyBuzzword={buyBuzzword}
           buyBoosterPack={buyBoosterPack}
-          addCardToAlbum={addCardToAlbum}
           t={t}
         />
       )}

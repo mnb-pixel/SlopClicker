@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import * as Icons from 'lucide-react';
-import { BUZZWORDS_DATA } from '../data/buzzwordsData';
+import { BUZZWORDS_DATA, getBoosterPackCost } from '../data/buzzwordsData';
 import { formatCurrency } from '../utils/formatters';
 
 export function BuzzwordAlbum({
@@ -8,7 +8,6 @@ export function BuzzwordAlbum({
   boughtBuzzwords = [],
   buyBuzzword,
   buyBoosterPack,
-  addCardToAlbum,
   t: _t,
 }) {
   const [rarityFilter, setRarityFilter] = useState('ALL'); // 'ALL' | 'Legendary' | 'Rare' | 'Uncommon' | 'Common'
@@ -19,6 +18,15 @@ export function BuzzwordAlbum({
   // Booster Pack Opening Animation State
   const [openingState, setOpeningState] = useState('CLOSED'); // 'CLOSED' | 'SHAKING' | 'REVEALED'
   const [pulledCard, setPulledCard] = useState(null);
+  const revealTimeoutRef = useRef(null);
+
+  // Clear any pending reveal timer if this component unmounts mid-animation
+  // (e.g. player switches store tabs while the pack is shaking).
+  useEffect(() => {
+    return () => {
+      if (revealTimeoutRef.current) clearTimeout(revealTimeoutRef.current);
+    };
+  }, []);
 
   // Dynamic Lucide Icon Renderer
   const renderCardIcon = (iconName, className = 'w-5 h-5') => {
@@ -26,30 +34,28 @@ export function BuzzwordAlbum({
     return <IconComp className={className} />;
   };
 
-  // Booster Pack Cost Formula: 600 * 1.20^cardsOwned
-  const packCost = Math.floor(600 * Math.pow(1.20, boughtBuzzwords.length));
+  const packCost = getBoosterPackCost(boughtBuzzwords.length);
   const canAffordPack = valuation >= packCost && boughtBuzzwords.length < BUZZWORDS_DATA.length;
 
-  // Handler for Booster Pack Purchase & Reveal Animation
+  // Handler for Booster Pack Purchase & Reveal Animation. buyBoosterPack() already
+  // deducts the cost AND commits the card to boughtBuzzwords in one atomic store update —
+  // this animation is purely cosmetic and never gates whether the card was granted.
   const handleBuyBoosterPack = () => {
-    if (!buyBoosterPack) return;
+    if (!buyBoosterPack || openingState !== 'CLOSED') return; // guard against double-clicks
     const card = buyBoosterPack();
     if (card) {
       setPulledCard(card);
       setOpeningState('SHAKING');
 
       // 700ms shake animation before reveal
-      setTimeout(() => {
+      revealTimeoutRef.current = setTimeout(() => {
         setOpeningState('REVEALED');
       }, 700);
     }
   };
 
-  // Commit pulled card into album
+  // Dismiss the reveal modal (card was already committed to the album on purchase)
   const handleInsertIntoAlbum = () => {
-    if (pulledCard && addCardToAlbum) {
-      addCardToAlbum(pulledCard.id);
-    }
     setOpeningState('CLOSED');
     setPulledCard(null);
   };
@@ -125,7 +131,7 @@ export function BuzzwordAlbum({
         {/* Buy Booster Pack Button */}
         <button
           onClick={handleBuyBoosterPack}
-          disabled={!canAffordPack}
+          disabled={!canAffordPack || openingState !== 'CLOSED'}
           className={`w-full sm:w-auto px-5 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg min-w-[170px] ${
             canAffordPack
               ? 'bg-gradient-to-r from-amber-400 via-fuchsia-500 to-cyan-400 text-slate-950 hover:brightness-110 active:scale-95 shadow-fuchsia-500/30'

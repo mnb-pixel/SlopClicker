@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { BUILDINGS_DATA } from '../data/buildingsData';
-import { UPGRADES_DATA } from '../data/upgradesData';
+import { UPGRADES_DATA, getAvailableUpgrades } from '../data/upgradesData';
 import { HEAVENLY_UPGRADES_DATA } from '../data/heavenlyUpgradesData';
 import { ACHIEVEMENTS_DATA } from '../data/achievementsData';
-import { BUZZWORDS_DATA } from '../data/buzzwordsData';
+import { BUZZWORDS_DATA, getBoosterPackCost } from '../data/buzzwordsData';
 import { GREENWASHING_LAYOFFS_DATA } from '../data/greenwashingLayoffsData';
 import { IDEALIST_PATH, CYNIC_PATH, EPOCHS } from '../data/credibilityTreeData';
 import { GOLDEN_EVENT_IDS, BUBBLE_EVENT_IDS } from '../i18n/content/events.content';
@@ -568,13 +568,12 @@ export function useGameStore() {
     addLog(`Purchased upgrade "${name}"`, 'success');
   }, [boughtUpgrades, valuation, soundEnabled, addLog, t]);
 
-  // Native "BUY ALL" Upgrades Button
+  // Native "BUY ALL" Upgrades Button — only from the same eligible set the tile grid shows
+  // (must own >=1 of the building etc.), so this can never buy an upgrade the UI hides.
   const buyAllUpgrades = useCallback(() => {
     let currentMoney = valuation;
-    const affordable = UPGRADES_DATA.filter((up) => {
-      if (boughtUpgrades.includes(up.id)) return false;
-      return currentMoney >= up.cost;
-    });
+    const eligible = getAvailableUpgrades(buildings, boughtUpgrades, valuation, totalValuation);
+    const affordable = eligible.filter((up) => currentMoney >= up.cost);
 
     if (affordable.length === 0) {
       addLog('No upgrades available to buy.', 'info');
@@ -599,7 +598,7 @@ export function useGameStore() {
     setBoughtUpgrades(newBought);
     playSound('buy', soundEnabled);
     addLog(`"BUY ALL" executed! Purchased ${newBought.length - boughtUpgrades.length} upgrades for $${spent.toLocaleString()}!`, 'success');
-  }, [boughtUpgrades, valuation, soundEnabled, addLog]);
+  }, [boughtUpgrades, valuation, totalValuation, buildings, soundEnabled, addLog]);
 
   // Dismiss the currently active event banner (purely informational - effects already auto-applied on spawn)
   const dismissEvent = useCallback(() => {
@@ -714,7 +713,10 @@ export function useGameStore() {
     return true;
   }, [boughtBuzzwords, valuation, soundEnabled, addLog]);
 
-  // Buy Trading Card Booster Pack (Deducts cost & returns pulled card)
+  // Buy Trading Card Booster Pack. Cost is deducted AND the card is committed to
+  // boughtBuzzwords in the same call, so autosave/unmount between purchase and the
+  // reveal animation's confirm click can never charge the player without granting a card.
+  // The returned card is only used by the UI to drive the reveal animation.
   const buyBoosterPack = useCallback(() => {
     const uncollected = BUZZWORDS_DATA.filter((bw) => !boughtBuzzwords.includes(bw.id));
     if (uncollected.length === 0) {
@@ -723,7 +725,7 @@ export function useGameStore() {
     }
 
     // Pack price increases with each collected card
-    const packCost = Math.floor(600 * Math.pow(1.20, boughtBuzzwords.length));
+    const packCost = getBoosterPackCost(boughtBuzzwords.length);
 
     if (valuation < packCost) {
       addLog(`Nicht genug Valuation für ein Trading Card Booster Pack ($${packCost.toLocaleString()})!`, 'danger');
@@ -735,21 +737,12 @@ export function useGameStore() {
     const pulledCard = uncollected[randomIndex];
 
     setValuation((prev) => prev - packCost);
+    setBoughtBuzzwords((prev) => [...prev, pulledCard.id]);
     playSound('golden', soundEnabled);
+    addLog(`🎴 Buzzword-Karte "${pulledCard.name}" (+${Math.round(pulledCard.bonus * 100)}% VPS) ins Album gezogen!`, 'achievement');
 
     return pulledCard;
   }, [boughtBuzzwords, valuation, soundEnabled, addLog]);
-
-  // Add Pulled Card to Album
-  const addCardToAlbum = useCallback((cardId) => {
-    if (!cardId || boughtBuzzwords.includes(cardId)) return;
-    const bw = BUZZWORDS_DATA.find((item) => item.id === cardId);
-    setBoughtBuzzwords((prev) => [...prev, cardId]);
-    playSound('buy', soundEnabled);
-    if (bw) {
-      addLog(`🎴 Buzzword-Karte "${bw.name}" (+${Math.round(bw.bonus * 100)}% VPS) ins Album einsortiert!`, 'achievement');
-    }
-  }, [boughtBuzzwords, soundEnabled, addLog]);
 
   // Buy Corporate Greenwashing & Layoff Action
   const buyGreenwashingLayoff = useCallback((itemId) => {
@@ -887,7 +880,7 @@ export function useGameStore() {
     // SEC Form S-1 & Hype Ledger Features
     themeMode, toggleThemeMode,
     hypeTier, burnRate,
-    boughtBuzzwords, buyBuzzword, buyBoosterPack, addCardToAlbum,
+    boughtBuzzwords, buyBuzzword, buyBoosterPack,
     boughtGreenwashingLayoffs, buyGreenwashingLayoff,
     epoch, idealistLevel, buyIdealistLevel, cynicLevel, buyCynicLevel, credibility, pivotCount, pivot,
   };

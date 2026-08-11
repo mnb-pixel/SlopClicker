@@ -104,3 +104,8 @@ export const BUZZWORDS_DATA = Array.from({ length: 80 }, (_, i) => {
     quote,
   };
 });
+
+// Booster Pack Cost Formula: 600 * 1.20^cardsOwned (shared by store logic and UI display)
+export function getBoosterPackCost(cardsOwned) {
+  return Math.floor(600 * Math.pow(1.20, cardsOwned));
+}
