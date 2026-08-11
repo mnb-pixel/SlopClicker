@@ -10,15 +10,20 @@ import { StatsTab } from './components/tabs/StatsTab';
 import { MiscTab } from './components/tabs/MiscTab';
 import { GoldenMemeBanner } from './components/GoldenMemeBanner';
 import { AdBanner } from './components/AdBanner';
+import { Footer } from './components/Footer';
 import { PitchDeckModal } from './components/modals/PitchDeckModal';
 import { ManualModal } from './components/modals/ManualModal';
 import { OfflineEarningsModal } from './components/modals/OfflineEarningsModal';
+import { ImpressumModal } from './components/modals/ImpressumModal';
+import { DatenschutzModal } from './components/modals/DatenschutzModal';
 import { UPGRADES_DATA } from './data/upgradesData';
 
 export default function App() {
   const store = useGameStore();
   const [isPitchDeckOpen, setIsPitchDeckOpen] = useState(false);
   const [isManualOpen, setIsManualOpen] = useState(false);
+  const [isImpressumOpen, setIsImpressumOpen] = useState(false);
+  const [isDatenschutzOpen, setIsDatenschutzOpen] = useState(false);
   const [layoutMode, setLayoutMode] = useState('desktop'); // 'desktop' (All-in-one) | 'mobile' (5-Tabs)
 
   // Count affordable upgrades for navbar badge indicator
@@ -204,6 +209,11 @@ export default function App() {
         </div>
       )}
 
+      <Footer
+        onOpenImpressum={() => setIsImpressumOpen(true)}
+        onOpenDatenschutz={() => setIsDatenschutzOpen(true)}
+      />
+
       {/* VC Pitch Deck Export Modal */}
       <PitchDeckModal
         isOpen={isPitchDeckOpen}
@@ -223,6 +233,16 @@ export default function App() {
       <ManualModal
         isOpen={isManualOpen}
         onClose={() => setIsManualOpen(false)}
+      />
+
+      {/* Legal */}
+      <ImpressumModal
+        isOpen={isImpressumOpen}
+        onClose={() => setIsImpressumOpen(false)}
+      />
+      <DatenschutzModal
+        isOpen={isDatenschutzOpen}
+        onClose={() => setIsDatenschutzOpen(false)}
       />
     </div>
   );
