@@ -15,6 +15,7 @@ export function StatsTab({
   logs,
   t,
 }) {
+  const [statsSection, setStatsSection] = useState('overview'); // 'overview' | 'log' | 'achievements'
   const [isBadgesModalOpen, setIsBadgesModalOpen] = useState(false);
   const tr = t || ((k) => k);
 
