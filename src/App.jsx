@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGameStore } from './hooks/useGameStore';
 import { Header } from './components/Header';
 import { NavBar } from './components/NavBar';
@@ -13,13 +13,29 @@ import { AdBanner } from './components/AdBanner';
 import { PitchDeckModal } from './components/modals/PitchDeckModal';
 import { ManualModal } from './components/modals/ManualModal';
 import { OfflineEarningsModal } from './components/modals/OfflineEarningsModal';
+import { AfkReportModal } from './components/modals/AfkReportModal';
+import { ScheduledAdModal } from './components/modals/ScheduledAdModal';
 import { UPGRADES_DATA } from './data/upgradesData';
 
 export default function App() {
   const store = useGameStore();
   const [isPitchDeckOpen, setIsPitchDeckOpen] = useState(false);
   const [isManualOpen, setIsManualOpen] = useState(false);
-  const [layoutMode, setLayoutMode] = useState('desktop'); // 'desktop' (All-in-one) | 'mobile' (5-Tabs)
+
+  // Automatische View-Erkennung (Punkt 8): Mobile Geräte bekommen automatisch die
+  // 5-Tab-Ansicht, Desktop/PC automatisch die All-in-One-Ansicht - kein manueller Button mehr.
+  const detectLayoutMode = () => {
+    if (typeof window === 'undefined') return 'desktop';
+    const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+    return (isMobileUA || window.innerWidth <= 768) ? 'mobile' : 'desktop';
+  };
+  const [layoutMode, setLayoutMode] = useState(detectLayoutMode);
+
+  useEffect(() => {
+    const handleResize = () => setLayoutMode(detectLayoutMode());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Count affordable upgrades for navbar badge indicator
   const affordableUpgradesCount = UPGRADES_DATA.filter(
@@ -47,13 +63,9 @@ export default function App() {
         powerClicks={store.powerClicks}
         powerClickActive={store.powerClickActive}
         togglePowerClick={store.togglePowerClick}
-        layoutMode={layoutMode}
-        setLayoutMode={setLayoutMode}
         themeMode={store.themeMode}
         hypeTier={store.hypeTier}
         burnRate={store.burnRate}
-        soundEnabled={store.soundEnabled}
-        setSoundEnabled={store.setSoundEnabled}
         onOpenManual={() => setIsManualOpen(true)}
         onOpenPitchDeck={() => setIsPitchDeckOpen(true)}
         lang={store.lang}
@@ -78,6 +90,23 @@ export default function App() {
         adState={store.adState}
         startAd={store.startAd}
         claimOfflineEarnings={store.claimOfflineEarnings}
+      />
+
+      {/* AFK-Report (Punkt 1): >=30min inaktiver Tab */}
+      <AfkReportModal
+        afkReport={store.afkReport}
+        adState={store.adState}
+        startAd={store.startAd}
+        claimAfkBonus={store.claimAfkBonus}
+        dismissAfkReport={store.dismissAfkReport}
+      />
+
+      {/* Geplantes Ad-Popup (Punkt 9) */}
+      <ScheduledAdModal
+        pendingScheduledAd={store.pendingScheduledAd}
+        adState={store.adState}
+        watchScheduledAdNow={store.watchScheduledAdNow}
+        deferScheduledAd={store.deferScheduledAd}
       />
 
       {/* WEB DESKTOP ALL-IN-ONE VIEW (Everything on 1 Page in 3 Columns) */}
@@ -127,11 +156,6 @@ export default function App() {
                 buyBuzzword={store.buyBuzzword}
                 buyBoosterPack={store.buyBoosterPack}
                 addCardToAlbum={store.addCardToAlbum}
-                pullFreeBoosterCard={store.pullFreeBoosterCard}
-                adState={store.adState}
-                startAd={store.startAd}
-                isAdReady={store.isAdReady}
-                getAdCooldownRemaining={store.getAdCooldownRemaining}
                 boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}
                 buyGreenwashingLayoff={store.buyGreenwashingLayoff}
                 t={store.t}
@@ -185,6 +209,8 @@ export default function App() {
                 isAdReady={store.isAdReady}
                 getAdCooldownRemaining={store.getAdCooldownRemaining}
                 resetSave={store.resetSave}
+                scheduledAdUnlocked={store.scheduledAdUnlocked}
+                claimUnlockedScheduledAd={store.claimUnlockedScheduledAd}
               />
             )}
           </main>

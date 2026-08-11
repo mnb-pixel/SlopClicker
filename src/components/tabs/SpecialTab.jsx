@@ -99,7 +99,7 @@ export function SpecialTab({
         <div className="grid grid-cols-2 gap-2 bg-[#14202C] p-2.5 rounded-xl border border-[#8A6A1F]/40 mb-3 text-xs font-mono">
           <div>
             <div className="text-slate-400 text-[10px]">{tr('credBalance')}</div>
-            <div className="text-[#8A6A1F] font-extrabold text-base">{credibility}</div>
+            <div className="text-[#8A6A1F] font-extrabold text-base">{credibility.toFixed(1)}</div>
           </div>
           <div>
             <div className="text-slate-400 text-[10px]">{tr('pivotGain')}</div>
@@ -109,7 +109,7 @@ export function SpecialTab({
 
         <button
           onClick={pivot}
-          disabled={credGain <= 0}
+          disabled={credGain < 5}
           className={`w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xl ${
             credGain > 0
               ? 'bg-[#8A6A1F] text-slate-950 hover:bg-[#C59B3F] active:scale-95'
@@ -319,7 +319,7 @@ export function SpecialTab({
 
               <button
                 onClick={ascend}
-                disabled={pendingChips <= 0 && prestigeLevel === 0}
+                disabled={pendingChips <= 0}
                 className={`relative z-10 w-full py-3 rounded-xl font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xl ${
                   pendingChips > 0 || prestigeLevel > 0
                     ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 active:scale-95'

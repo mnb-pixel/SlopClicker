@@ -21,11 +21,6 @@ export function StoreTab({
   buyBuzzword,
   buyBoosterPack,
   addCardToAlbum,
-  pullFreeBoosterCard,
-  adState,
-  startAd,
-  isAdReady,
-  getAdCooldownRemaining,
   boughtGreenwashingLayoffs = [],
   buyGreenwashingLayoff,
   t,
@@ -158,6 +153,29 @@ export function StoreTab({
   // Upgrades List Filtering (ONLY for engines the player ALREADY OWNS!)
   const availableUpgrades = getAvailableUpgrades(buildings, boughtUpgrades, valuation, totalValuation);
 
+  // Corporate Actions List Filtering (gleiche "lowest unbought tier pro Gebäude" Regel wie
+  // bei Upgrades) - oben berechnet, damit sowohl der Sub-Tab-Zähler als auch die Liste
+  // selbst dieselbe Quelle nutzen.
+  const lowestUnboughtCorporateItem = new Map();
+  GREENWASHING_LAYOFFS_DATA.forEach((item) => {
+    const isBought = boughtGreenwashingLayoffs.includes(item.id);
+    const ownedCount = buildings[item.buildingId] || 0;
+    if (ownedCount >= 1 && !isBought) {
+      const key = `${item.buildingId}_${item.type}`;
+      if (!lowestUnboughtCorporateItem.has(key)) {
+        lowestUnboughtCorporateItem.set(key, item);
+      }
+    }
+  });
+  const availableCorporate = GREENWASHING_LAYOFFS_DATA.filter((item) => {
+    if (boughtGreenwashingLayoffs.includes(item.id)) return false;
+    const ownedCount = buildings[item.buildingId] || 0;
+    if (ownedCount < 1) return false;
+    const key = `${item.buildingId}_${item.type}`;
+    const nextItem = lowestUnboughtCorporateItem.get(key);
+    return nextItem && nextItem.id === item.id;
+  });
+
   const boughtUpgradesObjects = boughtUpgrades
     .map((upId) => UPGRADES_DATA.find((u) => u.id === upId))
     .filter(Boolean);
@@ -188,7 +206,7 @@ export function StoreTab({
             storeSection === 'corporate' ? 'bg-emerald-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          {tr('subCorporate')}
+          {tr('subCorporate')} ({availableCorporate.length})
         </button>
         <button
           onClick={() => setStoreSection('buzzwords')}
@@ -566,140 +584,97 @@ export function StoreTab({
       })()}
 
       {/* CORPORATE ACTIONS SECTION (Greenwashing & Layoffs - Strict Owned Engines & Progressive Tiers) */}
-      {storeSection === 'corporate' && (() => {
-        const lowestUnboughtCorporateItem = new Map();
-
-        GREENWASHING_LAYOFFS_DATA.forEach((item) => {
-          const isBought = boughtGreenwashingLayoffs.includes(item.id);
-          const ownedCount = buildings[item.buildingId] || 0;
-          if (ownedCount >= 1 && !isBought) {
-            const key = `${item.buildingId}_${item.type}`;
-            if (!lowestUnboughtCorporateItem.has(key)) {
-              lowestUnboughtCorporateItem.set(key, item);
-            }
-          }
-        });
-
-        const availableCorporate = GREENWASHING_LAYOFFS_DATA.filter((item) => {
-          if (boughtGreenwashingLayoffs.includes(item.id)) return false;
-
-          // STRICT: Must own at least 1 of this building engine!
-          const ownedCount = buildings[item.buildingId] || 0;
-          if (ownedCount < 1) return false;
-
-          // Must be the lowest unbought tier for this building & type
-          const key = `${item.buildingId}_${item.type}`;
-          const nextItem = lowestUnboughtCorporateItem.get(key);
-          return nextItem && nextItem.id === item.id;
-        });
-
-        return (
-          <div className="flex flex-col gap-2">
-            <div className="bg-amber-950/40 p-3 rounded-xl border border-amber-500/40 mb-2 text-xs">
-              <div className="font-extrabold text-amber-300 flex items-center gap-1.5 mb-1">
-                <Icons.ShieldAlert className="w-4 h-4 text-amber-400" />
-                Corporate Actions & Greenwashing Protocol
-              </div>
-              <div className="text-[#EAE7DA]/80">
-                Mitigate Burn Rate with Greenwashing (-0.1% burn rate) or trigger AI Mass Layoffs (+20% to +35% engine output)!
-              </div>
+      {storeSection === 'corporate' && (
+        <div className="flex flex-col gap-2">
+          <div className="bg-amber-950/40 p-3 rounded-xl border border-amber-500/40 mb-2 text-xs">
+            <div className="font-extrabold text-amber-300 flex items-center gap-1.5 mb-1">
+              <Icons.ShieldAlert className="w-4 h-4 text-amber-400" />
+              Corporate Actions & Greenwashing Protocol
             </div>
+            <div className="text-[#EAE7DA]/80">
+              Mitigate Burn Rate with Greenwashing (-0.1% burn rate) or trigger AI Mass Layoffs (+20% to +35% engine output)!
+            </div>
+          </div>
 
-            {availableCorporate.length === 0 ? (
-              <div className="flex flex-col gap-2">
-                <div className="text-center py-4 bg-slate-900/40 rounded-xl border border-slate-800/80 text-slate-400 text-xs italic">
-                  Keine neuen Corporate Actions für deine gekauften KI-Engines. Kaufe mehr KI-Engines, um neue Protokolle freizuschalten!
-                </div>
-                {/* Teaser for next locked corporate protocol */}
-                {BUILDINGS_DATA.filter((b) => (buildings[b.id] || 0) < 1).slice(0, 2).map((b) => (
-                  <div
-                    key={`teaser_${b.id}`}
-                    className="p-3 rounded-xl border border-slate-800/80 bg-slate-950/60 flex items-center justify-between opacity-60 backdrop-blur-sm"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-600">
-                        <Icons.Lock className="w-4 h-4 text-slate-500" />
-                      </div>
-                      <div>
-                        <div className="font-extrabold text-xs text-slate-400">??? Sperr-Protokoll ({b.name})</div>
-                        <div className="text-[11px] text-rose-400/90 font-bold mt-0.5 flex items-center gap-1">
-                          <Icons.Lock className="w-3 h-3 text-rose-400 shrink-0" />
-                          <span>FEHLER: Erfordert den Kauf von mindestens 1x {b.name}!</span>
-                        </div>
-                      </div>
+          {availableCorporate.length === 0 ? (
+            <div className="flex flex-col gap-2">
+              <div className="text-center py-4 bg-slate-900/40 rounded-xl border border-slate-800/80 text-slate-400 text-xs italic">
+                Keine neuen Corporate Actions für deine gekauften KI-Engines. Kaufe mehr KI-Engines, um neue Protokolle freizuschalten!
+              </div>
+              {/* Teaser for next locked corporate protocol - gleicher stiller "gesperrt" Look wie bei Engines */}
+              {BUILDINGS_DATA.filter((b) => (buildings[b.id] || 0) < 1).slice(0, 2).map((b) => (
+                <div
+                  key={`teaser_${b.id}`}
+                  className="p-3 rounded-xl border border-slate-800/80 bg-slate-950/60 flex items-center justify-between opacity-60 backdrop-blur-sm"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-600">
+                      <Icons.Lock className="w-4 h-4 text-slate-500" />
                     </div>
-                    <div className="px-2.5 py-1 rounded text-[10px] font-black bg-slate-900 text-slate-500 border border-slate-800">
-                      GESPERRT
+                    <div>
+                      <div className="font-extrabold text-xs text-slate-400">??? Sperr-Protokoll ({b.name})</div>
+                      <div className="text-[11px] text-slate-500 italic mt-0.5">
+                        Erfordert den Kauf von mindestens 1x {b.name}.
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              availableCorporate.map((item) => {
-                const b = BUILDINGS_DATA.find((itemB) => itemB.id === item.buildingId);
-                const baseCost = b ? b.baseCost : 15;
-                const cost = item.costMult * baseCost;
-                const canAfford = valuation >= cost;
-                const missingValuation = cost - valuation;
+                  <div className="px-2.5 py-1 rounded text-[10px] font-black bg-slate-900 text-slate-500 border border-slate-800">
+                    GESPERRT
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            availableCorporate.map((item) => {
+              const b = BUILDINGS_DATA.find((itemB) => itemB.id === item.buildingId);
+              const baseCost = b ? b.baseCost : 15;
+              const cost = item.costMult * baseCost;
+              const canAfford = valuation >= cost;
 
-                return (
-                  <div
-                    key={item.id}
-                    className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
+              return (
+                <div
+                  key={item.id}
+                  className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
+                    canAfford
+                      ? 'bg-slate-900/90 border-amber-500/40 hover:border-amber-400 shadow-md'
+                      : 'bg-slate-950/60 border-slate-900 opacity-60'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className={`p-2 rounded-lg border shrink-0 ${
+                      item.type === 'greenwashing' ? 'bg-emerald-950 border-emerald-500/40 text-emerald-400' : 'bg-rose-950 border-rose-500/40 text-rose-400'
+                    }`}>
+                      {renderIcon(item.icon || (item.type === 'greenwashing' ? 'Recycle' : 'UserX'), 'w-4 h-4')}
+                    </div>
+                    <div>
+                      <div className="font-extrabold text-xs text-slate-100 flex items-center gap-2">
+                        <span>{gwName(item)}</span>
+                        <span className="text-[10px] text-slate-400 font-mono font-normal">({b ? buildingName(b.id) : ''})</span>
+                      </div>
+                      <div className="text-[11px] text-slate-300 italic">"{gwQuote(item)}"</div>
+                      <div className="text-[10px] text-amber-400 font-mono font-bold mt-1 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30 inline-block">
+                        {gwEffectDesc(item)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => buyGreenwashingLayoff(item.id)}
+                    disabled={!canAfford}
+                    className={`px-3 py-1.5 rounded-lg font-black text-xs flex flex-col items-end transition-all min-w-[85px] shrink-0 ml-2 ${
                       canAfford
-                        ? 'bg-slate-900/90 border-amber-500/40 hover:border-amber-400 shadow-md'
-                        : 'bg-slate-950/60 border-slate-800 opacity-80'
+                        ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 active:scale-95 shadow-sm'
+                        : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
                     }`}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <div className={`p-2 rounded-lg border shrink-0 ${
-                        item.type === 'greenwashing' ? 'bg-emerald-950 border-emerald-500/40 text-emerald-400' : 'bg-rose-950 border-rose-500/40 text-rose-400'
-                      }`}>
-                        {renderIcon(item.icon || (item.type === 'greenwashing' ? 'Recycle' : 'UserX'), 'w-4 h-4')}
-                      </div>
-                      <div>
-                        <div className="font-extrabold text-xs text-slate-100 flex items-center gap-2">
-                          <span>{gwName(item)}</span>
-                          <span className="text-[10px] text-slate-400 font-mono font-normal">({b?.name})</span>
-                        </div>
-                        <div className="text-[11px] text-slate-300 italic">"{gwQuote(item)}"</div>
-                        <div className="text-[10px] text-amber-400 font-mono font-bold mt-1 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30 inline-block">
-                          {gwEffectDesc(item)}
-                        </div>
-                        
-                        {/* Clear Error or Success Requirement Text */}
-                        {!canAfford ? (
-                          <div className="text-[10px] font-bold text-rose-400 mt-1 flex items-center gap-1">
-                            <Icons.Lock className="w-3 h-3 text-rose-400 shrink-0" />
-                            <span>FEHLER: Benötigt {formatCurrency(cost)} (Fehlen: {formatCurrency(missingValuation)})</span>
-                          </div>
-                        ) : (
-                          <div className="text-[10px] font-bold text-emerald-400 mt-1 flex items-center gap-1">
-                            <Icons.CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
-                            <span>✓ Bereit zur Ausführung</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => buyGreenwashingLayoff(item.id)}
-                      disabled={!canAfford}
-                      className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all shrink-0 ml-2 ${
-                        canAfford
-                          ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 active:scale-95 shadow-sm'
-                          : 'bg-slate-800 text-rose-400/80 cursor-not-allowed border border-slate-700'
-                      }`}
-                    >
-                      {canAfford ? formatCurrency(cost) : '🔒 ZU TEUER'}
-                    </button>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        );
-      })()}
+                    <span>{formatCurrency(cost)}</span>
+                  </button>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
 
       {/* BUZZWORDS TRADING CARD ALBUM & BOOSTER PACK SHOP */}
       {storeSection === 'buzzwords' && (
@@ -709,11 +684,6 @@ export function StoreTab({
           buyBuzzword={buyBuzzword}
           buyBoosterPack={buyBoosterPack}
           addCardToAlbum={addCardToAlbum}
-          pullFreeBoosterCard={pullFreeBoosterCard}
-          adState={adState}
-          startAd={startAd}
-          isAdReady={isAdReady}
-          getAdCooldownRemaining={getAdCooldownRemaining}
           t={t}
         />
       )}

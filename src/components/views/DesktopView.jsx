@@ -85,6 +85,8 @@ export function DesktopView({ store, setIsPitchDeckOpen }) {
             isAdReady={store.isAdReady}
             getAdCooldownRemaining={store.getAdCooldownRemaining}
             resetSave={store.resetSave}
+            scheduledAdUnlocked={store.scheduledAdUnlocked}
+            claimUnlockedScheduledAd={store.claimUnlockedScheduledAd}
           />
         </div>
       </div>
@@ -109,11 +111,6 @@ export function DesktopView({ store, setIsPitchDeckOpen }) {
           buyBuzzword={store.buyBuzzword}
           buyBoosterPack={store.buyBoosterPack}
           addCardToAlbum={store.addCardToAlbum}
-          pullFreeBoosterCard={store.pullFreeBoosterCard}
-          adState={store.adState}
-          startAd={store.startAd}
-          isAdReady={store.isAdReady}
-          getAdCooldownRemaining={store.getAdCooldownRemaining}
           boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}
           buyGreenwashingLayoff={store.buyGreenwashingLayoff}
           t={store.t}

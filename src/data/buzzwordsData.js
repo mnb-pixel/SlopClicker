@@ -61,7 +61,10 @@ const MODIFIER_QUOTES = {
   'Democratized': 'Available to anyone with an approved term sheet.',
 };
 
-// Rarity assignment (40 Common +1%, 25 Uncommon +2%, 10 Rare +5%, 5 Legendary +10%)
+// Rarity-Bänder bleiben fürs Badge/Filter-UI (40 Common / 25 Uncommon / 10 Rare / 5 Legendary),
+// der Bonus selbst wächst aber kontinuierlich mit dem Kartenindex (statt 4 flachen Stufen) -
+// jede neue Karte fühlt sich dadurch spürbar wertvoller an als die vorherige, nicht nur beim
+// Sprung in die nächste Rarität. bonus(0)=0.4%, bonus(79)≈13%, Summe aller 80 Karten ≈ +295% VPS.
 export const BUZZWORDS_DATA = Array.from({ length: 80 }, (_, i) => {
   const modIndex = Math.floor(i / 4);
   const nounIndex = i % NOUNS.length;
@@ -70,18 +73,11 @@ export const BUZZWORDS_DATA = Array.from({ length: 80 }, (_, i) => {
   const name = `${modifier} ${noun}`;
 
   let rarity = 'Common';
-  let bonus = 0.01; // +1%
+  if (i >= 75) rarity = 'Legendary';
+  else if (i >= 65) rarity = 'Rare';
+  else if (i >= 40) rarity = 'Uncommon';
 
-  if (i >= 75) {
-    rarity = 'Legendary';
-    bonus = 0.10; // +10%
-  } else if (i >= 65) {
-    rarity = 'Rare';
-    bonus = 0.05; // +5%
-  } else if (i >= 40) {
-    rarity = 'Uncommon';
-    bonus = 0.02; // +2%
-  }
+  const bonus = Math.round(0.004 * Math.pow(1.045, i) * 1000) / 1000;
 
   // Cost formula: steep exponential (1.45^i) so later cards are a genuine late-game goal,
   // not a footnote - direct-buy price is fixed per card by its position in the 80-card set.

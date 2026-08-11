@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, Edit3, Sparkles, Zap, ShieldAlert, Cpu, LayoutGrid, Smartphone, Volume2, VolumeX, BookOpen, Globe, Share2 } from 'lucide-react';
+import { Flame, Edit3, Sparkles, Zap, ShieldAlert, Cpu, ChevronUp, ChevronDown, BookOpen, Share2 } from 'lucide-react';
 import { formatCurrency, formatExactValuation, formatNumber } from '../utils/formatters';
 import { NewsTicker } from './NewsTicker';
 
@@ -17,13 +17,9 @@ export function Header({
   powerClicks,
   powerClickActive,
   togglePowerClick,
-  layoutMode,
-  setLayoutMode,
   themeMode,
   hypeTier,
   burnRate,
-  soundEnabled,
-  setSoundEnabled,
   onOpenManual,
   onOpenPitchDeck,
   lang = 'de',
@@ -33,6 +29,7 @@ export function Header({
 }) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(startupName);
+  const [buttonsCollapsed, setButtonsCollapsed] = useState(false);
 
   const handleSaveName = (e) => {
     e.preventDefault();
@@ -123,67 +120,43 @@ export function Header({
             </div>
           )}
 
-          {/* Right Action Buttons */}
+          {/* Right Action Buttons - kollabierbar auf nur den SHARE-Button (Punkt 12) */}
           <div className="flex items-center gap-2">
-            {/* Language Switcher Button */}
-            <select
-              value={lang}
-              onChange={(e) => setLang && setLang(e.target.value)}
-              className={`px-1.5 py-1 rounded text-xs font-mono font-black border transition-all cursor-pointer ${
-                isSecTheme ? 'bg-[#F4F1EA] text-slate-900 border-slate-900' : 'bg-slate-800 text-cyan-300 border-slate-700'
-              }`}
-            >
-              <option value="de">🇩🇪 DE</option>
-              <option value="en">🇬🇧 EN</option>
-              <option value="fr">🇫🇷 FR</option>
-              <option value="es">🇪🇸 ES</option>
-            </select>
-
-            {/* Game Manual Button */}
+            {/* Collapse/Expand Toggle */}
             <button
-              onClick={onOpenManual}
-              title={tr('openManual')}
-              className="p-1 rounded-full bg-slate-800 text-amber-300 border border-amber-500/40 hover:border-amber-400 text-xs transition-all flex items-center justify-center"
+              onClick={() => setButtonsCollapsed((prev) => !prev)}
+              title={buttonsCollapsed ? 'Buttons einblenden' : 'Buttons ausblenden'}
+              className="p-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-500 text-xs transition-all flex items-center justify-center"
             >
-              <BookOpen className="w-3.5 h-3.5" />
+              {buttonsCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
             </button>
 
-            {/* Quick Audio Mute / Unmute Button */}
-            <button
-              onClick={() => setSoundEnabled && setSoundEnabled(!soundEnabled)}
-              title="Toggle Audio SFX"
-              className={`p-1 rounded-full border text-xs transition-all ${
-                soundEnabled
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                  : 'bg-slate-800 text-slate-500 border-slate-700'
-              }`}
-            >
-              {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-            </button>
+            {!buttonsCollapsed && (
+              <>
+                {/* Language Switcher Button */}
+                <select
+                  value={lang}
+                  onChange={(e) => setLang && setLang(e.target.value)}
+                  className={`px-1.5 py-1 rounded text-xs font-mono font-black border transition-all cursor-pointer ${
+                    isSecTheme ? 'bg-[#F4F1EA] text-slate-900 border-slate-900' : 'bg-slate-800 text-cyan-300 border-slate-700'
+                  }`}
+                >
+                  <option value="de">🇩🇪 DE</option>
+                  <option value="en">🇬🇧 EN</option>
+                </select>
 
-            {/* View Switcher Button */}
-            <button
-              onClick={() => setLayoutMode(layoutMode === 'desktop' ? 'mobile' : 'desktop')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border transition-all ${
-                isSecTheme
-                  ? 'bg-[#2A3C50] text-[#EAE7DA] border-[#8A6A1F]/40 hover:border-[#8A6A1F]'
-                  : 'bg-slate-800 text-cyan-300 border-cyan-500/30 hover:border-cyan-400'
-              }`}
-            >
-              {layoutMode === 'desktop' ? (
-                <>
-                  <Smartphone className="w-3.5 h-3.5" />
-                  <span>{tr('viewMobile')}</span>
-                </>
-              ) : (
-                <>
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                  <span>{tr('viewDesktop')}</span>
-                </>
-              )}
-            </button>
+                {/* Game Manual Button */}
+                <button
+                  onClick={onOpenManual}
+                  title={tr('openManual')}
+                  className="p-1 rounded-full bg-slate-800 text-amber-300 border border-amber-500/40 hover:border-amber-400 text-xs transition-all flex items-center justify-center"
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )}
 
-            {/* Top Bar Prominent Virality SHARE Button */}
+            {/* Top Bar Prominent Virality SHARE Button - immer sichtbar */}
             <button
               onClick={onOpenPitchDeck}
               title="Share Startup Pitch Deck"
@@ -193,20 +166,21 @@ export function Header({
               <span>🚀 SHARE</span>
             </button>
 
-            {/* Power Click Badge */}
-            <button
-              onClick={togglePowerClick}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold transition-all border ${
-                powerClickActive
-                  ? 'bg-amber-500 text-slate-950 border-amber-300 shadow-lg animate-pulse'
-                  : powerClicks > 0
-                  ? isSecTheme ? 'bg-[#2A3C50] text-[#8A6A1F] border-[#8A6A1F]' : 'bg-slate-800 text-amber-400 border-amber-500/40'
-                  : 'opacity-50 cursor-not-allowed border-slate-700'
-              }`}
-            >
-              <Zap className="w-3.5 h-3.5" />
-              <span>{tr('powerTap')} {powerClicks}</span>
-            </button>
+            {!buttonsCollapsed && (
+              <button
+                onClick={togglePowerClick}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold transition-all border ${
+                  powerClickActive
+                    ? 'bg-amber-500 text-slate-950 border-amber-300 shadow-lg animate-pulse'
+                    : powerClicks > 0
+                    ? isSecTheme ? 'bg-[#2A3C50] text-[#8A6A1F] border-[#8A6A1F]' : 'bg-slate-800 text-amber-400 border-amber-500/40'
+                    : 'opacity-50 cursor-not-allowed border-slate-700'
+                }`}
+              >
+                <Zap className="w-3.5 h-3.5" />
+                <span>{tr('powerTap')} {powerClicks}</span>
+              </button>
+            )}
           </div>
         </div>
 

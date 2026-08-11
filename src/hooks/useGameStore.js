@@ -8,7 +8,6 @@ import { GREENWASHING_LAYOFFS_DATA } from '../data/greenwashingLayoffsData';
 import { IDEALIST_PATH, CYNIC_PATH, EPOCHS } from '../data/credibilityTreeData';
 import { GOLDEN_EVENT_IDS, BUBBLE_EVENT_IDS } from '../i18n/content/events.content';
 import { TRANSLATIONS } from '../i18n/translations';
-import { playSound } from '../utils/soundEffects';
 import { formatCurrency, getBuildingCost, getBuildingBulkCost, getMaxAffordableBuildings } from '../utils/formatters';
 
 const STORAGE_KEY = 'SLOP_CLICKER_GAME_SAVE_V1';
@@ -25,13 +24,13 @@ const BUBBLE_BURN_DURATION_SEC = 30;
 const AD_COOLDOWN_SEC = {
   nitrogen: 90,
   grant: 120,
-  booster_pack: 20 * 60,
   power_click: 15 * 60,
   ascend_boost: 5 * 60,
   pivot_boost: 5 * 60,
   golden_extend: 20,
   bubble_clear: 45,
   offline_double: 0,
+  scheduled_bonus: 0,
 };
 
 // Offline-Ertrag: gutgeschrieben ab 1 Minute Abwesenheit, gedeckelt auf 4h,
@@ -45,13 +44,17 @@ const OFFLINE_EFFICIENCY = 0.5;
 // unerreichbar, fühlte sich also wie "kaputt" an). Auf 1e7 gesenkt: erster Chip ab $10M.
 const ASCEND_CHIP_DIVISOR = 10000000;
 
+// Geplante Ad-Popups (Punkt 9): feste Zeitpunkte seit App-Start, an denen ein Popup eine
+// Rewarded Ad anbietet.
+const SCHEDULED_AD_MINUTES = [5, 15, 30, 60, 120];
+
 const INITIAL_BUILDINGS = BUILDINGS_DATA.reduce((acc, b) => {
   acc[b.id] = 0;
   return acc;
 }, {});
 
 export function useGameStore() {
-  const [lang, setLang] = useState('de'); // 'de' | 'en' | 'fr' | 'es'
+  const [lang, setLang] = useState('de'); // 'de' | 'en'
   const [startupName, setStartupName] = useState('tokenkamin');
   const [valuation, setValuation] = useState(0);
   const [totalValuation, setTotalValuation] = useState(0);
@@ -94,7 +97,20 @@ export function useGameStore() {
   const [pendingAscendBoost, setPendingAscendBoost] = useState(false);
   const [pendingPivotBoost, setPendingPivotBoost] = useState(false);
 
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  // Tab-Aktivität (Punkt 1): 'active' (Tab sichtbar & fokussiert) = 100% Rate,
+  // 'inactive' (Tab sichtbar, aber Fenster/Browser nicht fokussiert) = 20%,
+  // 'hidden' (Tab im Hintergrund/minimiert) = 10%.
+  const [pageActivity, setPageActivity] = useState('active');
+  const [afkReport, setAfkReport] = useState(null); // { amount } | null - nach >=30min Abwesenheit bei offenem Tab
+  const hiddenSinceRef = useRef(null);
+  const awayEarnedRef = useRef(0);
+
+  // Bei "später" wird statt einer harten Zeitgrenze ein Button im Menü freigeschaltet.
+  const sessionStartRef = useRef(Date.now());
+  const nextScheduledIndexRef = useRef(0);
+  const [pendingScheduledAd, setPendingScheduledAd] = useState(false);
+  const [scheduledAdUnlocked, setScheduledAdUnlocked] = useState(false);
+
   const [fancyGraphics, setFancyGraphics] = useState(true);
 
   const [activeTab, setActiveTab] = useState(1);
@@ -166,7 +182,6 @@ export function useGameStore() {
       boughtHeavenlyUpgrades,
       unlockedAchievements,
       stats,
-      soundEnabled,
       fancyGraphics,
       vps: vpsRef.current, // für Offline-Ertrag-Berechnung beim nächsten Laden
     };
@@ -181,7 +196,7 @@ export function useGameStore() {
     boughtGreenwashingLayoffs, epoch, idealistLevel, cynicLevel, credibility, pivotCount,
     valuationAtLastPivot, buildings,
     boughtUpgrades, unlockedUpgrades, boughtHeavenlyUpgrades, unlockedAchievements, stats,
-    soundEnabled, fancyGraphics
+    fancyGraphics
   ]);
 
   // Load state on mount
@@ -191,7 +206,7 @@ export function useGameStore() {
       if (saved) {
         const data = JSON.parse(saved);
         if (data) {
-          setLang(data.lang || 'de');
+          setLang(['de', 'en'].includes(data.lang) ? data.lang : 'de');
           setStartupName(data.startupName || 'tokenkamin');
           setValuation(data.valuation || 0);
           setTotalValuation(data.totalValuation || 0);
@@ -222,7 +237,6 @@ export function useGameStore() {
             overheatCount: 0, ascensionCount: 0, gpuBounced: false,
             ascendTrillion: false, shadowLucky: false,
           });
-          setSoundEnabled(data.soundEnabled !== false);
           setFancyGraphics(data.fancyGraphics !== false);
 
           // Offline-Ertrag: nur wenn Spieler >= 1 Minute weg war und beim letzten
@@ -280,6 +294,56 @@ export function useGameStore() {
     };
   }, []);
 
+  // Tab-Aktivität tracken (Punkt 1): hidden = Tab im Hintergrund, inactive = Tab sichtbar
+  // aber Fenster ohne Fokus. Bei Rückkehr aus "hidden" nach >=30min Abwesenheit wird ein
+  // AFK-Report gezeigt (wie viel in der Zeit erzeugt wurde), einsammelbar per Rewarded Ad.
+  useEffect(() => {
+    const updateActivity = () => {
+      if (document.visibilityState === 'hidden') {
+        if (hiddenSinceRef.current === null) {
+          hiddenSinceRef.current = Date.now();
+          awayEarnedRef.current = 0;
+        }
+        setPageActivity('hidden');
+      } else {
+        if (hiddenSinceRef.current !== null) {
+          const awaySec = (Date.now() - hiddenSinceRef.current) / 1000;
+          if (awaySec >= 1800 && awayEarnedRef.current >= 1) {
+            setAfkReport({ amount: awayEarnedRef.current });
+          }
+          hiddenSinceRef.current = null;
+        }
+        setPageActivity(document.hasFocus() ? 'active' : 'inactive');
+      }
+    };
+    updateActivity();
+    document.addEventListener('visibilitychange', updateActivity);
+    window.addEventListener('focus', updateActivity);
+    window.addEventListener('blur', updateActivity);
+    // hasFocus() Wechsel feuern nicht immer zuverlässig ein Event (z.B. Alt-Tab in
+    // manchen Browsern) - Poll als Fallback.
+    const poll = setInterval(updateActivity, 2000);
+    return () => {
+      document.removeEventListener('visibilitychange', updateActivity);
+      window.removeEventListener('focus', updateActivity);
+      window.removeEventListener('blur', updateActivity);
+      clearInterval(poll);
+    };
+  }, []);
+
+  // Geplante Ad-Popups (Punkt 9): pollt gegen SCHEDULED_AD_MINUTES seit App-Start.
+  useEffect(() => {
+    const poll = setInterval(() => {
+      const elapsedMin = (Date.now() - sessionStartRef.current) / 60000;
+      const nextIdx = nextScheduledIndexRef.current;
+      if (nextIdx < SCHEDULED_AD_MINUTES.length && elapsedMin >= SCHEDULED_AD_MINUTES[nextIdx]) {
+        nextScheduledIndexRef.current = nextIdx + 1;
+        setPendingScheduledAd(true);
+      }
+    }, 5000);
+    return () => clearInterval(poll);
+  }, []);
+
   // --- HYPE TIER & BURN RATE CALCULATIONS (Konzept Abschnitt 4) ---
   const hypeTier = useMemo(() => {
     const thresholds = [0, 1e4, 1e6, 1e8, 1e10, 1e12, 1e14, 1e16, 1e18, 1e20];
@@ -323,7 +387,9 @@ export function useGameStore() {
     // (this burn spike + the matching VPS cut below), so it needs to be clearly noticeable.
     const bubbleBonus = bubblePopTimer > 0 ? 0.015 : 0;
     const total = base + idealistBurnDelta + cynicBurnDelta - greenwashingDiscount + bubbleBonus;
-    return Math.max(0.0, Math.min(0.10, total));
+    // Mindestens 0.1%/s, nie exakt 0% - sonst wirkte die Burn Rate (v.a. mit vollem Idealist-Pfad)
+    // "kaputt" und zeigte dauerhaft 0.0% an, statt weiterhin spürbar am Bestand zu nagen.
+    return Math.max(0.001, Math.min(0.10, total));
   }, [hypeTier, idealistBurnDelta, cynicBurnDelta, greenwashingDiscount, bubblePopTimer]);
 
   // Buzzwords VPS Multiplier Bonus
@@ -469,12 +535,17 @@ export function useGameStore() {
       const tickScale = deltaSec / 0.2; // Konzept-Wahrscheinlichkeiten sind pro 200ms-Tick angegeben
 
       // 1. Produktion + kontinuierliches Burn (Konzept Abschnitt 4: Burn frisst den Bestand)
+      // Tab inaktiv/hidden (Punkt 1): Produktion läuft nur mit 20%/10% Rate weiter.
+      const activityMult = pageActivity === 'hidden' ? 0.10 : pageActivity === 'inactive' ? 0.20 : 1.0;
       setValuation((prevVal) => {
-        const earned = vps * deltaSec;
+        const earned = vps * deltaSec * activityMult;
         const burnLoss = prevVal * burnRate * deltaSec;
         if (earned > 0) {
           setTotalValuation((prev) => prev + earned);
           setSlopCount((prev) => prev + Math.max(1, Math.floor(earned)));
+          if (pageActivity === 'hidden') {
+            awayEarnedRef.current += earned;
+          }
         }
         if (burnLoss > 0) {
           setTotalBurned((prev) => prev + burnLoss);
@@ -520,7 +591,6 @@ export function useGameStore() {
         const id = GOLDEN_EVENT_IDS[Math.floor(Math.random() * GOLDEN_EVENT_IDS.length)];
         setActiveEvent({ id, kind: 'golden', expiresAt: now + GOLDEN_DURATION_SEC * 1000 });
         setStats((s) => ({ ...s, goldenCaught: s.goldenCaught + 1 }));
-        playSound('golden', soundEnabled);
         addLog(`${t(`event_${id}_title`)} - ${t(`event_${id}_desc`)}`, 'warning');
       // 7. Bubble Pop (0.04%/Tick@200ms): purely a temporary rate hit for 30s - VPS production
       // cut and burn rate spiked. No instant stock loss, same "rates only" rule as Golden Headline.
@@ -528,7 +598,6 @@ export function useGameStore() {
         const id = BUBBLE_EVENT_IDS[Math.floor(Math.random() * BUBBLE_EVENT_IDS.length)];
         setActiveEvent({ id, kind: 'bubble', expiresAt: now + 4000 });
         setBubblePopTimer(BUBBLE_BURN_DURATION_SEC);
-        playSound('overheat', soundEnabled);
         addLog(`${t(`event_${id}_title`)} - ${t(`event_${id}_desc`)}`, 'danger');
       }
 
@@ -543,7 +612,6 @@ export function useGameStore() {
           };
           if (ach.check(currentState)) {
             setUnlockedAchievements((prev) => Array.from(new Set([...prev, ach.id])));
-            playSound('golden', soundEnabled);
             addLog(`🏆 ACHIEVEMENT UNLOCKED: "${t(`ach_${ach.id}_name`)}"`, 'achievement');
           }
         }
@@ -556,7 +624,7 @@ export function useGameStore() {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [vps, burnRate, coolingRate, isOverheated, activeEvent, powerClickSurgeTimer, bubblePopTimer, unlockedAchievements, stats, totalValuation, totalBurned, pivotCount, buildings, boughtBuzzwords, soundEnabled, addLog, t]);
+  }, [vps, burnRate, coolingRate, isOverheated, activeEvent, powerClickSurgeTimer, bubblePopTimer, unlockedAchievements, stats, totalValuation, totalBurned, pivotCount, buildings, boughtBuzzwords, pageActivity, addLog, t]);
 
   // Dynamic Sticky Upgrade Unlock Logic (Cash-based & Owned Engine requirement)
   // Sticky rule: Once unlocked by reaching current cash threshold, upgrades stay unlocked even if cash drops!
@@ -608,7 +676,6 @@ export function useGameStore() {
   // Click AGI Button
   const handleTapAGI = useCallback((e) => {
     if (isOverheated) {
-      playSound('overheat', soundEnabled);
       return;
     }
 
@@ -622,7 +689,6 @@ export function useGameStore() {
       if (next >= 100.0) {
         setIsOverheated(true);
         setStats((s) => ({ ...s, overheatCount: s.overheatCount + 1 }));
-        playSound('overheat', soundEnabled);
         addLog('🔥 GPU OVERHEATED AT 100°C! Cooling initiated (-4°C/s). Button locked until < 50°C.', 'danger');
         return 100.0;
       }
@@ -630,7 +696,6 @@ export function useGameStore() {
     });
 
     setStats((s) => ({ ...s, totalClicks: s.totalClicks + 1 }));
-    playSound('click', soundEnabled);
 
     if (e && e.clientX && e.clientY) {
       const id = Date.now() + Math.random();
@@ -639,7 +704,7 @@ export function useGameStore() {
         { id, x: e.clientX, y: e.clientY, text: `+$${Math.floor(earned)}` },
       ]);
     }
-  }, [isOverheated, clickValue, soundEnabled, addLog]);
+  }, [isOverheated, clickValue, addLog]);
 
   // Buy Building
   const buyBuilding = useCallback((buildingId) => {
@@ -677,9 +742,8 @@ export function useGameStore() {
       [buildingId]: (prev[buildingId] || 0) + targetCount,
     }));
 
-    playSound('buy', soundEnabled);
     addLog(`Purchased ${targetCount}x ${t(`building_${b.id}_name`)} for $${cost.toLocaleString()}!`, 'success');
-  }, [buildings, buyMode, valuation, soundEnabled, addLog, t]);
+  }, [buildings, buyMode, valuation, addLog, t]);
 
   // Buy Upgrade
   const buyUpgrade = useCallback((upgradeId) => {
@@ -698,10 +762,9 @@ export function useGameStore() {
       setCoolingRate(up.effect.value);
     }
 
-    playSound('buy', soundEnabled);
     const name = up.type === 'building' ? t(`upgrade_${up.id}_name`) : up.name;
     addLog(`Purchased upgrade "${name}"`, 'success');
-  }, [boughtUpgrades, valuation, soundEnabled, addLog, t]);
+  }, [boughtUpgrades, valuation, addLog, t]);
 
   // Native "BUY ALL" Upgrades Button — only from the same eligible set the tile grid shows
   // (must own >=1 of the building etc.), so this can never buy an upgrade the UI hides.
@@ -731,9 +794,8 @@ export function useGameStore() {
 
     setValuation(currentMoney);
     setBoughtUpgrades(newBought);
-    playSound('buy', soundEnabled);
     addLog(`"BUY ALL" executed! Purchased ${newBought.length - boughtUpgrades.length} upgrades for $${spent.toLocaleString()}!`, 'success');
-  }, [boughtUpgrades, valuation, totalValuation, buildings, soundEnabled, addLog]);
+  }, [boughtUpgrades, valuation, totalValuation, buildings, addLog]);
 
   // Dismiss the currently active event banner (purely informational - effects already auto-applied on spawn)
   const dismissEvent = useCallback(() => {
@@ -749,9 +811,8 @@ export function useGameStore() {
     setPowerClicks((prev) => prev - 1);
     setPowerClickActive(true);
     setPowerClickSurgeTimer(20);
-    playSound('golden', soundEnabled);
     addLog('⚡ POWER CLICK ACTIVATED! Next taps deal double damage + temporary VPS surge!', 'success');
-  }, [powerClicks, soundEnabled, addLog]);
+  }, [powerClicks, addLog]);
 
   // Ist dieser Ad-Placement-Typ gerade nutzbar (kein aktiver Cooldown)?
   const isAdReady = useCallback((type) => Date.now() >= (adCooldowns[type] || 0), [adCooldowns]);
@@ -814,11 +875,10 @@ export function useGameStore() {
           addLog('🛡️ Bubble-Pop-Debuff sofort beendet!', 'success');
         }
 
-        playSound('ad', soundEnabled);
         if (onComplete) onComplete();
       }
     }, 1000);
-  }, [vps, soundEnabled, addLog, adState, adCooldowns]);
+  }, [vps, addLog, adState, adCooldowns]);
 
   // Offline-Ertrag einsammeln (optional per Ad verdoppelt)
   const claimOfflineEarnings = useCallback((doubled = false) => {
@@ -830,13 +890,46 @@ export function useGameStore() {
     addLog(`💰 Offline-Ertrag eingesammelt: +$${Math.floor(amount).toLocaleString()}${doubled ? ' (2x per Ad)' : ''}!`, 'success');
   }, [offlineReport, addLog]);
 
-  // Gratis Buzzword-Karte per Rewarded Ad (kein Cash-Abzug, gleicher Duplikatschutz wie Booster Pack)
-  const pullFreeBoosterCard = useCallback(() => {
-    const uncollected = BUZZWORDS_DATA.filter((bw) => !boughtBuzzwords.includes(bw.id));
-    if (uncollected.length === 0) return null;
-    const randomIndex = Math.floor(Math.random() * uncollected.length);
-    return uncollected[randomIndex];
-  }, [boughtBuzzwords]);
+  // AFK-Report schließen (Punkt 1): "nur einsammeln" (nichts extra, Wert wurde schon
+  // während der Abwesenheit live gutgeschrieben) oder per Ad verdoppeln.
+  const dismissAfkReport = useCallback(() => {
+    setAfkReport(null);
+  }, []);
+
+  const claimAfkBonus = useCallback(() => {
+    if (!afkReport) return;
+    setValuation((prev) => prev + afkReport.amount);
+    setTotalValuation((prev) => prev + afkReport.amount);
+    addLog(`💰 AFK-Bonus per Ad verdoppelt: +$${Math.floor(afkReport.amount).toLocaleString()}!`, 'success');
+    setAfkReport(null);
+  }, [afkReport, addLog]);
+
+  // Geplantes Ad-Popup (Punkt 9): jetzt ansehen (sofortige Belohnung) oder auf später
+  // verschieben (Button erscheint im Menü, keine feste Verfallszeit).
+  const watchScheduledAdNow = useCallback(() => {
+    setPendingScheduledAd(false);
+    startAd('scheduled_bonus', () => {
+      const reward = Math.max(250, vps * 60);
+      setValuation((prev) => prev + reward);
+      setTotalValuation((prev) => prev + reward);
+      addLog(`💰 Bonus-Werbung eingelöst! Erhalten: +$${Math.floor(reward).toLocaleString()}!`, 'success');
+    });
+  }, [vps, addLog, startAd]);
+
+  const deferScheduledAd = useCallback(() => {
+    setPendingScheduledAd(false);
+    setScheduledAdUnlocked(true);
+  }, []);
+
+  const claimUnlockedScheduledAd = useCallback(() => {
+    setScheduledAdUnlocked(false);
+    startAd('scheduled_bonus', () => {
+      const reward = Math.max(250, vps * 60);
+      setValuation((prev) => prev + reward);
+      setTotalValuation((prev) => prev + reward);
+      addLog(`💰 Bonus-Werbung eingelöst! Erhalten: +$${Math.floor(reward).toLocaleString()}!`, 'success');
+    });
+  }, [vps, addLog, startAd]);
 
   // Chips, die eine Ascension JETZT bringen würde (ohne Ad-Boost) - von SpecialTab fürs
   // Anzeigen/Deaktivieren des Buttons genutzt, damit die Formel nur an einer Stelle steht.
@@ -847,8 +940,12 @@ export function useGameStore() {
   // Singularity Ascension (SlopClicker Prestige Reset - bleibt zusätzlich zu Pivot bestehen)
   const ascend = useCallback(() => {
     const earnedChips = pendingAscendBoost ? Math.floor(pendingHeavenlyChips * 1.2) : pendingHeavenlyChips;
-    if (earnedChips <= 0 && prestigeLevel === 0) {
-      addLog('Singularity Ascension requires at least $10M lifetime valuation!', 'warning');
+    // STRICT: muss tatsächlich >=1 Heavenly Chip verdient haben - sonst konnte man nach dem
+    // ersten Ascend (prestigeLevel > 0) den Button beliebig oft drücken und pro Klick +1
+    // Prestige (=permanenter VPS-Bonus) geschenkt bekommen, ohne neue Lifetime-Valuation
+    // dafür erwirtschaftet zu haben (Exploit + unbegrenzter Zinseszins-Effekt).
+    if (earnedChips <= 0) {
+      addLog('Singularity Ascension requires enough NEW lifetime valuation to earn at least 1 Heavenly Chip!', 'warning');
       return;
     }
 
@@ -856,7 +953,7 @@ export function useGameStore() {
       setStats((s) => ({ ...s, ascendTrillion: true }));
     }
 
-    setPrestigeLevel((prev) => prev + earnedChips + 1);
+    setPrestigeLevel((prev) => prev + earnedChips);
     setHeavenlyChips((prev) => prev + earnedChips);
     setStats((s) => ({ ...s, ascensionCount: s.ascensionCount + 1 }));
 
@@ -869,20 +966,24 @@ export function useGameStore() {
 
     if (pendingAscendBoost) setPendingAscendBoost(false);
 
-    playSound('ascend', soundEnabled);
     addLog(`🌌 SINGULARITY ASCENSION EXECUTED! Earned ${earnedChips} Heavenly Chips!${pendingAscendBoost ? ' (inkl. +20% Ad-Bonus)' : ''}`, 'achievement');
-  }, [totalValuation, prestigeLevel, soundEnabled, addLog, pendingAscendBoost, pendingHeavenlyChips]);
+  }, [totalValuation, addLog, pendingAscendBoost, pendingHeavenlyChips]);
 
   // Pivot is a milestone, not a reset: Engines, Upgrades and Valuation all stay. Credibility
   // is earned on lifetime valuation GAINED SINCE THE LAST PIVOT.
+  // War Divisor 1e6 mit keiner Mindestschwelle - bei exponentiellem Valuation-Wachstum ließ
+  // sich das schon nach kurzer Zeit wieder erreichen, Epochen rotierten praktisch im
+  // Minutentakt durch. Divisor 10x höher + Mindestgewinn von 5 Credibility, damit ein Pivot
+  // echten Fortschritt seit dem letzten Pivot voraussetzt statt nur ">0".
+  const MIN_PIVOT_CRED_GAIN = 5;
   const pivotCredGain = useMemo(() => {
-    const base = Math.floor(Math.sqrt(Math.max(0, totalValuation - valuationAtLastPivot) / 1000000));
+    const base = Math.floor(Math.sqrt(Math.max(0, totalValuation - valuationAtLastPivot) / 10000000));
     return pendingPivotBoost ? Math.floor(base * 1.2) : base;
   }, [totalValuation, valuationAtLastPivot, pendingPivotBoost]);
 
   const pivot = useCallback(() => {
-    if (pivotCredGain <= 0) {
-      addLog('Pivot requires enough NEW lifetime valuation since your last Pivot to earn Credibility!', 'warning');
+    if (pivotCredGain < MIN_PIVOT_CRED_GAIN) {
+      addLog(`Pivot requires at least ${MIN_PIVOT_CRED_GAIN} NEW Credibility earned since your last Pivot!`, 'warning');
       return;
     }
     const nextEpoch = (epoch + 1) % EPOCHS.length;
@@ -892,9 +993,8 @@ export function useGameStore() {
     setValuationAtLastPivot(totalValuation);
     if (pendingPivotBoost) setPendingPivotBoost(false);
 
-    playSound('ascend', soundEnabled);
     addLog(`🔄 PIVOT EXECUTED! Epoch rotated to ${EPOCHS[nextEpoch].name}! Earned +${pivotCredGain} Credibility!${pendingPivotBoost ? ' (inkl. +20% Ad-Bonus)' : ''}`, 'achievement');
-  }, [pivotCredGain, totalValuation, epoch, soundEnabled, addLog, pendingPivotBoost]);
+  }, [pivotCredGain, totalValuation, epoch, addLog, pendingPivotBoost]);
 
   // Buy Buzzword Card Directly
   const buyBuzzword = useCallback((buzzId) => {
@@ -908,10 +1008,9 @@ export function useGameStore() {
 
     setValuation((prev) => prev - bw.cost);
     setBoughtBuzzwords((prev) => [...prev, buzzId]);
-    playSound('buy', soundEnabled);
     addLog(`✨ Buzzword-Karte "${bw.name}" (+${Math.round(bw.bonus * 100)}% VPS) ins Album gelegt!`, 'success');
     return true;
-  }, [boughtBuzzwords, valuation, soundEnabled, addLog]);
+  }, [boughtBuzzwords, valuation, addLog]);
 
   // Buy Trading Card Booster Pack. Cost is deducted AND the card is committed to
   // boughtBuzzwords in the same call, so autosave/unmount between purchase and the
@@ -939,21 +1038,19 @@ export function useGameStore() {
     const pulledCard = uncollected[randomIndex];
 
     setValuation((prev) => prev - packCost);
-    playSound('golden', soundEnabled);
 
     return pulledCard;
-  }, [boughtBuzzwords, valuation, soundEnabled, addLog]);
+  }, [boughtBuzzwords, valuation, addLog]);
 
   // Add Pulled Card to Album
   const addCardToAlbum = useCallback((cardId) => {
     if (!cardId || boughtBuzzwords.includes(cardId)) return;
     const bw = BUZZWORDS_DATA.find((item) => item.id === cardId);
     setBoughtBuzzwords((prev) => [...prev, cardId]);
-    playSound('buy', soundEnabled);
     if (bw) {
       addLog(`🎴 Buzzword-Karte "${bw.name}" (+${Math.round(bw.bonus * 100)}% VPS) ins Album einsortiert!`, 'achievement');
     }
-  }, [boughtBuzzwords, soundEnabled, addLog]);
+  }, [boughtBuzzwords, addLog]);
 
   // Buy Corporate Greenwashing & Layoff Action
   const buyGreenwashingLayoff = useCallback((itemId) => {
@@ -971,9 +1068,8 @@ export function useGameStore() {
 
     setValuation((prev) => prev - cost);
     setBoughtGreenwashingLayoffs((prev) => [...prev, itemId]);
-    playSound('buy', soundEnabled);
     addLog(`Executed Action "${t(`gw_${itemId}_name`)}"`, 'success');
-  }, [boughtGreenwashingLayoffs, valuation, soundEnabled, addLog, t]);
+  }, [boughtGreenwashingLayoffs, valuation, addLog, t]);
 
   // Buy Idealist Path Level
   const buyIdealistLevel = useCallback(() => {
@@ -988,9 +1084,8 @@ export function useGameStore() {
 
     setCredibility((prev) => prev - cost);
     setIdealistLevel((prev) => prev + 1);
-    playSound('buy', soundEnabled);
     addLog(`Unlocked Idealist Node "${nextNode.name}"!`, 'success');
-  }, [idealistLevel, credibility, soundEnabled, addLog]);
+  }, [idealistLevel, credibility, addLog]);
 
   // Buy Cynic Path Level
   const buyCynicLevel = useCallback(() => {
@@ -1005,15 +1100,13 @@ export function useGameStore() {
 
     setCredibility((prev) => prev - cost);
     setCynicLevel((prev) => prev + 1);
-    playSound('buy', soundEnabled);
     addLog(`Unlocked Cynic Node "${nextNode.name}"!`, 'success');
-  }, [cynicLevel, credibility, soundEnabled, addLog]);
+  }, [cynicLevel, credibility, addLog]);
 
   // Theme Mode (SEC Prospectus vs Cyberpunk) - explizite Nutzer-Entscheidung, wird gespeichert
   const toggleThemeMode = useCallback(() => {
     setThemeMode((prev) => (prev === 'sec_prospectus' ? 'cyberpunk' : 'sec_prospectus'));
-    playSound('click', soundEnabled);
-  }, [soundEnabled]);
+  }, []);
 
   // Buy Heavenly Upgrade
   const buyHeavenlyUpgrade = useCallback((upgradeId) => {
@@ -1027,9 +1120,8 @@ export function useGameStore() {
 
     setHeavenlyChips((prev) => prev - up.chipsCost);
     setBoughtHeavenlyUpgrades((prev) => [...prev, upgradeId]);
-    playSound('buy', soundEnabled);
     addLog(`Purchased Heavenly Upgrade "${up.name}"!`, 'success');
-  }, [boughtHeavenlyUpgrades, heavenlyChips, soundEnabled, addLog]);
+  }, [boughtHeavenlyUpgrades, heavenlyChips, addLog]);
 
   const hasAiDomainBonus = useMemo(() => {
     return (startupName || '').trim().toLowerCase().endsWith('.ai');
@@ -1084,9 +1176,11 @@ export function useGameStore() {
     activeEvent, dismissEvent,
     adState, startAd, isAdReady, getAdCooldownRemaining,
     offlineReport, claimOfflineEarnings,
-    pullFreeBoosterCard, pendingAscendBoost, pendingPivotBoost,
+    pageActivity, afkReport, dismissAfkReport, claimAfkBonus,
+    pendingScheduledAd, watchScheduledAdNow, deferScheduledAd,
+    scheduledAdUnlocked, claimUnlockedScheduledAd,
+    pendingAscendBoost, pendingPivotBoost,
     stats, logs,
-    soundEnabled, setSoundEnabled,
     fancyGraphics, setFancyGraphics,
     activeTab, setActiveTab,
     vps, grossVps, netFlow, clickValue, handleTapAGI,

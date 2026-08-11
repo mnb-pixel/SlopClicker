@@ -8,6 +8,8 @@ export function MiscTab({
   isAdReady,
   getAdCooldownRemaining,
   resetSave,
+  scheduledAdUnlocked,
+  claimUnlockedScheduledAd,
 }) {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
 
@@ -57,6 +59,25 @@ export function MiscTab({
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-2">
+            {scheduledAdUnlocked && (
+              <button
+                onClick={claimUnlockedScheduledAd}
+                className="p-3 rounded-xl bg-slate-950 border border-amber-500 hover:border-amber-400 text-left transition-all flex items-center justify-between group animate-pulse"
+              >
+                <div>
+                  <div className="font-extrabold text-xs text-amber-300 flex items-center gap-1.5">
+                    <Icons.Tv className="w-4 h-4 text-amber-400" />
+                    🎁 Bonus-Werbung verfügbar
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-0.5">
+                    Verschobene Bonus-Anzeige jetzt ansehen & einsammeln.
+                  </div>
+                </div>
+                <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black px-2 py-1 rounded border border-amber-500/30 group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors shrink-0">
+                  WATCH AD
+                </span>
+              </button>
+            )}
             <button
               onClick={() => startAd('nitrogen')}
               disabled={isAdReady && !isAdReady('nitrogen')}

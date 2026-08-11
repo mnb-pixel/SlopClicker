@@ -10,11 +10,6 @@ export function BuzzwordAlbum({
   buyBuzzword,
   buyBoosterPack,
   addCardToAlbum,
-  pullFreeBoosterCard,
-  adState,
-  startAd,
-  isAdReady,
-  getAdCooldownRemaining,
   t: _t,
 }) {
   const [rarityFilter, setRarityFilter] = useState('ALL'); // 'ALL' | 'Legendary' | 'Rare' | 'Uncommon' | 'Common'
@@ -49,21 +44,6 @@ export function BuzzwordAlbum({
         setOpeningState('REVEALED');
       }, 700);
     }
-  };
-
-  // Handler for Free Booster Pack via Rewarded Ad (no cost, gated by cooldown)
-  const handleFreeBoosterAd = () => {
-    if (!startAd || !pullFreeBoosterCard) return;
-    startAd('booster_pack', () => {
-      const card = pullFreeBoosterCard();
-      if (card) {
-        setPulledCard(card);
-        setOpeningState('SHAKING');
-        setTimeout(() => {
-          setOpeningState('REVEALED');
-        }, 700);
-      }
-    });
   };
 
   // Commit pulled card into album
@@ -156,27 +136,6 @@ export function BuzzwordAlbum({
           <Icons.Sparkles className="w-4 h-4 shrink-0" />
           <span>{boughtCount >= totalCards ? 'ALLES GESAMMELT' : `PACK ÖFFNEN (${formatCurrency(packCost)})`}</span>
         </button>
-
-        {/* Rewarded-Ad Gratis-Pack: nur anzeigen, wenn Cash nicht reicht - genau da hängt die Sammel-Loop fest */}
-        {startAd && boughtCount < totalCards && valuation < packCost && (
-          adState?.type === 'booster_pack' ? (
-            <div className="w-full py-2.5 rounded-xl bg-slate-950/80 border border-amber-500 text-amber-300 font-black text-xs text-center animate-pulse">
-              Ad läuft... ({adState.timer}s)
-            </div>
-          ) : isAdReady && !isAdReady('booster_pack') ? (
-            <div className="text-[10px] text-slate-400 font-mono">
-              Gratis Pack per Ad in {getAdCooldownRemaining ? Math.ceil(getAdCooldownRemaining('booster_pack') / 60) : 0}min wieder verfügbar
-            </div>
-          ) : (
-            <button
-              onClick={handleFreeBoosterAd}
-              className="w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-slate-800 border border-fuchsia-500/60 text-fuchsia-300 hover:bg-slate-700 active:scale-95 shadow-lg transition-all flex items-center justify-center gap-2"
-            >
-              <Icons.Tv className="w-4 h-4" />
-              Gratis Pack per Video-Ad
-            </button>
-          )
-        )}
       </div>
 
       {/* 📘 BINDER HEADER & PORTFOLIO PROGRESS */}

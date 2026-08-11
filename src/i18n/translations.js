@@ -1,4 +1,4 @@
-// Multi-Language Dictionary (DE, EN, FR, ES) for SlopClicker / Hype Clicker
+// Multi-Language Dictionary (DE, EN) for SlopClicker / Hype Clicker
 
 import { buildContentTranslations } from './mergeContent';
 
@@ -51,7 +51,7 @@ export const TRANSLATIONS = {
 
     // Buzzwords Section
     buzzwordTitle: 'Sammelbare Buzzword-Karten',
-    buzzwordDesc: 'Sammle KI-Buzzwords für bis zu +190% kumulativen Ertrags-Bonus!',
+    buzzwordDesc: 'Sammle KI-Buzzwords für bis zu +290% kumulativen Ertrags-Bonus!',
     buzzwordCollected: 'Gesammelt:',
     lockedBuzzword: '??? Verborgene Buzzword-Karte',
     lockedBuzzwordDesc: 'Erfordert höhere Bewertung.',
@@ -171,7 +171,7 @@ export const TRANSLATIONS = {
 
     // Buzzwords Section
     buzzwordTitle: 'Collectible Buzzword Cards',
-    buzzwordDesc: 'Collect AI Buzzwords for up to +190% cumulative VPS bonus!',
+    buzzwordDesc: 'Collect AI Buzzwords for up to +290% cumulative VPS bonus!',
     buzzwordCollected: 'Collected:',
     lockedBuzzword: '??? Hidden Buzzword Card',
     lockedBuzzwordDesc: 'Requires higher valuation to reveal.',
@@ -242,253 +242,11 @@ export const TRANSLATIONS = {
     event_llm_hallucination_title: '🌀 LLM Hallucination',
     event_llm_hallucination_desc: 'Models producing ultra-creative slop! Click Value multiplied 5x for 15s!',
   },
-
-  fr: {
-    // Header
-    formHeader: 'PROSPECTUS FINANCIER | PROFIL DE L\'ENTREPRISE ET AUDIT',
-    confidentialTicker: 'DÉPÔT CONFIDENTIEL • ENREGISTREMENT • NIVEAU HYPE',
-    burnRate: '🔥 Burn:',
-    netVps: 'Net VPS:',
-    slopCount: 'Slop:',
-    powerTap: 'Power Tap:',
-    viewDesktop: 'Web Tout-en-un',
-    viewMobile: 'Mobile 5-Onglets',
-    themeLedger: '📜 Investor Ledger',
-    themeCyber: '📱 Cyberpunk',
-    openManual: 'Manuel',
-
-    // Tabs
-    tabSlop: 'Slop Core',
-    tabStore: 'Boutique',
-    tabSpecial: 'Spécial',
-    tabStats: 'Statistiques',
-    tabMisc: 'Paramètres',
-
-    // Slop Tab
-    watermark: 'PROJET CONFIDENTIEL',
-    sealTitle: '★ SCEAU OFFICIEL D\'AUTORISATION ★',
-    sealHeader: 'LIGNE 1: AUTORISATION DU CONTRIBUABLE',
-    sealPart: 'PARTIE I',
-    sealButtonText: 'AUTORISER PROMPT ET JETONS',
-    perTap: '/ tap',
-    powerSurge: 'Power Click Actif ! Les taps comptent double !',
-    gpuOverheated: 'GPU EN SURCHAUFFE !',
-    gpuCooling: 'Sécurité thermique déclenchée à 100°C. Refroidissement (-4°C/s).',
-
-    // Store Sub-tabs
-    subEngines: 'Engines IA',
-    subUpgrades: 'Améliorations',
-    subCorporate: 'Entreprise',
-    subBuzzwords: 'Buzzwords',
-
-    // Corporate Section
-    corporateTitle: 'Protocoles d\'Entreprise & Greenwashing',
-    corporateDesc: 'Réduisez le taux de combustion avec le greenwashing ou lancez des licenciements IA !',
-    lockedCorporate: '??? Protocole Verrouillé',
-    lockedCorporateDesc: 'Nécessite une valeur plus élevée ou un moteur IA lié.',
-    executed: 'EXÉCUTÉ',
-    locked: 'VERROUILLÉ',
-
-    // Buzzwords Section
-    buzzwordTitle: 'Cartes Buzzwords à Collectionner',
-    buzzwordDesc: 'Collectionnez les buzzwords IA pour jusqu\'à +190% de bonus VPS !',
-    buzzwordCollected: 'Collectionnés:',
-    lockedBuzzword: '??? Carte Verrouillée',
-    lockedBuzzwordDesc: 'Nécessite une valorisation plus élevée.',
-    collected: 'COLLECTIONNÉ',
-
-    // Special Tab
-    pivotTitle: 'Stratégie de Pivotement & Époques',
-    pivotDesc: 'Pivotez votre startup vers la prochaine ère et gagnez de la Crédibilité. Moteurs, Améliorations & Valorisation restent intacts !',
-    credBalance: 'Solde de Crédibilité:',
-    pivotGain: 'Gain du Pivot:',
-    executePivot: 'Exécuter le Pivot (+',
-
-    pathIdealist: '😇 Idéaliste',
-    pathCynic: '😈 Cynique',
-    pathAscension: '🌌 Singularité',
-    idealistTitle: 'Voie de Crédibilité Idéaliste',
-    idealistDesc: 'Débloque des pratiques éthiques qui réduisent le taux de combustion !',
-    cynicTitle: 'Voie de Crédibilité Cynique',
-    cynicDesc: 'Croissance agressive ! Booste le VPS mais augmente les risques !',
-    ascendTitle: 'Ascension vers la Singularité',
-    prestigeLevelText: 'Niveau de Prestige:',
-    heavenlyChipsText: 'Jetons Célestes:',
-    executeAscend: 'Exécuter la Réinitialisation (+',
-
-    // Stats Tab
-    statsTitle: 'Bilan de la Startup & Journaux d\'Audit',
-    statValuation: 'Valeur Actuelle:',
-    statTotalValuation: 'Valeur Totale Cumulée:',
-    statTotalClicks: 'Taps Manuels:',
-    statOverheats: 'Surchauffes GPU:',
-    milestones: 'Jalons / Succès',
-
-    // Settings Tab
-    settingsTitle: 'Paramètres & Audio',
-    audioTitle: 'Sons Effets Web Audio',
-    graphicsTitle: 'Graphismes Cyber',
-    wipeSave: 'Effacer la Sauvegarde',
-    wipeConfirm: 'Êtes-vous sûr ? Toute la progression sera supprimée !',
-    yesWipe: 'OUI, EFFACER LA SAUVEGARDE',
-    cancel: 'ANNULER',
-    pitchDeck: 'Exporter le Pitch Deck Meme',
-    manualTitle: 'Manuel Investisseur et Startup',
-
-    // Language Selector
-    language: 'Langue / Lang:',
-
-    // Upgrade Details & Purchased Upgrades
-    targetLabel: '🎯 Cible:',
-    affectsClick: 'Puissance des Clics Manuels',
-    affectsSyndicate: 'Hype du Syndicat du Conseil',
-    affectsGlobal: 'Production Globale VPS',
-    boughtUpgradesTitle: 'Améliorations Achetées',
-    noBoughtUpgrades: 'Aucune amélioration achetée.',
-    unitProduction: 'Par Unité:',
-    totalProduction: 'Rendement Total:',
-    incomeShare: 'du revenu total',
-    multiplierLabel: 'Multiplicateur:',
-    showBoughtUpgrades: 'Afficher les Améliorations Achetées',
-    hideBoughtUpgrades: 'Masquer les Améliorations Achetées',
-
-    // Events / Meme Banners
-    claimMemeBtn: '⚡ RÉCLAMER LE MEME !',
-    noticedBtn: '📋 PRIS EN COMPTE',
-    event_vc_tweet_title: '🟢 VC Hype Tweet',
-    event_vc_tweet_desc: 'Pam Saltman partage votre startup ! Boost immédiat de +20% de valorisation !',
-    event_eu_ai_act_title: '🔴 Loi Mondiale Slop Adoptée',
-    event_eu_ai_act_desc: 'Frais de conformité réglementaire ! VPS réduit de 50% pendant 20 secondes.',
-    event_llm_hallucination_title: '🌀 Hallucination du LLM',
-    event_llm_hallucination_desc: 'Modèles produisant du slop ultra-créatif ! Valeur de clic x5 pendant 15s !',
-  },
-
-  es: {
-    // Header
-    formHeader: 'PROSPECTO FINANCIERO | PERFIL DE LA EMPRESA Y AUDITORÍA',
-    confidentialTicker: 'REGISTRO CONFIDENCIAL • REGISTRO DE INVERSOR • NIVEL DE HYPE',
-    burnRate: '🔥 Burn:',
-    netVps: 'Net VPS:',
-    slopCount: 'Slop:',
-    powerTap: 'Power Tap:',
-    viewDesktop: 'Web Todo-en-uno',
-    viewMobile: 'Móvil 5-Pestañas',
-    themeLedger: '📜 Investor Ledger',
-    themeCyber: '📱 Cyberpunk',
-    openManual: 'Manual',
-
-    // Tabs
-    tabSlop: 'Slop Core',
-    tabStore: 'Tienda',
-    tabSpecial: 'Especial',
-    tabStats: 'Estadísticas',
-    tabMisc: 'Ajustes',
-
-    // Slop Tab
-    watermark: 'BORRADOR CONFIDENCIAL',
-    sealTitle: '★ SELLO OFICIAL DE AUTORIZACIÓN ★',
-    sealHeader: 'LÍNEA 1: AUTORIZACIÓN DEL CONTRIBUYENTE',
-    sealPart: 'PARTE I',
-    sealButtonText: 'AUTORIZAR PROMPT Y TOKENS',
-    perTap: '/ tap',
-    powerSurge: '¡Power Click Activo! ¡Los taps valen el doble!',
-    gpuOverheated: '¡GPU SOBRECALENTADA!',
-    gpuCooling: 'Protección térmica activada a 100°C. Enfriando (-4°C/s).',
-
-    // Store Sub-tabs
-    subEngines: 'Motores IA',
-    subUpgrades: 'Mejoras',
-    subCorporate: 'Corporativo',
-    subBuzzwords: 'Buzzwords',
-
-    // Corporate Section
-    corporateTitle: 'Protocolos Corporativos & Greenwashing',
-    corporateDesc: '¡Reduce la tasa de quemado con greenwashing o activa despidos masivos con IA!',
-    lockedCorporate: '??? Protocolo Bloqueado',
-    lockedCorporateDesc: 'Requiere una mayor valoración o motor IA vinculado.',
-    executed: 'EJECUTADO',
-    locked: 'BLOQUEADO',
-
-    // Buzzwords Section
-    buzzwordTitle: 'Tarjetas Buzzwords Coleccionables',
-    buzzwordDesc: '¡Colecciona buzzwords de IA para obtener hasta +190% de bonificación VPS!',
-    buzzwordCollected: 'Coleccionadas:',
-    lockedBuzzword: '??? Tarjeta Oculta',
-    lockedBuzzwordDesc: 'Requiere mayor valoración para revelar.',
-    collected: 'COLECCIONADO',
-
-    // Special Tab
-    pivotTitle: 'Estrategia de Pivote & Épocas',
-    pivotDesc: '¡Pivota tu startup hacia la próxima era y gana Credibilidad! ¡Motores, Mejoras y Valoración se mantienen intactos!',
-    credBalance: 'Saldo de Credibilidad:',
-    pivotGain: 'Ganancia del Pivote:',
-    executePivot: 'Ejecutar Pivote (+',
-
-    pathIdealist: '😇 Idealista',
-    pathCynic: '😈 Cínico',
-    pathAscension: '🌌 Singularidad',
-    idealistTitle: 'Ruta de Credibilidad Idealista',
-    idealistDesc: '¡Desbloquea prácticas éticas que reducen permanentemente la tasa de quemado!',
-    cynicTitle: 'Ruta de Credibilidad Cínica',
-    cynicDesc: '¡Crecimiento agresivo! ¡Aumenta drásticamente el VPS pero eleva el riesgo!',
-    ascendTitle: 'Ascensión a la Singularidad',
-    prestigeLevelText: 'Nivel de Prestigio:',
-    heavenlyChipsText: 'Fichas Celestiales:',
-    executeAscend: 'Ejecutar Reinicio de Singularidad (+',
-
-    // Stats Tab
-    statsTitle: 'Balance General & Registros de Auditoría',
-    statValuation: 'Valor Actual:',
-    statTotalValuation: 'Valor Histórico Acumulado:',
-    statTotalClicks: 'Taps Manuales:',
-    statOverheats: 'Sobrecalentamientos GPU:',
-    milestones: 'Hitos / Logros',
-
-    // Settings Tab
-    settingsTitle: 'Ajustes & Audio',
-    audioTitle: 'Sonidos Efectos Web Audio',
-    graphicsTitle: 'Gráficos Cyber',
-    wipeSave: 'Borrar Datos de Guardado',
-    wipeConfirm: '¿Estás seguro? ¡Se borrará todo el progreso!',
-    yesWipe: 'SÍ, BORRAR GUARDADO',
-    cancel: 'CANCELAR',
-    pitchDeck: 'Exportar Pitch Deck Meme',
-    manualTitle: 'Manual del Inversor y Startup',
-
-    // Language Selector
-    language: 'Idioma / Lang:',
-
-    // Upgrade Details & Purchased Upgrades
-    targetLabel: '🎯 Objetivo:',
-    affectsClick: 'Poder de Clic Manual',
-    affectsSyndicate: 'Hype del Sindicato de la Junta',
-    affectsGlobal: 'Producción Global VPS',
-    boughtUpgradesTitle: 'Mejoras Compradas',
-    noBoughtUpgrades: 'Aún no has comprado mejoras.',
-    unitProduction: 'Por Unidad:',
-    totalProduction: 'Rendimiento Total:',
-    incomeShare: 'del ingreso total',
-    multiplierLabel: 'Multiplicador:',
-    showBoughtUpgrades: 'Mostrar Mejoras Compradas',
-    hideBoughtUpgrades: 'Ocultar Mejoras Compradas',
-
-    // Events / Meme Banners
-    claimMemeBtn: '⚡ ¡RECLAMAR MEME!',
-    noticedBtn: '📋 ENTENDIDO',
-    event_vc_tweet_title: '🟢 Tweet de VC Hype',
-    event_vc_tweet_desc: '¡Pam Saltman retwittea tu startup! ¡Impulso instantáneo del +20% en valoración!',
-    event_eu_ai_act_title: '🔴 Ley Mundial de Slop Aprobada',
-    event_eu_ai_act_desc: '¡Carga regulatoria de cumplimiento! VPS reducido en un 50% durante 20 segundos.',
-    event_llm_hallucination_title: '🌀 Alucinación del LLM',
-    event_llm_hallucination_desc: '¡Los modelos producen slop ultra creativo! ¡Valor de clic x5 por 15s!',
-  },
 };
 
 // Große Content-Dictionaries (Gebäude, 260 Upgrades, 100 Greenwashing/Layoffs,
 // Achievements, Events) leben in src/i18n/content/*.content.js und werden hier
 // eingemischt, damit t()/tr() sie wie jeden anderen UI-Text auflösen kann.
-// de/en sind vollständig befüllt; fr/es fallen auf en zurück (t() macht das
-// automatisch: TRANSLATIONS[lang]?.[key] || TRANSLATIONS.en[key] || key).
 const CONTENT_TRANSLATIONS = buildContentTranslations();
 Object.assign(TRANSLATIONS.de, CONTENT_TRANSLATIONS.de);
 Object.assign(TRANSLATIONS.en, CONTENT_TRANSLATIONS.en);

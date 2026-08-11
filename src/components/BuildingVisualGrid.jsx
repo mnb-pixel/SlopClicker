@@ -94,7 +94,7 @@ export function BuildingVisualGrid({ buildings, boughtUpgrades = [], boughtGreen
                   </span>
                   {bMult > 1 && (
                     <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black px-1.5 py-0.1 rounded border border-amber-500/30">
-                      {bMult.toFixed(1)}x upgraded
+                      {bMult.toFixed(1)}x
                     </span>
                   )}
                 </div>
