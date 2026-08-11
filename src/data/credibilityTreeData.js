@@ -1,5 +1,6 @@
 // Credibility Tree: Idealist Path (lowers Burn Rate) vs Cynic Path (boosts VPS, raises Burn Rate)
-// Costs per level s (0..14): 1.35^s Credibility
+// Costs per level s (0..14): CREDIBILITY_LEVEL_COST_BASE^s Credibility
+export const CREDIBILITY_LEVEL_COST_BASE = 1.75;
 
 export const IDEALIST_PATH = [
   { level: 1, name: 'Erste Selbstreflexion', burnDelta: -0.002, vpsBonus: 0, icon: 'HeartHandshake', quote: 'Kurzer Moment der Ehrlichkeit im Investorengespräch.' },

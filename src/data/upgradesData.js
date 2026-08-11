@@ -13,7 +13,7 @@ const BUILDING_UPGRADES_DATA = BUILDINGS_DATA.flatMap((b) =>
     type: 'building',
     buildingId: b.id,
     icon: THRESHOLD_ICONS[i % THRESHOLD_ICONS.length] || b.icon || 'Zap',
-    cost: Math.floor(10 * b.baseCost * Math.pow(1.15, i)),
+    cost: Math.floor(10 * b.baseCost * Math.pow(1.25, i)),
     effect: { type: 'buildingMult', value: UPGRADE_MULTIPLIERS[i] },
     req: { buildingCount: { id: b.id, count: threshold } },
   }))

@@ -50,8 +50,8 @@ export function BuildingVisualGrid({ buildings, boughtUpgrades = [], boughtGreen
         </span>
       </div>
 
-      {/* Visual Building Rows */}
-      <div className="flex flex-col gap-2.5 max-h-[320px] overflow-y-auto pr-1">
+      {/* Visual Building Rows - grows with the list, page scrolls instead of a nested scrollbar */}
+      <div className="flex flex-col gap-2.5">
         {ownedBuildings.map((b) => {
           const count = buildings[b.id] || 0;
 

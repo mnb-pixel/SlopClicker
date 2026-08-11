@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import * as Icons from 'lucide-react';
 import { HEAVENLY_UPGRADES_DATA } from '../../data/heavenlyUpgradesData';
-import { IDEALIST_PATH, CYNIC_PATH, EPOCHS } from '../../data/credibilityTreeData';
+import { IDEALIST_PATH, CYNIC_PATH, EPOCHS, CREDIBILITY_LEVEL_COST_BASE } from '../../data/credibilityTreeData';
 import { formatCurrency, formatNumber } from '../../utils/formatters';
 
 export function SpecialTab({
@@ -161,7 +161,7 @@ export function SpecialTab({
           {IDEALIST_PATH.slice(0, idealistLevel + 1).map((node, idx) => {
             const isUnlocked = idx < idealistLevel;
             const isNext = idx === idealistLevel;
-            const cost = Math.pow(1.35, idx);
+            const cost = Math.pow(CREDIBILITY_LEVEL_COST_BASE, idx);
             const canAfford = credibility >= cost && isNext;
             const nodeName = `${currentEpoch.prefix}${node.name}`;
 
@@ -222,7 +222,7 @@ export function SpecialTab({
           {CYNIC_PATH.slice(0, cynicLevel + 1).map((node, idx) => {
             const isUnlocked = idx < cynicLevel;
             const isNext = idx === cynicLevel;
-            const cost = Math.pow(1.35, idx);
+            const cost = Math.pow(CREDIBILITY_LEVEL_COST_BASE, idx);
             const canAfford = credibility >= cost && isNext;
             const nodeName = `${currentEpoch.prefix}${node.name}`;
 

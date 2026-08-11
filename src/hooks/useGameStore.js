@@ -5,7 +5,7 @@ import { HEAVENLY_UPGRADES_DATA } from '../data/heavenlyUpgradesData';
 import { ACHIEVEMENTS_DATA } from '../data/achievementsData';
 import { BUZZWORDS_DATA, getBoosterPackCost } from '../data/buzzwordsData';
 import { GREENWASHING_LAYOFFS_DATA, getCorporateActionCost } from '../data/greenwashingLayoffsData';
-import { IDEALIST_PATH, CYNIC_PATH, EPOCHS } from '../data/credibilityTreeData';
+import { IDEALIST_PATH, CYNIC_PATH, EPOCHS, CREDIBILITY_LEVEL_COST_BASE } from '../data/credibilityTreeData';
 import { GOLDEN_EVENT_IDS, BUBBLE_EVENT_IDS } from '../i18n/content/events.content';
 import { TRANSLATIONS } from '../i18n/translations';
 import { formatCurrency, getBuildingCost, getBuildingBulkCost, getMaxAffordableBuildings } from '../utils/formatters';
@@ -1022,13 +1022,19 @@ export function useGameStore() {
       return;
     }
     const nextEpoch = (epoch + 1) % EPOCHS.length;
-    setCredibility((prev) => prev + pivotCredGain);
+    // Alter Credibility-Kontostand verpufft mit dem Pivot - nur der frisch verdiente
+    // pivotCredGain bleibt als neues Startkapital für den (ebenfalls zurückgesetzten) Baum.
+    // Verhindert, dass Idealist/Cynic-Baum über beliebig viele Pivots hinweg permanent
+    // weiterwächst, statt bei jeder Epoche neu erkämpft werden zu müssen.
+    setCredibility(pivotCredGain);
+    setIdealistLevel(0);
+    setCynicLevel(0);
     setEpoch(nextEpoch);
     setPivotCount((prev) => prev + 1);
     setValuationAtLastPivot(totalValuation);
     if (pendingPivotBoost) setPendingPivotBoost(false);
 
-    addLog(`🔄 PIVOT EXECUTED! Epoch rotated to ${EPOCHS[nextEpoch].name}! Earned +${pivotCredGain} Credibility!${pendingPivotBoost ? ' (inkl. +20% Ad-Bonus)' : ''}`, 'achievement');
+    addLog(`🔄 PIVOT EXECUTED! Epoch rotated to ${EPOCHS[nextEpoch].name}! Earned +${pivotCredGain} Credibility! Credibility-Baum wurde zurückgesetzt.${pendingPivotBoost ? ' (inkl. +20% Ad-Bonus)' : ''}`, 'achievement');
   }, [pivotCredGain, totalValuation, epoch, addLog, pendingPivotBoost]);
 
   // Buy Buzzword Card Directly
@@ -1110,7 +1116,7 @@ export function useGameStore() {
   const buyIdealistLevel = useCallback(() => {
     if (idealistLevel >= 15) return;
     const nextNode = IDEALIST_PATH[idealistLevel];
-    const cost = Math.pow(1.35, idealistLevel);
+    const cost = Math.pow(CREDIBILITY_LEVEL_COST_BASE, idealistLevel);
 
     if (credibility < cost) {
       addLog(`Not enough Credibility for Idealist level ${idealistLevel + 1}!`, 'danger');
@@ -1126,7 +1132,7 @@ export function useGameStore() {
   const buyCynicLevel = useCallback(() => {
     if (cynicLevel >= 15) return;
     const nextNode = CYNIC_PATH[cynicLevel];
-    const cost = Math.pow(1.35, cynicLevel);
+    const cost = Math.pow(CREDIBILITY_LEVEL_COST_BASE, cynicLevel);
 
     if (credibility < cost) {
       addLog(`Not enough Credibility for Cynic level ${cynicLevel + 1}!`, 'danger');
