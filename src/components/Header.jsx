@@ -24,7 +24,6 @@ export function Header({
   burnRate,
   soundEnabled,
   setSoundEnabled,
-  setActiveTab,
   onOpenManual,
   onOpenPitchDeck,
   lang = 'de',
@@ -160,15 +159,6 @@ export function Header({
               }`}
             >
               {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-            </button>
-
-            {/* Quick Settings Button */}
-            <button
-              onClick={() => setActiveTab && setActiveTab(5)}
-              title="Open Settings & Misc"
-              className="p-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700 hover:border-cyan-400 text-xs transition-all"
-            >
-              <Cpu className="w-3.5 h-3.5" />
             </button>
 
             {/* View Switcher Button */}

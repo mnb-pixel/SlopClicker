@@ -38,10 +38,10 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenManual }) {
         {/* Special Ascension */}
         <div className="bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-2 shadow-xl">
           <SpecialTab
-            totalValuation={store.totalValuation}
             prestigeLevel={store.prestigeLevel}
             heavenlyChips={store.heavenlyChips}
             ascend={store.ascend}
+            pendingHeavenlyChips={store.pendingHeavenlyChips}
             boughtHeavenlyUpgrades={store.boughtHeavenlyUpgrades}
             buyHeavenlyUpgrade={store.buyHeavenlyUpgrade}
             epoch={store.epoch}
@@ -80,10 +80,6 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenManual }) {
         {/* Ads, Pitch Deck & Misc Settings */}
         <div className="bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-2 shadow-xl">
           <MiscTab
-            soundEnabled={store.soundEnabled}
-            setSoundEnabled={store.setSoundEnabled}
-            fancyGraphics={store.fancyGraphics}
-            setFancyGraphics={store.setFancyGraphics}
             adState={store.adState}
             startAd={store.startAd}
             isAdReady={store.isAdReady}
@@ -91,9 +87,6 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenManual }) {
             onOpenPitchDeck={() => setIsPitchDeckOpen(true)}
             onOpenManual={onOpenManual}
             resetSave={store.resetSave}
-            lang={store.lang}
-            setLang={store.setLang}
-            t={store.t}
           />
         </div>
       </div>

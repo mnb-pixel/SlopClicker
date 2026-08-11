@@ -54,7 +54,6 @@ export default function App() {
         burnRate={store.burnRate}
         soundEnabled={store.soundEnabled}
         setSoundEnabled={store.setSoundEnabled}
-        setActiveTab={store.setActiveTab}
         onOpenManual={() => setIsManualOpen(true)}
         onOpenPitchDeck={() => setIsPitchDeckOpen(true)}
         lang={store.lang}
@@ -141,10 +140,10 @@ export default function App() {
 
             {store.activeTab === 3 && (
               <SpecialTab
-                totalValuation={store.totalValuation}
                 prestigeLevel={store.prestigeLevel}
                 heavenlyChips={store.heavenlyChips}
                 ascend={store.ascend}
+                pendingHeavenlyChips={store.pendingHeavenlyChips}
                 boughtHeavenlyUpgrades={store.boughtHeavenlyUpgrades}
                 buyHeavenlyUpgrade={store.buyHeavenlyUpgrade}
                 epoch={store.epoch}
@@ -181,10 +180,6 @@ export default function App() {
 
             {store.activeTab === 5 && (
               <MiscTab
-                soundEnabled={store.soundEnabled}
-                setSoundEnabled={store.setSoundEnabled}
-                fancyGraphics={store.fancyGraphics}
-                setFancyGraphics={store.setFancyGraphics}
                 adState={store.adState}
                 startAd={store.startAd}
                 isAdReady={store.isAdReady}
@@ -192,9 +187,6 @@ export default function App() {
                 onOpenPitchDeck={() => setIsPitchDeckOpen(true)}
                 onOpenManual={() => setIsManualOpen(true)}
                 resetSave={store.resetSave}
-                lang={store.lang}
-                setLang={store.setLang}
-                t={store.t}
               />
             )}
           </main>

@@ -40,6 +40,11 @@ const OFFLINE_MIN_SECONDS = 60;
 const OFFLINE_CAP_SECONDS = 4 * 3600;
 const OFFLINE_EFFICIENCY = 0.5;
 
+// Singularity Ascension: Chips = sqrt(totalValuation / Divisor). War vorher 1e9 (der erste
+// Chip brauchte $1 Mrd. Lifetime-Valuation - bei den exponentiellen Gebäudekosten praktisch
+// unerreichbar, fühlte sich also wie "kaputt" an). Auf 1e7 gesenkt: erster Chip ab $10M.
+const ASCEND_CHIP_DIVISOR = 10000000;
+
 const INITIAL_BUILDINGS = BUILDINGS_DATA.reduce((acc, b) => {
   acc[b.id] = 0;
   return acc;
@@ -389,9 +394,11 @@ export function useGameStore() {
     }
     const pathMult = 1.0 + buzzwordBonus + idealistVpsBonus + cynicVpsBonus;
 
-    let prestigeBonus = 1.0 + (prestigeLevel * 0.01);
+    // War 1%/2% pro Prestige-Level - bei so seltenen Chips (siehe ASCEND_CHIP_DIVISOR) hat
+    // sich der harte Reset nicht gelohnt. Verdoppelt, damit Ascension spürbar was bringt.
+    let prestigeBonus = 1.0 + (prestigeLevel * 0.02);
     if (boughtHeavenlyUpgrades.includes('heaven_synergy_1')) {
-      prestigeBonus = 1.0 + (prestigeLevel * 0.02);
+      prestigeBonus = 1.0 + (prestigeLevel * 0.04);
     }
 
     let powerSurgeMult = 1.0;
@@ -831,12 +838,17 @@ export function useGameStore() {
     return uncollected[randomIndex];
   }, [boughtBuzzwords]);
 
+  // Chips, die eine Ascension JETZT bringen würde (ohne Ad-Boost) - von SpecialTab fürs
+  // Anzeigen/Deaktivieren des Buttons genutzt, damit die Formel nur an einer Stelle steht.
+  const pendingHeavenlyChips = useMemo(() => {
+    return Math.floor(Math.sqrt(Math.max(0, totalValuation) / ASCEND_CHIP_DIVISOR));
+  }, [totalValuation]);
+
   // Singularity Ascension (SlopClicker Prestige Reset - bleibt zusätzlich zu Pivot bestehen)
   const ascend = useCallback(() => {
-    const baseChips = Math.floor(Math.pow(totalValuation / 1000000000, 0.5));
-    const earnedChips = pendingAscendBoost ? Math.floor(baseChips * 1.2) : baseChips;
+    const earnedChips = pendingAscendBoost ? Math.floor(pendingHeavenlyChips * 1.2) : pendingHeavenlyChips;
     if (earnedChips <= 0 && prestigeLevel === 0) {
-      addLog('Singularity Ascension requires at least $1B lifetime valuation!', 'warning');
+      addLog('Singularity Ascension requires at least $10M lifetime valuation!', 'warning');
       return;
     }
 
@@ -859,7 +871,7 @@ export function useGameStore() {
 
     playSound('ascend', soundEnabled);
     addLog(`🌌 SINGULARITY ASCENSION EXECUTED! Earned ${earnedChips} Heavenly Chips!${pendingAscendBoost ? ' (inkl. +20% Ad-Bonus)' : ''}`, 'achievement');
-  }, [totalValuation, prestigeLevel, soundEnabled, addLog, pendingAscendBoost]);
+  }, [totalValuation, prestigeLevel, soundEnabled, addLog, pendingAscendBoost, pendingHeavenlyChips]);
 
   // Pivot is a milestone, not a reset: Engines, Upgrades and Valuation all stay. Credibility
   // is earned on lifetime valuation GAINED SINCE THE LAST PIVOT.
@@ -1065,7 +1077,7 @@ export function useGameStore() {
     valuation, totalValuation, totalBurned, slopCount,
     gpuTemp, isOverheated, coolingRate,
     powerClicks, powerClickActive, powerClickSurgeTimer, togglePowerClick,
-    prestigeLevel, heavenlyChips, ascend, buyHeavenlyUpgrade, boughtHeavenlyUpgrades,
+    prestigeLevel, heavenlyChips, ascend, pendingHeavenlyChips, buyHeavenlyUpgrade, boughtHeavenlyUpgrades,
     buildings, buyBuilding, buyMode, setBuyMode,
     boughtUpgrades, unlockedUpgrades, buyUpgrade, buyAllUpgrades,
     unlockedAchievements,

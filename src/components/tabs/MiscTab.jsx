@@ -4,10 +4,6 @@ import { formatCurrency } from '../../utils/formatters';
 import { AdBanner } from '../AdBanner';
 
 export function MiscTab({
-  soundEnabled,
-  setSoundEnabled,
-  fancyGraphics,
-  setFancyGraphics,
   adState,
   startAd,
   isAdReady,
@@ -15,8 +11,6 @@ export function MiscTab({
   onOpenPitchDeck,
   onOpenManual,
   resetSave,
-  lang = 'de',
-  setLang,
 }) {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
 
@@ -154,54 +148,8 @@ export function MiscTab({
       {/* Statischer Werbe-Slot (Banner) */}
       <AdBanner variant="rectangle" label="Werbung" />
 
-      {/* Settings Options */}
+      {/* Wipe Save Data (Sprache & Audio sind bereits in der Kopfzeile verfügbar) */}
       <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
-        <h3 className="font-black text-sm uppercase text-slate-200 flex items-center gap-2">
-          <Icons.Settings className="w-4 h-4 text-slate-400" /> Settings & Audio
-        </h3>
-
-        {/* Language Selection Row */}
-        <div className="flex items-center justify-between py-1 border-b border-slate-800 text-xs">
-          <span className="text-slate-300 font-semibold flex items-center gap-1">
-            <Icons.Globe className="w-3.5 h-3.5 text-cyan-400" /> Language / Sprache
-          </span>
-          <select
-            value={lang}
-            onChange={(e) => setLang && setLang(e.target.value)}
-            className="px-2 py-1 rounded bg-slate-950 text-cyan-300 border border-slate-800 font-mono font-bold text-xs"
-          >
-            <option value="de">🇩🇪 Deutsch</option>
-            <option value="en">🇬🇧 English</option>
-            <option value="fr">🇫🇷 Français</option>
-            <option value="es">🇪🇸 Español</option>
-          </select>
-        </div>
-
-        <div className="flex items-center justify-between py-1 border-b border-slate-800 text-xs">
-          <span className="text-slate-300 font-semibold">Web Audio SFX Tones</span>
-          <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`px-3 py-1 rounded-full text-xs font-black transition-all ${
-              soundEnabled ? 'bg-cyan-500 text-slate-950' : 'bg-slate-800 text-slate-500'
-            }`}
-          >
-            {soundEnabled ? 'ON' : 'OFF'}
-          </button>
-        </div>
-
-        <div className="flex items-center justify-between py-1 border-b border-slate-800 text-xs">
-          <span className="text-slate-300 font-semibold">Fancy Cyber Graphics</span>
-          <button
-            onClick={() => setFancyGraphics(!fancyGraphics)}
-            className={`px-3 py-1 rounded-full text-xs font-black transition-all ${
-              fancyGraphics ? 'bg-cyan-500 text-slate-950' : 'bg-slate-800 text-slate-500'
-            }`}
-          >
-            {fancyGraphics ? 'ON' : 'OFF'}
-          </button>
-        </div>
-
-        {/* Wipe Save Button */}
         {showWipeConfirm ? (
           <div className="bg-rose-950/80 p-3 rounded-xl border border-rose-500 flex flex-col gap-2 mt-2">
             <div className="text-xs font-extrabold text-rose-300">
