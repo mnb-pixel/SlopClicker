@@ -1,0 +1,23 @@
+// Gebäude-Namen (Konzept Abschnitt 5), Key-Präfix: building_<id>_name
+export const BUILDINGS_CONTENT = {
+  prompt_intern: { de: { name: 'Prompt-Praktikant' }, en: { name: 'Prompt Intern' } },
+  chatbot_widget: { de: { name: 'Chatbot-Widget' }, en: { name: 'Chatbot Widget' } },
+  prompt_engineer: { de: { name: 'Prompt Engineer' }, en: { name: 'Prompt Engineer' } },
+  gpu_rack: { de: { name: 'GPU-Rack' }, en: { name: 'GPU Rack' } },
+  datacenter: { de: { name: 'Rechenzentrum' }, en: { name: 'Data Center' } },
+  web_scraper: { de: { name: 'Web-Scraper' }, en: { name: 'Web Scraper' } },
+  thought_leader: { de: { name: 'LinkedIn-Thought-Leader' }, en: { name: 'LinkedIn Thought Leader' } },
+  vc_firm: { de: { name: 'VC-Firma' }, en: { name: 'VC Firm' } },
+  hype_journalist: { de: { name: 'Hype-Journalist' }, en: { name: 'Hype Journalist' } },
+  keynote_stage: { de: { name: 'Keynote-Bühne' }, en: { name: 'Keynote Stage' } },
+  pivot_startup: { de: { name: 'Pivot-Startup' }, en: { name: 'Pivot Startup' } },
+  token_burner: { de: { name: 'Token-Burner' }, en: { name: 'Token Burner' } },
+  pitch_deck: { de: { name: 'Recyceltes Pitch Deck' }, en: { name: 'Recycled Pitch Deck' } },
+  lobbyist: { de: { name: 'Regulierungs-Lobbyist' }, en: { name: 'Regulatory Lobbyist' } },
+  agi_clock: { de: { name: 'AGI-Countdown-Uhr' }, en: { name: 'AGI Countdown Clock' } },
+  gray_market_dc: { de: { name: 'Grauer-Markt-Rechenzentrum' }, en: { name: 'Gray-Market Data Center' } },
+  nuclear_reactor: { de: { name: 'Kleiner Atomreaktor' }, en: { name: 'Small Nuclear Reactor' } },
+  metaverse_city: { de: { name: 'Metaverse-Geisterstadt' }, en: { name: 'Metaverse Ghost Town' } },
+  excel_sheet: { de: { name: 'Selbstbewusste Excel-Tabelle' }, en: { name: 'Self-Aware Spreadsheet' } },
+  singularity: { de: { name: 'Die Singularity' }, en: { name: 'The Singularity' } },
+};

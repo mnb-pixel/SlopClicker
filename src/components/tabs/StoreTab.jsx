@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import * as Icons from 'lucide-react';
 import { BUILDINGS_DATA } from '../../data/buildingsData';
-import { UPGRADES_DATA } from '../../data/upgradesData';
-import { BUZZWORDS_DATA } from '../../data/buzzwordsData';
+import { UPGRADES_DATA, getAvailableUpgrades } from '../../data/upgradesData';
 import { GREENWASHING_LAYOFFS_DATA } from '../../data/greenwashingLayoffsData';
 import { formatCurrency, formatNumber, getBuildingCost, getBuildingBulkCost, getMaxAffordableBuildings } from '../../utils/formatters';
 import { BuzzwordAlbum } from '../BuzzwordAlbum';
@@ -28,6 +27,7 @@ export function StoreTab({
 }) {
   const [storeSection, setStoreSection] = useState('engines'); // 'engines' | 'upgrades' | 'corporate' | 'buzzwords'
   const [showBoughtUpgrades, setShowBoughtUpgrades] = useState(false);
+  const [hoveredUpgradeId, setHoveredUpgradeId] = useState(null);
   const tr = t || ((k) => k);
 
   // Dynamic Icon Resolver helper
@@ -42,25 +42,50 @@ export function StoreTab({
       return (
         <img
           src={item.image}
-          alt={item.name || 'AI Engine Meme'}
+          alt="AI Engine Meme"
           className="w-7 h-7 rounded-lg object-cover border border-cyan-400/60 shadow-md"
         />
       );
     }
-    return renderIcon(item?.icon || defaultIcon, 'w-4 h-4 text-cyan-400');
+    const iconColor = item?.type === 'building' ? 'text-cyan-400' : item?.type === 'click' ? 'text-amber-400' : item?.type === 'syndicate' ? 'text-fuchsia-400' : item?.type === 'global' ? 'text-emerald-400' : 'text-cyan-400';
+    return renderIcon(item?.icon || defaultIcon, `w-4 h-4 ${iconColor}`);
   };
+
+  const buildingName = (buildingId) => tr(`building_${buildingId}_name`);
 
   // Target Badge Resolver helper
   const getTargetBadge = (up) => {
     if (!up) return '';
     if (up.type === 'building') {
-      const targetB = BUILDINGS_DATA.find((b) => b.id === up.buildingId);
-      return targetB ? `🎯 ${targetB.name}` : `🎯 ${up.buildingId}`;
+      return `🎯 ${buildingName(up.buildingId)}`;
     }
     if (up.type === 'click') return `🎯 ${tr('affectsClick')}`;
-    if (up.type === 'syndicate') return `🎯 ${tr('affectsSyndicate')}`;
+    if (up.type === 'syndicate') {
+      return up.req?.buildingId ? `🎯 ${buildingName(up.req.buildingId)}` : `🎯 ${tr('affectsSyndicate')}`;
+    }
     if (up.type === 'global') return `🎯 ${tr('affectsGlobal')}`;
     return '🎯 Global';
+  };
+
+  // Für die 260 Gebäude-Upgrades (nur type:'building') gibt es Name/Flavor über t(),
+  // description wird dynamisch aus Gebäude-Name + Multiplikator gebaut.
+  const upgradeName = (up) => (up.type === 'building' ? tr(`upgrade_${up.id}_name`) : up.name);
+  const upgradeQuote = (up) => (up.type === 'building' ? tr(`upgrade_${up.id}_quote`) : up.quote);
+  const upgradeDescription = (up) => {
+    if (up.type !== 'building') return up.description;
+    return `${buildingName(up.buildingId)} produce ${up.effect.value}x more Valuation!`;
+  };
+
+  // Für die 100 Greenwashing/Layoff-Aktionen: Name/Flavor über t(), effectDesc dynamisch.
+  const gwName = (item) => tr(`gw_${item.id}_name`);
+  const gwQuote = (item) => tr(`gw_${item.id}_quote`);
+  const gwEffectDesc = (item) => {
+    if (item.type === 'greenwashing' && item.tier === 1) return 'Burn Rate -0.1%';
+    if (item.type === 'greenwashing' && item.tier === 2) return 'Engine VPS +10%';
+    if (item.type === 'greenwashing' && item.tier === 3) return 'Cosmetic only (no numeric effect)';
+    if (item.type === 'layoff' && item.tier === 1) return 'Engine VPS +20%';
+    if (item.type === 'layoff' && item.tier === 2) return 'Engine VPS +15%';
+    return '';
   };
 
   // Calculate gross base CPS sum across all buildings for income percentage share
@@ -77,16 +102,16 @@ export function StoreTab({
     boughtGreenwashingLayoffs.forEach((itemId) => {
       const gw = GREENWASHING_LAYOFFS_DATA.find((g) => g.id === itemId);
       if (gw && gw.buildingId === b.id) {
-        if (gw.id.endsWith('_2')) bMult *= 1.10;
-        if (gw.id.endsWith('_3')) bMult *= 1.15;
-        if (gw.id.startsWith('lay_') && gw.tier === 1) bMult *= 1.20;
-        if (gw.id.startsWith('lay_') && gw.tier === 2) bMult *= 1.35;
+        if (gw.type === 'greenwashing' && gw.tier === 2) bMult *= 1.10;
+        if (gw.type === 'layoff' && gw.tier === 1) bMult *= 1.20;
+        if (gw.type === 'layoff' && gw.tier === 2) bMult *= 1.15;
       }
     });
     return acc + count * b.baseCps * bMult;
   }, 0);
 
-  // Progressive Building Visibility
+  // Progressive Building Visibility: a building's tile only shows once the PREVIOUS
+  // building is actually owned (no shortcut via valuation alone).
   const visibleBuildings = [];
   let foundFirstLocked = false;
 
@@ -95,22 +120,18 @@ export function StoreTab({
     const prevBuilding = idx > 0 ? BUILDINGS_DATA[idx - 1] : null;
     const prevCount = prevBuilding ? (buildings[prevBuilding.id] || 0) : 0;
 
-    const isUnlocked = idx === 0 || count > 0 || prevCount >= 1 || totalValuation >= b.baseCost * 0.15;
+    const isUnlocked = idx === 0 || count > 0 || prevCount >= 1;
 
     if (isUnlocked) {
       visibleBuildings.push(b);
     } else if (!foundFirstLocked) {
-      visibleBuildings.push({ id: `locked_teaser_${b.id}`, isTeaser: true, name: b.name });
+      visibleBuildings.push({ id: `locked_teaser_${b.id}`, isTeaser: true });
       foundFirstLocked = true;
     }
   });
 
-  // Upgrades List Filtering
-  const totalOwnedBuildings = Object.values(buildings).reduce((sum, c) => sum + (c || 0), 0);
-  const availableUpgrades = UPGRADES_DATA.filter((up) => {
-    if (boughtUpgrades.includes(up.id)) return false;
-    return unlockedUpgrades.includes(up.id);
-  });
+  // Upgrades List Filtering (ONLY for engines the player ALREADY OWNS!)
+  const availableUpgrades = getAvailableUpgrades(buildings, boughtUpgrades, valuation, totalValuation);
 
   const boughtUpgradesObjects = boughtUpgrades
     .map((upId) => UPGRADES_DATA.find((u) => u.id === upId))
@@ -195,7 +216,7 @@ export function StoreTab({
                           ??? Locked Engine Tier
                         </div>
                         <div className="text-[11px] text-slate-500 italic mt-0.5">
-                          Requires higher valuation or previous engine tier.
+                          Requires owning the previous AI Engine tier.
                         </div>
                       </div>
                     </div>
@@ -238,10 +259,9 @@ export function StoreTab({
               boughtGreenwashingLayoffs.forEach((itemId) => {
                 const gw = GREENWASHING_LAYOFFS_DATA.find((g) => g.id === itemId);
                 if (gw && gw.buildingId === b.id) {
-                  if (gw.id.endsWith('_2')) bMult *= 1.10;
-                  if (gw.id.endsWith('_3')) bMult *= 1.15;
-                  if (gw.id.startsWith('lay_') && gw.tier === 1) bMult *= 1.20;
-                  if (gw.id.startsWith('lay_') && gw.tier === 2) bMult *= 1.35;
+                  if (gw.type === 'greenwashing' && gw.tier === 2) bMult *= 1.10;
+                  if (gw.type === 'layoff' && gw.tier === 1) bMult *= 1.20;
+                  if (gw.type === 'layoff' && gw.tier === 2) bMult *= 1.15;
                 }
               });
 
@@ -254,11 +274,9 @@ export function StoreTab({
                   {/* Mouseover Hover Tooltip Card */}
                   <div className="hidden group-hover:flex flex-col gap-1 absolute bottom-full left-0 right-0 z-50 mb-2 p-3 bg-slate-950/95 backdrop-blur-md border border-cyan-500/50 rounded-xl shadow-2xl text-xs pointer-events-none animate-fadeIn">
                     <div className="font-extrabold text-cyan-300 flex items-center justify-between">
-                      <span>{b.name}</span>
+                      <span>{buildingName(b.id)}</span>
                       <span className="text-[10px] text-slate-400 font-mono">Base: {formatCurrency(b.baseCost)}</span>
                     </div>
-                    <div className="text-slate-300 italic text-[11px]">"{b.quote}"</div>
-                    <div className="text-slate-400 text-[11px]">{b.description}</div>
                     <div className="text-emerald-400 font-mono font-bold text-[11px] pt-1 border-t border-slate-800 flex justify-between">
                       <span>1 Unit: +{formatCurrency(unitVps)}/s ({bMult.toFixed(1)}x mult)</span>
                       <span>Total: +{formatCurrency(buildingTotalVps)}/s ({vpsSharePct}%)</span>
@@ -279,7 +297,7 @@ export function StoreTab({
                       </div>
                       <div>
                         <div className="font-extrabold text-xs text-slate-100 flex items-center gap-1.5">
-                          {b.name}
+                          {buildingName(b.id)}
                           {count > 0 && (
                             <span className="bg-cyan-500/20 text-cyan-300 text-[10px] font-black px-1.5 py-0.1 rounded border border-cyan-500/30">
                               x{count}
@@ -319,149 +337,159 @@ export function StoreTab({
         </div>
       )}
 
-      {/* UPGRADES SECTION */}
-      {storeSection === 'upgrades' && (
-        <div className="flex flex-col gap-3">
-          {/* Native "BUY ALL" Button */}
-          <div className="flex justify-between items-center bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
-            <div>
-              <div className="text-xs font-extrabold text-slate-200">Native "Buy All" Function</div>
-              <div className="text-[10px] text-slate-400">Instantly buys all affordable upgrades.</div>
-            </div>
-            <button
-              onClick={buyAllUpgrades}
-              className="bg-amber-500 text-slate-950 hover:bg-amber-400 px-3 py-1.5 rounded-lg font-black text-xs shadow-md shadow-amber-500/20 active:scale-95 transition-all"
-            >
-              ⚡ BUY ALL
-            </button>
-          </div>
+      {/* UPGRADES SECTION (Kachel Grid / Tiles View) */}
+      {storeSection === 'upgrades' && (() => {
+        const activeUpgrade = availableUpgrades.find((u) => u.id === hoveredUpgradeId) || availableUpgrades[0];
+        const canAffordActive = activeUpgrade && valuation >= activeUpgrade.cost;
 
-          {availableUpgrades.length === 0 ? (
-            <div className="text-center py-6 bg-slate-900/40 rounded-xl border border-slate-800/80 text-slate-400 text-xs italic">
-              No new available upgrades discovered right now.
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {availableUpgrades.map((up) => {
-                const canAfford = valuation >= up.cost;
-                const targetText = getTargetBadge(up);
-
-                return (
-                  <div key={up.id} className="relative group">
-                    {/* Mouseover Hover Tooltip Card */}
-                    <div className="hidden group-hover:flex flex-col gap-1 absolute bottom-full left-0 right-0 z-50 mb-2 p-3 bg-slate-950/95 backdrop-blur-md border border-amber-500/50 rounded-xl shadow-2xl text-xs pointer-events-none animate-fadeIn">
-                      <div className="font-extrabold text-amber-300 flex items-center justify-between">
-                        <span>{up.name}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">{formatCurrency(up.cost)}</span>
-                      </div>
-                      <div className="text-cyan-400 text-[10px] font-mono font-bold">{targetText}</div>
-                      <div className="text-slate-300 italic text-[11px]">"{up.quote}"</div>
-                      <div className="text-amber-400 font-semibold text-[11px] pt-1 border-t border-slate-800">
-                        {up.description}
-                      </div>
-                    </div>
-
-                    {/* Upgrade Row */}
-                    <div
-                      className={`p-2.5 rounded-xl border flex items-center justify-between transition-all ${
-                        canAfford
-                          ? 'bg-slate-900/90 border-slate-700 hover:border-amber-500/60 shadow-md'
-                          : 'bg-slate-950/60 border-slate-900 opacity-60'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="bg-slate-800 p-2 rounded-lg border border-slate-700 text-amber-400 shrink-0">
-                          {renderItemArtwork(up, 'Zap')}
-                        </div>
-                        <div>
-                          <div className="font-extrabold text-xs text-slate-100 flex items-center gap-1.5 flex-wrap">
-                            <span>{up.name}</span>
-                            <span className="bg-amber-500/20 text-amber-300 text-[9px] font-black px-1.5 py-0.2 rounded border border-amber-500/30 font-mono">
-                              {targetText}
-                            </span>
-                          </div>
-                          <div className="text-[10px] text-amber-300/90 font-mono font-semibold mt-0.5">
-                            {up.description}
-                          </div>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => buyUpgrade(up.id)}
-                        disabled={!canAfford}
-                        className={`px-3 py-1.5 rounded-lg font-black text-xs flex flex-col items-end transition-all min-w-[80px] ${
-                          canAfford
-                            ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 active:scale-95 shadow-sm'
-                            : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-                        }`}
-                      >
-                        <span>BUY</span>
-                        <span className="text-[10px] font-mono opacity-90">
-                          {formatCurrency(up.cost)}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* BOUGHT UPGRADES ACCORDION SECTION */}
-          <div className="mt-2 bg-slate-900/80 rounded-xl border border-slate-800 overflow-hidden">
-            <button
-              onClick={() => setShowBoughtUpgrades((prev) => !prev)}
-              className="w-full p-3 flex items-center justify-between font-extrabold text-xs text-emerald-400 hover:bg-slate-800/60 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <Icons.CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>{tr('boughtUpgradesTitle')} ({boughtUpgradesObjects.length})</span>
+        return (
+          <div className="flex flex-col gap-3">
+            {/* Header + Buy All */}
+            <div className="flex justify-between items-center bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
+              <div>
+                <div className="text-xs font-extrabold text-slate-200 flex items-center gap-1.5">
+                  <Icons.Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>Verfügbare Upgrades ({availableUpgrades.length})</span>
+                </div>
+                <div className="text-[10px] text-slate-400">Kachel antippen für Details, dann unten "KAUFEN" drücken.</div>
               </div>
-              <span className="text-[10px] font-mono font-bold text-slate-400">
-                {showBoughtUpgrades ? tr('hideBoughtUpgrades') : tr('showBoughtUpgrades')}
-              </span>
-            </button>
+              <button
+                onClick={buyAllUpgrades}
+                disabled={availableUpgrades.filter((u) => valuation >= u.cost).length === 0}
+                className="bg-amber-500 text-slate-950 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg font-black text-xs shadow-md shadow-amber-500/20 active:scale-95 transition-all shrink-0"
+              >
+                ⚡ BUY ALL
+              </button>
+            </div>
 
-            {showBoughtUpgrades && (
-              <div className="p-2 border-t border-slate-800 flex flex-col gap-2 bg-slate-950/60">
-                {boughtUpgradesObjects.length === 0 ? (
-                  <div className="text-center py-4 text-slate-500 text-xs italic">
-                    {tr('noBoughtUpgrades')}
+            {/* UNTRUNCATED UPGRADE INSPECTOR CARD (Fixed in document flow - Never cut off!) */}
+            {activeUpgrade && (
+              <div className="bg-slate-950/95 border-2 border-amber-400/80 rounded-xl p-3 shadow-xl flex flex-col gap-1.5 text-xs text-slate-100 animate-fadeIn">
+                <div className="flex items-center justify-between font-extrabold text-amber-300 border-b border-slate-800 pb-1">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="p-1 rounded bg-slate-900 border border-slate-800 shrink-0">
+                      {renderItemArtwork(activeUpgrade, 'Zap')}
+                    </div>
+                    <span className="truncate">{upgradeName(activeUpgrade)}</span>
                   </div>
-                ) : (
-                  boughtUpgradesObjects.map((up) => {
-                    const targetText = getTargetBadge(up);
-                    return (
-                      <div
-                        key={up.id}
-                        className="p-2 rounded-lg bg-emerald-950/30 border border-emerald-500/40 flex items-center justify-between text-xs"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="p-1.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/30">
-                            {renderItemArtwork(up, 'Check')}
-                          </div>
-                          <div>
-                            <div className="font-bold text-slate-200 flex items-center gap-1.5">
-                              <span>{up.name}</span>
-                              <span className="bg-emerald-500/20 text-emerald-300 text-[9px] font-mono font-bold px-1 rounded">
-                                {targetText}
-                              </span>
-                            </div>
-                            <div className="text-[10px] text-emerald-400 font-mono">{up.description}</div>
-                          </div>
-                        </div>
-                        <span className="bg-emerald-500/20 text-emerald-300 text-[9px] font-black px-2 py-0.5 rounded border border-emerald-500/40 shrink-0">
-                          ✓ BOUGHT
-                        </span>
-                      </div>
-                    );
-                  })
+                  <span className="font-mono text-emerald-400 font-black text-sm shrink-0 ml-2">
+                    {formatCurrency(activeUpgrade.cost)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] font-mono">
+                  <span className="text-cyan-300 font-bold">{getTargetBadge(activeUpgrade)}</span>
+                  <span className={canAffordActive ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                    {canAffordActive ? '✓ Bezahlbar' : '🔒 Nicht genug Valuation'}
+                  </span>
+                </div>
+
+                {upgradeQuote(activeUpgrade) && (
+                  <div className="text-slate-300 italic text-[11px] bg-slate-900/60 p-1.5 rounded border border-slate-800/80">
+                    "{upgradeQuote(activeUpgrade)}"
+                  </div>
                 )}
+
+                <div className="text-amber-300 font-bold text-[11px] pt-1 flex justify-between items-center gap-2">
+                  <span>⚡ {upgradeDescription(activeUpgrade)}</span>
+                  <button
+                    onClick={() => buyUpgrade(activeUpgrade.id)}
+                    disabled={!canAffordActive}
+                    className={`px-3 py-1 rounded-lg font-black text-xs transition-all shrink-0 ${
+                      canAffordActive
+                        ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 active:scale-95 shadow-sm'
+                        : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                    }`}
+                  >
+                    KAUFEN
+                  </button>
+                </div>
               </div>
             )}
+
+            {availableUpgrades.length === 0 ? (
+              <div className="text-center py-8 bg-slate-900/40 rounded-xl border border-slate-800/80 text-slate-400 text-xs italic">
+                Keine neuen Upgrades freigeschaltet. Kaufe mehr KI-Engines für neue Upgrades!
+              </div>
+            ) : (
+              /* Tile Grid (Kacheln) */
+              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+                {availableUpgrades.map((up) => {
+                  const canAfford = valuation >= up.cost;
+                  const isHovered = activeUpgrade?.id === up.id;
+
+                  return (
+                    <div
+                      key={up.id}
+                      onMouseEnter={() => setHoveredUpgradeId(up.id)}
+                      onClick={() => setHoveredUpgradeId(up.id)}
+                      className={`w-full aspect-square rounded-xl border flex flex-col items-center justify-between p-1.5 cursor-pointer transition-all ${
+                        isHovered
+                          ? 'ring-2 ring-amber-400 border-amber-300 bg-amber-950/40 scale-105 shadow-lg shadow-amber-500/20'
+                          : canAfford
+                          ? 'bg-slate-900 border-amber-500/60 text-amber-400 hover:border-amber-300 hover:scale-105 active:scale-95 shadow-md'
+                          : 'bg-slate-950/80 border-slate-800/80 text-slate-600 opacity-50'
+                      }`}
+                    >
+                      <div className="flex-1 flex items-center justify-center">
+                        {renderItemArtwork(up, 'Zap')}
+                      </div>
+                      <div className={`text-[9px] font-mono font-bold truncate w-full text-center ${
+                        canAfford ? 'text-amber-300' : 'text-slate-500'
+                      }`}>
+                        {formatCurrency(up.cost)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* BOUGHT UPGRADES ACCORDION SECTION */}
+            <div className="mt-2 bg-slate-900/80 rounded-xl border border-slate-800 overflow-hidden">
+              <button
+                onClick={() => setShowBoughtUpgrades((prev) => !prev)}
+                className="w-full p-3 flex items-center justify-between font-extrabold text-xs text-emerald-400 hover:bg-slate-800/60 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Icons.CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>{tr('boughtUpgradesTitle')} ({boughtUpgradesObjects.length})</span>
+                </div>
+                <span className="text-[10px] font-mono font-bold text-slate-400">
+                  {showBoughtUpgrades ? tr('hideBoughtUpgrades') : tr('showBoughtUpgrades')}
+                </span>
+              </button>
+
+              {showBoughtUpgrades && (
+                <div className="p-2 border-t border-slate-800 bg-slate-950/60">
+                  {boughtUpgradesObjects.length === 0 ? (
+                    <div className="text-center py-4 text-slate-500 text-xs italic">
+                      {tr('noBoughtUpgrades')}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+                      {boughtUpgradesObjects.map((up) => {
+                        const targetText = getTargetBadge(up);
+                        return (
+                          <div
+                            key={up.id}
+                            onMouseEnter={() => setHoveredUpgradeId(up.id)}
+                            className="w-full aspect-square rounded-xl bg-emerald-950/30 border border-emerald-500/40 p-1.5 flex flex-col items-center justify-center text-emerald-400 opacity-90 hover:opacity-100 hover:border-emerald-400 cursor-pointer transition-all"
+                            title={`${upgradeName(up)}: ${upgradeDescription(up)}`}
+                          >
+                            {renderItemArtwork(up, 'Check')}
+                            <span className="text-[9px] font-mono font-bold text-emerald-400/80 mt-0.5">✓</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* CORPORATE ACTIONS SECTION (Greenwashing & Layoffs - Strict Owned Engines & Progressive Tiers) */}
       {storeSection === 'corporate' && (() => {
@@ -527,7 +555,7 @@ export function StoreTab({
                       <div className={`p-2 rounded-lg border shrink-0 ${
                         item.type === 'greenwashing' ? 'bg-emerald-950 border-emerald-500/40 text-emerald-400' : 'bg-rose-950 border-rose-500/40 text-rose-400'
                       }`}>
-                        {item.type === 'greenwashing' ? <Icons.Recycle className="w-4 h-4" /> : <Icons.UserX className="w-4 h-4" />}
+                        {renderIcon(item.icon || (item.type === 'greenwashing' ? 'Recycle' : 'UserX'), 'w-4 h-4')}
                       </div>
                       <div>
                         <div className="font-extrabold text-xs text-slate-100">{item.name}</div>

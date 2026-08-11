@@ -19,7 +19,6 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenManual }) {
           gpuTemp={store.gpuTemp}
           clickValue={store.clickValue}
           activeEvent={store.activeEvent}
-          catchGoldenMeme={store.catchGoldenMeme}
           powerClickActive={store.powerClickActive}
           particles={store.particles}
           buildings={store.buildings}
@@ -48,6 +47,7 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenManual }) {
             cynicLevel={store.cynicLevel}
             buyCynicLevel={store.buyCynicLevel}
             pivot={store.pivot}
+            pivotCredGain={store.pivotCredGain}
             t={store.t}
           />
         </div>

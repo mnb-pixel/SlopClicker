@@ -1,5 +1,7 @@
 // Multi-Language Dictionary (DE, EN, FR, ES) for SlopClicker / Hype Clicker
 
+import { buildContentTranslations } from './mergeContent';
+
 export const TRANSLATIONS = {
   de: {
     // Header
@@ -57,7 +59,7 @@ export const TRANSLATIONS = {
 
     // Special Tab
     pivotTitle: 'Pivot Strategy & Epochen-Rotation',
-    pivotDesc: 'Pivotieren dein Startup in die nächste Hype-Ära. Setzt Bewertung & Engines zurück für Credibility!',
+    pivotDesc: 'Pivotiere dein Startup in die nächste Hype-Ära und sammle Credibility. Engines, Upgrades & Valuation bleiben erhalten!',
     credBalance: 'Credibility Guthaben:',
     pivotGain: 'Pivot Gewinn:',
     executePivot: 'Pivot Ausführen (+',
@@ -177,7 +179,7 @@ export const TRANSLATIONS = {
 
     // Special Tab
     pivotTitle: 'Pivot Strategy & Epoch Rotation',
-    pivotDesc: 'Pivot your startup into the next hype era. Reset Valuation & Engines for Credibility!',
+    pivotDesc: 'Pivot your startup into the next hype era and earn Credibility. Engines, Upgrades & Valuation stay intact!',
     credBalance: 'Credibility Balance:',
     pivotGain: 'Pivot Gain:',
     executePivot: 'Execute Pivot (+',
@@ -297,7 +299,7 @@ export const TRANSLATIONS = {
 
     // Special Tab
     pivotTitle: 'Stratégie de Pivotement & Époques',
-    pivotDesc: 'Pivotez votre startup vers la prochaine ère. Réinitialisez la valeur pour la Crédibilité !',
+    pivotDesc: 'Pivotez votre startup vers la prochaine ère et gagnez de la Crédibilité. Moteurs, Améliorations & Valorisation restent intacts !',
     credBalance: 'Solde de Crédibilité:',
     pivotGain: 'Gain du Pivot:',
     executePivot: 'Exécuter le Pivot (+',
@@ -417,7 +419,7 @@ export const TRANSLATIONS = {
 
     // Special Tab
     pivotTitle: 'Estrategia de Pivote & Épocas',
-    pivotDesc: '¡Pivota tu startup hacia la próxima era! ¡Reinicia el valor para ganar Credibilidad!',
+    pivotDesc: '¡Pivota tu startup hacia la próxima era y gana Credibilidad! ¡Motores, Mejoras y Valoración se mantienen intactos!',
     credBalance: 'Saldo de Credibilidad:',
     pivotGain: 'Ganancia del Pivote:',
     executePivot: 'Ejecutar Pivote (+',
@@ -481,3 +483,12 @@ export const TRANSLATIONS = {
     event_llm_hallucination_desc: '¡Los modelos producen slop ultra creativo! ¡Valor de clic x5 por 15s!',
   },
 };
+
+// Große Content-Dictionaries (Gebäude, 260 Upgrades, 100 Greenwashing/Layoffs,
+// Achievements, Events) leben in src/i18n/content/*.content.js und werden hier
+// eingemischt, damit t()/tr() sie wie jeden anderen UI-Text auflösen kann.
+// de/en sind vollständig befüllt; fr/es fallen auf en zurück (t() macht das
+// automatisch: TRANSLATIONS[lang]?.[key] || TRANSLATIONS.en[key] || key).
+const CONTENT_TRANSLATIONS = buildContentTranslations();
+Object.assign(TRANSLATIONS.de, CONTENT_TRANSLATIONS.de);
+Object.assign(TRANSLATIONS.en, CONTENT_TRANSLATIONS.en);

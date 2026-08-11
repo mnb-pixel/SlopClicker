@@ -18,6 +18,7 @@ export function SpecialTab({
   cynicLevel = 0,
   buyCynicLevel,
   pivot,
+  pivotCredGain = 0,
   t,
 }) {
   const [activePathTab, setActivePathTab] = useState('idealist'); // 'idealist' | 'cynic' | 'heavenly'
@@ -29,7 +30,7 @@ export function SpecialTab({
   };
 
   const currentEpoch = EPOCHS[epoch] || EPOCHS[2];
-  const credGain = Math.floor(Math.sqrt(totalValuation / 1000000));
+  const credGain = pivotCredGain;
   const pendingChips = Math.floor(Math.pow(totalValuation / 1000000000, 0.5));
   const currentBonus = prestigeLevel * (boughtHeavenlyUpgrades.includes('heaven_synergy_1') ? 2 : 1);
 
@@ -132,14 +133,19 @@ export function SpecialTab({
                     : 'bg-slate-950/60 border-slate-900 opacity-60'
                 }`}
               >
-                <div>
-                  <div className="font-extrabold text-xs text-slate-100 flex items-center gap-1.5">
-                    <span>Level {node.level}: {nodeName}</span>
-                    {isUnlocked && <span className="bg-emerald-500/20 text-emerald-300 text-[9px] px-1 rounded">UNLOCKED</span>}
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-lg bg-emerald-950 border border-emerald-500/40 text-emerald-400 shrink-0">
+                    {renderIcon(node.icon || 'HeartHandshake', 'w-4 h-4')}
                   </div>
-                  <div className="text-[11px] text-slate-400 italic">"{node.quote}"</div>
-                  <div className="text-[10px] text-emerald-400 font-mono font-bold mt-0.5">
-                    Burn Delta: {(node.burnDelta * 100).toFixed(1)}% {node.vpsBonus > 0 && `| VPS: +${Math.round(node.vpsBonus * 100)}%`}
+                  <div>
+                    <div className="font-extrabold text-xs text-slate-100 flex items-center gap-1.5">
+                      <span>Level {node.level}: {nodeName}</span>
+                      {isUnlocked && <span className="bg-emerald-500/20 text-emerald-300 text-[9px] px-1 rounded font-mono font-bold">UNLOCKED</span>}
+                    </div>
+                    <div className="text-[11px] text-slate-400 italic">"{node.quote}"</div>
+                    <div className="text-[10px] text-emerald-400 font-mono font-bold mt-0.5">
+                      Burn Delta: {(node.burnDelta * 100).toFixed(1)}% {node.vpsBonus > 0 && `| VPS: +${Math.round(node.vpsBonus * 100)}%`}
+                    </div>
                   </div>
                 </div>
 
@@ -188,14 +194,19 @@ export function SpecialTab({
                     : 'bg-slate-950/60 border-slate-900 opacity-60'
                 }`}
               >
-                <div>
-                  <div className="font-extrabold text-xs text-slate-100 flex items-center gap-1.5">
-                    <span>Level {node.level}: {nodeName}</span>
-                    {isUnlocked && <span className="bg-rose-500/20 text-rose-300 text-[9px] px-1 rounded">UNLOCKED</span>}
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-lg bg-rose-950 border border-rose-500/40 text-rose-400 shrink-0">
+                    {renderIcon(node.icon || 'TrendingUp', 'w-4 h-4')}
                   </div>
-                  <div className="text-[11px] text-slate-400 italic">"{node.quote}"</div>
-                  <div className="text-[10px] text-rose-400 font-mono font-bold mt-0.5">
-                    VPS: +{Math.round(node.vpsBonus * 100)}% {node.burnDelta > 0 && `| Burn: +${(node.burnDelta * 100).toFixed(1)}%`}
+                  <div>
+                    <div className="font-extrabold text-xs text-slate-100 flex items-center gap-1.5">
+                      <span>Level {node.level}: {nodeName}</span>
+                      {isUnlocked && <span className="bg-rose-500/20 text-rose-300 text-[9px] px-1 rounded font-mono font-bold">UNLOCKED</span>}
+                    </div>
+                    <div className="text-[11px] text-slate-400 italic">"{node.quote}"</div>
+                    <div className="text-[10px] text-rose-400 font-mono font-bold mt-0.5">
+                      VPS: +{Math.round(node.vpsBonus * 100)}% {node.burnDelta > 0 && `| Burn: +${(node.burnDelta * 100).toFixed(1)}%`}
+                    </div>
                   </div>
                 </div>
 

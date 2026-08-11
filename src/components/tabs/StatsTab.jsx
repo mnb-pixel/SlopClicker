@@ -13,9 +13,10 @@ export function StatsTab({
   slopCount,
   unlockedAchievements,
   logs,
+  t,
 }) {
-  const [statsSection, setStatsSection] = useState('overview'); // 'overview' | 'log' | 'achievements'
   const [isBadgesModalOpen, setIsBadgesModalOpen] = useState(false);
+  const tr = t || ((k) => k);
 
   const renderIcon = (iconName, className = 'w-4 h-4') => {
     const IconComp = Icons[iconName] || Icons.Award;

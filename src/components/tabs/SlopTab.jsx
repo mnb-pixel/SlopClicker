@@ -9,7 +9,6 @@ export function SlopTab({
   gpuTemp,
   clickValue,
   activeEvent,
-  catchGoldenMeme,
   powerClickActive,
   particles,
   buildings,
@@ -147,6 +146,7 @@ export function SlopTab({
         buildings={buildings || {}}
         boughtUpgrades={boughtUpgrades || []}
         boughtGreenwashingLayoffs={boughtGreenwashingLayoffs || []}
+        t={t}
       />
     </div>
   );

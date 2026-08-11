@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Flame, Edit3, Sparkles, Zap, ShieldAlert, Cpu, LayoutGrid, Smartphone, Volume2, VolumeX, BookOpen, Globe } from 'lucide-react';
 import { formatCurrency, formatExactValuation, formatNumber } from '../utils/formatters';
+import { NewsTicker } from './NewsTicker';
 
 export function Header({
   startupName,
@@ -9,6 +10,7 @@ export function Header({
   valuation,
   vps,
   grossVps,
+  netFlow,
   slopCount,
   gpuTemp,
   isOverheated,
@@ -26,6 +28,7 @@ export function Header({
   onOpenManual,
   lang = 'de',
   setLang,
+  logs,
   t,
 }) {
   const [isEditingName, setIsEditingName] = useState(false);
@@ -73,14 +76,8 @@ export function Header({
           </div>
         )}
 
-        {/* Financial Newswire Ticker */}
-        <div className={`text-[10px] font-mono tracking-widest overflow-hidden whitespace-nowrap py-0.5 border-b ${
-          isSecTheme ? 'bg-[#F4F1EA] text-slate-900 border-slate-900' : 'bg-slate-950 text-cyan-400/80 border-slate-800'
-        }`}>
-          <div className="inline-block animate-marquee uppercase font-bold">
-            {tr('confidentialTicker')} {hypeTier}/10 • {tr('burnRate')} {(burnRate * 100).toFixed(1)}%/s • GREENWASHING CERTIFIED • INVESTOR RELATIONS RUNWAY ACTIVE •
-          </div>
-        </div>
+        {/* Financial Newswire Ticker: live game events mixed with satirical filler headlines */}
+        <NewsTicker logs={logs} lang={lang} hypeTier={hypeTier} burnRate={burnRate} isSecTheme={isSecTheme} />
 
         {/* Top Row: Startup Name, Theme Switcher & View Mode */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -225,7 +222,7 @@ export function Header({
           </div>
           <div className="flex items-center justify-center gap-3 text-xs mt-0.5">
             <span className={isSecTheme ? 'text-[#38512E] font-bold' : 'text-cyan-400 font-semibold'}>
-              {tr('netVps')} +{formatCurrency(vps)}/s
+              {tr('netVps')} {netFlow >= 0 ? '+' : ''}{formatCurrency(netFlow ?? vps)}/s
             </span>
             <span className="opacity-40">•</span>
             <span className={`font-mono font-bold ${isSecTheme ? 'text-[#8C2F26]' : 'text-rose-400'}`}>
