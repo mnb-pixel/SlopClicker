@@ -5,6 +5,7 @@ import { formatCurrency, formatExactValuation, formatNumber } from '../utils/for
 export function Header({
   startupName,
   setStartupName,
+  hasAiDomainBonus,
   valuation,
   vps,
   grossVps,
@@ -101,19 +102,28 @@ export function Header({
               </button>
             </form>
           ) : (
-            <button
-              onClick={() => setIsEditingName(true)}
-              className="flex items-center gap-1.5 hover:opacity-80 transition-opacity group"
-            >
-              <span className={`font-extrabold text-sm tracking-wider uppercase ${
-                isSecTheme
-                  ? 'text-[#EAE7DA] font-serif underline decoration-[#8A6A1F]'
-                  : 'bg-gradient-to-r from-cyan-400 to-fuchsia-400 bg-clip-text text-transparent'
-              }`}>
-                {startupName}
-              </span>
-              <Edit3 className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsEditingName(true)}
+                className="flex items-center gap-1.5 hover:opacity-80 transition-opacity group"
+              >
+                <span className={`font-extrabold text-sm tracking-wider uppercase ${
+                  isSecTheme
+                    ? 'text-[#EAE7DA] font-serif underline decoration-[#8A6A1F]'
+                    : 'bg-gradient-to-r from-cyan-400 to-fuchsia-400 bg-clip-text text-transparent'
+                }`}>
+                  {startupName}
+                </span>
+                <Edit3 className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
+              </button>
+
+              {hasAiDomainBonus && (
+                <span className="bg-amber-400/20 text-amber-300 border border-amber-400/60 font-mono text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md shadow-amber-500/20 animate-pulse">
+                  <Sparkles className="w-3 h-3 text-amber-300" />
+                  <span>.AI HYPE BONUS (+10% VPS)</span>
+                </span>
+              )}
+            </div>
           )}
 
           {/* Right Action Buttons */}

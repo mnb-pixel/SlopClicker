@@ -8,7 +8,7 @@ import { GREENWASHING_LAYOFFS_DATA } from '../data/greenwashingLayoffsData';
 import { IDEALIST_PATH, CYNIC_PATH, EPOCHS } from '../data/credibilityTreeData';
 import { TRANSLATIONS } from '../i18n/translations';
 import { playSound } from '../utils/soundEffects';
-import { getBuildingCost, getBuildingBulkCost, getMaxAffordableBuildings } from '../utils/formatters';
+import { formatCurrency, getBuildingCost, getBuildingBulkCost, getMaxAffordableBuildings } from '../utils/formatters';
 
 const STORAGE_KEY = 'SLOP_CLICKER_GAME_SAVE_V1';
 
@@ -19,7 +19,7 @@ const INITIAL_BUILDINGS = BUILDINGS_DATA.reduce((acc, b) => {
 
 export function useGameStore() {
   const [lang, setLang] = useState('de'); // 'de' | 'en' | 'fr' | 'es'
-  const [startupName, setStartupName] = useState('Slopify.ai');
+  const [startupName, setStartupName] = useState('tokenkamin');
   const [valuation, setValuation] = useState(0);
   const [totalValuation, setTotalValuation] = useState(0);
   const [slopCount, setSlopCount] = useState(0);
@@ -47,6 +47,7 @@ export function useGameStore() {
 
   const [buildings, setBuildings] = useState(INITIAL_BUILDINGS);
   const [boughtUpgrades, setBoughtUpgrades] = useState([]);
+  const [unlockedUpgrades, setUnlockedUpgrades] = useState([]);
   const [boughtHeavenlyUpgrades, setBoughtHeavenlyUpgrades] = useState([]);
   const [unlockedAchievements, setUnlockedAchievements] = useState([]);
 
@@ -101,6 +102,7 @@ export function useGameStore() {
       heavenlyChips,
       buildings,
       boughtUpgrades,
+      unlockedUpgrades,
       boughtHeavenlyUpgrades,
       unlockedAchievements,
       stats,
@@ -115,7 +117,7 @@ export function useGameStore() {
   }, [
     startupName, valuation, totalValuation, slopCount, gpuTemp, isOverheated,
     coolingRate, powerClicks, prestigeLevel, heavenlyChips, buildings,
-    boughtUpgrades, boughtHeavenlyUpgrades, unlockedAchievements, stats,
+    boughtUpgrades, unlockedUpgrades, boughtHeavenlyUpgrades, unlockedAchievements, stats,
     soundEnabled, fancyGraphics
   ]);
 
@@ -126,7 +128,7 @@ export function useGameStore() {
       if (saved) {
         const data = JSON.parse(saved);
         if (data) {
-          setStartupName(data.startupName || 'Slopify.ai');
+          setStartupName(data.startupName || 'tokenkamin');
           setValuation(data.valuation || 0);
           setTotalValuation(data.totalValuation || 0);
           setSlopCount(data.slopCount || 0);
@@ -138,6 +140,7 @@ export function useGameStore() {
           setHeavenlyChips(data.heavenlyChips || 0);
           setBuildings({ ...INITIAL_BUILDINGS, ...data.buildings });
           setBoughtUpgrades(data.boughtUpgrades || []);
+          setUnlockedUpgrades(data.unlockedUpgrades || []);
           setBoughtHeavenlyUpgrades(data.boughtHeavenlyUpgrades || []);
           setUnlockedAchievements(data.unlockedAchievements || []);
           setStats(data.stats || {
@@ -172,6 +175,11 @@ export function useGameStore() {
     }, 10000);
     return () => clearInterval(saveTimer);
   }, [saveGame]);
+
+  // Update browser tab title dynamically: "$Value - CompanyName" (No lightning bolts!)
+  useEffect(() => {
+    document.title = `${formatCurrency(valuation)} - ${startupName}`;
+  }, [valuation, startupName]);
 
   // --- HYPE TIER & BURN RATE CALCULATIONS ---
   const hypeTier = useMemo(() => {
@@ -305,8 +313,11 @@ export function useGameStore() {
       eventMult = 0.5;
     }
 
-    return totalCps * globalMult * syndicateBoost * pathMult * prestigeBonus * powerSurgeMult * eventMult;
-  }, [buildings, boughtUpgrades, boughtGreenwashingLayoffs, boughtHeavenlyUpgrades, unlockedAchievements, buzzwordBonus, idealistLevel, cynicLevel, prestigeLevel, powerClickActive, powerClickSurgeTimer, activeEvent]);
+    // 9. Easter Egg: .ai Company Domain Bonus (+10% VPS)
+    const aiDomainMult = (startupName || '').trim().toLowerCase().endsWith('.ai') ? 1.10 : 1.0;
+
+    return totalCps * globalMult * syndicateBoost * pathMult * prestigeBonus * powerSurgeMult * eventMult * aiDomainMult;
+  }, [buildings, boughtUpgrades, boughtGreenwashingLayoffs, boughtHeavenlyUpgrades, unlockedAchievements, buzzwordBonus, idealistLevel, cynicLevel, prestigeLevel, powerClickActive, powerClickSurgeTimer, activeEvent, startupName]);
 
   // Net VPS after continuous Burn Rate deduction
   const vps = useMemo(() => {
@@ -445,6 +456,51 @@ export function useGameStore() {
 
     return () => clearInterval(interval);
   }, [vps, coolingRate, isOverheated, activeEvent, powerClickSurgeTimer, unlockedAchievements, stats, totalValuation, valuation, buildings, boughtHeavenlyUpgrades, boughtUpgrades, boughtBuzzwords, boughtGreenwashingLayoffs, prestigeLevel, heavenlyChips, idealistLevel, cynicLevel, epoch, soundEnabled, addLog]);
+
+  // Dynamic Sticky Upgrade Unlock Logic (Cash-based & Owned Engine requirement)
+  // Sticky rule: Once unlocked by reaching current cash threshold, upgrades stay unlocked even if cash drops!
+  useEffect(() => {
+    const newlyUnlocked = [];
+
+    // Find lowest unbought upgrade per OWNED building
+    const lowestUnboughtBuildingUpgrade = new Map();
+    UPGRADES_DATA.forEach((up) => {
+      if (up.type === 'building' && !boughtUpgrades.includes(up.id)) {
+        const ownedCount = buildings[up.buildingId] || 0;
+        if (ownedCount >= 1 && !lowestUnboughtBuildingUpgrade.has(up.buildingId)) {
+          lowestUnboughtBuildingUpgrade.set(up.buildingId, up);
+        }
+      }
+    });
+
+    UPGRADES_DATA.forEach((up) => {
+      if (boughtUpgrades.includes(up.id) || unlockedUpgrades.includes(up.id)) return;
+
+      if (up.type === 'building') {
+        const ownedCount = buildings[up.buildingId] || 0;
+        if (ownedCount < 1) return; // STRICT: Must own engine!
+
+        const nextUp = lowestUnboughtBuildingUpgrade.get(up.buildingId);
+        if (!nextUp || nextUp.id !== up.id) return;
+
+        const reqCount = up.req?.buildingCount?.count || 1;
+        // Unlock when CURRENT CASH 'valuation' reaches 30% of cost or building count is met
+        if (valuation >= up.cost * 0.3 || ownedCount >= reqCount) {
+          newlyUnlocked.push(up.id);
+        }
+      } else {
+        // Misc Upgrades (Click, Syndicate, Global)
+        const targetCost = up.cost || up.req?.totalValuation || 100;
+        if (valuation >= targetCost * 0.3) {
+          newlyUnlocked.push(up.id);
+        }
+      }
+    });
+
+    if (newlyUnlocked.length > 0) {
+      setUnlockedUpgrades((prev) => [...new Set([...prev, ...newlyUnlocked])]);
+    }
+  }, [valuation, buildings, boughtUpgrades, unlockedUpgrades]);
 
   // --- ACTIONS ---
 
@@ -667,6 +723,7 @@ export function useGameStore() {
     setValuation(0);
     setBuildings(INITIAL_BUILDINGS);
     setBoughtUpgrades([]);
+    setUnlockedUpgrades([]);
     setGpuTemp(0);
     setIsOverheated(false);
 
@@ -686,6 +743,7 @@ export function useGameStore() {
     setValuation(0);
     setBuildings(INITIAL_BUILDINGS);
     setBoughtUpgrades([]);
+    setUnlockedUpgrades([]);
     setGpuTemp(0);
     setIsOverheated(false);
 
@@ -785,17 +843,14 @@ export function useGameStore() {
     addLog(`Purchased Heavenly Upgrade "${up.name}"!`, 'success');
   }, [boughtHeavenlyUpgrades, heavenlyChips, soundEnabled, addLog]);
 
-  // Bouncing GPU Easter Egg
-  const bounceGPU = useCallback(() => {
-    setStats((s) => ({ ...s, gpuBounced: true }));
-    playSound('golden', soundEnabled);
-    addLog('🛸 GPU Detached! Meltdown physics Easter Egg unlocked!', 'achievement');
-  }, [soundEnabled, addLog]);
+  const hasAiDomainBonus = useMemo(() => {
+    return (startupName || '').trim().toLowerCase().endsWith('.ai');
+  }, [startupName]);
 
   // Wipe Save Data
   const resetSave = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
-    setStartupName('Slopify.ai');
+    setStartupName('tokenkamin');
     setValuation(0);
     setTotalValuation(0);
     setSlopCount(0);
@@ -803,6 +858,7 @@ export function useGameStore() {
     setIsOverheated(false);
     setBuildings(INITIAL_BUILDINGS);
     setBoughtUpgrades([]);
+    setUnlockedUpgrades([]);
     setBoughtHeavenlyUpgrades([]);
     setUnlockedAchievements([]);
     setPrestigeLevel(0);
@@ -821,13 +877,13 @@ export function useGameStore() {
 
   return {
     lang, setLang, t,
-    startupName, setStartupName,
+    startupName, setStartupName, hasAiDomainBonus,
     valuation, totalValuation, slopCount,
     gpuTemp, isOverheated, coolingRate,
     powerClicks, powerClickActive, powerClickSurgeTimer, togglePowerClick,
     prestigeLevel, heavenlyChips, ascend, buyHeavenlyUpgrade, boughtHeavenlyUpgrades,
     buildings, buyBuilding, buyMode, setBuyMode,
-    boughtUpgrades, buyUpgrade, buyAllUpgrades,
+    boughtUpgrades, unlockedUpgrades, buyUpgrade, buyAllUpgrades,
     unlockedAchievements,
     activeEvent, catchGoldenMeme,
     adState, startAd,
@@ -836,7 +892,7 @@ export function useGameStore() {
     fancyGraphics, setFancyGraphics,
     activeTab, setActiveTab,
     vps, grossVps, clickValue, handleTapAGI,
-    bounceGPU, resetSave, particles,
+    resetSave, particles,
 
     // SEC Form S-1 & Hype Ledger Features
     themeMode, toggleThemeMode,

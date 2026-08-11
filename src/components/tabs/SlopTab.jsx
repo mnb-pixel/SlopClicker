@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Zap, Flame, ShieldAlert, Sparkles, Move } from 'lucide-react';
+import React from 'react';
+import { Zap, Flame, ShieldAlert, Sparkles } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 import { BuildingVisualGrid } from '../BuildingVisualGrid';
 
@@ -12,22 +12,14 @@ export function SlopTab({
   catchGoldenMeme,
   powerClickActive,
   particles,
-  bounceGPU,
   buildings,
   boughtUpgrades,
   boughtGreenwashingLayoffs,
   themeMode,
   t,
 }) {
-  const [isBouncing, setIsBouncing] = useState(false);
   const isSecTheme = themeMode === 'sec_prospectus';
   const tr = t || ((k) => k);
-
-  const handleDragGPU = () => {
-    setIsBouncing(true);
-    bounceGPU();
-    setTimeout(() => setIsBouncing(false), 2000);
-  };
 
   return (
     <div className="flex flex-col items-center justify-between min-h-[calc(100vh-230px)] p-4 relative overflow-hidden">
@@ -150,14 +142,6 @@ export function SlopTab({
             </span>
           </button>
         )}
-
-        {/* Easter Egg Drag / Bounce GPU button */}
-        <button
-          onClick={handleDragGPU}
-          className="mt-2 text-[11px] text-slate-500 hover:text-cyan-400 flex items-center gap-1 transition-colors z-10"
-        >
-          <Move className="w-3 h-3" /> Detach & Bounce GPU (Easter Egg)
-        </button>
       </div>
 
       {/* Visual Building Grid (Owned Items Display in Middle) */}

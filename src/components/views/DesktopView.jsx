@@ -22,7 +22,6 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenManual }) {
           catchGoldenMeme={store.catchGoldenMeme}
           powerClickActive={store.powerClickActive}
           particles={store.particles}
-          bounceGPU={store.bounceGPU}
           buildings={store.buildings}
           boughtUpgrades={store.boughtUpgrades}
           boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}
@@ -99,6 +98,7 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenManual }) {
           buyMode={store.buyMode}
           setBuyMode={store.setBuyMode}
           boughtUpgrades={store.boughtUpgrades}
+          unlockedUpgrades={store.unlockedUpgrades}
           buyUpgrade={store.buyUpgrade}
           buyAllUpgrades={store.buyAllUpgrades}
           totalValuation={store.totalValuation}

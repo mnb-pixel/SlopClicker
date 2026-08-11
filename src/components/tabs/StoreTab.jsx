@@ -13,6 +13,7 @@ export function StoreTab({
   buyMode,
   setBuyMode,
   boughtUpgrades,
+  unlockedUpgrades = [],
   buyUpgrade,
   buyAllUpgrades,
   totalValuation,
@@ -105,17 +106,7 @@ export function StoreTab({
   const totalOwnedBuildings = Object.values(buildings).reduce((sum, c) => sum + (c || 0), 0);
   const availableUpgrades = UPGRADES_DATA.filter((up) => {
     if (boughtUpgrades.includes(up.id)) return false;
-    if ((up.type === 'global' || up.type === 'syndicate') && totalOwnedBuildings < 1) return false;
-    if (up.req) {
-      if (up.req.totalValuation && totalValuation < up.req.totalValuation * 0.10 && valuation < up.cost * 0.10) {
-        return false;
-      }
-      if (up.req.buildingCount) {
-        const count = buildings[up.req.buildingCount.id] || 0;
-        if (count < 1 && totalValuation < up.cost * 0.10) return false;
-      }
-    }
-    return true;
+    return unlockedUpgrades.includes(up.id);
   });
 
   const boughtUpgradesObjects = boughtUpgrades

@@ -2,14 +2,6 @@ import React, { useState } from 'react';
 import * as Icons from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 
-const TIPS = [
-  'Tip #1: Always add .ai to your domain to instantly double your seed round valuation.',
-  'Tip #2: If your model hallucinates non-existent citations, call it "emergent creative intelligence".',
-  'Tip #3: When GPUs overheat, hold a bag of frozen peas against your PCIe slots.',
-  'Tip #4: Never write backend code when you can write a 20-line ClosedAI API wrapper.',
-  'Tip #5: Pam Saltman recommends posting enigmatic photos of pine trees on X to raise $7 Trillion.',
-];
-
 export function MiscTab({
   soundEnabled,
   setSoundEnabled,
@@ -23,39 +15,10 @@ export function MiscTab({
   lang = 'de',
   setLang,
 }) {
-  const [tipIndex, setTipIndex] = useState(0);
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
-
-  const nextTip = () => {
-    setTipIndex((prev) => (prev + 1) % TIPS.length);
-  };
 
   return (
     <div className="p-4 pb-20 max-w-md mx-auto flex flex-col gap-5">
-      {/* Tip of the Day Box (Saltman Avatar Parody) */}
-      <div className="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 flex items-start gap-3 shadow-xl">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-500 to-fuchsia-500 p-0.5 shrink-0 overflow-hidden shadow-md">
-          <img
-            src="/altman_avatar_meme.jpg"
-            alt="Saltman Founder Avatar"
-            className="w-full h-full object-cover rounded-full"
-          />
-        </div>
-        <div className="flex-1">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-black text-cyan-400 uppercase tracking-wider">
-              Tip of the Day
-            </span>
-            <button
-              onClick={nextTip}
-              className="text-[10px] text-slate-500 hover:text-slate-300 font-bold"
-            >
-              Next Tip →
-            </button>
-          </div>
-          <p className="text-xs text-slate-300 italic">{TIPS[tipIndex]}</p>
-        </div>
-      </div>
 
       {/* Game Manual Banner */}
       <div className="bg-gradient-to-r from-[#1C2B3A] via-slate-900 to-[#14202C] p-4 rounded-2xl border-2 border-[#8A6A1F] shadow-2xl flex flex-col gap-2">

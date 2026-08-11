@@ -34,6 +34,7 @@ export default function App() {
       <Header
         startupName={store.startupName}
         setStartupName={store.setStartupName}
+        hasAiDomainBonus={store.hasAiDomainBonus}
         valuation={store.valuation}
         vps={store.vps}
         grossVps={store.grossVps}
@@ -100,6 +101,7 @@ export default function App() {
                 buyMode={store.buyMode}
                 setBuyMode={store.setBuyMode}
                 boughtUpgrades={store.boughtUpgrades}
+                unlockedUpgrades={store.unlockedUpgrades}
                 buyUpgrade={store.buyUpgrade}
                 buyAllUpgrades={store.buyAllUpgrades}
                 totalValuation={store.totalValuation}
