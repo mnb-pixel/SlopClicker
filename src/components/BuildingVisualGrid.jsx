@@ -25,7 +25,7 @@ export function BuildingVisualGrid({ buildings, boughtUpgrades = [], boughtGreen
 
   if (ownedBuildings.length === 0) {
     return (
-      <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 text-center my-4 backdrop-blur-md">
+      <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 text-center mt-2 mb-1 backdrop-blur-md w-full">
         <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
           ⚡ AI Compute Matrix (Empty)
         </div>
@@ -37,7 +37,7 @@ export function BuildingVisualGrid({ buildings, boughtUpgrades = [], boughtGreen
   }
 
   return (
-    <div className="bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-3.5 shadow-2xl my-4 backdrop-blur-md w-full">
+    <div className="bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-3.5 shadow-2xl mt-2 mb-1 backdrop-blur-md w-full">
       <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
         <span className="text-xs font-extrabold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
           <Icons.Cpu className="w-4 h-4 text-cyan-400" />

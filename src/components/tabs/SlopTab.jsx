@@ -22,7 +22,7 @@ export function SlopTab({
   const tr = t || ((k) => k);
 
   return (
-    <div className="flex flex-col items-center justify-between min-h-[calc(100vh-230px)] p-4 relative overflow-hidden">
+    <div className="flex flex-col items-center justify-start gap-2 p-2 relative overflow-hidden">
       {/* SEC Form S-1 Confidential Watermark */}
       {isSecTheme && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden opacity-15 select-none z-0">
