@@ -6,13 +6,13 @@ import { BUILDINGS_DATA } from './buildingsData';
 // GW II = Gebäude-Multiplikator x1.10, GW III = rein kosmetisch (kein Zahlen-Effekt),
 // Layoff I = x1.20, Layoff II = x1.15.
 const TIERS = [
-  { key: '1', type: 'greenwashing', tier: 1, costMult: 5 },
-  { key: '2', type: 'greenwashing', tier: 2, costMult: 15 },
-  { key: '3', type: 'greenwashing', tier: 3, costMult: 40 },
+  { key: '1', type: 'greenwashing', tier: 1, costMult: 5, icon: 'Leaf' },
+  { key: '2', type: 'greenwashing', tier: 2, costMult: 15, icon: 'Trees' },
+  { key: '3', type: 'greenwashing', tier: 3, costMult: 40, icon: 'Recycle' },
 ];
 const LAYOFF_TIERS = [
-  { key: '1', type: 'layoff', tier: 1, costMult: 20 },
-  { key: '2', type: 'layoff', tier: 2, costMult: 60 },
+  { key: '1', type: 'layoff', tier: 1, costMult: 20, icon: 'UserMinus' },
+  { key: '2', type: 'layoff', tier: 2, costMult: 60, icon: 'UserX' },
 ];
 
 export const GREENWASHING_LAYOFFS_DATA = BUILDINGS_DATA.flatMap((b) => [
@@ -22,6 +22,7 @@ export const GREENWASHING_LAYOFFS_DATA = BUILDINGS_DATA.flatMap((b) => [
     type: t.type,
     tier: t.tier,
     costMult: t.costMult,
+    icon: t.icon,
   })),
   ...LAYOFF_TIERS.map((t) => ({
     id: `lay_${b.id}_${t.key}`,
@@ -29,5 +30,6 @@ export const GREENWASHING_LAYOFFS_DATA = BUILDINGS_DATA.flatMap((b) => [
     type: t.type,
     tier: t.tier,
     costMult: t.costMult,
+    icon: t.icon,
   })),
 ]);

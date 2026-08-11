@@ -101,6 +101,8 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenManual }) {
           totalValuation={store.totalValuation}
           boughtBuzzwords={store.boughtBuzzwords}
           buyBuzzword={store.buyBuzzword}
+          buyBoosterPack={store.buyBoosterPack}
+          addCardToAlbum={store.addCardToAlbum}
           boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}
           buyGreenwashingLayoff={store.buyGreenwashingLayoff}
           t={store.t}

@@ -1,14 +1,18 @@
 import { BUILDINGS_DATA } from './buildingsData';
 import { UPGRADE_THRESHOLDS, UPGRADE_MULTIPLIERS } from '../i18n/content/upgrades.content';
 
-// 260 Gebäude-Upgrades (Konzept Abschnitt 6): 13 Schwellen x 20 Gebäude.
-// Kosten(Schwelle-Index t, 1-indiziert) = 10 * baseCost * 1.15^(t-1)
+const THRESHOLD_ICONS = [
+  'Zap', 'TrendingUp', 'Cpu', 'Sparkles', 'ShieldCheck',
+  'Flame', 'Award', 'Rocket', 'Layers', 'Maximize2',
+  'Crown', 'Atom', 'Infinity'
+];
+
 const BUILDING_UPGRADES_DATA = BUILDINGS_DATA.flatMap((b) =>
   UPGRADE_THRESHOLDS.map((threshold, i) => ({
     id: `${b.id}_up_${threshold}`,
     type: 'building',
     buildingId: b.id,
-    icon: 'ArrowUpCircle',
+    icon: THRESHOLD_ICONS[i % THRESHOLD_ICONS.length] || b.icon || 'Zap',
     cost: Math.floor(10 * b.baseCost * Math.pow(1.15, i)),
     effect: { type: 'buildingMult', value: UPGRADE_MULTIPLIERS[i] },
     req: { buildingCount: { id: b.id, count: threshold } },

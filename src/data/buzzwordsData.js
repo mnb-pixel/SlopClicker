@@ -15,11 +15,59 @@ const NOUNS = [
   'Data Moat', 'Talent Density', 'Vertical Integration', 'Platform Shift'
 ];
 
+const NOUN_ICONS = {
+  'Synergy': 'Zap',
+  'Moat': 'ShieldCheck',
+  'Flywheel': 'RotateCw',
+  'Paradigm Shift': 'Sparkles',
+  'Value Chain': 'TrendingUp',
+  'Ecosystem': 'Globe',
+  'Alpha': 'Crown',
+  'Runway': 'Rocket',
+  'North Star': 'Compass',
+  'Product-Market-Fit': 'Target',
+  'Network Effect': 'Network',
+  'First-Mover Advantage': 'Flame',
+  'Deep Tech': 'Cpu',
+  'Category Creation': 'Wand2',
+  'Land Grab': 'Flag',
+  'Compute Layer': 'Server',
+  'Data Moat': 'Database',
+  'Talent Density': 'Users',
+  'Vertical Integration': 'Layers',
+  'Platform Shift': 'Activity',
+};
+
+const MODIFIER_QUOTES = {
+  'Agentic': 'Operates without human intervention or common sense.',
+  'Exponential': 'Doubles on every single pitch deck slide.',
+  'Disruptive': 'Breaks regulations before asking for permission.',
+  'Autonomous': 'Thinks for itself, mostly about stock options.',
+  'Synthetic': '100% artificial, 0% organic reality.',
+  'Generative': 'Creates infinite content from finite intelligence.',
+  'Emergent': 'Nobody programmed this behavior, but it works.',
+  'Federated': 'Distributed across 50 offshore shell corporations.',
+  'Quantum-Ready': 'Superposition of working and broken.',
+  'Next-Gen': 'Yesterday’s tech with tomorrow’s price tag.',
+  'Hyper-Scalable': 'Grows faster than your server hosting budget.',
+  'Zero-Shot': 'Nails it on the first try, or pretends to.',
+  'Multi-Modal': 'Translates text into hype and back.',
+  'Self-Improving': 'Learns exclusively from its own hallucinations.',
+  'Composable': 'Lego bricks of pure financial valuation.',
+  'Sovereign': 'Answers to no government or board of directors.',
+  'Frictionless': 'Smooth enough to slip right past compliance.',
+  'Post-Human': 'Surpasses human comprehension and revenue.',
+  'Bleeding-Edge': 'So sharp it cuts quarterly gross margins.',
+  'Democratized': 'Available to anyone with an approved term sheet.',
+};
+
 // Rarity assignment (40 Common +1%, 25 Uncommon +2%, 10 Rare +5%, 5 Legendary +10%)
 export const BUZZWORDS_DATA = Array.from({ length: 80 }, (_, i) => {
   const modIndex = Math.floor(i / 4);
   const nounIndex = i % NOUNS.length;
-  const name = `${MODIFIERS[modIndex]} ${NOUNS[nounIndex]}`;
+  const modifier = MODIFIERS[modIndex];
+  const noun = NOUNS[nounIndex];
+  const name = `${modifier} ${noun}`;
 
   let rarity = 'Common';
   let bonus = 0.01; // +1%
@@ -38,12 +86,21 @@ export const BUZZWORDS_DATA = Array.from({ length: 80 }, (_, i) => {
   // Cost formula: 40 * baseCost1 (15) * 1.22^i
   const cost = Math.floor(600 * Math.pow(1.22, i));
 
+  const cardNum = `#${String(i + 1).padStart(2, '0')}`;
+  const icon = NOUN_ICONS[noun] || 'Sparkles';
+  const quote = MODIFIER_QUOTES[modifier] || 'The pinnacle of AI marketing hype.';
+
   return {
     id: `buzz_${i}`,
     index: i,
+    cardNum,
     name,
+    modifier,
+    noun,
     rarity,
     bonus,
     cost,
+    icon,
+    quote,
   };
 });
