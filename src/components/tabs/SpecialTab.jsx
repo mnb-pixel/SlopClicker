@@ -18,6 +18,7 @@ export function SpecialTab({
   cynicLevel = 0,
   buyCynicLevel,
   pivot,
+  pivotCredGain = 0,
   t,
 }) {
   const [activePathTab, setActivePathTab] = useState('idealist'); // 'idealist' | 'cynic' | 'heavenly'
@@ -29,7 +30,7 @@ export function SpecialTab({
   };
 
   const currentEpoch = EPOCHS[epoch] || EPOCHS[2];
-  const credGain = Math.floor(Math.sqrt(totalValuation / 1000000));
+  const credGain = pivotCredGain;
   const pendingChips = Math.floor(Math.pow(totalValuation / 1000000000, 0.5));
   const currentBonus = prestigeLevel * (boughtHeavenlyUpgrades.includes('heaven_synergy_1') ? 2 : 1);
 

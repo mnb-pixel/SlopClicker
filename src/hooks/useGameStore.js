@@ -53,6 +53,7 @@ export function useGameStore() {
   const [cynicLevel, setCynicLevel] = useState(0);
   const [credibility, setCredibility] = useState(0);
   const [pivotCount, setPivotCount] = useState(0);
+  const [valuationAtLastPivot, setValuationAtLastPivot] = useState(0);
   const [bubblePopTimer, setBubblePopTimer] = useState(0);
 
   const [buildings, setBuildings] = useState(INITIAL_BUILDINGS);
@@ -122,6 +123,7 @@ export function useGameStore() {
       cynicLevel,
       credibility,
       pivotCount,
+      valuationAtLastPivot,
       buildings,
       boughtUpgrades,
       boughtHeavenlyUpgrades,
@@ -138,7 +140,8 @@ export function useGameStore() {
   }, [
     lang, startupName, valuation, totalValuation, totalBurned, slopCount, gpuTemp, isOverheated,
     coolingRate, powerClicks, prestigeLevel, heavenlyChips, themeMode, boughtBuzzwords,
-    boughtGreenwashingLayoffs, epoch, idealistLevel, cynicLevel, credibility, pivotCount, buildings,
+    boughtGreenwashingLayoffs, epoch, idealistLevel, cynicLevel, credibility, pivotCount,
+    valuationAtLastPivot, buildings,
     boughtUpgrades, boughtHeavenlyUpgrades, unlockedAchievements, stats,
     soundEnabled, fancyGraphics
   ]);
@@ -170,6 +173,7 @@ export function useGameStore() {
           setCynicLevel(data.cynicLevel || 0);
           setCredibility(data.credibility || 0);
           setPivotCount(data.pivotCount || 0);
+          setValuationAtLastPivot(data.valuationAtLastPivot || 0);
           setBuildings({ ...INITIAL_BUILDINGS, ...data.buildings });
           setBoughtUpgrades(data.boughtUpgrades || []);
           setBoughtHeavenlyUpgrades(data.boughtHeavenlyUpgrades || []);
@@ -702,28 +706,28 @@ export function useGameStore() {
     addLog(`🌌 SINGULARITY ASCENSION EXECUTED! Earned ${earnedChips} Heavenly Chips!`, 'achievement');
   }, [totalValuation, prestigeLevel, soundEnabled, addLog]);
 
-  // Pivot (Konzept: Prestige-Reset mit Epochen-Rotation & Credibility-Baum)
+  // Pivot is a milestone, not a reset: Engines, Upgrades and Valuation all stay. Credibility
+  // is earned on lifetime valuation GAINED SINCE THE LAST PIVOT (not lifetime-total, which
+  // never decreases) so repeated pivots can't farm Credibility for free without new growth.
+  // Ascension remains the actual full-wipe prestige mechanic for Heavenly Chips.
+  const pivotCredGain = useMemo(() => {
+    return Math.floor(Math.sqrt(Math.max(0, totalValuation - valuationAtLastPivot) / 1000000));
+  }, [totalValuation, valuationAtLastPivot]);
+
   const pivot = useCallback(() => {
-    const credGain = Math.floor(Math.sqrt(totalValuation / 1000000));
-    if (credGain <= 0) {
-      addLog('Pivot requires enough lifetime valuation to earn Credibility!', 'warning');
+    if (pivotCredGain <= 0) {
+      addLog('Pivot requires enough NEW lifetime valuation since your last Pivot to earn Credibility!', 'warning');
       return;
     }
     const nextEpoch = (epoch + 1) % EPOCHS.length;
-    setCredibility((prev) => prev + credGain);
+    setCredibility((prev) => prev + pivotCredGain);
     setEpoch(nextEpoch);
     setPivotCount((prev) => prev + 1);
-
-    // Konzept: Tokens & Gebäude & Gebäude-Upgrades resetten; Credibility-Baum, Greenwashing/Layoff, Buzzwords bleiben
-    setValuation(0);
-    setBuildings(INITIAL_BUILDINGS);
-    setBoughtUpgrades([]);
-    setGpuTemp(0);
-    setIsOverheated(false);
+    setValuationAtLastPivot(totalValuation);
 
     playSound('ascend', soundEnabled);
-    addLog(`🔄 PIVOT EXECUTED! Epoch rotated to ${EPOCHS[nextEpoch].name}! Earned +${credGain} Credibility!`, 'achievement');
-  }, [totalValuation, epoch, soundEnabled, addLog]);
+    addLog(`🔄 PIVOT EXECUTED! Epoch rotated to ${EPOCHS[nextEpoch].name}! Earned +${pivotCredGain} Credibility!`, 'achievement');
+  }, [pivotCredGain, totalValuation, epoch, soundEnabled, addLog]);
 
   // Buy Buzzword Card Directly
   const buyBuzzword = useCallback((buzzId) => {
@@ -911,6 +915,6 @@ export function useGameStore() {
     hypeTier, burnRate,
     boughtBuzzwords, buyBuzzword, buyBoosterPack,
     boughtGreenwashingLayoffs, buyGreenwashingLayoff,
-    epoch, idealistLevel, buyIdealistLevel, cynicLevel, buyCynicLevel, credibility, pivotCount, pivot,
+    epoch, idealistLevel, buyIdealistLevel, cynicLevel, buyCynicLevel, credibility, pivotCount, pivot, pivotCredGain,
   };
 }

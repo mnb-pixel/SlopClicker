@@ -79,7 +79,7 @@ export function ManualModal({ isOpen, onClose }) {
               <RotateCw className="w-4 h-4" /> 4. Pivot Strategy & Epochen-Rotation
             </h3>
             <p className="mb-2">
-              Ab einem gewissen Unternehmenswert kannst du einen strategischen <strong>Pivot</strong> vollziehen. Ein Pivot setzt dein operatives Geschäft zurück, belohnt dich jedoch mit wertvoller <strong>Credibility</strong> und rotiert dein Startup in die nächste Hype-Epoche.
+              Ab einem gewissen Zuwachs an Unternehmenswert kannst du einen strategischen <strong>Pivot</strong> vollziehen. Engines, Upgrades und Valuation bleiben dabei erhalten — ein Pivot belohnt dich mit wertvoller <strong>Credibility</strong> für den Wertzuwachs seit deinem letzten Pivot und rotiert dein Startup in die nächste Hype-Epoche.
             </p>
             <ul className="list-disc list-inside space-y-1 text-slate-300 mb-2">
               <li><strong>😇 Idealisten-Pfad</strong>: Investiere Credibility in nachhaltige Strukturen, um deine Burn Rate dauerhaft zu drosseln.</li>

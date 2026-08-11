@@ -46,6 +46,7 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenManual }) {
             cynicLevel={store.cynicLevel}
             buyCynicLevel={store.buyCynicLevel}
             pivot={store.pivot}
+            pivotCredGain={store.pivotCredGain}
             t={store.t}
           />
         </div>

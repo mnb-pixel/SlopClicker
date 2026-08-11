@@ -127,6 +127,7 @@ export default function App() {
                 cynicLevel={store.cynicLevel}
                 buyCynicLevel={store.buyCynicLevel}
                 pivot={store.pivot}
+                pivotCredGain={store.pivotCredGain}
                 t={store.t}
               />
             )}
