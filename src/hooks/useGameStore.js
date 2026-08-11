@@ -61,10 +61,11 @@ export function useGameStore() {
 
   const [stats, setStats] = useState({
     totalClicks: 0,
-    totalAdsWatched: 0,
+    adsWatched: 0,
     goldenCaught: 0,
     overheatCount: 0,
     ascensionCount: 0,
+    pivotCount: 0,
     gpuBounced: false,
     ascendTrillion: false,
     gotLucky: false,
@@ -140,8 +141,8 @@ export function useGameStore() {
           setBoughtHeavenlyUpgrades(data.boughtHeavenlyUpgrades || []);
           setUnlockedAchievements(data.unlockedAchievements || []);
           setStats(data.stats || {
-            totalClicks: 0, totalAdsWatched: 0, goldenCaught: 0,
-            overheatCount: 0, ascensionCount: 0, gpuBounced: false,
+            totalClicks: 0, adsWatched: 0, goldenCaught: 0,
+            overheatCount: 0, ascensionCount: 0, pivotCount: 0, gpuBounced: false,
             ascendTrillion: false, gotLucky: false,
           });
           setSoundEnabled(data.soundEnabled !== false);
@@ -425,6 +426,8 @@ export function useGameStore() {
           const currentState = {
             stats, totalValuation, valuation, buildings,
             unlockedAchievements, activeEvent,
+            boughtUpgrades, boughtBuzzwords, boughtGreenwashingLayoffs,
+            prestigeLevel, heavenlyChips, idealistLevel, cynicLevel, epoch, vps,
           };
           if (ach.check(currentState)) {
             setUnlockedAchievements((prev) => [...prev, ach.id]);
@@ -441,7 +444,7 @@ export function useGameStore() {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [vps, coolingRate, isOverheated, activeEvent, powerClickSurgeTimer, unlockedAchievements, stats, totalValuation, valuation, buildings, boughtHeavenlyUpgrades, soundEnabled, addLog]);
+  }, [vps, coolingRate, isOverheated, activeEvent, powerClickSurgeTimer, unlockedAchievements, stats, totalValuation, valuation, buildings, boughtHeavenlyUpgrades, boughtUpgrades, boughtBuzzwords, boughtGreenwashingLayoffs, prestigeLevel, heavenlyChips, idealistLevel, cynicLevel, epoch, soundEnabled, addLog]);
 
   // --- ACTIONS ---
 
@@ -677,6 +680,7 @@ export function useGameStore() {
     setCredibility((prev) => prev + credGain);
     setEpoch((prev) => (prev + 1) % EPOCHS.length);
     setPrestigeLevel((prev) => prev + 1);
+    setStats((s) => ({ ...s, pivotCount: (s.pivotCount || 0) + 1 }));
 
     // Reset progress
     setValuation(0);
@@ -804,8 +808,8 @@ export function useGameStore() {
     setPrestigeLevel(0);
     setHeavenlyChips(0);
     setStats({
-      totalClicks: 0, totalAdsWatched: 0, goldenCaught: 0,
-      overheatCount: 0, ascensionCount: 0, gpuBounced: false,
+      totalClicks: 0, adsWatched: 0, goldenCaught: 0,
+      overheatCount: 0, ascensionCount: 0, pivotCount: 0, gpuBounced: false,
       ascendTrillion: false, gotLucky: false,
     });
     addLog('Save data completely wiped. Starting fresh startup round!', 'danger');

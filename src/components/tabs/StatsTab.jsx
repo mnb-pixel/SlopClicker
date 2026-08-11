@@ -134,50 +134,84 @@ export function StatsTab({
         </div>
       )}
 
-      {/* ACHIEVEMENTS LIST */}
+      {/* ACHIEVEMENTS / BADGE WALL */}
       {statsSection === 'achievements' && (
         <div className="flex flex-col gap-2">
-          {ACHIEVEMENTS_DATA.map((ach) => {
-            const isUnlocked = unlockedAchievements.includes(ach.id);
-            return (
-              <div
-                key={ach.id}
-                className={`p-3 rounded-xl border flex items-center gap-3 transition-all ${
-                  isUnlocked
-                    ? ach.isShadow
+          <div className="bg-cyan-950/40 p-3 rounded-xl border border-cyan-500/40 mb-1 text-xs">
+            <div className="font-extrabold text-cyan-300 flex items-center gap-1.5 mb-1">
+              <Icons.Trophy className="w-4 h-4 text-cyan-400" />
+              Achievement Badge Wall
+            </div>
+            <div className="text-slate-300/80">
+              Locked badges stay blurred until you hit the milestone that unlocks them.
+            </div>
+            <div className="text-[10px] text-cyan-400 font-mono font-bold mt-1">
+              Badges Unlocked: {unlockedCount} / {totalCount}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {ACHIEVEMENTS_DATA.map((ach) => {
+              const isUnlocked = unlockedAchievements.includes(ach.id);
+
+              if (!isUnlocked) {
+                return (
+                  <div
+                    key={ach.id}
+                    className="relative p-2.5 rounded-xl border border-slate-800 bg-slate-950/70 flex flex-col justify-between opacity-70 backdrop-blur-sm overflow-hidden"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-700">
+                        <Icons.Lock className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-slate-900 text-slate-600 border border-slate-800">
+                        LOCKED
+                      </span>
+                    </div>
+                    <div className="text-xs font-bold text-slate-600 blur-[3px] select-none truncate">
+                      ????????????
+                    </div>
+                    <div className="text-[10px] text-slate-700 italic mt-0.5 blur-[2px] select-none">
+                      "?????????????????"
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={ach.id}
+                  className={`p-2.5 rounded-xl border flex flex-col justify-between transition-all ${
+                    ach.isShadow
                       ? 'bg-fuchsia-950/40 border-fuchsia-500/50 text-fuchsia-200 shadow-lg'
                       : 'bg-slate-900/90 border-slate-700 text-slate-200 shadow-md'
-                    : 'bg-slate-950/60 border-slate-900 opacity-40 grayscale'
-                }`}
-              >
-                <div
-                  className={`p-2.5 rounded-lg border ${
-                    isUnlocked
-                      ? ach.isShadow
-                        ? 'bg-fuchsia-900 border-fuchsia-400 text-fuchsia-300 animate-pulse'
-                        : 'bg-cyan-950 border-cyan-500/40 text-cyan-400'
-                      : 'bg-slate-900 border-slate-800 text-slate-600'
                   }`}
                 >
-                  {renderIcon(ach.icon)}
-                </div>
-                <div>
-                  <div className="font-extrabold text-sm flex items-center gap-2">
-                    {ach.name}
-                    {ach.isShadow && (
-                      <span className="bg-fuchsia-500/20 text-fuchsia-300 text-[9px] font-black px-1.5 py-0.2 rounded border border-fuchsia-500/30">
-                        SHADOW
-                      </span>
-                    )}
-                    {isUnlocked && (
-                      <span className="text-emerald-400 text-xs font-black">✓</span>
-                    )}
+                  <div className="flex items-center justify-between mb-1">
+                    <div
+                      className={`p-2 rounded-lg border ${
+                        ach.isShadow
+                          ? 'bg-fuchsia-900 border-fuchsia-400 text-fuchsia-300 animate-pulse'
+                          : 'bg-cyan-950 border-cyan-500/40 text-cyan-400'
+                      }`}
+                    >
+                      {renderIcon(ach.icon)}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {ach.isShadow && (
+                        <span className="bg-fuchsia-500/20 text-fuchsia-300 text-[9px] font-black px-1.5 py-0.2 rounded border border-fuchsia-500/30">
+                          SHADOW
+                        </span>
+                      )}
+                      <Icons.CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    </div>
                   </div>
-                  <div className="text-[11px] text-slate-400 italic">"{ach.quote}"</div>
+                  <div className="font-extrabold text-xs">{ach.name}</div>
+                  <div className="text-[10px] text-slate-400 italic mt-0.5">"{ach.quote}"</div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
