@@ -80,6 +80,10 @@ const MISC_UPGRADES_DATA = [
   },
 
   // --- BOARD SYNDICATE UPGRADES (Achievement/Milestone-based scaling) ---
+  // Named after the VC Firm engine, so gated on actually owning it (buildingId below) -
+  // not just a valuation threshold, even though vc_firm (Tier 8, ~$941M) is far pricier
+  // than syndicate_1/2's own cost. That's intentional: these are VC-firm perks now, not a
+  // separate free-floating progression track.
   {
     id: 'syndicate_1',
     name: 'Seed Angel Advisor',
@@ -89,7 +93,7 @@ const MISC_UPGRADES_DATA = [
     icon: 'Briefcase',
     type: 'syndicate',
     effect: { type: 'syndicate', factor: 0.10 },
-    req: { totalValuation: 1000 },
+    req: { totalValuation: 1000, buildingId: 'vc_firm' },
   },
   {
     id: 'syndicate_2',
@@ -100,7 +104,7 @@ const MISC_UPGRADES_DATA = [
     icon: 'Building2',
     type: 'syndicate',
     effect: { type: 'syndicate', factor: 0.20 },
-    req: { totalValuation: 100000 },
+    req: { totalValuation: 100000, buildingId: 'vc_firm' },
   },
   {
     id: 'syndicate_3',
@@ -111,7 +115,7 @@ const MISC_UPGRADES_DATA = [
     icon: 'Award',
     type: 'syndicate',
     effect: { type: 'syndicate', factor: 0.30 },
-    req: { totalValuation: 10000000 },
+    req: { totalValuation: 10000000, buildingId: 'vc_firm' },
   },
   {
     id: 'syndicate_4',
@@ -122,7 +126,7 @@ const MISC_UPGRADES_DATA = [
     icon: 'UserCheck',
     type: 'syndicate',
     effect: { type: 'syndicate', factor: 0.50 },
-    req: { totalValuation: 1000000000 },
+    req: { totalValuation: 1000000000, buildingId: 'vc_firm' },
   },
 
   // --- GLOBAL MULTIPLIERS & THERMAL EFFICIENCY ---
@@ -218,7 +222,13 @@ export function getAvailableUpgrades(buildings, boughtUpgrades, valuation, total
       return true;
     }
 
-    // Misc Upgrades (Click, Syndicate, Global)
+    // Misc Upgrades (Click, Syndicate, Global). A few of these (currently the Board
+    // Syndicate line) are named after a specific engine and require owning it, same
+    // as building-type upgrades - checked via req.buildingId when present.
+    if (up.req && up.req.buildingId) {
+      const ownedCount = buildings[up.req.buildingId] || 0;
+      if (ownedCount < 1) return false;
+    }
     if (up.req && up.req.totalValuation) {
       if (totalValuation < up.req.totalValuation * 0.5 && valuation < up.cost * 0.3) {
         return false;

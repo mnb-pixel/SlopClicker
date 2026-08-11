@@ -58,7 +58,9 @@ export function StoreTab({
       return `🎯 ${buildingName(up.buildingId)}`;
     }
     if (up.type === 'click') return `🎯 ${tr('affectsClick')}`;
-    if (up.type === 'syndicate') return `🎯 ${tr('affectsSyndicate')}`;
+    if (up.type === 'syndicate') {
+      return up.req?.buildingId ? `🎯 ${buildingName(up.req.buildingId)}` : `🎯 ${tr('affectsSyndicate')}`;
+    }
     if (up.type === 'global') return `🎯 ${tr('affectsGlobal')}`;
     return '🎯 Global';
   };
