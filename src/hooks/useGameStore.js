@@ -185,14 +185,6 @@ export function useGameStore() {
           });
           setSoundEnabled(data.soundEnabled !== false);
           setFancyGraphics(data.fancyGraphics !== false);
-
-          if (data.timestamp) {
-            const now = Date.now();
-            const elapsedSec = Math.max(0, (now - data.timestamp) / 1000);
-            if (elapsedSec > 5) {
-              addLog(`Perfect Idling: You were offline for ${Math.floor(elapsedSec)}s. GPUs kept crunching slop!`, 'success');
-            }
-          }
         }
       }
     } catch (e) {

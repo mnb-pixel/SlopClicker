@@ -106,7 +106,8 @@ export function StoreTab({
     return acc + count * b.baseCps * bMult;
   }, 0);
 
-  // Progressive Building Visibility
+  // Progressive Building Visibility: a building's tile only shows once the PREVIOUS
+  // building is actually owned (no shortcut via valuation alone).
   const visibleBuildings = [];
   let foundFirstLocked = false;
 
@@ -115,7 +116,7 @@ export function StoreTab({
     const prevBuilding = idx > 0 ? BUILDINGS_DATA[idx - 1] : null;
     const prevCount = prevBuilding ? (buildings[prevBuilding.id] || 0) : 0;
 
-    const isUnlocked = idx === 0 || count > 0 || prevCount >= 1 || totalValuation >= b.baseCost * 0.15;
+    const isUnlocked = idx === 0 || count > 0 || prevCount >= 1;
 
     if (isUnlocked) {
       visibleBuildings.push(b);
@@ -212,7 +213,7 @@ export function StoreTab({
                           ??? Locked Engine Tier
                         </div>
                         <div className="text-[11px] text-slate-500 italic mt-0.5">
-                          Requires higher valuation or previous engine tier.
+                          Requires owning the previous AI Engine tier.
                         </div>
                       </div>
                     </div>
@@ -487,7 +488,7 @@ export function StoreTab({
         );
       })()}
 
-      {/* CORPORATE ACTIONS SECTION (Greenwashing & Layoffs - Progressive Discovery) */}
+      {/* CORPORATE ACTIONS SECTION (Greenwashing & Layoffs - only for engines you own) */}
       {storeSection === 'corporate' && (() => {
         const visibleCorporate = [];
         let foundFirstLocked = false;
@@ -498,9 +499,9 @@ export function StoreTab({
           const baseCost = b ? b.baseCost : 15;
           const cost = item.costMult * baseCost;
           const currentCount = buildings[item.buildingId] || 0;
-          const isUnlocked = isBought || currentCount >= 1 || totalValuation >= cost * 0.15;
+          const isUnlocked = isBought || currentCount >= 1;
 
-          if (isUnlocked && !foundFirstLocked) {
+          if (isUnlocked) {
             visibleCorporate.push({ ...item, isTeaser: false, cost });
           } else if (!foundFirstLocked) {
             visibleCorporate.push({ ...item, isTeaser: true, cost });
@@ -536,7 +537,7 @@ export function StoreTab({
                           ??? Locked Corporate Protocol
                         </div>
                         <div className="text-[11px] text-slate-500 italic mt-0.5">
-                          Requires higher valuation or related AI Engine.
+                          Requires owning the related AI Engine.
                         </div>
                       </div>
                     </div>
