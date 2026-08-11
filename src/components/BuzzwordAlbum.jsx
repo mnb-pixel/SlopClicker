@@ -100,13 +100,13 @@ export function BuzzwordAlbum({
   return (
     <div className="flex flex-col gap-4">
       {/* 🎴 BOOSTER PACK SHOP CARD */}
-      <div className="rounded-2xl bg-gradient-to-r from-purple-950 via-slate-900 to-fuchsia-950 border-2 border-fuchsia-500/50 p-4 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5 w-full sm:w-auto">
+      <div className="rounded-2xl bg-gradient-to-r from-purple-950 via-slate-900 to-fuchsia-950 border-2 border-fuchsia-500/50 p-4 shadow-xl flex flex-col items-center text-center gap-3">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
           <div className="p-3 rounded-2xl bg-gradient-to-br from-fuchsia-500 via-purple-600 to-amber-400 text-slate-950 border-2 border-amber-300 shadow-lg shrink-0">
             <Icons.Layers className="w-7 h-7 text-slate-950" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
+            <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
               <span className="text-xs font-black uppercase text-amber-300 tracking-wider">
                 🎴 Trading Card Booster Pack
               </span>
@@ -123,18 +123,18 @@ export function BuzzwordAlbum({
           </div>
         </div>
 
-        {/* Buy Booster Pack Button */}
+        {/* Buy Booster Pack Button - Central Bottom Placement */}
         <button
           onClick={handleBuyBoosterPack}
           disabled={!canAffordPack}
-          className={`w-full sm:w-auto px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shrink-0 ${
+          className={`w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg mt-1 ${
             canAffordPack
               ? 'bg-gradient-to-r from-amber-400 via-fuchsia-500 to-cyan-400 text-slate-950 hover:brightness-110 active:scale-95 shadow-fuchsia-500/30'
               : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
           }`}
         >
           <Icons.Sparkles className="w-4 h-4 shrink-0" />
-          <span className="truncate">{boughtCount >= totalCards ? 'ALLES GESAMMELT' : `PACK ÖFFNEN (${formatCurrency(packCost)})`}</span>
+          <span>{boughtCount >= totalCards ? 'ALLES GESAMMELT' : `PACK ÖFFNEN (${formatCurrency(packCost)})`}</span>
         </button>
       </div>
 
