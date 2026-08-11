@@ -192,6 +192,8 @@ export const UPGRADES_DATA = [...BUILDING_UPGRADES_DATA, ...MISC_UPGRADES_DATA];
 // Eligibility filter shared by the Upgrades tile grid (StoreTab) and "BUY ALL" (useGameStore),
 // so bulk-buying can never purchase an upgrade the UI wouldn't otherwise show/allow.
 export function getAvailableUpgrades(buildings, boughtUpgrades, valuation, totalValuation) {
+  const totalBuildingsOwned = Object.values(buildings || {}).reduce((sum, cnt) => sum + cnt, 0);
+
   const lowestUnboughtBuildingUpgrade = new Map();
   UPGRADES_DATA.forEach((up) => {
     if (up.type === 'building' && !boughtUpgrades.includes(up.id)) {
@@ -220,6 +222,11 @@ export function getAvailableUpgrades(buildings, boughtUpgrades, valuation, total
         return false;
       }
       return true;
+    }
+
+    // Global VPS upgrades require owning at least 1 engine/building
+    if (up.type === 'global' && (up.effect?.type === 'globalMult' || up.effect?.type === 'vpsMult')) {
+      if (totalBuildingsOwned < 1) return false;
     }
 
     // Misc Upgrades (Click, Syndicate, Global). A few of these (currently the Board
