@@ -32,8 +32,10 @@ export function StatsTab({
     <div className="p-4 pb-20 max-w-md mx-auto">
       {isBadgesModalOpen && (
         <BadgesModal
+          isOpen={isBadgesModalOpen}
           unlockedAchievements={unlockedAchievements}
           onClose={() => setIsBadgesModalOpen(false)}
+          t={t}
         />
       )}
 

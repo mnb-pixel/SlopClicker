@@ -39,24 +39,6 @@ export function MiscTab({
         </button>
       </div>
 
-      {/* Export VC Pitch Deck Banner */}
-      <div className="bg-gradient-to-r from-cyan-950 via-slate-900 to-fuchsia-950 p-4 rounded-2xl border border-cyan-500/40 shadow-2xl flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <Icons.Share2 className="w-5 h-5 text-cyan-400" />
-          <h3 className="font-black text-sm uppercase tracking-wide text-cyan-200">
-            Meme Pitch Deck Generator
-          </h3>
-        </div>
-        <p className="text-xs text-slate-300">
-          Export your hilarious startup investor card, copy formatted meme to clipboard, share on X, and blast confetti!
-        </p>
-        <button
-          onClick={onOpenPitchDeck}
-          className="mt-1 w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-cyan-500 to-fuchsia-500 text-slate-950 hover:from-cyan-400 hover:to-fuchsia-400 active:scale-95 shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2"
-        >
-          <Icons.FileText className="w-4 h-4" /> Export VC Pitch Deck
-        </button>
-      </div>
 
       {/* Simulated Rewarded Ad Monocle */}
       <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">

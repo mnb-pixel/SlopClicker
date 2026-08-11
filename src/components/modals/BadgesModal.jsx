@@ -1,21 +1,36 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import * as Icons from 'lucide-react';
 import { ACHIEVEMENTS_DATA } from '../../data/achievementsData';
 
-export function BadgesModal({ isOpen, onClose, unlockedAchievements = [] }) {
+export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [], t }) {
   const [filter, setFilter] = useState('ALL'); // 'ALL' | 'UNLOCKED' | 'LOCKED'
   const [searchQuery, setSearchQuery] = useState('');
 
   if (!isOpen) return null;
+
+  const tr = t || ((k) => k);
 
   const renderIcon = (iconName, className = 'w-5 h-5') => {
     const IconComp = Icons[iconName] || Icons.Trophy;
     return <IconComp className={className} />;
   };
 
-  const unlockedCount = unlockedAchievements.length;
+  const unlockedCount = new Set(unlockedAchievements).size;
   const totalCount = ACHIEVEMENTS_DATA.length;
   const progressPct = Math.round((unlockedCount / totalCount) * 100);
+
+  const getAchTitle = (ach) => {
+    const key = `ach_${ach.id}_name`;
+    const val = tr(key);
+    return val && val !== key ? val : ach.name || `Badge ${ach.id}`;
+  };
+
+  const getAchQuote = (ach) => {
+    const key = `ach_${ach.id}_quote`;
+    const val = tr(key);
+    return val && val !== key ? val : ach.quote || 'Auszeichnung für herausragenden Hype.';
+  };
 
   const filteredBadges = ACHIEVEMENTS_DATA.filter((ach) => {
     const isUnlocked = unlockedAchievements.includes(ach.id);
@@ -23,16 +38,14 @@ export function BadgesModal({ isOpen, onClose, unlockedAchievements = [] }) {
     if (filter === 'LOCKED' && isUnlocked) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      return (
-        (isUnlocked && ach.name.toLowerCase().includes(q)) ||
-        (isUnlocked && ach.desc.toLowerCase().includes(q)) ||
-        (isUnlocked && ach.quote.toLowerCase().includes(q))
-      );
+      const title = getAchTitle(ach).toLowerCase();
+      const quote = getAchQuote(ach).toLowerCase();
+      return (isUnlocked && (title.includes(q) || quote.includes(q)));
     }
     return true;
   });
 
-  return (
+  const modalContent = (
     <div
       className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
       onClick={onClose}
@@ -162,11 +175,10 @@ export function BadgesModal({ isOpen, onClose, unlockedAchievements = [] }) {
                   </div>
                   <div>
                     <div className="font-extrabold text-xs text-slate-100 flex items-center gap-1.5">
-                      <span>{ach.name}</span>
+                      <span>{getAchTitle(ach)}</span>
                       <Icons.CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                     </div>
-                    <div className="text-[11px] text-slate-300 mt-0.5">{ach.desc}</div>
-                    <div className="text-[10px] text-amber-300/80 font-mono italic mt-0.5">"{ach.quote}"</div>
+                    <div className="text-[10px] text-amber-300/80 font-mono italic mt-0.5">"{getAchQuote(ach)}"</div>
                   </div>
                 </div>
               </div>
@@ -176,4 +188,6 @@ export function BadgesModal({ isOpen, onClose, unlockedAchievements = [] }) {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
