@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import * as Icons from 'lucide-react';
 import { ACHIEVEMENTS_DATA } from '../../data/achievementsData';
+import { AdBanner } from '../AdBanner';
 
 export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [], t }) {
   const [filter, setFilter] = useState('ALL'); // 'ALL' | 'UNLOCKED' | 'LOCKED'
@@ -185,6 +186,8 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
             );
           })}
         </div>
+
+        <AdBanner variant="leaderboard" label="Werbung" />
       </div>
     </div>
   );

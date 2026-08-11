@@ -21,6 +21,11 @@ export function StoreTab({
   buyBuzzword,
   buyBoosterPack,
   addCardToAlbum,
+  pullFreeBoosterCard,
+  adState,
+  startAd,
+  isAdReady,
+  getAdCooldownRemaining,
   boughtGreenwashingLayoffs = [],
   buyGreenwashingLayoff,
   t,
@@ -654,6 +659,11 @@ export function StoreTab({
           buyBuzzword={buyBuzzword}
           buyBoosterPack={buyBoosterPack}
           addCardToAlbum={addCardToAlbum}
+          pullFreeBoosterCard={pullFreeBoosterCard}
+          adState={adState}
+          startAd={startAd}
+          isAdReady={isAdReady}
+          getAdCooldownRemaining={getAdCooldownRemaining}
           t={t}
         />
       )}

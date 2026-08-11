@@ -19,6 +19,12 @@ export function SpecialTab({
   buyCynicLevel,
   pivot,
   pivotCredGain = 0,
+  adState,
+  startAd,
+  isAdReady,
+  getAdCooldownRemaining,
+  pendingAscendBoost = false,
+  pendingPivotBoost = false,
   t,
 }) {
   const [activePathTab, setActivePathTab] = useState('idealist'); // 'idealist' | 'cynic' | 'heavenly'
@@ -27,6 +33,42 @@ export function SpecialTab({
   const renderIcon = (iconName, className = 'w-5 h-5') => {
     const IconComp = Icons[iconName] || Icons.Sparkles;
     return <IconComp className={className} />;
+  };
+
+  // Rewarded-Ad-Boost-Button, wiederverwendet für Pivot & Ascension: gewährt +20% auf
+  // die nächste Ausführung, kein Cash/Gate - reiner Bonus an einem ohnehin großen Meilenstein.
+  const renderAdBoost = (type, label, pendingActive) => {
+    if (!startAd) return null;
+    if (pendingActive) {
+      return (
+        <div className="mt-2 text-[10px] font-mono font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/40 rounded-lg px-2 py-1.5 text-center">
+          ✓ +20% Ad-Bonus aktiv für nächste Ausführung
+        </div>
+      );
+    }
+    if (adState?.type === type) {
+      return (
+        <div className="mt-2 text-[10px] font-mono font-bold text-amber-300 bg-slate-950/80 border border-amber-500 rounded-lg px-2 py-1.5 text-center animate-pulse">
+          Ad läuft... ({adState.timer}s)
+        </div>
+      );
+    }
+    if (isAdReady && !isAdReady(type)) {
+      return (
+        <div className="mt-2 text-[10px] text-slate-400 font-mono text-center">
+          Ad-Bonus in {getAdCooldownRemaining ? Math.ceil(getAdCooldownRemaining(type) / 60) : 0}min wieder verfügbar
+        </div>
+      );
+    }
+    return (
+      <button
+        onClick={() => startAd(type)}
+        className="mt-2 w-full py-2 rounded-xl font-black text-[10px] uppercase tracking-wider bg-slate-800 border border-purple-400/60 text-purple-200 hover:bg-slate-700 active:scale-95 shadow-md transition-all flex items-center justify-center gap-1.5"
+      >
+        <Icons.Tv className="w-3.5 h-3.5" />
+        {label}
+      </button>
+    );
   };
 
   const currentEpoch = EPOCHS[epoch] || EPOCHS[2];
@@ -77,6 +119,7 @@ export function SpecialTab({
           <Icons.RotateCw className="w-4 h-4" />
           {tr('executePivot')}{credGain} Credibility & Rotate Epoch)
         </button>
+        {renderAdBoost('pivot_boost', 'Video ansehen: +20% Credibility', pendingPivotBoost)}
       </div>
 
       {/* Path Selector Tabs */}
@@ -286,6 +329,9 @@ export function SpecialTab({
                 <Icons.Repeat className="w-4 h-4" />
                 Execute Singularity Reset (+{pendingChips} Chips)
               </button>
+              <div className="relative z-10">
+                {renderAdBoost('ascend_boost', 'Video ansehen: +20% Heavenly Chips', pendingAscendBoost)}
+              </div>
             </div>
 
             <div className="flex flex-col gap-2.5">

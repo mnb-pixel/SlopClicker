@@ -25,6 +25,10 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenManual }) {
           boughtUpgrades={store.boughtUpgrades}
           boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}
           themeMode={store.themeMode}
+          adState={store.adState}
+          startAd={store.startAd}
+          isAdReady={store.isAdReady}
+          getAdCooldownRemaining={store.getAdCooldownRemaining}
           t={store.t}
         />
       </div>
@@ -48,6 +52,12 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenManual }) {
             buyCynicLevel={store.buyCynicLevel}
             pivot={store.pivot}
             pivotCredGain={store.pivotCredGain}
+            adState={store.adState}
+            startAd={store.startAd}
+            isAdReady={store.isAdReady}
+            getAdCooldownRemaining={store.getAdCooldownRemaining}
+            pendingAscendBoost={store.pendingAscendBoost}
+            pendingPivotBoost={store.pendingPivotBoost}
             t={store.t}
           />
         </div>
@@ -76,6 +86,8 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenManual }) {
             setFancyGraphics={store.setFancyGraphics}
             adState={store.adState}
             startAd={store.startAd}
+            isAdReady={store.isAdReady}
+            getAdCooldownRemaining={store.getAdCooldownRemaining}
             onOpenPitchDeck={() => setIsPitchDeckOpen(true)}
             onOpenManual={onOpenManual}
             resetSave={store.resetSave}
@@ -106,6 +118,11 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenManual }) {
           buyBuzzword={store.buyBuzzword}
           buyBoosterPack={store.buyBoosterPack}
           addCardToAlbum={store.addCardToAlbum}
+          pullFreeBoosterCard={store.pullFreeBoosterCard}
+          adState={store.adState}
+          startAd={store.startAd}
+          isAdReady={store.isAdReady}
+          getAdCooldownRemaining={store.getAdCooldownRemaining}
           boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}
           buyGreenwashingLayoff={store.buyGreenwashingLayoff}
           t={store.t}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import * as Icons from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
+import { AdBanner } from '../AdBanner';
 
 export function MiscTab({
   soundEnabled,
@@ -9,6 +10,8 @@ export function MiscTab({
   setFancyGraphics,
   adState,
   startAd,
+  isAdReady,
+  getAdCooldownRemaining,
   onOpenPitchDeck,
   onOpenManual,
   resetSave,
@@ -16,6 +19,25 @@ export function MiscTab({
   setLang,
 }) {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
+
+  // Kompakter Ad-Button, der je nach Cooldown-Status Play-Button / Countdown / "läuft" zeigt.
+  const renderAdCta = (type) => {
+    if (adState?.type === type) {
+      return (
+        <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black px-2 py-1 rounded border border-amber-500/30 shrink-0 animate-pulse">
+          {adState.timer}s...
+        </span>
+      );
+    }
+    if (isAdReady && !isAdReady(type)) {
+      return (
+        <span className="text-slate-500 text-[10px] font-mono font-bold px-2 py-1 shrink-0">
+          {getAdCooldownRemaining ? getAdCooldownRemaining(type) : 0}s
+        </span>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="p-4 pb-20 max-w-md mx-auto flex flex-col gap-5">
@@ -65,7 +87,8 @@ export function MiscTab({
           <div className="grid grid-cols-1 gap-2">
             <button
               onClick={() => startAd('nitrogen')}
-              className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500 text-left transition-all flex items-center justify-between group"
+              disabled={isAdReady && !isAdReady('nitrogen')}
+              className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500 text-left transition-all flex items-center justify-between group disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <div>
                 <div className="font-extrabold text-xs text-cyan-300 flex items-center gap-1.5">
@@ -76,14 +99,17 @@ export function MiscTab({
                   Instantly cools GPU to 0°C + grants 2x Click Power for 30s.
                 </div>
               </div>
-              <span className="bg-cyan-500/20 text-cyan-300 text-[10px] font-black px-2 py-1 rounded border border-cyan-500/30 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors shrink-0">
-                WATCH AD (3s)
-              </span>
+              {renderAdCta('nitrogen') || (
+                <span className="bg-cyan-500/20 text-cyan-300 text-[10px] font-black px-2 py-1 rounded border border-cyan-500/30 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors shrink-0">
+                  WATCH AD (3s)
+                </span>
+              )}
             </button>
 
             <button
               onClick={() => startAd('grant')}
-              className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-amber-500 text-left transition-all flex items-center justify-between group"
+              disabled={isAdReady && !isAdReady('grant')}
+              className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-amber-500 text-left transition-all flex items-center justify-between group disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <div>
                 <div className="font-extrabold text-xs text-amber-300 flex items-center gap-1.5">
@@ -94,13 +120,39 @@ export function MiscTab({
                   Receives an instant non-dilutive government payout of (VPS × 100).
                 </div>
               </div>
-              <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black px-2 py-1 rounded border border-amber-500/30 group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors shrink-0">
-                WATCH AD (3s)
-              </span>
+              {renderAdCta('grant') || (
+                <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black px-2 py-1 rounded border border-amber-500/30 group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors shrink-0">
+                  WATCH AD (3s)
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => startAd('power_click')}
+              disabled={isAdReady && !isAdReady('power_click')}
+              className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-fuchsia-500 text-left transition-all flex items-center justify-between group disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <div>
+                <div className="font-extrabold text-xs text-fuchsia-300 flex items-center gap-1.5">
+                  <Icons.Zap className="w-4 h-4 text-fuchsia-400" />
+                  ⚡ Bonus Power Click
+                </div>
+                <div className="text-[11px] text-slate-400 mt-0.5">
+                  Grants 1 extra Power Click charge instantly (normally earned every 30 min).
+                </div>
+              </div>
+              {renderAdCta('power_click') || (
+                <span className="bg-fuchsia-500/20 text-fuchsia-300 text-[10px] font-black px-2 py-1 rounded border border-fuchsia-500/30 group-hover:bg-fuchsia-500 group-hover:text-slate-950 transition-colors shrink-0">
+                  WATCH AD (3s)
+                </span>
+              )}
             </button>
           </div>
         )}
       </div>
+
+      {/* Statischer Werbe-Slot (Banner) */}
+      <AdBanner variant="rectangle" label="Werbung" />
 
       {/* Settings Options */}
       <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Zap, Flame, ShieldAlert, Sparkles } from 'lucide-react';
+import { Zap, Flame, ShieldAlert, Sparkles, Tv, ThermometerSnowflake } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 import { BuildingVisualGrid } from '../BuildingVisualGrid';
 
@@ -15,6 +15,10 @@ export function SlopTab({
   boughtUpgrades,
   boughtGreenwashingLayoffs,
   themeMode,
+  adState,
+  startAd,
+  isAdReady,
+  getAdCooldownRemaining,
   t,
 }) {
   const isSecTheme = themeMode === 'sec_prospectus';
@@ -58,6 +62,28 @@ export function SlopTab({
           <p className="text-xs text-rose-300 mt-1">
             {tr('gpuCooling')}
           </p>
+
+          {/* Rewarded-Ad Sofort-Kühlung: der genau richtige Moment, der Spieler ist gerade blockiert */}
+          {startAd && (
+            adState?.type === 'nitrogen' ? (
+              <div className="mt-3 bg-slate-950/80 border border-amber-500 rounded-xl p-2.5 text-amber-300 font-black text-xs animate-pulse">
+                Ad läuft... ({adState.timer}s)
+              </div>
+            ) : isAdReady && !isAdReady('nitrogen') ? (
+              <div className="mt-3 text-[10px] text-slate-400 font-mono">
+                Sofort-Kühlung per Ad in {getAdCooldownRemaining ? getAdCooldownRemaining('nitrogen') : 0}s wieder verfügbar
+              </div>
+            ) : (
+              <button
+                onClick={() => startAd('nitrogen')}
+                className="mt-3 w-full py-2 rounded-xl font-black text-xs uppercase tracking-wider bg-cyan-500 text-slate-950 hover:bg-cyan-400 active:scale-95 shadow-lg transition-all flex items-center justify-center gap-1.5"
+              >
+                <Tv className="w-3.5 h-3.5" />
+                <ThermometerSnowflake className="w-3.5 h-3.5" />
+                Video ansehen: Sofort-Kühlung
+              </button>
+            )
+          )}
         </div>
       )}
 

@@ -9,8 +9,10 @@ import { SpecialTab } from './components/tabs/SpecialTab';
 import { StatsTab } from './components/tabs/StatsTab';
 import { MiscTab } from './components/tabs/MiscTab';
 import { GoldenMemeBanner } from './components/GoldenMemeBanner';
+import { AdBanner } from './components/AdBanner';
 import { PitchDeckModal } from './components/modals/PitchDeckModal';
 import { ManualModal } from './components/modals/ManualModal';
+import { OfflineEarningsModal } from './components/modals/OfflineEarningsModal';
 import { UPGRADES_DATA } from './data/upgradesData';
 
 export default function App() {
@@ -65,7 +67,18 @@ export default function App() {
       <GoldenMemeBanner
         activeEvent={store.activeEvent}
         dismissEvent={store.dismissEvent}
+        adState={store.adState}
+        startAd={store.startAd}
+        isAdReady={store.isAdReady}
         t={store.t}
+      />
+
+      {/* Willkommen-zurück Offline-Ertrag Screen */}
+      <OfflineEarningsModal
+        offlineReport={store.offlineReport}
+        adState={store.adState}
+        startAd={store.startAd}
+        claimOfflineEarnings={store.claimOfflineEarnings}
       />
 
       {/* WEB DESKTOP ALL-IN-ONE VIEW (Everything on 1 Page in 3 Columns) */}
@@ -91,6 +104,10 @@ export default function App() {
                 boughtUpgrades={store.boughtUpgrades}
                 boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}
                 themeMode={store.themeMode}
+                adState={store.adState}
+                startAd={store.startAd}
+                isAdReady={store.isAdReady}
+                getAdCooldownRemaining={store.getAdCooldownRemaining}
                 t={store.t}
               />
             )}
@@ -111,6 +128,11 @@ export default function App() {
                 buyBuzzword={store.buyBuzzword}
                 buyBoosterPack={store.buyBoosterPack}
                 addCardToAlbum={store.addCardToAlbum}
+                pullFreeBoosterCard={store.pullFreeBoosterCard}
+                adState={store.adState}
+                startAd={store.startAd}
+                isAdReady={store.isAdReady}
+                getAdCooldownRemaining={store.getAdCooldownRemaining}
                 boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}
                 buyGreenwashingLayoff={store.buyGreenwashingLayoff}
                 t={store.t}
@@ -133,6 +155,12 @@ export default function App() {
                 buyCynicLevel={store.buyCynicLevel}
                 pivot={store.pivot}
                 pivotCredGain={store.pivotCredGain}
+                adState={store.adState}
+                startAd={store.startAd}
+                isAdReady={store.isAdReady}
+                getAdCooldownRemaining={store.getAdCooldownRemaining}
+                pendingAscendBoost={store.pendingAscendBoost}
+                pendingPivotBoost={store.pendingPivotBoost}
                 t={store.t}
               />
             )}
@@ -159,6 +187,8 @@ export default function App() {
                 setFancyGraphics={store.setFancyGraphics}
                 adState={store.adState}
                 startAd={store.startAd}
+                isAdReady={store.isAdReady}
+                getAdCooldownRemaining={store.getAdCooldownRemaining}
                 onOpenPitchDeck={() => setIsPitchDeckOpen(true)}
                 onOpenManual={() => setIsManualOpen(true)}
                 resetSave={store.resetSave}
@@ -168,6 +198,11 @@ export default function App() {
               />
             )}
           </main>
+
+          {/* Statischer Werbe-Slot (Banner) über der Tab-Leiste */}
+          <div className="px-3 pb-2">
+            <AdBanner variant="leaderboard" label="Werbung" />
+          </div>
 
           {/* 5-Tab Navigation Bar */}
           <NavBar
