@@ -74,10 +74,10 @@
   animation: glitchAnim 0.3s infinite ease-in-out;
 }
 
-/* Golden meme popup pulse */
+/* Golden meme popup pulse - Glow-only (kein transform!), damit das Popup nicht "hüpft" */
 @keyframes goldenPulse {
-  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 10px rgba(234, 179, 8, 0.8)); }
-  50% { transform: scale(1.1) rotate(4deg); filter: drop-shadow(0 0 25px rgba(250, 204, 21, 1)); }
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(234, 179, 8, 0.8)); }
+  50% { filter: drop-shadow(0 0 25px rgba(250, 204, 21, 1)); }
 }
 
 .golden-meme-pulse {
