@@ -18,7 +18,7 @@ const NOUNS = [
 // Rarity assignment (40 Common +1%, 25 Uncommon +2%, 10 Rare +5%, 5 Legendary +10%)
 export const BUZZWORDS_DATA = Array.from({ length: 80 }, (_, i) => {
   const modIndex = Math.floor(i / 4);
-  const nounIndex = (i * 3) % NOUNS.length;
+  const nounIndex = i % NOUNS.length;
   const name = `${MODIFIERS[modIndex]} ${NOUNS[nounIndex]}`;
 
   let rarity = 'Common';

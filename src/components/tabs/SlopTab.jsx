@@ -9,7 +9,6 @@ export function SlopTab({
   gpuTemp,
   clickValue,
   activeEvent,
-  catchGoldenMeme,
   powerClickActive,
   particles,
   bounceGPU,
@@ -159,7 +158,7 @@ export function SlopTab({
       </div>
 
       {/* Visual Building Grid (Cookie Clicker Owned Items Display in Middle) */}
-      <BuildingVisualGrid buildings={buildings || {}} />
+      <BuildingVisualGrid buildings={buildings || {}} t={t} />
     </div>
   );
 }

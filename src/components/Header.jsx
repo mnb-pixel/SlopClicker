@@ -8,6 +8,7 @@ export function Header({
   valuation,
   vps,
   grossVps,
+  netFlow,
   slopCount,
   gpuTemp,
   isOverheated,
@@ -228,7 +229,7 @@ export function Header({
           </div>
           <div className="flex items-center justify-center gap-3 text-xs mt-0.5">
             <span className={isSecTheme ? 'text-[#38512E] font-bold' : 'text-cyan-400 font-semibold'}>
-              {tr('netVps')} +{formatCurrency(vps)}/s
+              {tr('netVps')} {netFlow >= 0 ? '+' : ''}{formatCurrency(netFlow ?? vps)}/s
             </span>
             <span className="opacity-40">•</span>
             <span className={`font-mono font-bold ${isSecTheme ? 'text-[#8C2F26]' : 'text-rose-400'}`}>

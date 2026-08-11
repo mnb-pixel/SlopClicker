@@ -29,7 +29,7 @@ export default function App() {
   return (
     <div className={`min-h-screen flex flex-col select-none transition-colors ${
       isW9Theme ? 'sec-w9-theme bg-[#F4F1EA] text-[#0F172A]' : 'bg-slate-950 text-slate-100 font-sans'
-    } ${store.activeEvent?.id === 'llm_hallucination' ? 'glitch-mode' : ''}`}>
+    } ${store.activeEvent?.kind === 'bubble' ? 'glitch-mode' : ''}`}>
       {/* Top Status Header */}
       <Header
         startupName={store.startupName}
@@ -37,6 +37,7 @@ export default function App() {
         valuation={store.valuation}
         vps={store.vps}
         grossVps={store.grossVps}
+        netFlow={store.netFlow}
         slopCount={store.slopCount}
         gpuTemp={store.gpuTemp}
         isOverheated={store.isOverheated}
@@ -61,7 +62,7 @@ export default function App() {
       {/* Viewport Fullscreen Floating Golden Meme Banner */}
       <GoldenMemeBanner
         activeEvent={store.activeEvent}
-        catchGoldenMeme={store.catchGoldenMeme}
+        dismissEvent={store.dismissEvent}
         t={store.t}
       />
 
@@ -81,7 +82,6 @@ export default function App() {
                 gpuTemp={store.gpuTemp}
                 clickValue={store.clickValue}
                 activeEvent={store.activeEvent}
-                catchGoldenMeme={store.catchGoldenMeme}
                 powerClickActive={store.powerClickActive}
                 particles={store.particles}
                 bounceGPU={store.bounceGPU}

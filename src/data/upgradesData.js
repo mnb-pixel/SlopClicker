@@ -1,4 +1,23 @@
-export const UPGRADES_DATA = [
+import { BUILDINGS_DATA } from './buildingsData';
+import { UPGRADE_THRESHOLDS, UPGRADE_MULTIPLIERS } from '../i18n/content/upgrades.content';
+
+// 260 Gebäude-Upgrades (Konzept Abschnitt 6): 13 Schwellen x 20 Gebäude.
+// Kosten(Schwelle-Index t, 1-indiziert) = 10 * baseCost * 1.15^(t-1)
+const BUILDING_UPGRADES_DATA = BUILDINGS_DATA.flatMap((b) =>
+  UPGRADE_THRESHOLDS.map((threshold, i) => ({
+    id: `${b.id}_up_${threshold}`,
+    type: 'building',
+    buildingId: b.id,
+    icon: 'ArrowUpCircle',
+    cost: Math.floor(10 * b.baseCost * Math.pow(1.15, i)),
+    effect: { type: 'buildingMult', value: UPGRADE_MULTIPLIERS[i] },
+    req: { buildingCount: { id: b.id, count: threshold } },
+  }))
+);
+
+// --- Zusätzliche SlopClicker-Mechaniken (nicht Teil des Hype-Clicker-Konzepts,
+// bleiben bestehen weil sie an GPU-Overheat/Power-Click gebunden sind) ---
+const MISC_UPGRADES_DATA = [
   // --- CLICK TAP UPGRADES (Massive Click Boosts) ---
   {
     id: 'click_1',
@@ -102,147 +121,6 @@ export const UPGRADES_DATA = [
     req: { totalValuation: 1000000000 },
   },
 
-  // --- BUILDING TIER 1 UPGRADES (Cursor) ---
-  {
-    id: 'cursor_up_1',
-    name: 'Reinforced Spacebar',
-    cost: 100,
-    quote: 'Can withstand 500 taps per minute.',
-    description: 'Auto-Prompt Cursors produce 2x more Valuation!',
-    icon: 'Square',
-    type: 'building',
-    buildingId: 'cursor',
-    effect: { type: 'buildingMult', value: 2 },
-    req: { buildingCount: { id: 'cursor', count: 1 } },
-  },
-  {
-    id: 'cursor_up_2',
-    name: 'Autohotkey Script Pro',
-    cost: 500,
-    quote: 'Bypasses rate limiting with random delay functions.',
-    description: 'Auto-Prompt Cursors produce 3x more Valuation!',
-    icon: 'Code',
-    type: 'building',
-    buildingId: 'cursor',
-    effect: { type: 'buildingMult', value: 3 },
-    req: { buildingCount: { id: 'cursor', count: 5 } },
-  },
-  {
-    id: 'cursor_up_3',
-    name: 'Sub-Millisecond Macro',
-    cost: 10000,
-    quote: 'Clicks before physics permits.',
-    description: 'Auto-Prompt Cursors produce 5x more Valuation!',
-    icon: 'Zap',
-    type: 'building',
-    buildingId: 'cursor',
-    effect: { type: 'buildingMult', value: 5 },
-    req: { buildingCount: { id: 'cursor', count: 15 } },
-  },
-
-  // --- BUILDING TIER 2 UPGRADES (Prompt Engineer) ---
-  {
-    id: 'prompt_up_1',
-    name: 'System Prompt Sycophancy',
-    cost: 1000,
-    quote: '"You are a brilliant assistant who agrees with everything I say."',
-    description: 'Prompt Engineers produce 2x more Valuation!',
-    icon: 'FileText',
-    type: 'building',
-    buildingId: 'prompt_engineer',
-    effect: { type: 'buildingMult', value: 2 },
-    req: { buildingCount: { id: 'prompt_engineer', count: 1 } },
-  },
-  {
-    id: 'prompt_up_2',
-    name: 'Chain-of-Thought Abuse',
-    cost: 5000,
-    quote: 'Forces the LLM to think for 40 seconds before outputting "Yes".',
-    description: 'Prompt Engineers produce 3x more Valuation!',
-    icon: 'GitCommit',
-    type: 'building',
-    buildingId: 'prompt_engineer',
-    effect: { type: 'buildingMult', value: 3 },
-    req: { buildingCount: { id: 'prompt_engineer', count: 5 } },
-  },
-
-  // --- BUILDING TIER 3 UPGRADES (Human-in-the-Loop AI) ---
-  {
-    id: 'turk_up_1',
-    name: 'Espresso Fuel Station',
-    cost: 11000,
-    quote: 'Increases typing speed by 40%.',
-    description: 'Human-in-the-Loop AI produces 2x more Valuation!',
-    icon: 'Coffee',
-    type: 'building',
-    buildingId: 'fake_indian_turk',
-    effect: { type: 'buildingMult', value: 2 },
-    req: { buildingCount: { id: 'fake_indian_turk', count: 1 } },
-  },
-  {
-    id: 'turk_up_2',
-    name: 'Mechanical Keyboard Army',
-    cost: 55000,
-    quote: 'Blue switches clacking in unison sound like a real data center.',
-    description: 'Human-in-the-Loop AI produces 3x more Valuation!',
-    icon: 'Grid',
-    type: 'building',
-    buildingId: 'fake_indian_turk',
-    effect: { type: 'buildingMult', value: 3 },
-    req: { buildingCount: { id: 'fake_indian_turk', count: 5 } },
-  },
-
-  // --- BUILDING TIER 4 UPGRADES (6-Finger Gen) ---
-  {
-    id: 'sixfinger_up_1',
-    name: 'Extra Thumb Matrix',
-    cost: 120000,
-    quote: 'Why have 5 fingers when you can have 12?',
-    description: '6-Finger Image Generators produce 2x more Valuation!',
-    icon: 'Hand',
-    type: 'building',
-    buildingId: 'six_finger_gen',
-    effect: { type: 'buildingMult', value: 2 },
-    req: { buildingCount: { id: 'six_finger_gen', count: 1 } },
-  },
-  {
-    id: 'sixfinger_up_2',
-    name: 'Melting Teeth Renderer',
-    cost: 600000,
-    quote: 'Renders smiles with 48 glowing incisors.',
-    description: '6-Finger Image Generators produce 3x more Valuation!',
-    icon: 'Smile',
-    type: 'building',
-    buildingId: 'six_finger_gen',
-    effect: { type: 'buildingMult', value: 3 },
-    req: { buildingCount: { id: 'six_finger_gen', count: 5 } },
-  },
-
-  // --- BUILDING TIER 5 UPGRADES (Wrapper Startup) ---
-  {
-    id: 'wrapper_up_1',
-    name: 'TechCrunch Press Release',
-    cost: 1300000,
-    quote: '"Disrupting search with a custom CSS wrapper!"',
-    description: '1-Page Wrapper Startups produce 2x more Valuation!',
-    icon: 'Newspaper',
-    type: 'building',
-    buildingId: 'wrapper_startup',
-    effect: { type: 'buildingMult', value: 2 },
-    req: { buildingCount: { id: 'wrapper_startup', count: 1 } },
-  },
-  {
-    id: 'wrapper_up_2',
-    name: 'Multi-Cloud Prompt Router',
-    quote: '"We are Uber for SLOP-4 prompts in the cloud."',
-    description: '1-Page Wrapper Startups produce 3x more Valuation!',
-    icon: 'Award',
-    type: 'building',
-    buildingId: 'wrapper_startup',
-    effect: { type: 'buildingMult', value: 3 },
-    req: { buildingCount: { id: 'wrapper_startup', count: 5 } },
-  },
-
   // --- GLOBAL MULTIPLIERS & THERMAL EFFICIENCY ---
   {
     id: 'thermal_1',
@@ -300,3 +178,5 @@ export const UPGRADES_DATA = [
     req: { totalValuation: 100000000 },
   },
 ];
+
+export const UPGRADES_DATA = [...BUILDING_UPGRADES_DATA, ...MISC_UPGRADES_DATA];

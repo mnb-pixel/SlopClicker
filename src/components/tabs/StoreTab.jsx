@@ -38,7 +38,7 @@ export function StoreTab({
       return (
         <img
           src={item.image}
-          alt={item.name || 'AI Engine Meme'}
+          alt="AI Engine Meme"
           className="w-7 h-7 rounded-lg object-cover border border-cyan-400/60 shadow-md"
         />
       );
@@ -46,17 +46,39 @@ export function StoreTab({
     return renderIcon(item?.icon || defaultIcon, 'w-4 h-4 text-cyan-400');
   };
 
+  const buildingName = (buildingId) => tr(`building_${buildingId}_name`);
+
   // Target Badge Resolver helper
   const getTargetBadge = (up) => {
     if (!up) return '';
     if (up.type === 'building') {
-      const targetB = BUILDINGS_DATA.find((b) => b.id === up.buildingId);
-      return targetB ? `🎯 ${targetB.name}` : `🎯 ${up.buildingId}`;
+      return `🎯 ${buildingName(up.buildingId)}`;
     }
     if (up.type === 'click') return `🎯 ${tr('affectsClick')}`;
     if (up.type === 'syndicate') return `🎯 ${tr('affectsSyndicate')}`;
     if (up.type === 'global') return `🎯 ${tr('affectsGlobal')}`;
     return '🎯 Global';
+  };
+
+  // Für die 260 Gebäude-Upgrades (nur type:'building') gibt es Name/Flavor über t(),
+  // description wird dynamisch aus Gebäude-Name + Multiplikator gebaut.
+  const upgradeName = (up) => (up.type === 'building' ? tr(`upgrade_${up.id}_name`) : up.name);
+  const upgradeQuote = (up) => (up.type === 'building' ? tr(`upgrade_${up.id}_quote`) : up.quote);
+  const upgradeDescription = (up) => {
+    if (up.type !== 'building') return up.description;
+    return `${buildingName(up.buildingId)} produce ${up.effect.value}x more Valuation!`;
+  };
+
+  // Für die 100 Greenwashing/Layoff-Aktionen: Name/Flavor über t(), effectDesc dynamisch.
+  const gwName = (item) => tr(`gw_${item.id}_name`);
+  const gwQuote = (item) => tr(`gw_${item.id}_quote`);
+  const gwEffectDesc = (item) => {
+    if (item.type === 'greenwashing' && item.tier === 1) return 'Burn Rate -0.1%';
+    if (item.type === 'greenwashing' && item.tier === 2) return 'Engine VPS +10%';
+    if (item.type === 'greenwashing' && item.tier === 3) return 'Cosmetic only (no numeric effect)';
+    if (item.type === 'layoff' && item.tier === 1) return 'Engine VPS +20%';
+    if (item.type === 'layoff' && item.tier === 2) return 'Engine VPS +15%';
+    return '';
   };
 
   // Calculate gross base CPS sum across all buildings for income percentage share
@@ -73,10 +95,9 @@ export function StoreTab({
     boughtGreenwashingLayoffs.forEach((itemId) => {
       const gw = GREENWASHING_LAYOFFS_DATA.find((g) => g.id === itemId);
       if (gw && gw.buildingId === b.id) {
-        if (gw.id.endsWith('_2')) bMult *= 1.10;
-        if (gw.id.endsWith('_3')) bMult *= 1.15;
-        if (gw.id.startsWith('lay_') && gw.tier === 1) bMult *= 1.20;
-        if (gw.id.startsWith('lay_') && gw.tier === 2) bMult *= 1.35;
+        if (gw.type === 'greenwashing' && gw.tier === 2) bMult *= 1.10;
+        if (gw.type === 'layoff' && gw.tier === 1) bMult *= 1.20;
+        if (gw.type === 'layoff' && gw.tier === 2) bMult *= 1.15;
       }
     });
     return acc + count * b.baseCps * bMult;
@@ -96,7 +117,7 @@ export function StoreTab({
     if (isUnlocked) {
       visibleBuildings.push(b);
     } else if (!foundFirstLocked) {
-      visibleBuildings.push({ id: `locked_teaser_${b.id}`, isTeaser: true, name: b.name });
+      visibleBuildings.push({ id: `locked_teaser_${b.id}`, isTeaser: true });
       foundFirstLocked = true;
     }
   });
@@ -242,10 +263,9 @@ export function StoreTab({
               boughtGreenwashingLayoffs.forEach((itemId) => {
                 const gw = GREENWASHING_LAYOFFS_DATA.find((g) => g.id === itemId);
                 if (gw && gw.buildingId === b.id) {
-                  if (gw.id.endsWith('_2')) bMult *= 1.10;
-                  if (gw.id.endsWith('_3')) bMult *= 1.15;
-                  if (gw.id.startsWith('lay_') && gw.tier === 1) bMult *= 1.20;
-                  if (gw.id.startsWith('lay_') && gw.tier === 2) bMult *= 1.35;
+                  if (gw.type === 'greenwashing' && gw.tier === 2) bMult *= 1.10;
+                  if (gw.type === 'layoff' && gw.tier === 1) bMult *= 1.20;
+                  if (gw.type === 'layoff' && gw.tier === 2) bMult *= 1.15;
                 }
               });
 
@@ -258,11 +278,9 @@ export function StoreTab({
                   {/* Mouseover Hover Tooltip Card */}
                   <div className="hidden group-hover:flex flex-col gap-1 absolute bottom-full left-0 right-0 z-50 mb-2 p-3 bg-slate-950/95 backdrop-blur-md border border-cyan-500/50 rounded-xl shadow-2xl text-xs pointer-events-none animate-fadeIn">
                     <div className="font-extrabold text-cyan-300 flex items-center justify-between">
-                      <span>{b.name}</span>
+                      <span>{buildingName(b.id)}</span>
                       <span className="text-[10px] text-slate-400 font-mono">Base: {formatCurrency(b.baseCost)}</span>
                     </div>
-                    <div className="text-slate-300 italic text-[11px]">"{b.quote}"</div>
-                    <div className="text-slate-400 text-[11px]">{b.description}</div>
                     <div className="text-emerald-400 font-mono font-bold text-[11px] pt-1 border-t border-slate-800 flex justify-between">
                       <span>1 Unit: +{formatCurrency(unitVps)}/s ({bMult.toFixed(1)}x mult)</span>
                       <span>Total: +{formatCurrency(buildingTotalVps)}/s ({vpsSharePct}%)</span>
@@ -283,7 +301,7 @@ export function StoreTab({
                       </div>
                       <div>
                         <div className="font-extrabold text-xs text-slate-100 flex items-center gap-1.5">
-                          {b.name}
+                          {buildingName(b.id)}
                           {count > 0 && (
                             <span className="bg-cyan-500/20 text-cyan-300 text-[10px] font-black px-1.5 py-0.1 rounded border border-cyan-500/30">
                               x{count}
@@ -355,13 +373,13 @@ export function StoreTab({
                     {/* Mouseover Hover Tooltip Card */}
                     <div className="hidden group-hover:flex flex-col gap-1 absolute bottom-full left-0 right-0 z-50 mb-2 p-3 bg-slate-950/95 backdrop-blur-md border border-amber-500/50 rounded-xl shadow-2xl text-xs pointer-events-none animate-fadeIn">
                       <div className="font-extrabold text-amber-300 flex items-center justify-between">
-                        <span>{up.name}</span>
+                        <span>{upgradeName(up)}</span>
                         <span className="text-[10px] text-slate-400 font-mono">{formatCurrency(up.cost)}</span>
                       </div>
                       <div className="text-cyan-400 text-[10px] font-mono font-bold">{targetText}</div>
-                      <div className="text-slate-300 italic text-[11px]">"{up.quote}"</div>
+                      {upgradeQuote(up) && <div className="text-slate-300 italic text-[11px]">"{upgradeQuote(up)}"</div>}
                       <div className="text-amber-400 font-semibold text-[11px] pt-1 border-t border-slate-800">
-                        {up.description}
+                        {upgradeDescription(up)}
                       </div>
                     </div>
 
@@ -379,13 +397,13 @@ export function StoreTab({
                         </div>
                         <div>
                           <div className="font-extrabold text-xs text-slate-100 flex items-center gap-1.5 flex-wrap">
-                            <span>{up.name}</span>
+                            <span>{upgradeName(up)}</span>
                             <span className="bg-amber-500/20 text-amber-300 text-[9px] font-black px-1.5 py-0.2 rounded border border-amber-500/30 font-mono">
                               {targetText}
                             </span>
                           </div>
                           <div className="text-[10px] text-amber-300/90 font-mono font-semibold mt-0.5">
-                            {up.description}
+                            {upgradeDescription(up)}
                           </div>
                         </div>
                       </div>
@@ -446,12 +464,12 @@ export function StoreTab({
                           </div>
                           <div>
                             <div className="font-bold text-slate-200 flex items-center gap-1.5">
-                              <span>{up.name}</span>
+                              <span>{upgradeName(up)}</span>
                               <span className="bg-emerald-500/20 text-emerald-300 text-[9px] font-mono font-bold px-1 rounded">
                                 {targetText}
                               </span>
                             </div>
-                            <div className="text-[10px] text-emerald-400 font-mono">{up.description}</div>
+                            <div className="text-[10px] text-emerald-400 font-mono">{upgradeDescription(up)}</div>
                           </div>
                         </div>
                         <span className="bg-emerald-500/20 text-emerald-300 text-[9px] font-black px-2 py-0.5 rounded border border-emerald-500/40 shrink-0">
@@ -548,9 +566,9 @@ export function StoreTab({
                       {item.type === 'greenwashing' ? <Icons.Recycle className="w-4 h-4" /> : <Icons.UserX className="w-4 h-4" />}
                     </div>
                     <div>
-                      <div className="font-extrabold text-xs text-slate-100">{item.name}</div>
-                      <div className="text-[11px] text-slate-400 italic">"{item.quote}"</div>
-                      <div className="text-[10px] text-amber-400 font-mono font-bold mt-0.5">{item.effectDesc}</div>
+                      <div className="font-extrabold text-xs text-slate-100">{gwName(item)}</div>
+                      <div className="text-[11px] text-slate-400 italic">"{gwQuote(item)}"</div>
+                      <div className="text-[10px] text-amber-400 font-mono font-bold mt-0.5">{gwEffectDesc(item)}</div>
                     </div>
                   </div>
 

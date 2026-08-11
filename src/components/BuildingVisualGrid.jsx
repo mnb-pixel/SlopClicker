@@ -3,13 +3,16 @@ import * as Icons from 'lucide-react';
 import { BUILDINGS_DATA } from '../data/buildingsData';
 import { formatCurrency, formatNumber } from '../utils/formatters';
 
-export function BuildingVisualGrid({ buildings }) {
+export function BuildingVisualGrid({ buildings, t }) {
+  const tr = t || ((k) => k);
+  const buildingName = (b) => tr(`building_${b.id}_name`);
+
   const renderItemArtwork = (b, sizeClass = 'w-6 h-6') => {
     if (b && b.image) {
       return (
         <img
           src={b.image}
-          alt={b.name}
+          alt={buildingName(b)}
           className={`${sizeClass} rounded-md object-cover border border-cyan-400/60 shadow-md`}
         />
       );
@@ -64,7 +67,7 @@ export function BuildingVisualGrid({ buildings }) {
                   <div className="p-0.5 rounded bg-slate-800 border border-slate-700">
                     {renderItemArtwork(b, 'w-6 h-6')}
                   </div>
-                  <span>{b.name}</span>
+                  <span>{buildingName(b)}</span>
                   <span className="bg-cyan-500/20 text-cyan-300 text-[10px] font-black px-1.5 py-0.1 rounded border border-cyan-500/30">
                     x{count}
                   </span>
@@ -81,7 +84,7 @@ export function BuildingVisualGrid({ buildings }) {
                     key={idx}
                     className="w-6 h-6 rounded-lg bg-slate-900 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-inner transform group-hover:scale-105 transition-transform animate-pulse overflow-hidden"
                     style={{ animationDelay: `${(idx % 5) * 200}ms` }}
-                    title={`${b.name} #${idx + 1}`}
+                    title={`${buildingName(b)} #${idx + 1}`}
                   >
                     {renderItemArtwork(b, 'w-full h-full')}
                   </div>

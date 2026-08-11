@@ -1,5 +1,7 @@
 // Multi-Language Dictionary (DE, EN, FR, ES) for SlopClicker / Hype Clicker
 
+import { buildContentTranslations } from './mergeContent';
+
 export const TRANSLATIONS = {
   de: {
     // Header
@@ -481,3 +483,12 @@ export const TRANSLATIONS = {
     event_llm_hallucination_desc: '¡Los modelos producen slop ultra creativo! ¡Valor de clic x5 por 15s!',
   },
 };
+
+// Große Content-Dictionaries (Gebäude, 260 Upgrades, 100 Greenwashing/Layoffs,
+// Achievements, Events) leben in src/i18n/content/*.content.js und werden hier
+// eingemischt, damit t()/tr() sie wie jeden anderen UI-Text auflösen kann.
+// de/en sind vollständig befüllt; fr/es fallen auf en zurück (t() macht das
+// automatisch: TRANSLATIONS[lang]?.[key] || TRANSLATIONS.en[key] || key).
+const CONTENT_TRANSLATIONS = buildContentTranslations();
+Object.assign(TRANSLATIONS.de, CONTENT_TRANSLATIONS.de);
+Object.assign(TRANSLATIONS.en, CONTENT_TRANSLATIONS.en);

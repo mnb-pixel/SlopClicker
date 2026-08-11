@@ -12,8 +12,10 @@ export function StatsTab({
   slopCount,
   unlockedAchievements,
   logs,
+  t,
 }) {
   const [statsSection, setStatsSection] = useState('overview'); // 'overview' | 'log' | 'achievements'
+  const tr = t || ((k) => k);
 
   const renderIcon = (iconName, className = 'w-4 h-4') => {
     const IconComp = Icons[iconName] || Icons.Award;
@@ -163,7 +165,7 @@ export function StatsTab({
                 </div>
                 <div>
                   <div className="font-extrabold text-sm flex items-center gap-2">
-                    {ach.name}
+                    {tr(`ach_${ach.id}_name`)}
                     {ach.isShadow && (
                       <span className="bg-fuchsia-500/20 text-fuchsia-300 text-[9px] font-black px-1.5 py-0.2 rounded border border-fuchsia-500/30">
                         SHADOW
@@ -173,7 +175,7 @@ export function StatsTab({
                       <span className="text-emerald-400 text-xs font-black">✓</span>
                     )}
                   </div>
-                  <div className="text-[11px] text-slate-400 italic">"{ach.quote}"</div>
+                  <div className="text-[11px] text-slate-400 italic">"{tr(`ach_${ach.id}_quote`)}"</div>
                 </div>
               </div>
             );
