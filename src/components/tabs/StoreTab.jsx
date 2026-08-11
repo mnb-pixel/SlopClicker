@@ -364,8 +364,12 @@ export function StoreTab({
 
       {/* UPGRADES SECTION (Kachel Grid / Tiles View) */}
       {storeSection === 'upgrades' && (() => {
-        const activeUpgrade = availableUpgrades.find((u) => u.id === hoveredUpgradeId) || availableUpgrades[0];
-        const canAffordActive = activeUpgrade && valuation >= activeUpgrade.cost;
+        // Aus ALLEN Upgrades suchen (nicht nur den verfügbaren): sobald man kauft,
+        // verschwindet das Upgrade aus availableUpgrades - würde die Karte sonst sofort
+        // auf ein anderes Upgrade springen lassen oder ganz verschwinden.
+        const activeUpgrade = UPGRADES_DATA.find((u) => u.id === hoveredUpgradeId) || availableUpgrades[0];
+        const isActiveBought = activeUpgrade && boughtUpgrades.includes(activeUpgrade.id);
+        const canAffordActive = activeUpgrade && !isActiveBought && valuation >= activeUpgrade.cost;
 
         return (
           <div className="flex flex-col gap-3">
@@ -404,8 +408,8 @@ export function StoreTab({
 
                 <div className="flex items-center justify-between text-[10px] font-mono">
                   <span className="text-cyan-300 font-bold">{getTargetBadge(activeUpgrade)}</span>
-                  <span className={canAffordActive ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
-                    {canAffordActive ? '✓ Bezahlbar' : '🔒 Nicht genug Valuation'}
+                  <span className={isActiveBought ? 'text-emerald-400 font-bold' : canAffordActive ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                    {isActiveBought ? '✓ Gekauft' : canAffordActive ? '✓ Bezahlbar' : '🔒 Nicht genug Valuation'}
                   </span>
                 </div>
 
@@ -417,6 +421,11 @@ export function StoreTab({
 
                 <div className="text-amber-300 font-bold text-[11px] pt-1 flex justify-between items-center gap-2">
                   <span>⚡ {upgradeDescription(activeUpgrade)}</span>
+                  {isActiveBought ? (
+                    <span className="px-3 py-1 rounded-lg font-black text-xs shrink-0 bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 flex items-center gap-1">
+                      <Icons.CheckCircle2 className="w-3.5 h-3.5" /> Gekauft
+                    </span>
+                  ) : (
                   <button
                     onClick={() => buyUpgrade(activeUpgrade.id)}
                     disabled={!canAffordActive}
@@ -428,6 +437,7 @@ export function StoreTab({
                   >
                     KAUFEN
                   </button>
+                  )}
                 </div>
               </div>
             )}
