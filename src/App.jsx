@@ -61,9 +61,6 @@ export default function App() {
         slopCount={store.slopCount}
         gpuTemp={store.gpuTemp}
         isOverheated={store.isOverheated}
-        powerClicks={store.powerClicks}
-        powerClickActive={store.powerClickActive}
-        togglePowerClick={store.togglePowerClick}
         themeMode={store.themeMode}
         hypeTier={store.hypeTier}
         burnRate={store.burnRate}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, Edit3, Sparkles, Zap, ShieldAlert, Cpu, ChevronUp, ChevronDown, BookOpen, Share2 } from 'lucide-react';
+import { Flame, Edit3, Sparkles, ShieldAlert, Cpu, ChevronUp, ChevronDown, BookOpen, Share2 } from 'lucide-react';
 import { formatCurrency, formatExactValuation, formatNumber } from '../utils/formatters';
 import { NewsTicker } from './NewsTicker';
 
@@ -14,9 +14,6 @@ export function Header({
   slopCount,
   gpuTemp,
   isOverheated,
-  powerClicks,
-  powerClickActive,
-  togglePowerClick,
   themeMode,
   hypeTier,
   burnRate,
@@ -165,22 +162,6 @@ export function Header({
               <Share2 className="w-3.5 h-3.5 text-slate-950" />
               <span>🚀 SHARE</span>
             </button>
-
-            {!buttonsCollapsed && (
-              <button
-                onClick={togglePowerClick}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold transition-all border ${
-                  powerClickActive
-                    ? 'bg-amber-500 text-slate-950 border-amber-300 shadow-lg animate-pulse'
-                    : powerClicks > 0
-                    ? isSecTheme ? 'bg-[#2A3C50] text-[#8A6A1F] border-[#8A6A1F]' : 'bg-slate-800 text-amber-400 border-amber-500/40'
-                    : 'opacity-50 cursor-not-allowed border-slate-700'
-                }`}
-              >
-                <Zap className="w-3.5 h-3.5" />
-                <span>{tr('powerTap')} {powerClicks}</span>
-              </button>
-            )}
           </div>
         </div>
 

@@ -6,6 +6,7 @@ import { ACHIEVEMENTS_DATA } from '../data/achievementsData';
 import { BUZZWORDS_DATA, getBoosterPackCost } from '../data/buzzwordsData';
 import { GREENWASHING_LAYOFFS_DATA, getCorporateActionCost } from '../data/greenwashingLayoffsData';
 import { IDEALIST_PATH, CYNIC_PATH, EPOCHS, CREDIBILITY_LEVEL_COST_BASE } from '../data/credibilityTreeData';
+import { BLACK_SWAN_EVENTS_DATA } from '../data/blackSwanEventsData';
 import { GOLDEN_EVENT_IDS, BUBBLE_EVENT_IDS } from '../i18n/content/events.content';
 import { TRANSLATIONS } from '../i18n/translations';
 import { formatCurrency, getBuildingCost, getBuildingBulkCost, getMaxAffordableBuildings } from '../utils/formatters';
@@ -18,6 +19,13 @@ const BUBBLE_CHANCE_PER_200MS = 0.0004; // 0.04%
 const SHADOW_CHANCE_PER_200MS = 0.0000015; // 0.00015%
 const GOLDEN_DURATION_SEC = 15;
 const BUBBLE_BURN_DURATION_SEC = 30;
+
+// Black Swan Events (pro Engine-Typ, siehe blackSwanEventsData.js): harte Untergrenze von
+// 24h zwischen zwei Events DERSELBEN Engine, obendrauf eine sehr niedrige Tick-Chance, damit
+// es auch bei vielen gleichzeitig besessenen Engine-Typen "ultra selten" bleibt (~2%/Tag
+// pro bereits eligibler Engine, also im Schnitt mehrere Wochen Abstand).
+const BLACK_SWAN_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+const BLACK_SWAN_CHANCE_PER_200MS = 0.00000005;
 
 // Monetarisierung: Rewarded-Ad-Cooldowns pro Placement (Sekunden), damit dieselbe
 // Ad-Belohnung nicht im Sekundentakt wieder abgegriffen werden kann.
@@ -85,6 +93,10 @@ export function useGameStore() {
   const [bubblePopTimer, setBubblePopTimer] = useState(0);
 
   const [buildings, setBuildings] = useState(INITIAL_BUILDINGS);
+  // Black Swan Events: nächstmöglicher Zeitpunkt (ms) für ein Event PRO Engine-Typ.
+  // undefined = Engine noch nie beobachtet -> beim ersten Tick mit Bestand > 0 auf
+  // "jetzt + 24h" gesetzt (Gnadenfrist, bevor überhaupt ein erstes Event möglich ist).
+  const [blackSwanNextEligible, setBlackSwanNextEligible] = useState({});
   const [boughtUpgrades, setBoughtUpgrades] = useState([]);
   const [unlockedUpgrades, setUnlockedUpgrades] = useState([]);
   const [boughtHeavenlyUpgrades, setBoughtHeavenlyUpgrades] = useState([]);
@@ -185,6 +197,7 @@ export function useGameStore() {
       pivotCount,
       valuationAtLastPivot,
       buildings,
+      blackSwanNextEligible,
       boughtUpgrades,
       unlockedUpgrades,
       boughtHeavenlyUpgrades,
@@ -202,7 +215,7 @@ export function useGameStore() {
     lang, startupName, valuation, totalValuation, totalBurned, slopCount, gpuTemp, isOverheated,
     coolingRate, powerClicks, prestigeLevel, heavenlyChips, themeMode, boughtBuzzwords,
     boughtGreenwashingLayoffs, epoch, idealistLevel, cynicLevel, credibility, pivotCount,
-    valuationAtLastPivot, buildings,
+    valuationAtLastPivot, buildings, blackSwanNextEligible,
     boughtUpgrades, unlockedUpgrades, boughtHeavenlyUpgrades, unlockedAchievements, stats,
     fancyGraphics
   ]);
@@ -236,6 +249,7 @@ export function useGameStore() {
           setPivotCount(data.pivotCount || 0);
           setValuationAtLastPivot(data.valuationAtLastPivot || 0);
           setBuildings({ ...INITIAL_BUILDINGS, ...data.buildings });
+          setBlackSwanNextEligible(data.blackSwanNextEligible || {});
           setBoughtUpgrades(data.boughtUpgrades || []);
           setUnlockedUpgrades(data.unlockedUpgrades || []);
           setBoughtHeavenlyUpgrades(data.boughtHeavenlyUpgrades || []);
@@ -609,7 +623,32 @@ export function useGameStore() {
         addLog(`${t(`event_${id}_title`)} - ${t(`event_${id}_desc`)}`, 'danger');
       }
 
-      // 8. Achievements prüfen
+      // 8. Black Swan Events (pro Engine, siehe blackSwanEventsData.js): harte 24h-Sperre pro
+      // Engine-Typ (blackSwanNextEligible) + sehr niedrige Tick-Chance obendrauf, damit es
+      // "ultra selten" bleibt. Zerstört bei Auslösung lossPct des aktuellen Bestands dieser
+      // einen Engine - kein globaler Effekt.
+      BUILDINGS_DATA.forEach((b) => {
+        const owned = buildings[b.id] || 0;
+        if (owned <= 0) return;
+
+        const eligibleAt = blackSwanNextEligible[b.id];
+        if (eligibleAt === undefined) {
+          setBlackSwanNextEligible((prev) => ({ ...prev, [b.id]: now + BLACK_SWAN_COOLDOWN_MS }));
+          return;
+        }
+        if (now < eligibleAt) return;
+
+        if (Math.random() < BLACK_SWAN_CHANCE_PER_200MS * tickScale) {
+          const event = BLACK_SWAN_EVENTS_DATA.find((e) => e.buildingId === b.id);
+          if (!event) return;
+          const lost = Math.max(1, Math.floor(owned * event.lossPct));
+          setBuildings((prev) => ({ ...prev, [b.id]: Math.max(0, (prev[b.id] || 0) - lost) }));
+          setBlackSwanNextEligible((prev) => ({ ...prev, [b.id]: now + BLACK_SWAN_COOLDOWN_MS }));
+          addLog(`${event.title} - ${t(`building_${b.id}_name`)}: -${lost} (-${Math.round(event.lossPct * 100)}%). ${event.desc}`, 'danger');
+        }
+      });
+
+      // 9. Achievements prüfen
       ACHIEVEMENTS_DATA.forEach((ach) => {
         if (!unlockedAchievements.includes(ach.id)) {
           const currentState = {
@@ -625,14 +664,14 @@ export function useGameStore() {
         }
       });
 
-      // 9. Shadow Achievement "Tatsächlich Gewinn gemacht" (0.00015% pro 200ms-Tick)
+      // 10. Shadow Achievement "Tatsächlich Gewinn gemacht" (0.00015% pro 200ms-Tick)
       if (Math.random() < SHADOW_CHANCE_PER_200MS * tickScale) {
         setStats((prev) => ({ ...prev, shadowLucky: true }));
       }
     }, 100);
 
     return () => clearInterval(interval);
-  }, [vps, burnRate, coolingRate, isOverheated, activeEvent, powerClickSurgeTimer, bubblePopTimer, unlockedAchievements, stats, totalValuation, totalBurned, pivotCount, buildings, boughtBuzzwords, pageActivity, addLog, t]);
+  }, [vps, burnRate, coolingRate, isOverheated, activeEvent, powerClickSurgeTimer, bubblePopTimer, unlockedAchievements, stats, totalValuation, totalBurned, pivotCount, buildings, blackSwanNextEligible, boughtBuzzwords, pageActivity, addLog, t]);
 
   // Dynamic Sticky Upgrade Unlock Logic (Cash-based & Owned Engine requirement)
   // Sticky rule: Once unlocked by reaching current cash threshold, upgrades stay unlocked even if cash drops!
@@ -994,6 +1033,7 @@ export function useGameStore() {
 
     setValuation(0);
     setBuildings(INITIAL_BUILDINGS);
+    setBlackSwanNextEligible({});
     setBoughtUpgrades([]);
     setUnlockedUpgrades([]);
     setGpuTemp(0);
@@ -1179,6 +1219,7 @@ export function useGameStore() {
     setGpuTemp(0);
     setIsOverheated(false);
     setBuildings(INITIAL_BUILDINGS);
+    setBlackSwanNextEligible({});
     setBoughtUpgrades([]);
     setUnlockedUpgrades([]);
     setBoughtHeavenlyUpgrades([]);
