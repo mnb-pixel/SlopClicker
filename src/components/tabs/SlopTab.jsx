@@ -109,8 +109,6 @@ export function SlopTab({
             onClick={handleTapAGI}
             disabled={isOverheated}
             className={`relative w-56 h-56 rounded-full border-4 flex flex-col items-center justify-center p-3 text-center transition-all transform active:scale-95 shadow-2xl overflow-hidden group ${
-              isBouncing ? 'animate-bounce border-fuchsia-500 bg-fuchsia-950' : ''
-            } ${
               isOverheated
                 ? 'bg-slate-900/90 border-rose-600 text-slate-600 cursor-not-allowed grayscale'
                 : powerClickActive
