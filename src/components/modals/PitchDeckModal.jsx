@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
-import { X, Copy, Share2, Check, Sparkles, Rocket, Download, MessageSquare, Send, Globe, Award, Layers } from 'lucide-react';
-import { formatCurrency, formatNumber } from '../../utils/formatters';
-import { BUILDINGS_DATA } from '../../data/buildingsData';
+import { X, Copy, Share2, Check, Rocket, Download, MessageSquare, Send, Globe, Award, Loader2 } from 'lucide-react';
+import { formatCurrency } from '../../utils/formatters';
+import { drawPitchDeck } from '../../utils/pitchDeckCanvas';
 import { ACHIEVEMENTS_DATA } from '../../data/achievementsData';
 import { BUZZWORDS_DATA } from '../../data/buzzwordsData';
 
@@ -27,7 +27,7 @@ export function PitchDeckModal({
 }) {
   const tr = t || ((k) => k);
   const [copied, setCopied] = useState(false);
-  const [isGeneratingPng, setIsGeneratingPng] = useState(false);
+  const [isGeneratingPng, setIsGeneratingPng] = useState(true);
   const [pngDataUrl, setPngDataUrl] = useState(null);
   const [detailed, setDetailed] = useState(false);
   const canvasRef = useRef(null);
@@ -51,246 +51,38 @@ export function PitchDeckModal({
     }
   }, [isOpen]);
 
-  // Generate HD 1080x1920 Mobile Story Canvas Graphic
+  // HD 1080x1920 Story-Card rendern - das Ergebnis ist gleichzeitig die Vorschau
+  // im Modal, damit die Vorschau exakt dem geteilten Bild entspricht.
   useEffect(() => {
     if (!isOpen) return;
+    setIsGeneratingPng(true);
 
-    // Detaillierte Version braucht Platz für 2 zusätzliche Stat-Boxen (Badges + Buzzword-Karten) -
-    // Canvas wächst dafür in der Höhe, alles ab dem Zitat/Stempel/Footer rutscht um EXTRA_H runter.
-    const EXTRA_H = 260;
-    const extra = detailed ? EXTRA_H : 0;
-    const canvasHeight = 1920 + extra;
-
-    const generateCanvas = () => {
-      setIsGeneratingPng(true);
+    const timer = setTimeout(() => {
       const canvas = canvasRef.current || document.createElement('canvas');
-      canvas.width = 1080;
-      canvas.height = canvasHeight;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      // 1. Dark Gradient Background
-      const bgGrad = ctx.createLinearGradient(0, 0, 1080, canvasHeight);
-      bgGrad.addColorStop(0, '#030712'); // slate-950
-      bgGrad.addColorStop(0.3, '#0f172a'); // slate-900
-      bgGrad.addColorStop(0.7, '#1e1b4b'); // indigo-950
-      bgGrad.addColorStop(1, '#030712');
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, 1080, canvasHeight);
-
-      // Subtle Tech Grid Lines
-      ctx.strokeStyle = 'rgba(6, 182, 212, 0.07)';
-      ctx.lineWidth = 2;
-      for (let x = 0; x < 1080; x += 60) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvasHeight);
-        ctx.stroke();
-      }
-      for (let y = 0; y < canvasHeight; y += 60) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(1080, y);
-        ctx.stroke();
-      }
-
-      // Outer Decorative Border Frame
-      ctx.strokeStyle = '#06b6d4';
-      ctx.lineWidth = 10;
-      ctx.strokeRect(40, 40, 1000, canvasHeight - 80);
-
-      ctx.strokeStyle = '#a855f7';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(52, 52, 976, canvasHeight - 104);
-
-      // 2. Top Header Banner: Prospectus & Watermark
-      ctx.fillStyle = '#f59e0b'; // amber-500
-      ctx.font = '900 36px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(tr('pdConfidentialTitle'), 540, 130);
-
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '700 28px sans-serif';
-      ctx.fillText(tr('pdOfficialSubtitle'), 540, 175);
-
-      // Horizontal Divider
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(80, 210);
-      ctx.lineTo(1000, 210);
-      ctx.stroke();
-
-      // 3. Startup Title Header
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 76px sans-serif';
-      ctx.fillText(startupName.toUpperCase(), 540, 310);
-
-      if (hasAiDomainBonus) {
-        ctx.fillStyle = '#f59e0b';
-        ctx.font = '900 32px monospace';
-        ctx.fillText(tr('pdAiHypeDomainLong'), 540, 365);
-      }
-
-      // 4. Main Metric Card Box: VALUATION
-      const cardGrad = ctx.createLinearGradient(100, 420, 980, 720);
-      cardGrad.addColorStop(0, 'rgba(15, 23, 42, 0.9)');
-      cardGrad.addColorStop(1, 'rgba(30, 27, 75, 0.9)');
-      ctx.fillStyle = cardGrad;
-      ctx.roundRect(100, 420, 880, 300, 30);
-      ctx.fill();
-      ctx.strokeStyle = '#06b6d4';
-      ctx.lineWidth = 4;
-      ctx.roundRect(100, 420, 880, 300, 30);
-      ctx.stroke();
-
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '900 32px monospace';
-      ctx.fillText(tr('pdEstimatedValuation'), 540, 480);
-
-      ctx.fillStyle = '#10b981'; // emerald-500
-      ctx.font = '900 96px monospace';
-      ctx.fillText(formatCurrency(valuation), 540, 590);
-
-      ctx.fillStyle = '#67e8f9';
-      ctx.font = '700 34px monospace';
-      ctx.fillText(`+${formatCurrency(vps)} ${tr('pdPassiveCashflow')}`, 540, 665);
-
-      // 5. Financial Highlights Grid (2x2)
-      const gridItems = [
-        { label: tr('pdAnnualRevenue'), val: tr('pdPureHype'), color: '#f43f5e' },
-        { label: tr('pdHypeTierRank'), val: `${tr('pdTierLabel')} ${hypeTier} / 10`, color: '#ec4899' },
-        { label: tr('pdTotalTokens'), val: `${formatNumber(slopCount)} ${tr('pdTokensLabel')}`, color: '#c084fc' },
-        { label: tr('pdMeltedGpuCores'), val: `${overheatCount} ${tr('pdOverheatsLabel')}`, color: '#fb923c' },
-      ];
-
-      gridItems.forEach((item, idx) => {
-        const col = idx % 2;
-        const row = Math.floor(idx / 2);
-        const x = 100 + col * 450;
-        const y = 760 + row * 190;
-
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
-        ctx.roundRect(x, y, 430, 160, 20);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.lineWidth = 2;
-        ctx.roundRect(x, y, 430, 160, 20);
-        ctx.stroke();
-
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '800 24px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(item.label, x + 215, y + 55);
-
-        ctx.fillStyle = item.color;
-        ctx.font = '900 36px sans-serif';
-        ctx.fillText(item.val, x + 215, y + 115);
+      const dataUrl = drawPitchDeck(canvas, {
+        startupName,
+        hasAiDomainBonus,
+        valuation,
+        vps,
+        slopCount,
+        overheatCount,
+        prestigeLevel,
+        hypeTier,
+        buildings,
+        detailed,
+        badgeCount,
+        badgeTotal,
+        cardCount,
+        cardTotal,
+        cardBonusPct,
+        t,
       });
-
-      // 6. Top Owned AI Infrastructure Section
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
-      ctx.roundRect(100, 1180, 880, 320, 24);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(168, 85, 247, 0.4)';
-      ctx.lineWidth = 3;
-      ctx.roundRect(100, 1180, 880, 320, 24);
-      ctx.stroke();
-
-      ctx.fillStyle = '#a855f7';
-      ctx.font = '900 30px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(tr('pdDeployedEngines'), 540, 1235);
-
-      // Get top 3 owned building engines
-      const ownedEngines = BUILDINGS_DATA.map((b) => ({
-        name: (t && t(`building_${b.id}_name`)) || b.id,
-        count: buildings[b.id] || 0,
-      })).filter((b) => b.count > 0).slice(-3).reverse();
-
-      if (ownedEngines.length === 0) {
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = 'italic 30px sans-serif';
-        ctx.fillText(tr('pdManualTappingMode'), 540, 1340);
-      } else {
-        ownedEngines.forEach((eng, i) => {
-          ctx.fillStyle = '#e2e8f0';
-          ctx.font = '800 32px sans-serif';
-          ctx.textAlign = 'left';
-          ctx.fillText(`• ${eng.name}`, 140, 1300 + i * 55);
-
-          ctx.fillStyle = '#38bdf8';
-          ctx.font = '900 32px monospace';
-          ctx.textAlign = 'right';
-          ctx.fillText(`${eng.count}x ${tr('pdDeployedLabel')}`, 940, 1300 + i * 55);
-        });
-      }
-
-      // 6b. DETAILED MODE: Badges & Buzzword Card Collection Stats (optional, user-toggled)
-      if (detailed) {
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
-        ctx.roundRect(100, 1520, 880, 200, 24);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
-        ctx.lineWidth = 3;
-        ctx.roundRect(100, 1520, 880, 200, 24);
-        ctx.stroke();
-
-        ctx.fillStyle = '#10b981';
-        ctx.font = '900 30px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(tr('pdCollectionPortfolio'), 540, 1568);
-
-        ctx.fillStyle = '#e2e8f0';
-        ctx.font = '800 30px sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(`🏆 ${tr('pdBadgesUnlocked')}`, 140, 1630);
-        ctx.fillStyle = '#fbbf24';
-        ctx.font = '900 30px monospace';
-        ctx.textAlign = 'right';
-        ctx.fillText(`${badgeCount} / ${badgeTotal}`, 940, 1630);
-
-        ctx.fillStyle = '#e2e8f0';
-        ctx.font = '800 30px sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(`🎴 ${tr('pdBuzzwordCards')}`, 140, 1685);
-        ctx.fillStyle = '#e879f9';
-        ctx.font = '900 30px monospace';
-        ctx.textAlign = 'right';
-        ctx.fillText(`${cardCount} / ${cardTotal} (+${cardBonusPct}% VPS)`, 940, 1685);
-      }
-
-      // 7. Satirical VC Prospectus Stamp Seal & Quote
-      ctx.fillStyle = '#f59e0b';
-      ctx.font = 'italic 900 32px serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(tr('pdHypeQuote'), 540, 1560 + extra);
-
-      // VC Approved Stamp Badge Box
-      ctx.fillStyle = 'rgba(245, 158, 11, 0.15)';
-      ctx.roundRect(290, 1610 + extra, 500, 100, 20);
-      ctx.fill();
-      ctx.strokeStyle = '#f59e0b';
-      ctx.lineWidth = 4;
-      ctx.roundRect(290, 1610 + extra, 500, 100, 20);
-      ctx.stroke();
-
-      ctx.fillStyle = '#fef3c7';
-      ctx.font = '900 36px monospace';
-      ctx.fillText(tr('pdApprovedBySyndicate'), 540, 1672 + extra);
-
-      // 8. Footer Call-to-Action Link Branding
-      ctx.fillStyle = '#06b6d4';
-      ctx.font = '900 34px sans-serif';
-      ctx.fillText(tr('pdBuildEmpireFooter'), 540, 1820 + extra);
-
-      setPngDataUrl(canvas.toDataURL('image/png'));
+      setPngDataUrl(dataUrl);
       setIsGeneratingPng(false);
-    };
+    }, 60);
 
-    // Small delay to ensure modal open DOM state
-    setTimeout(generateCanvas, 100);
-  }, [isOpen, startupName, hasAiDomainBonus, valuation, vps, slopCount, overheatCount, hypeTier, buildings, detailed, badgeCount, badgeTotal, cardCount, cardTotal, cardBonusPct, t, tr]);
+    return () => clearTimeout(timer);
+  }, [isOpen, startupName, hasAiDomainBonus, valuation, vps, slopCount, overheatCount, prestigeLevel, hypeTier, buildings, detailed, badgeCount, badgeTotal, cardCount, cardTotal, cardBonusPct, t]);
 
   if (!isOpen) return null;
 
@@ -422,79 +214,32 @@ export function PitchDeckModal({
           <span>{tr('pdDetailedToggleLabel')}</span>
         </label>
 
-        {/* Story Card Visual Preview */}
+        {/* Live-Vorschau: exakt das PNG, das geteilt wird (WYSIWYG) */}
         <div className="flex-1 overflow-y-auto pr-1">
-          <div className="bg-gradient-to-b from-slate-950 via-indigo-950/60 to-slate-950 rounded-xl border-2 border-cyan-500/40 p-4 font-mono text-xs text-slate-200 shadow-2xl relative space-y-3">
-            {/* Stamp Badge Overlay */}
-            <div className="absolute top-3 right-3 opacity-20 pointer-events-none select-none">
-              <div className="border-4 border-amber-400 text-amber-300 font-black text-xs p-2 rounded-xl -rotate-12 uppercase tracking-widest text-center">
-                {tr('pdVcApprovedStamp')}
-              </div>
-            </div>
-
-            {/* Startup Header */}
-            <div className="border-b border-slate-800 pb-2">
-              <div className="text-[10px] text-amber-400 font-black uppercase tracking-widest">
-                {tr('pdInvestorProspectus')}
-              </div>
-              <div className="text-base font-black text-slate-100 flex items-center justify-between">
-                <span>{startupName.toUpperCase()}</span>
-                <Sparkles className="w-4 h-4 text-fuchsia-400" />
-              </div>
-              {hasAiDomainBonus && (
-                <span className="inline-block mt-1 text-[9px] font-black bg-amber-400/20 text-amber-300 border border-amber-400/50 px-2 py-0.5 rounded-full">
-                  ✨ {tr('pdAiHypeDomainShort')}
-                </span>
-              )}
-            </div>
-
-            {/* Valuation Featured Box */}
-            <div className="bg-slate-900/90 p-3 rounded-xl border border-emerald-500/40 text-center shadow-inner">
-              <div className="text-[10px] text-slate-400 uppercase font-bold">{tr('pdEstimatedValuation')}</div>
-              <div className="text-xl font-black text-emerald-400">{formatCurrency(valuation)}</div>
-              <div className="text-[11px] text-cyan-300 font-bold mt-0.5">+{formatCurrency(vps)} {tr('pdCashflowSuffix')}</div>
-            </div>
-
-            {/* Grid Metrics */}
-            <div className="grid grid-cols-2 gap-2 text-[10px]">
-              <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-                <span className="text-slate-400 block">{tr('pdAnnualRevenue')}:</span>
-                <span className="text-rose-400 font-bold">{tr('pdPureHype')}</span>
-              </div>
-              <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-                <span className="text-slate-400 block">{tr('pdHypeTierRank')}:</span>
-                <span className="text-fuchsia-300 font-bold">{tr('pdTierLabel')} {hypeTier} / 10</span>
-              </div>
-              <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-                <span className="text-slate-400 block">{tr('pdAiTokensLabel')}</span>
-                <span className="text-purple-300 font-bold">{formatNumber(slopCount)}</span>
-              </div>
-              <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-                <span className="text-slate-400 block">{tr('pdMeltedGpuCores')}:</span>
-                <span className="text-amber-300 font-bold">{overheatCount} {tr('pdMeltedLabel')}</span>
-              </div>
-            </div>
-
-            {/* Collection Portfolio (nur in der detaillierten Version) */}
-            {detailed && (
-              <div className="bg-slate-900/90 p-3 rounded-xl border border-emerald-500/40 space-y-1.5">
-                <div className="text-[10px] text-emerald-400 uppercase font-bold text-center">{tr('pdCollectionPortfolio')}</div>
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-slate-300 flex items-center gap-1"><Award className="w-3 h-3 text-amber-400" /> {tr('pdBadgesUnlocked')}</span>
-                  <span className="text-amber-300 font-bold">{badgeCount} / {badgeTotal}</span>
-                </div>
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-slate-300 flex items-center gap-1"><Layers className="w-3 h-3 text-fuchsia-400" /> {tr('pdBuzzwordCards')}</span>
-                  <span className="text-fuchsia-300 font-bold">{cardCount} / {cardTotal} (+{cardBonusPct}% VPS)</span>
-                </div>
+          <div className="relative rounded-2xl overflow-hidden border-2 border-cyan-500/40 shadow-2xl shadow-fuchsia-500/10 bg-slate-950">
+            {pngDataUrl ? (
+              <img
+                src={pngDataUrl}
+                alt={`${startupName} Pitch Deck`}
+                className={`w-full block transition-opacity duration-200 ${isGeneratingPng ? 'opacity-40' : 'opacity-100'}`}
+              />
+            ) : (
+              <div className="w-full aspect-[9/16] flex items-center justify-center text-slate-500 text-xs font-mono gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
+                {tr('pdPreviewLoading')}
               </div>
             )}
 
-            {/* Quote Tagline */}
-            <div className="text-center italic text-[10px] text-amber-300/90 bg-amber-950/30 p-2 rounded-lg border border-amber-500/30">
-              {tr('pdHypeQuote')}
-            </div>
+            {isGeneratingPng && pngDataUrl && (
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-950/40 backdrop-blur-[1px]">
+                <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
+              </div>
+            )}
           </div>
+
+          <p className="text-center text-[9px] text-slate-500 font-mono mt-2">
+            {tr('pdPreviewHint')}
+          </p>
         </div>
 
         {/* Multi-Channel Share Actions */}
@@ -522,7 +267,7 @@ export function PitchDeckModal({
             <button
               onClick={handleDownloadPng}
               disabled={isGeneratingPng || !pngDataUrl}
-              className="py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider bg-slate-800 text-cyan-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5 border border-cyan-500/40 shadow-md"
+              className="py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider bg-slate-800 text-cyan-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5 border border-cyan-500/40 shadow-md disabled:opacity-50"
             >
               <Download className="w-4 h-4 text-cyan-400" />
               <span>{tr('pdSavePng')}</span>
