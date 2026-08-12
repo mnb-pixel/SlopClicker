@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { Scale, ShieldCheck, X, AlertTriangle } from 'lucide-react';
 import {
@@ -45,35 +45,14 @@ function renderRich(text, keyPrefix) {
 
 // page: 'impressum' | 'datenschutz'
 export function LegalModal({ page, onClose, lang = 'de' }) {
-  const isImpressumEmbed = page === 'impressum';
-
-  // Impressum kommt jetzt aus Termlys gehostetem Dokument statt aus dem handgebauten
-  // OPERATOR-Text unten - lädt extern nach, sobald das Ziel-Div im DOM ist. Frisches
-  // <script>-Tag bei JEDEM Öffnen (statt einmalig in index.html): Termlys embed-policy.min.js
-  // scannt beim eigenen Laden nach [name="termly-embed"]-Elementen, das Div existiert in
-  // dieser SPA aber erst, wenn das Modal tatsächlich offen ist - ein einmalig global
-  // geladenes Script (wie das Consent-Banner-Script) würde beim allerersten Seitenaufruf
-  // ins Leere laufen, weil das Modal da noch gar nicht gerendert ist. Hook läuft
-  // unbedingt vor jedem Early-Return unten (React-Regel: Hooks nie bedingt aufrufen).
-  useEffect(() => {
-    if (!isImpressumEmbed) return undefined;
-    const script = document.createElement('script');
-    script.src = 'https://app.termly.io/embed-policy.min.js';
-    script.async = true;
-    document.body.appendChild(script);
-    return () => { document.body.removeChild(script); };
-  }, [isImpressumEmbed]);
-
   if (!page) return null;
 
   const c = LEGAL_CONTENT[lang] || LEGAL_CONTENT.en;
   const doc = c[page];
   if (!doc) return null;
 
-  // Draft-Warnung nur noch für Datenschutz relevant (dessen Text zieht weiterhin aus dem
-  // OPERATOR-Objekt) - Termlys Impressum-Dokument ist über deren eigenen Wizard vollständig
-  // ausgefüllt, hat mit den lokalen LEGAL_TODO-Platzhaltern nichts mehr zu tun.
-  const isDraft = !isImpressumEmbed && hasOpenTodos();
+  const isDatenschutz = page === 'datenschutz';
+  const isDraft = hasOpenTodos();
   const Icon = page === 'impressum' ? Scale : ShieldCheck;
 
   const modalContent = (
@@ -111,52 +90,43 @@ export function LegalModal({ page, onClose, lang = 'de' }) {
             </div>
           )}
 
-          {isImpressumEmbed ? (
-            // Heller Container: Termlys Dokument ist für eine normale, helle Webseite
-            // generiert (schwarzer Text) - auf dem dunklen Modal-Hintergrund wäre es
-            // sonst unleserlich, bis das externe Script eigene Styles nachlädt.
-            <div className="bg-white rounded-xl p-4 min-h-[200px] text-slate-900">
-              <div name="termly-embed" data-id="d6d665d9-8b3f-4f9e-a15f-36c16fbe56b3" />
-            </div>
-          ) : (
-            <>
-              {doc.sections.map((section, si) => (
-                <section key={si} className="flex flex-col gap-1.5">
-                  <h3 className="text-xs font-black uppercase tracking-wider text-cyan-400">
-                    {section.title}
-                  </h3>
-                  {section.lines.map((line, li) => (
-                    <p key={li} className="text-[12px] leading-relaxed text-slate-300">
-                      {renderRich(fillOperator(line), `s${si}-l${li}`)}
-                    </p>
-                  ))}
-                </section>
+          {doc.sections.map((section, si) => (
+            <section key={si} className="flex flex-col gap-1.5">
+              <h3 className="text-xs font-black uppercase tracking-wider text-cyan-400">
+                {section.title}
+              </h3>
+              {section.lines.map((line, li) => (
+                <p key={li} className="text-[12px] leading-relaxed text-slate-300">
+                  {renderRich(fillOperator(line), `s${si}-l${li}`)}
+                </p>
               ))}
+            </section>
+          ))}
 
-              {/* DSAR-Formular (Data Subject Access Request): formalisiert genau die
-                  Rechte aus Abschnitt "Deine Rechte" oben (Auskunft/Löschung/etc.) als
-                  ausfüllbares Formular statt nur als E-Mail-Hinweis. Termlys iframe kommt
-                  ohne feste Maße - ohne explizite Höhe würde er auf Browser-Default
-                  (~150px) zusammenfallen und das Formular wäre nicht bedienbar. */}
-              <section className="flex flex-col gap-1.5">
-                <h3 className="text-xs font-black uppercase tracking-wider text-cyan-400">
-                  {c.dsarFormTitle}
-                </h3>
-                <div className="bg-white rounded-xl overflow-hidden">
-                  <iframe
-                    src="https://app.termly.io/dsar/7f2cb15d-bdb3-42ff-a9a8-7c8d709800a1"
-                    title={c.dsarFormTitle}
-                    className="w-full border-0"
-                    style={{ height: 600 }}
-                  />
-                </div>
-              </section>
-
-              <div className="text-[10px] text-slate-500 font-mono border-t border-slate-800 pt-3">
-                {c.lastUpdatedLabel}: {c.lastUpdated}
+          {isDatenschutz && (
+            // DSAR-Formular (Data Subject Access Request): formalisiert genau die Rechte
+            // aus Abschnitt "Deine Rechte" oben (Auskunft/Löschung/etc.) als ausfüllbares
+            // Formular statt nur als E-Mail-Hinweis. Termlys iframe kommt ohne feste Maße -
+            // ohne explizite Höhe würde er auf Browser-Default (~150px) zusammenfallen und
+            // das Formular wäre nicht bedienbar. Nur bei Datenschutz, nicht beim Impressum.
+            <section className="flex flex-col gap-1.5">
+              <h3 className="text-xs font-black uppercase tracking-wider text-cyan-400">
+                {c.dsarFormTitle}
+              </h3>
+              <div className="bg-white rounded-xl overflow-hidden">
+                <iframe
+                  src="https://app.termly.io/dsar/7f2cb15d-bdb3-42ff-a9a8-7c8d709800a1"
+                  title={c.dsarFormTitle}
+                  className="w-full border-0"
+                  style={{ height: 600 }}
+                />
               </div>
-            </>
+            </section>
           )}
+
+          <div className="text-[10px] text-slate-500 font-mono border-t border-slate-800 pt-3">
+            {c.lastUpdatedLabel}: {c.lastUpdated}
+          </div>
         </div>
       </div>
     </div>
