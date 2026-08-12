@@ -172,6 +172,7 @@ export const TRANSLATIONS = {
     footerPrivacy: 'Spielstand bleibt auf deinem Gerät • AI-Bubble-sicher',
     legalImprint: 'Impressum',
     legalPrivacy: 'Datenschutz',
+    consentPreferences: 'Cookie-Einstellungen',
 
     // Header (ergänzend)
     saveLabel: 'Speichern',
@@ -612,6 +613,7 @@ export const TRANSLATIONS = {
     footerPrivacy: 'Your Save Stays on This Device • AI Bubble Safe',
     legalImprint: 'Legal Notice',
     legalPrivacy: 'Privacy',
+    consentPreferences: 'Cookie Preferences',
 
     // Header (additional)
     saveLabel: 'Save',

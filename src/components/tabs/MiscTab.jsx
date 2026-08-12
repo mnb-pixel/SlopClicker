@@ -206,6 +206,17 @@ export function MiscTab({
           >
             {tr('legalPrivacy')}
           </button>
+          <span className="text-slate-700">•</span>
+          {/* class (nicht className-Wert selbst) muss exakt "termly-display-preferences"
+              bleiben - daran bindet Termlys global geladenes Resource-Blocker-Script
+              (siehe index.html) seinen Klick-Handler, der das Consent-Preference-Center
+              öffnet. href="#" wie von Termly vorgegeben, kein eigener Navigations-Handler. */}
+          <a
+            href="#"
+            className="termly-display-preferences text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
+          >
+            {tr('consentPreferences')}
+          </a>
         </div>
         <div>{tr('footerPrivacy')}</div>
         <div className="text-[10px] text-slate-600">Token Furnace Mobile v1.0.0</div>

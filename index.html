@@ -2,16 +2,23 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
+
+    <!-- Termly Consent-Banner + Auto Blocker (autoBlock=on in der URL). Muss laut Termly
+         der ALLERERSTE <script>-Tag der Seite sein - auch vor dem AdSense-Snippet weiter
+         unten -, damit der Auto Blocker dessen Cookie-setzende Skripte erkennen und bis zur
+         Einwilligung blockieren kann, statt dass AdSense schon vor der Zustimmung feuert. -->
+    <script src="https://app.termly.io/resource-blocker/4810446e-db26-4a1e-a96a-1bbdefde2c01?autoBlock=on"></script>
+
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="description" content="Token Furnace - The satirical AI bubble & VC startup idle clicker game." />
     <title>$0 - tokenkamin</title>
 
     <!-- Google AdSense: Inhaberschaftsbestätigung + späteres Ausliefern von Anzeigen.
-         Lädt nur die Bibliothek, fragt noch keine personalisierten Anzeigen an - das ist
-         erst nach Cookie-Consent zulässig (siehe Datenschutz-Abschnitt "Werbung" in
-         legal.content.js, dort noch als "kein Netzwerk eingebunden" zu aktualisieren,
-         sobald der Consent-Banner steht). -->
+         Lädt nur die Bibliothek, fragt noch keine personalisierten Anzeigen an. Der Termly
+         Auto Blocker oben soll dieses Skript erkennen und bis zur Cookie-Einwilligung
+         blockieren (siehe Datenschutz-Abschnitt "Werbung" in legal.content.js, dort noch als
+         "kein Netzwerk eingebunden" zu aktualisieren, sobald der Consent-Banner produktiv ist). -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6020764817262332"
      crossorigin="anonymous"></script>
 
