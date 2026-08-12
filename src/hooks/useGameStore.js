@@ -157,14 +157,24 @@ export function useGameStore() {
   // Effect direkt nach der vps-Berechnung aktuell gehalten.
   const vpsRef = useRef(0);
 
+  // `||` würde einen bewusst leeren String (z.B. der leere Epochen-Präfix bei 'ai') als
+  // "fehlt" behandeln und bis zum rohen Key durchfallen lassen - darum hier explizit auf
+  // undefined/null statt auf Falsy prüfen.
   const t = useCallback((key) => {
-    return TRANSLATIONS[lang]?.[key] || TRANSLATIONS.en[key] || key;
+    const deVal = TRANSLATIONS[lang]?.[key];
+    if (deVal !== undefined && deVal !== null) return deVal;
+    const enVal = TRANSLATIONS.en[key];
+    return enVal !== undefined && enVal !== null ? enVal : key;
   }, [lang]);
 
   // Wie t(), aber mit {var}-Platzhalter-Ersetzung - für Log-/Toast-Sätze, die dynamische
   // Werte (Namen, Beträge, Zahlen) an fester Stelle im übersetzten Satz brauchen.
   const tf = useCallback((key, vars = {}) => {
-    let str = TRANSLATIONS[lang]?.[key] || TRANSLATIONS.en[key] || key;
+    const deVal = TRANSLATIONS[lang]?.[key];
+    const enVal = TRANSLATIONS.en[key];
+    let str = deVal !== undefined && deVal !== null
+      ? deVal
+      : (enVal !== undefined && enVal !== null ? enVal : key);
     Object.entries(vars).forEach(([k, v]) => {
       str = str.replaceAll(`{${k}}`, v);
     });
