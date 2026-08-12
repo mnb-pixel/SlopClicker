@@ -1,5 +1,6 @@
 import React from 'react';
-import * as Icons from 'lucide-react';
+import { Cpu } from 'lucide-react';
+import { getIcon } from '../utils/iconMap';
 import { BUILDINGS_DATA } from '../data/buildingsData';
 import { UPGRADES_DATA } from '../data/upgradesData';
 import { GREENWASHING_LAYOFFS_DATA } from '../data/greenwashingLayoffsData';
@@ -18,7 +19,7 @@ export function BuildingVisualGrid({ buildings, boughtUpgrades = [], boughtGreen
         />
       );
     }
-    const IconComp = Icons[b?.icon] || Icons.Server;
+    const IconComp = getIcon(b?.icon, 'Server');
     return <IconComp className="w-3.5 h-3.5 text-cyan-400" />;
   };
 
@@ -42,7 +43,7 @@ export function BuildingVisualGrid({ buildings, boughtUpgrades = [], boughtGreen
     <div className="bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-3.5 shadow-2xl mt-2 mb-1 backdrop-blur-md w-full">
       <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
         <span className="text-xs font-extrabold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
-          <Icons.Cpu className="w-4 h-4 text-cyan-400" />
+          <Cpu className="w-4 h-4 text-cyan-400" />
           {tr('deployedEngines')} ({ownedBuildings.length} {tr('typesLabel')})
         </span>
         <span className="text-[10px] text-slate-400 font-mono">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useGameStore } from './hooks/useGameStore';
 import { Header } from './components/Header';
 import { NavBar } from './components/NavBar';
@@ -10,14 +10,27 @@ import { StatsTab } from './components/tabs/StatsTab';
 import { MiscTab } from './components/tabs/MiscTab';
 import { GoldenMemeBanner } from './components/GoldenMemeBanner';
 import { AdRewardToast } from './components/AdRewardToast';
+import { ClickParticles } from './components/ClickParticles';
 import { AdBanner } from './components/AdBanner';
-import { PitchDeckModal } from './components/modals/PitchDeckModal';
-import { ManualModal } from './components/modals/ManualModal';
 import { OfflineEarningsModal } from './components/modals/OfflineEarningsModal';
 import { AfkReportModal } from './components/modals/AfkReportModal';
 import { ScheduledAdModal } from './components/modals/ScheduledAdModal';
-import { LegalModal } from './components/modals/LegalModal';
 import { UPGRADES_DATA } from './data/upgradesData';
+
+// Lazy geladen statt statisch importiert: alle drei sind reine Klick-zum-Öffnen-Modals,
+// die die meisten Sessions nie aufrufen. PitchDeckModal allein zieht canvas-confetti plus
+// ~1000 Zeilen Canvas-Zeichenlogik (pitchDeckCanvas/Consulting/Shared.js) mit - das lud
+// bisher jede Sitzung ungefragt mit, auch wenn "Teilen" nie geklickt wird. Named statt
+// Default-Export -> .then()-Mapping ist der Standard-Weg, React.lazy() das zu erlauben.
+const PitchDeckModal = lazy(() =>
+  import('./components/modals/PitchDeckModal').then((m) => ({ default: m.PitchDeckModal }))
+);
+const ManualModal = lazy(() =>
+  import('./components/modals/ManualModal').then((m) => ({ default: m.ManualModal }))
+);
+const LegalModal = lazy(() =>
+  import('./components/modals/LegalModal').then((m) => ({ default: m.LegalModal }))
+);
 
 export default function App() {
   const store = useGameStore();
@@ -26,6 +39,25 @@ export default function App() {
   // null | 'impressum' | 'datenschutz' - Rechtstexte als Modal, damit sie aus jeder
   // Ansicht (mobil wie Desktop) über die Einstellungen erreichbar bleiben.
   const [legalPage, setLegalPage] = useState(null);
+
+  // Live gemessene Header-Höhe (statt fest verdrahtetem px-Wert): der Header wechselt seine
+  // Höhe je nach Zustand (SEC-Theme blendet eine zusätzliche Banner-Zeile ein, ein langer
+  // Startup-Name kann umbrechen). Ein sticky-Element, das direkt UNTER dem ebenfalls
+  // sticky Header andocken soll (z.B. die Store-Unterkategorien-Leiste auf Mobile, wo
+  // beide relativ zum Dokument-Scroll positioniert sind), braucht diesen Wert als "top".
+  const headerWrapRef = useRef(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  useEffect(() => {
+    const el = headerWrapRef.current;
+    if (!el) return undefined;
+    // getBoundingClientRect() statt entries[0].contentRect: ResizeObserver liefert per
+    // Default die Content-Box OHNE Padding/Border, der Header hat aber p-3 + border-b -
+    // contentRect wäre um genau diese ~25px zu klein und die Leiste würde teilweise
+    // unter dem Header verschwinden statt direkt darunter anzudocken.
+    const ro = new ResizeObserver(() => setHeaderHeight(el.getBoundingClientRect().height));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Automatische View-Erkennung (Punkt 8): Mobile Geräte bekommen automatisch die
   // 5-Tab-Ansicht, Desktop/PC automatisch die All-in-One-Ansicht - kein manueller Button mehr.
@@ -53,8 +85,10 @@ export default function App() {
     <div className={`min-h-screen flex flex-col select-none transition-colors ${
       isW9Theme ? 'sec-w9-theme bg-[#F4F1EA] text-[#0F172A]' : 'bg-slate-950 text-slate-100 font-sans'
     } ${store.bubbleGlitchUntil ? 'glitch-mode' : ''}`}>
-      {/* Top Status Header */}
+      {/* Top Status Header. ref geht direkt an das <header>-Element (siehe forwardRef in
+          Header.jsx) - ein umschließender Wrapper-Div hier würde position:sticky brechen. */}
       <Header
+        ref={headerWrapRef}
         startupName={store.startupName}
         setStartupName={store.setStartupName}
         hasAiDomainBonus={store.hasAiDomainBonus}
@@ -91,6 +125,8 @@ export default function App() {
         adRewardToast={store.adRewardToast}
         dismissAdRewardToast={store.dismissAdRewardToast}
       />
+
+      <ClickParticles particles={store.particles} />
 
       {/* Willkommen-zurück Offline-Ertrag Screen */}
       <OfflineEarningsModal
@@ -140,7 +176,6 @@ export default function App() {
                 clickValue={store.clickValue}
                 activeEvent={store.activeEvent}
                 powerClickActive={store.powerClickActive}
-                particles={store.particles}
                 bounceGPU={store.bounceGPU}
                 buildings={store.buildings}
                 boughtUpgrades={store.boughtUpgrades}
@@ -172,6 +207,7 @@ export default function App() {
                 addCardToAlbum={store.addCardToAlbum}
                 boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}
                 buyGreenwashingLayoff={store.buyGreenwashingLayoff}
+                stickyTopPx={headerHeight}
                 t={store.t}
               />
             )}
@@ -254,34 +290,39 @@ export default function App() {
         </div>
       )}
 
-      {/* Impressum / Datenschutzerklärung */}
-      <LegalModal page={legalPage} onClose={() => setLegalPage(null)} lang={store.lang} />
+      {/* fallback=null: alle drei sind Klick-zum-Öffnen-Overlays, die davor ohnehin nichts
+          rendern (isOpen/page ist erst nach dem Klick gesetzt) - ein kurzer Moment ohne
+          sichtbaren Ladeindikator ist hier unauffälliger als ein Spinner-Flackern. */}
+      <Suspense fallback={null}>
+        {/* Impressum / Datenschutzerklärung */}
+        <LegalModal page={legalPage} onClose={() => setLegalPage(null)} lang={store.lang} />
 
-      {/* VC Pitch Deck Export Modal */}
-      <PitchDeckModal
-        isOpen={isPitchDeckOpen}
-        onClose={() => setIsPitchDeckOpen(false)}
-        startupName={store.startupName}
-        hasAiDomainBonus={store.hasAiDomainBonus}
-        valuation={store.valuation}
-        vps={store.vps}
-        slopCount={store.slopCount}
-        overheatCount={store.stats.overheatCount}
-        prestigeLevel={store.prestigeLevel}
-        hypeTier={store.hypeTier}
-        buildings={store.buildings}
-        unlockedAchievements={store.unlockedAchievements}
-        boughtBuzzwords={store.boughtBuzzwords}
-        lang={store.lang}
-        t={store.t}
-      />
+        {/* VC Pitch Deck Export Modal */}
+        <PitchDeckModal
+          isOpen={isPitchDeckOpen}
+          onClose={() => setIsPitchDeckOpen(false)}
+          startupName={store.startupName}
+          hasAiDomainBonus={store.hasAiDomainBonus}
+          valuation={store.valuation}
+          vps={store.vps}
+          slopCount={store.slopCount}
+          overheatCount={store.stats.overheatCount}
+          prestigeLevel={store.prestigeLevel}
+          hypeTier={store.hypeTier}
+          buildings={store.buildings}
+          unlockedAchievements={store.unlockedAchievements}
+          boughtBuzzwords={store.boughtBuzzwords}
+          lang={store.lang}
+          t={store.t}
+        />
 
-      {/* Interactive Form S-1 Game Manual Modal */}
-      <ManualModal
-        isOpen={isManualOpen}
-        onClose={() => setIsManualOpen(false)}
-        lang={store.lang}
-      />
+        {/* Interactive Form S-1 Game Manual Modal */}
+        <ManualModal
+          isOpen={isManualOpen}
+          onClose={() => setIsManualOpen(false)}
+          lang={store.lang}
+        />
+      </Suspense>
     </div>
   );
 }

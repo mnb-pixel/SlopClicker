@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import * as Icons from 'lucide-react';
+import { Tv, RotateCw, Sparkles, ShieldAlert, Repeat } from 'lucide-react';
+import { getIcon } from '../../utils/iconMap';
 import { HEAVENLY_UPGRADES_DATA } from '../../data/heavenlyUpgradesData';
 import { IDEALIST_PATH, CYNIC_PATH, EPOCHS, CREDIBILITY_LEVEL_COST_BASE } from '../../data/credibilityTreeData';
 import { formatCurrency, formatNumber } from '../../utils/formatters';
@@ -31,7 +32,7 @@ export function SpecialTab({
   const tr = t || ((k) => k);
 
   const renderIcon = (iconName, className = 'w-5 h-5') => {
-    const IconComp = Icons[iconName] || Icons.Sparkles;
+    const IconComp = getIcon(iconName, 'Sparkles');
     return <IconComp className={className} />;
   };
 
@@ -66,7 +67,7 @@ export function SpecialTab({
         onClick={() => startAd(type)}
         className="mt-2 w-full py-2 rounded-xl font-black text-[10px] uppercase tracking-wider bg-slate-800 border border-purple-400/60 text-purple-200 hover:bg-slate-700 active:scale-95 shadow-md transition-all flex items-center justify-center gap-1.5"
       >
-        <Icons.Tv className="w-3.5 h-3.5" />
+        <Tv className="w-3.5 h-3.5" />
         {label}
       </button>
     );
@@ -129,7 +130,7 @@ export function SpecialTab({
         <div className="bg-gradient-to-br from-[#1C2B3A] via-slate-900 to-[#14202C] p-4 rounded-2xl border-2 border-[#8A6A1F] shadow-2xl relative overflow-hidden">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <Icons.RotateCw className="w-5 h-5 text-[#8A6A1F] animate-spin" />
+              <RotateCw className="w-5 h-5 text-[#8A6A1F] animate-spin" />
               <h2 className="text-base font-black text-[#EAE7DA] uppercase font-serif">
                 {tr('pivotTitle')}
               </h2>
@@ -163,7 +164,7 @@ export function SpecialTab({
                 : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
             }`}
           >
-            <Icons.RotateCw className="w-4 h-4" />
+            <RotateCw className="w-4 h-4" />
             {tr('executePivot')}{credGain}{tr('pivotExecuteSuffix')}
           </button>
           {renderAdBoost('pivot_boost', tr('watchAdCredBoost').replace('{amount}', Math.max(0, Math.floor(credGain * 1.2) - credGain)), pendingPivotBoost)}
@@ -320,7 +321,7 @@ export function SpecialTab({
               />
 
               <div className="relative z-10 flex items-center gap-2 mb-2">
-                <Icons.Sparkles className="w-6 h-6 text-purple-400 animate-pulse" />
+                <Sparkles className="w-6 h-6 text-purple-400 animate-pulse" />
                 <h2 className="text-lg font-black tracking-wide text-purple-200 uppercase">
                   {tr('ascendTitle')}
                 </h2>
@@ -340,7 +341,7 @@ export function SpecialTab({
               </div>
 
               <div className="relative z-10 flex items-start gap-2 bg-rose-950/80 border-2 border-rose-500 rounded-xl p-2.5 mb-3 shadow-lg shadow-rose-500/20">
-                <Icons.ShieldAlert className="w-8 h-8 text-rose-400 shrink-0 animate-pulse" />
+                <ShieldAlert className="w-8 h-8 text-rose-400 shrink-0 animate-pulse" />
                 <p className="text-[11px] text-rose-200 font-bold leading-snug">
                   {tr('ascendWarning')}
                 </p>
@@ -355,7 +356,7 @@ export function SpecialTab({
                     : 'bg-slate-800/90 text-slate-500 cursor-not-allowed border border-slate-700'
                 }`}
               >
-                <Icons.Repeat className="w-4 h-4" />
+                <Repeat className="w-4 h-4" />
                 {tr('executeAscend')}{pendingChips}{tr('ascendExecuteSuffix')}
               </button>
               <div className="relative z-10">

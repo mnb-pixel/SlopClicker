@@ -392,8 +392,9 @@ export const TRANSLATIONS = {
     offlineInfraRan: 'Deine Infrastruktur lief {time} weiter, während du weg warst.',
     offlineEarningsLabel: 'Offline-Ertrag',
     collectOnly: 'Nur einsammeln ({amount})',
-    afkTitle: 'Du warst kurz weg',
-    afkDesc: 'In deiner Abwesenheit wurden {amount} Value erzeugt!',
+    afkTitle: 'Du warst länger weg',
+    afkDesc: 'Während deiner Abwesenheit wurden {amount} erzeugt - aber noch nicht gutgeschrieben. Video ansehen zum Einsammeln, sonst verfällt der Betrag.',
+    afkForfeitBtn: 'Verzichten (kein Betrag)',
 
     // Desktop View Headings
     infraShopTitle: 'KI-Infrastruktur & Upgrades Shop',
@@ -423,7 +424,8 @@ export const TRANSLATIONS = {
     log_bonusBubbleClear: '🛡️ Bonus erhalten: Bubble-Pop-Debuff sofort beendet!',
     log_offlineEarnings: '💰 Offline-Ertrag eingesammelt: +${amount}!',
     log_offlineEarningsDoubled: '💰 Bonus erhalten: Offline-Ertrag eingesammelt: +${amount} (2x per Ad)!',
-    log_afkBonusDoubled: '💰 Bonus erhalten: AFK-Bonus per Ad verdoppelt: +${amount}!',
+    log_afkBonusClaimed: '💰 AFK-Ertrag per Video eingesammelt: +${amount}!',
+    log_afkBonusForfeited: '💨 AFK-Ertrag verfallen: {amount} nicht eingesammelt (kein Video angesehen).',
     log_scheduledAdRedeemed: '💰 Bonus erhalten: Bonus-Werbung eingelöst! +${amount}!',
     log_notEnoughForAscend: 'Singularity Ascension erfordert genug NEUE Lifetime-Valuation, um mindestens 1 Heavenly Chip zu verdienen!',
     log_ascendExecuted: '🌌 SINGULARITY ASCENSION AUSGEFÜHRT! {chips} Heavenly Chips verdient!',
@@ -830,8 +832,9 @@ export const TRANSLATIONS = {
     offlineInfraRan: 'Your infrastructure kept running for {time} while you were away.',
     offlineEarningsLabel: 'Offline Earnings',
     collectOnly: 'Collect only ({amount})',
-    afkTitle: 'You were briefly away',
-    afkDesc: '{amount} Value was generated while you were away!',
+    afkTitle: 'You were away for a while',
+    afkDesc: '{amount} was generated while you were away - but not credited yet. Watch a video to collect it, or it expires.',
+    afkForfeitBtn: 'Forfeit (no reward)',
 
     // Desktop View Headings
     infraShopTitle: 'AI Infrastructure & Upgrades Shop',
@@ -861,7 +864,8 @@ export const TRANSLATIONS = {
     log_bonusBubbleClear: '🛡️ Bonus received: Bubble Pop debuff ended instantly!',
     log_offlineEarnings: '💰 Offline earnings collected: +${amount}!',
     log_offlineEarningsDoubled: '💰 Bonus received: Offline earnings collected: +${amount} (2x via ad)!',
-    log_afkBonusDoubled: '💰 Bonus received: AFK bonus doubled via ad: +${amount}!',
+    log_afkBonusClaimed: '💰 AFK earnings collected via video: +${amount}!',
+    log_afkBonusForfeited: '💨 AFK earnings expired: {amount} not collected (no video watched).',
     log_scheduledAdRedeemed: '💰 Bonus received: Bonus ad redeemed! +${amount}!',
     log_notEnoughForAscend: 'Singularity Ascension requires enough NEW lifetime valuation to earn at least 1 Heavenly Chip!',
     log_ascendExecuted: '🌌 SINGULARITY ASCENSION EXECUTED! Earned {chips} Heavenly Chips!',

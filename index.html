@@ -6,6 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="description" content="SlopClicker - The satirical AI bubble & VC startup idle clicker game." />
     <title>$0 - tokenkamin</title>
+
+    <!-- Social-Share-Vorschau (Open Graph / Twitter Card): das Pitch-Deck-Feature verschickt
+         aktiv window.location.href über navigator.share() (siehe PitchDeckModal.jsx) - ohne
+         diese Tags zeigt jeder geteilte Link keine Bildvorschau/Titel, was genau das virale
+         Feature entwertet. %VITE_SITE_URL% wird von Vite aus der Env-Variable VITE_SITE_URL
+         interpoliert (siehe .env) - MUSS auf die echte Produktions-Domain gesetzt werden,
+         sonst zeigt die Vorschau eine Platzhalter-URL an.
+    -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="SlopClicker" />
+    <meta property="og:title" content="SlopClicker – Der AI-Bubble Idle Clicker" />
+    <meta property="og:description" content="Baue dein KI-Startup zur Milliardenbewertung auf, ganz ohne Produkt. Satirischer Idle Clicker über den AI-Hype." />
+    <meta property="og:url" content="%VITE_SITE_URL%/" />
+    <meta property="og:image" content="%VITE_SITE_URL%/singularity_prestige_meme.jpg" />
+    <meta property="og:image:width" content="1376" />
+    <meta property="og:image:height" content="768" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SlopClicker – Der AI-Bubble Idle Clicker" />
+    <meta name="twitter:description" content="Baue dein KI-Startup zur Milliardenbewertung auf, ganz ohne Produkt. Satirischer Idle Clicker über den AI-Hype." />
+    <meta name="twitter:image" content="%VITE_SITE_URL%/singularity_prestige_meme.jpg" />
   </head>
   <body class="bg-slate-950 text-slate-100 overflow-x-hidden selection:bg-cyan-500 selection:text-black">
     <div id="root"></div>

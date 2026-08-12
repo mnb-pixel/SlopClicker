@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
-import * as Icons from 'lucide-react';
+import React, { useState, lazy, Suspense } from 'react';
+import { Trophy, Sparkles } from 'lucide-react';
 import { ACHIEVEMENTS_DATA } from '../../data/achievementsData';
 import { formatCurrency, formatNumber } from '../../utils/formatters';
-import { BadgesModal } from '../modals/BadgesModal';
+
+// Lazy statt statisch: reines Klick-zum-Öffnen-Modal (Badge-Übersicht), lädt seinen Code
+// erst bei tatsächlichem Öffnen nach statt bei jedem Statistik-Tab-Aufruf.
+const BadgesModal = lazy(() =>
+  import('../modals/BadgesModal').then((m) => ({ default: m.BadgesModal }))
+);
 
 export function StatsTab({
   stats,
@@ -19,11 +24,6 @@ export function StatsTab({
   const [isBadgesModalOpen, setIsBadgesModalOpen] = useState(false);
   const tr = t || ((k) => k);
 
-  const renderIcon = (iconName, className = 'w-4 h-4') => {
-    const IconComp = Icons[iconName] || Icons.Award;
-    return <IconComp className={className} />;
-  };
-
   const unlockedCount = new Set(unlockedAchievements).size;
   const totalCount = ACHIEVEMENTS_DATA.length;
   const hypePct = Math.min(100, Math.floor((unlockedCount / totalCount) * 100));
@@ -31,12 +31,14 @@ export function StatsTab({
   return (
     <div className="p-4 pb-20 max-w-md mx-auto">
       {isBadgesModalOpen && (
-        <BadgesModal
-          isOpen={isBadgesModalOpen}
-          unlockedAchievements={unlockedAchievements}
-          onClose={() => setIsBadgesModalOpen(false)}
-          t={t}
-        />
+        <Suspense fallback={null}>
+          <BadgesModal
+            isOpen={isBadgesModalOpen}
+            unlockedAchievements={unlockedAchievements}
+            onClose={() => setIsBadgesModalOpen(false)}
+            t={t}
+          />
+        </Suspense>
       )}
 
       {/* Sub-tab switcher */}
@@ -160,7 +162,7 @@ export function StatsTab({
       {statsSection === 'achievements' && (
         <div className="bg-gradient-to-br from-amber-950/60 via-slate-900 to-slate-950 border-2 border-amber-500/50 rounded-2xl p-5 shadow-2xl flex flex-col items-center text-center gap-3">
           <div className="p-3.5 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-400/60 shadow-xl">
-            <Icons.Trophy className="w-8 h-8 text-amber-400 animate-pulse" />
+            <Trophy className="w-8 h-8 text-amber-400 animate-pulse" />
           </div>
           <div>
             <h3 className="font-black text-sm uppercase tracking-wider text-slate-100">
@@ -175,7 +177,7 @@ export function StatsTab({
             onClick={() => setIsBadgesModalOpen(true)}
             className="w-full py-3 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-slate-950 hover:brightness-110 active:scale-95 shadow-xl transition-all flex items-center justify-center gap-2"
           >
-            <Icons.Sparkles className="w-4 h-4 text-slate-950" />
+            <Sparkles className="w-4 h-4 text-slate-950" />
             <span>✨ {tr('openBadgesPopup')} ({unlockedCount}/{totalCount})</span>
           </button>
         </div>

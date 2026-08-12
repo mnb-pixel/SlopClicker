@@ -22,7 +22,6 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
           clickValue={store.clickValue}
           activeEvent={store.activeEvent}
           powerClickActive={store.powerClickActive}
-          particles={store.particles}
           buildings={store.buildings}
           boughtUpgrades={store.boughtUpgrades}
           boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}
@@ -125,6 +124,10 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
           addCardToAlbum={store.addCardToAlbum}
           boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}
           buyGreenwashingLayoff={store.buyGreenwashingLayoff}
+          // 0, nicht die globale Header-Höhe: diese Spalte scrollt in ihrem EIGENEN
+          // overflow-y-auto-Container statt mit der Seite, der App-Header liegt außerhalb
+          // davon - die Unterkategorien-Leiste soll direkt an dessen eigenem Rand andocken.
+          stickyTopPx={0}
           t={store.t}
         />
       </div>

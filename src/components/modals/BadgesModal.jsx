@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import * as Icons from 'lucide-react';
+import { Trophy, X, Search, Lock, CheckCircle2 } from 'lucide-react';
+import { getIcon } from '../../utils/iconMap';
 import { ACHIEVEMENTS_DATA } from '../../data/achievementsData';
 import { AdBanner } from '../AdBanner';
 
@@ -13,7 +14,7 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
   const tr = t || ((k) => k);
 
   const renderIcon = (iconName, className = 'w-5 h-5') => {
-    const IconComp = Icons[iconName] || Icons.Trophy;
+    const IconComp = getIcon(iconName, 'Trophy');
     return <IconComp className={className} />;
   };
 
@@ -59,7 +60,7 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-lg">
-              <Icons.Trophy className="w-6 h-6 text-amber-400" />
+              <Trophy className="w-6 h-6 text-amber-400" />
             </div>
             <div>
               <h2 className="text-base font-black uppercase tracking-wider text-slate-100 flex items-center gap-2">
@@ -75,7 +76,7 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
             onClick={onClose}
             className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
           >
-            <Icons.X className="w-5 h-5" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -123,7 +124,7 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
           </div>
 
           <div className="relative">
-            <Icons.Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               placeholder={tr('badgeSearchPlaceholder')}
@@ -147,7 +148,7 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
                 >
                   <div className="flex items-center gap-3">
                     <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-700">
-                      <Icons.Lock className="w-5 h-5" />
+                      <Lock className="w-5 h-5" />
                     </div>
                     <div>
                       <div className="font-mono text-xs text-slate-500 blur-[3px]">
@@ -177,7 +178,7 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
                   <div>
                     <div className="font-extrabold text-xs text-slate-100 flex items-center gap-1.5">
                       <span>{getAchTitle(ach)}</span>
-                      <Icons.CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                     </div>
                     <div className="text-[10px] text-amber-300/80 font-mono italic mt-0.5">"{getAchQuote(ach)}"</div>
                   </div>
