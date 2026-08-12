@@ -454,9 +454,20 @@ export function drawPitchDeck(canvas, opts = {}) {
 
   if (style === 'consulting') {
     drawConsultingDeck(ctx, shared);
-  } else {
-    drawNeonDeck(ctx, shared);
+    // Consulting ist fast reine Fläche (weißes Papier, klare Kanten) - PNG
+    // komprimiert das verlustfrei auf ein paar hundert KB.
+    return canvas.toDataURL('image/png');
   }
 
-  return canvas.toDataURL('image/png');
+  drawNeonDeck(ctx, shared);
+  // Der Neon-Hintergrund ist ein körniger, dunkler Verlauf mit Rasterlinien - als
+  // PNG landet das bei ~1.7MB, weil PNG verlustfrei komprimiert und so viel
+  // Bildrauschen kaum kleiner kriegt. Diese Datei-URL wird direkt als <img src>
+  // im DOM gehalten; öffnet man auf iOS Safari das native Kontextmenü darauf
+  // (Bild sichern/teilen per Long-Press), muss WebKit sie voll dekodieren - bei
+  // 1.7MB reicht das für einen Renderer-Crash. Als JPEG ist dieselbe Grafik nur
+  // ~150-250KB, weil verlustbehaftete Kompression genau bei solchen weichen
+  // Verläufen sehr effizient ist; bei Qualität 0.92 bleiben Text und Linien
+  // sauber lesbar.
+  return canvas.toDataURL('image/jpeg', 0.92);
 }
