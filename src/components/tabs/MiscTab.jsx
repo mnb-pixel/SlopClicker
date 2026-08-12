@@ -207,6 +207,13 @@ export function MiscTab({
             {tr('legalPrivacy')}
           </button>
           <span className="text-slate-700">•</span>
+          <button
+            onClick={() => onOpenLegal && onOpenLegal('cookies')}
+            className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
+          >
+            {tr('legalCookies')}
+          </button>
+          <span className="text-slate-700">•</span>
           {/* class (nicht className-Wert selbst) muss exakt "termly-display-preferences"
               bleiben - daran bindet Termlys global geladenes Resource-Blocker-Script
               (siehe index.html) seinen Klick-Handler, der das Consent-Preference-Center

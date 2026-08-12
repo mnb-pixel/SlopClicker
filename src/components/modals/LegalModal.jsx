@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Scale, ShieldCheck, X, AlertTriangle } from 'lucide-react';
 import {
@@ -43,8 +43,25 @@ function renderRich(text, keyPrefix) {
   });
 }
 
-// page: 'impressum' | 'datenschutz'
+// page: 'impressum' | 'datenschutz' | 'cookies'
 export function LegalModal({ page, onClose, lang = 'de' }) {
+  const isCookiePolicyEmbed = page === 'cookies';
+
+  // Cookie-Richtlinie kommt als Termly-Embed statt lokalem Text - lädt extern nach, sobald
+  // das Ziel-Div im DOM ist. Frisches <script>-Tag bei JEDEM Öffnen (statt einmalig in
+  // index.html): embed-policy.min.js scannt beim eigenen Laden nach
+  // [name="termly-embed"]-Elementen, das Div existiert in dieser SPA aber erst, wenn das
+  // Modal tatsächlich offen ist. Hook läuft unbedingt vor jedem Early-Return unten
+  // (React-Regel: Hooks nie bedingt aufrufen).
+  useEffect(() => {
+    if (!isCookiePolicyEmbed) return undefined;
+    const script = document.createElement('script');
+    script.src = 'https://app.termly.io/embed-policy.min.js';
+    script.async = true;
+    document.body.appendChild(script);
+    return () => { document.body.removeChild(script); };
+  }, [isCookiePolicyEmbed]);
+
   if (!page) return null;
 
   const c = LEGAL_CONTENT[lang] || LEGAL_CONTENT.en;
@@ -52,7 +69,9 @@ export function LegalModal({ page, onClose, lang = 'de' }) {
   if (!doc) return null;
 
   const isDatenschutz = page === 'datenschutz';
-  const isDraft = hasOpenTodos();
+  // Termlys Cookie-Richtlinie ist über deren eigenen Wizard vollständig ausgefüllt, hat mit
+  // den lokalen OPERATOR/LEGAL_TODO-Platzhaltern nichts zu tun.
+  const isDraft = !isCookiePolicyEmbed && hasOpenTodos();
   const Icon = page === 'impressum' ? Scale : ShieldCheck;
 
   const modalContent = (
@@ -90,18 +109,27 @@ export function LegalModal({ page, onClose, lang = 'de' }) {
             </div>
           )}
 
-          {doc.sections.map((section, si) => (
-            <section key={si} className="flex flex-col gap-1.5">
-              <h3 className="text-xs font-black uppercase tracking-wider text-cyan-400">
-                {section.title}
-              </h3>
-              {section.lines.map((line, li) => (
-                <p key={li} className="text-[12px] leading-relaxed text-slate-300">
-                  {renderRich(fillOperator(line), `s${si}-l${li}`)}
-                </p>
-              ))}
-            </section>
-          ))}
+          {isCookiePolicyEmbed ? (
+            // Heller Container: Termlys Dokument ist für eine normale, helle Webseite
+            // generiert (schwarzer Text) - auf dem dunklen Modal-Hintergrund wäre es
+            // sonst unleserlich, bis das externe Script eigene Styles nachlädt.
+            <div className="bg-white rounded-xl p-4 min-h-[200px] text-slate-900">
+              <div name="termly-embed" data-id="b82783bc-9a8a-497f-b921-c24ebf93b306" />
+            </div>
+          ) : (
+            doc.sections.map((section, si) => (
+              <section key={si} className="flex flex-col gap-1.5">
+                <h3 className="text-xs font-black uppercase tracking-wider text-cyan-400">
+                  {section.title}
+                </h3>
+                {section.lines.map((line, li) => (
+                  <p key={li} className="text-[12px] leading-relaxed text-slate-300">
+                    {renderRich(fillOperator(line), `s${si}-l${li}`)}
+                  </p>
+                ))}
+              </section>
+            ))
+          )}
 
           {isDatenschutz && (
             // DSAR-Formular (Data Subject Access Request): formalisiert genau die Rechte

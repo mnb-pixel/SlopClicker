@@ -170,6 +170,13 @@ export const LEGAL_CONTENT = {
         },
       ],
     },
+
+    // Kein lokaler Text - LegalModal.jsx rendert hier stattdessen Termlys Cookie-Richtlinie-
+    // Embed. sections bleibt leer, title wird trotzdem für die Modal-Kopfzeile gebraucht.
+    cookies: {
+      title: 'Cookie-Richtlinie',
+      sections: [],
+    },
   },
 
   en: {
@@ -278,6 +285,11 @@ export const LEGAL_CONTENT = {
           ],
         },
       ],
+    },
+
+    cookies: {
+      title: 'Cookie Policy',
+      sections: [],
     },
   },
 };
