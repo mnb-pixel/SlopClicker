@@ -16,12 +16,16 @@ import { ManualModal } from './components/modals/ManualModal';
 import { OfflineEarningsModal } from './components/modals/OfflineEarningsModal';
 import { AfkReportModal } from './components/modals/AfkReportModal';
 import { ScheduledAdModal } from './components/modals/ScheduledAdModal';
+import { LegalModal } from './components/modals/LegalModal';
 import { UPGRADES_DATA } from './data/upgradesData';
 
 export default function App() {
   const store = useGameStore();
   const [isPitchDeckOpen, setIsPitchDeckOpen] = useState(false);
   const [isManualOpen, setIsManualOpen] = useState(false);
+  // null | 'impressum' | 'datenschutz' - Rechtstexte als Modal, damit sie aus jeder
+  // Ansicht (mobil wie Desktop) über die Einstellungen erreichbar bleiben.
+  const [legalPage, setLegalPage] = useState(null);
 
   // Automatische View-Erkennung (Punkt 8): Mobile Geräte bekommen automatisch die
   // 5-Tab-Ansicht, Desktop/PC automatisch die All-in-One-Ansicht - kein manueller Button mehr.
@@ -120,7 +124,7 @@ export default function App() {
       {/* WEB DESKTOP ALL-IN-ONE VIEW (Everything on 1 Page in 3 Columns) */}
       {layoutMode === 'desktop' ? (
         <main className="flex-1 pb-10">
-          <DesktopView store={store} setIsPitchDeckOpen={setIsPitchDeckOpen} />
+          <DesktopView store={store} setIsPitchDeckOpen={setIsPitchDeckOpen} onOpenLegal={setLegalPage} />
         </main>
       ) : (
         /* MOBILE 5-TAB VIEW */
@@ -223,6 +227,7 @@ export default function App() {
                 claimUnlockedScheduledAd={store.claimUnlockedScheduledAd}
                 grantAdPreview={store.grantAdPreview}
                 scheduledAdPreview={store.scheduledAdPreview}
+                onOpenLegal={setLegalPage}
                 t={store.t}
               />
             )}
@@ -248,6 +253,9 @@ export default function App() {
           />
         </div>
       )}
+
+      {/* Impressum / Datenschutzerklärung */}
+      <LegalModal page={legalPage} onClose={() => setLegalPage(null)} lang={store.lang} />
 
       {/* VC Pitch Deck Export Modal */}
       <PitchDeckModal

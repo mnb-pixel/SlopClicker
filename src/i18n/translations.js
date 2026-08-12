@@ -165,6 +165,8 @@ export const TRANSLATIONS = {
     govGrantTitle: 'Staatliches KI-Förderprogramm',
     govGrantDesc: 'Erhält eine sofortige, nicht-verwässernde Staatszahlung von +{amount}.',
     footerPrivacy: 'Keine Daten gesammelt • 100% Offline • AI-Bubble-sicher',
+    legalImprint: 'Impressum',
+    legalPrivacy: 'Datenschutz',
 
     // Header (ergänzend)
     saveLabel: 'Speichern',
@@ -601,6 +603,8 @@ export const TRANSLATIONS = {
     govGrantTitle: 'Government AI Grant',
     govGrantDesc: 'Receives an instant non-dilutive government payout of +{amount}.',
     footerPrivacy: 'No Data Collected • 100% Offline • AI Bubble Safe',
+    legalImprint: 'Legal Notice',
+    legalPrivacy: 'Privacy',
 
     // Header (additional)
     saveLabel: 'Save',

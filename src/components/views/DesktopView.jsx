@@ -6,7 +6,7 @@ import { StatsTab } from '../tabs/StatsTab';
 import { MiscTab } from '../tabs/MiscTab';
 import { AdBanner } from '../AdBanner';
 
-export function DesktopView({ store, setIsPitchDeckOpen }) {
+export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
   return (
     <div className="w-full max-w-7xl mx-auto p-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
       {/* LEFT COLUMN: Main GPU Clicker, Heat Bar, Golden Memes, Owned Visual Items Grid (4 cols) */}
@@ -97,6 +97,7 @@ export function DesktopView({ store, setIsPitchDeckOpen }) {
             claimUnlockedScheduledAd={store.claimUnlockedScheduledAd}
             grantAdPreview={store.grantAdPreview}
             scheduledAdPreview={store.scheduledAdPreview}
+            onOpenLegal={onOpenLegal}
             t={store.t}
           />
         </div>

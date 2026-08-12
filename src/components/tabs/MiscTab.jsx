@@ -12,6 +12,7 @@ export function MiscTab({
   claimUnlockedScheduledAd,
   grantAdPreview = 0,
   scheduledAdPreview = 0,
+  onOpenLegal,
   t,
 }) {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
@@ -187,8 +188,25 @@ export function MiscTab({
         )}
       </div>
 
-      {/* Footer */}
-      <footer className="text-center text-[11px] text-slate-500 my-2 space-y-1">
+      {/* Footer inkl. Pflichtlinks. Impressum und Datenschutzerklärung müssen von jeder
+          Ansicht aus erreichbar sein - der Einstellungen-Tab wird auch in der Desktop-
+          Ansicht gerendert, damit gilt das für beide Layouts. */}
+      <footer className="text-center text-[11px] text-slate-500 my-2 space-y-2">
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={() => onOpenLegal && onOpenLegal('impressum')}
+            className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
+          >
+            {tr('legalImprint')}
+          </button>
+          <span className="text-slate-700">•</span>
+          <button
+            onClick={() => onOpenLegal && onOpenLegal('datenschutz')}
+            className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
+          >
+            {tr('legalPrivacy')}
+          </button>
+        </div>
         <div>{tr('footerPrivacy')}</div>
         <div className="text-[10px] text-slate-600">SlopClicker Mobile v1.0.0</div>
       </footer>
