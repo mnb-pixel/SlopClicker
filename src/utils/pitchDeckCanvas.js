@@ -1,21 +1,25 @@
 // Rendering der teilbaren 9:16 Pitch-Deck-Story-Card (1080x1920, +250px in der
 // detaillierten Version) - optimiert für Instagram/TikTok Stories & Reels.
 //
-// WICHTIG: Jeder Pfad-Helfer ruft IMMER ctx.beginPath() auf, bevor er einen Pfad
-// baut. Ohne das sammeln sich alle roundRect()-Subpfade im selben Pfad an und ein
-// späteres fill() übermalt sämtliche vorher gezeichneten Boxen samt Text - genau
-// deshalb waren im geteilten Bild vorher die Bewertungs- und Stat-Boxen leer.
+// Zwei Stile stehen zur Wahl (siehe PITCH_DECK_STYLES):
+//   'neon'       - das Cyberpunk-Design der App (diese Datei)
+//   'consulting' - seriöser Berater-Einseiter (pitchDeckConsulting.js)
+//
+// Gemeinsame Zeichen-Helfer liegen in pitchDeckShared.js - dort steht auch,
+// warum jeder Pfad-Helfer beginPath() ruft und warum hier nirgends shadowBlur
+// verwendet wird.
 
-import { BUILDINGS_DATA } from '../data/buildingsData';
 import { formatCurrency, formatNumber } from './formatters';
+import { drawConsultingDeck } from './pitchDeckConsulting';
+import {
+  PITCH_DECK_WIDTH, SANS, MONO, SERIF,
+  fillRound, strokeRound, line, linear, setTracking, fitFont, ellipsize, drawPill,
+  getTopEngines, getPitchDeckHeight,
+} from './pitchDeckShared';
 
-export const PITCH_DECK_WIDTH = 1080;
-export const PITCH_DECK_BASE_HEIGHT = 1920;
-const DETAILED_EXTRA_HEIGHT = 250;
+export { PITCH_DECK_WIDTH, getTopEngines, getPitchDeckHeight };
 
-const SANS = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-const MONO = 'ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Courier New", monospace';
-const SERIF = 'Georgia, "Times New Roman", serif';
+export const PITCH_DECK_STYLES = ['neon', 'consulting'];
 
 const C = {
   cyan: '#22d3ee',
@@ -32,102 +36,6 @@ const C = {
   ink: '#050815',
 };
 
-/* ---------------------------------------------------------------- helpers */
-
-function roundedPath(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.roundRect(x, y, w, h, r);
-}
-
-function fillRound(ctx, x, y, w, h, r, style) {
-  roundedPath(ctx, x, y, w, h, r);
-  ctx.fillStyle = style;
-  ctx.fill();
-}
-
-function strokeRound(ctx, x, y, w, h, r, style, lineWidth = 2) {
-  roundedPath(ctx, x, y, w, h, r);
-  ctx.strokeStyle = style;
-  ctx.lineWidth = lineWidth;
-  ctx.stroke();
-}
-
-function line(ctx, x1, y1, x2, y2, style, lineWidth = 2) {
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.lineTo(x2, y2);
-  ctx.strokeStyle = style;
-  ctx.lineWidth = lineWidth;
-  ctx.stroke();
-}
-
-function linear(ctx, x0, y0, x1, y1, stops) {
-  const g = ctx.createLinearGradient(x0, y0, x1, y1);
-  stops.forEach(([offset, color]) => g.addColorStop(offset, color));
-  return g;
-}
-
-function withGlow(ctx, color, blur, draw) {
-  ctx.save();
-  ctx.shadowColor = color;
-  ctx.shadowBlur = blur;
-  draw();
-  ctx.restore();
-}
-
-function setTracking(ctx, px) {
-  // letterSpacing wird von älteren Engines ignoriert - dann rendert es einfach eng.
-  try { ctx.letterSpacing = `${px}px`; } catch { /* nicht unterstützt */ }
-}
-
-// Schriftgröße so lange verkleinern, bis der Text in maxWidth passt.
-function fitFont(ctx, text, maxWidth, weight, size, family, minSize = 14) {
-  let current = size;
-  ctx.font = `${weight} ${current}px ${family}`;
-  while (current > minSize && ctx.measureText(text).width > maxWidth) {
-    current -= 2;
-    ctx.font = `${weight} ${current}px ${family}`;
-  }
-  return current;
-}
-
-// Text mit "…" kürzen, falls er zu breit ist (Font muss vorher gesetzt sein).
-function ellipsize(ctx, text, maxWidth) {
-  if (ctx.measureText(text).width <= maxWidth) return text;
-  let cut = text;
-  while (cut.length > 1 && ctx.measureText(`${cut}…`).width > maxWidth) {
-    cut = cut.slice(0, -1);
-  }
-  return `${cut.trim()}…`;
-}
-
-function drawPill(ctx, cx, cy, text, opts = {}) {
-  const {
-    font = `900 26px ${MONO}`,
-    color = C.slateLight,
-    bg = 'rgba(255,255,255,0.06)',
-    border = null,
-    padX = 30,
-    height = 54,
-    tracking = 0,
-  } = opts;
-
-  ctx.font = font;
-  setTracking(ctx, tracking);
-  const w = ctx.measureText(text).width + padX * 2;
-  const x = cx - w / 2;
-  const y = cy - height / 2;
-
-  fillRound(ctx, x, y, w, height, height / 2, bg);
-  if (border) strokeRound(ctx, x, y, w, height, height / 2, border, 2);
-
-  ctx.fillStyle = color;
-  ctx.textAlign = 'center';
-  ctx.fillText(text, cx, cy);
-  setTracking(ctx, 0);
-  return w;
-}
-
 /* ------------------------------------------------------------- background */
 
 function drawBackground(ctx, H) {
@@ -140,11 +48,12 @@ function drawBackground(ctx, H) {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, PITCH_DECK_WIDTH, H);
 
-  // Weiche Neon-Blobs für Tiefe
+  // Weiche Neon-Blobs für Tiefe - bewusst nur 2 statt vieler: jeder Blob ist ein
+  // radialer Fill über das komplette Canvas, und zusammen mit der Vignette darunter
+  // ergeben zu viele davon auf iOS Safari messbar teures Rendering.
   const blobs = [
-    { x: 140, y: 260, r: 620, color: 'rgba(34, 211, 238, 0.20)' },
-    { x: 980, y: H * 0.42, r: 700, color: 'rgba(217, 70, 239, 0.18)' },
-    { x: 420, y: H - 220, r: 640, color: 'rgba(99, 102, 241, 0.20)' },
+    { x: 160, y: 280, r: 640, color: 'rgba(34, 211, 238, 0.18)' },
+    { x: 940, y: H - 260, r: 680, color: 'rgba(217, 70, 239, 0.16)' },
   ];
   blobs.forEach(({ x, y, r, color }) => {
     const g = ctx.createRadialGradient(x, y, 0, x, y, r);
@@ -174,9 +83,11 @@ function drawFrame(ctx, H) {
     [0.5, C.violet],
     [1, C.amber],
   ]);
-  withGlow(ctx, 'rgba(34, 211, 238, 0.45)', 30, () => {
-    strokeRound(ctx, 34, 34, PITCH_DECK_WIDTH - 68, H - 68, 46, frameGrad, 6);
-  });
+  // KEIN ctx.shadowBlur hier: wiederholte Shadow-Blur-Aufrufe auf einem großen
+  // Canvas sind auf iOS Safari extrem teuer und haben die App-Seite mit einem
+  // Renderer-Crash ("A problem repeatedly occurred") abstürzen lassen. Der
+  // Farbverlauf im Rahmen selbst sorgt schon für genug visuellen Pop.
+  strokeRound(ctx, 34, 34, PITCH_DECK_WIDTH - 68, H - 68, 46, frameGrad, 6);
   strokeRound(ctx, 50, 50, PITCH_DECK_WIDTH - 100, H - 100, 36, 'rgba(255,255,255,0.10)', 2);
 }
 
@@ -217,11 +128,9 @@ function drawTitle(ctx, tr, startupName, hasAiDomainBonus) {
     [1, C.fuchsia],
   ]);
   ctx.textAlign = 'center';
-  withGlow(ctx, 'rgba(217, 70, 239, 0.55)', 34, () => {
-    ctx.font = `900 ${size}px ${SANS}`;
-    ctx.fillStyle = grad;
-    ctx.fillText(name, 540, 300);
-  });
+  ctx.font = `900 ${size}px ${SANS}`;
+  ctx.fillStyle = grad;
+  ctx.fillText(name, 540, 300);
 
   if (hasAiDomainBonus) {
     drawPill(ctx, 540, 372, tr('pdAiHypeDomainShort'), {
@@ -241,12 +150,10 @@ function drawHeroValuation(ctx, tr, valuation, vps) {
   const w = 900;
   const h = 320;
 
-  withGlow(ctx, 'rgba(52, 211, 153, 0.28)', 40, () => {
-    fillRound(ctx, x, y, w, h, 40, linear(ctx, x, y, x + w, y + h, [
-      [0, 'rgba(13, 22, 45, 0.92)'],
-      [1, 'rgba(30, 20, 66, 0.92)'],
-    ]));
-  });
+  fillRound(ctx, x, y, w, h, 40, linear(ctx, x, y, x + w, y + h, [
+    [0, 'rgba(13, 22, 45, 0.92)'],
+    [1, 'rgba(30, 20, 66, 0.92)'],
+  ]));
   strokeRound(ctx, x, y, w, h, 40, linear(ctx, x, y, x + w, y, [
     [0, 'rgba(52, 211, 153, 0.85)'],
     [1, 'rgba(34, 211, 238, 0.85)'],
@@ -261,14 +168,12 @@ function drawHeroValuation(ctx, tr, valuation, vps) {
 
   const value = formatCurrency(valuation);
   const valueSize = fitFont(ctx, value, 780, 900, 124, SANS, 48);
-  withGlow(ctx, 'rgba(52, 211, 153, 0.65)', 36, () => {
-    ctx.font = `900 ${valueSize}px ${SANS}`;
-    ctx.fillStyle = linear(ctx, 180, 0, 900, 0, [
-      [0, C.emerald],
-      [1, C.cyanSoft],
-    ]);
-    ctx.fillText(value, 540, y + 160);
-  });
+  ctx.font = `900 ${valueSize}px ${SANS}`;
+  ctx.fillStyle = linear(ctx, 180, 0, 900, 0, [
+    [0, C.emerald],
+    [1, C.cyanSoft],
+  ]);
+  ctx.fillText(value, 540, y + 160);
 
   drawPill(ctx, 540, y + 258, `+${formatCurrency(vps)} ${tr('pdPassiveCashflow')}`, {
     font: `800 28px ${MONO}`,
@@ -309,9 +214,7 @@ function drawTierBar(ctx, tr, hypeTier) {
   for (let i = 0; i < 10; i++) {
     const sx = barX + i * (segW + gap);
     if (i < tier) {
-      withGlow(ctx, 'rgba(168, 85, 247, 0.55)', 16, () => {
-        fillRound(ctx, sx, barY, segW, barH, 8, fillGrad);
-      });
+      fillRound(ctx, sx, barY, segW, barH, 8, fillGrad);
     } else {
       fillRound(ctx, sx, barY, segW, barH, 8, 'rgba(255,255,255,0.07)');
       strokeRound(ctx, sx, barY, segW, barH, 8, 'rgba(255,255,255,0.10)', 2);
@@ -487,13 +390,11 @@ function drawBottom(ctx, tr, H) {
   const barY = H - 140;
   const barW = 900;
   const barH = 72;
-  withGlow(ctx, 'rgba(34, 211, 238, 0.45)', 28, () => {
-    fillRound(ctx, barX, barY, barW, barH, 36, linear(ctx, barX, 0, barX + barW, 0, [
-      [0, C.cyan],
-      [0.5, C.fuchsia],
-      [1, C.amber],
-    ]));
-  });
+  fillRound(ctx, barX, barY, barW, barH, 36, linear(ctx, barX, 0, barX + barW, 0, [
+    [0, C.cyan],
+    [0.5, C.fuchsia],
+    [1, C.amber],
+  ]));
 
   const cta = tr('pdBuildEmpireFooter');
   setTracking(ctx, 1);
@@ -504,23 +405,32 @@ function drawBottom(ctx, tr, H) {
   setTracking(ctx, 0);
 }
 
+function drawNeonDeck(ctx, o) {
+  const { tr, H, detailed } = o;
+
+  drawBackground(ctx, H);
+  drawFrame(ctx, H);
+  drawHeader(ctx, tr);
+  drawTitle(ctx, tr, o.startupName, o.hasAiDomainBonus);
+  drawHeroValuation(ctx, tr, o.valuation, o.vps);
+  drawTierBar(ctx, tr, o.hypeTier);
+  drawStatGrid(ctx, [
+    { label: tr('pdAnnualRevenue'), value: tr('pdPureHype'), color: C.rose },
+    { label: tr('pdTotalTokens'), value: `${formatNumber(o.slopCount)} ${tr('pdTokensLabel')}`, color: C.violet },
+    { label: tr('pdMeltedGpuCores'), value: `${o.overheatCount} ${tr('pdOverheatsLabel')}`, color: C.orange },
+    { label: tr('pdPrestigeLevelStat'), value: `${o.prestigeLevel} ${tr('pdAscensionsLabel')}`, color: C.cyan },
+  ]);
+  drawEngines(ctx, tr, o.engines);
+  if (detailed) {
+    drawCollection(ctx, tr, {
+      badgeCount: o.badgeCount, badgeTotal: o.badgeTotal,
+      cardCount: o.cardCount, cardTotal: o.cardTotal, cardBonusPct: o.cardBonusPct,
+    });
+  }
+  drawBottom(ctx, tr, H);
+}
+
 /* ------------------------------------------------------------------- main */
-
-// Liefert die 3 höchstwertigen gekauften Engines (teuerste zuerst).
-export function getTopEngines(buildings = {}, t) {
-  return BUILDINGS_DATA
-    .map((b) => ({
-      name: (t && t(`building_${b.id}_name`)) || b.id,
-      count: buildings[b.id] || 0,
-    }))
-    .filter((b) => b.count > 0)
-    .slice(-3)
-    .reverse();
-}
-
-export function getPitchDeckHeight(detailed) {
-  return PITCH_DECK_BASE_HEIGHT + (detailed ? DETAILED_EXTRA_HEIGHT : 0);
-}
 
 /**
  * Zeichnet die komplette Story-Card auf das übergebene Canvas.
@@ -538,6 +448,8 @@ export function drawPitchDeck(canvas, opts = {}) {
     hypeTier = 1,
     buildings = {},
     detailed = false,
+    style = 'neon',
+    lang = 'de',
     badgeCount = 0,
     badgeTotal = 0,
     cardCount = 0,
@@ -557,23 +469,18 @@ export function drawPitchDeck(canvas, opts = {}) {
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';
 
-  drawBackground(ctx, H);
-  drawFrame(ctx, H);
-  drawHeader(ctx, tr);
-  drawTitle(ctx, tr, startupName, hasAiDomainBonus);
-  drawHeroValuation(ctx, tr, valuation, vps);
-  drawTierBar(ctx, tr, hypeTier);
-  drawStatGrid(ctx, [
-    { label: tr('pdAnnualRevenue'), value: tr('pdPureHype'), color: C.rose },
-    { label: tr('pdTotalTokens'), value: `${formatNumber(slopCount)} ${tr('pdTokensLabel')}`, color: C.violet },
-    { label: tr('pdMeltedGpuCores'), value: `${overheatCount} ${tr('pdOverheatsLabel')}`, color: C.orange },
-    { label: tr('pdPrestigeLevelStat'), value: `${prestigeLevel} ${tr('pdAscensionsLabel')}`, color: C.cyan },
-  ]);
-  drawEngines(ctx, tr, getTopEngines(buildings, t));
-  if (detailed) {
-    drawCollection(ctx, tr, { badgeCount, badgeTotal, cardCount, cardTotal, cardBonusPct });
+  const shared = {
+    tr, lang, H, detailed, startupName, hasAiDomainBonus, valuation, vps, slopCount,
+    overheatCount, prestigeLevel, hypeTier,
+    engines: getTopEngines(buildings, t),
+    badgeCount, badgeTotal, cardCount, cardTotal, cardBonusPct,
+  };
+
+  if (style === 'consulting') {
+    drawConsultingDeck(ctx, shared);
+  } else {
+    drawNeonDeck(ctx, shared);
   }
-  drawBottom(ctx, tr, H);
 
   return canvas.toDataURL('image/png');
 }

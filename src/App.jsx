@@ -255,6 +255,7 @@ export default function App() {
         buildings={store.buildings}
         unlockedAchievements={store.unlockedAchievements}
         boughtBuzzwords={store.boughtBuzzwords}
+        lang={store.lang}
         t={store.t}
       />
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
-import { X, Copy, Share2, Check, Rocket, Download, MessageSquare, Send, Globe, Award, Loader2 } from 'lucide-react';
+import { X, Copy, Share2, Check, Rocket, Download, MessageSquare, Send, Globe, Award, Loader2, Sparkles, FileText } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 import { drawPitchDeck } from '../../utils/pitchDeckCanvas';
 import { ACHIEVEMENTS_DATA } from '../../data/achievementsData';
@@ -23,6 +23,7 @@ export function PitchDeckModal({
   buildings = {},
   unlockedAchievements = [],
   boughtBuzzwords = [],
+  lang = 'de',
   t,
 }) {
   const tr = t || ((k) => k);
@@ -30,6 +31,7 @@ export function PitchDeckModal({
   const [isGeneratingPng, setIsGeneratingPng] = useState(true);
   const [pngDataUrl, setPngDataUrl] = useState(null);
   const [detailed, setDetailed] = useState(false);
+  const [style, setStyle] = useState('neon');
   const [snapshot, setSnapshot] = useState(null);
   const canvasRef = useRef(null);
 
@@ -73,13 +75,13 @@ export function PitchDeckModal({
 
     const timer = setTimeout(() => {
       const canvas = canvasRef.current || document.createElement('canvas');
-      const dataUrl = drawPitchDeck(canvas, { ...snapshot, detailed, t });
+      const dataUrl = drawPitchDeck(canvas, { ...snapshot, detailed, style, lang, t });
       setPngDataUrl(dataUrl);
       setIsGeneratingPng(false);
     }, 60);
 
     return () => clearTimeout(timer);
-  }, [isOpen, snapshot, detailed, t]);
+  }, [isOpen, snapshot, detailed, style, lang, t]);
 
   if (!isOpen || !snapshot) return null;
 
@@ -109,7 +111,7 @@ export function PitchDeckModal({
   const handleDownloadPng = () => {
     if (!pngDataUrl) return;
     const link = document.createElement('a');
-    link.download = `${snapshot.startupName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_pitchdeck.png`;
+    link.download = `${snapshot.startupName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_pitchdeck_${style}.png`;
     link.href = pngDataUrl;
     link.click();
     confetti({
@@ -197,6 +199,37 @@ export function PitchDeckModal({
           >
             <X className="w-4 h-4" />
           </button>
+        </div>
+
+        {/* Design-Umschalter: Neon-Cyberpunk (App-Look) oder seriöse Beratungs-Folie */}
+        <div className="flex items-center gap-2 mb-2 shrink-0">
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 shrink-0">
+            {tr('pdStyleLabel')}
+          </span>
+          <div className="grid grid-cols-2 gap-1 flex-1 p-1 rounded-xl bg-slate-950/80 border border-slate-800">
+            <button
+              onClick={() => setStyle('neon')}
+              className={`py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wide transition-all flex items-center justify-center gap-1 ${
+                style === 'neon'
+                  ? 'bg-gradient-to-r from-cyan-400 to-fuchsia-500 text-slate-950'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Sparkles className="w-3 h-3" />
+              {tr('pdStyleNeon')}
+            </button>
+            <button
+              onClick={() => setStyle('consulting')}
+              className={`py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wide transition-all flex items-center justify-center gap-1 ${
+                style === 'consulting'
+                  ? 'bg-slate-200 text-slate-900'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <FileText className="w-3 h-3" />
+              {tr('pdStyleConsulting')}
+            </button>
+          </div>
         </div>
 
         {/* Detaillierte Version Toggle - der User entscheidet, ob Badges & Buzzword-Karten mit rein sollen */}
