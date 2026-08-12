@@ -214,12 +214,18 @@ export function MiscTab({
             {tr('legalCookies')}
           </button>
           <span className="text-slate-700">•</span>
-          {/* class (nicht className-Wert selbst) muss exakt "termly-display-preferences"
-              bleiben - daran bindet Termlys global geladenes Resource-Blocker-Script
-              (siehe index.html) seinen Klick-Handler, der das Consent-Preference-Center
-              öffnet. href="#" wie von Termly vorgegeben, kein eigener Navigations-Handler. */}
+          {/* class "termly-display-preferences" bleibt für Termlys eigenen Klick-Handler
+              erhalten, reicht in dieser SPA aber allein nicht: Termlys Script bindet diesen
+              Handler nur an Elemente, die schon im DOM stehen, wenn das Script die Seite
+              einmalig scannt - der Link steckt aber im lazy gerenderten Settings-Tab und
+              existiert zu dem Zeitpunkt oft noch nicht. Deshalb zusätzlich Termlys
+              dokumentierte SPA-Lösung: die global exponierte API-Funktion direkt aufrufen. */}
           <a
             href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              window.Termly?.displayPreferenceModal?.();
+            }}
             className="termly-display-preferences text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
           >
             {tr('consentPreferences')}
