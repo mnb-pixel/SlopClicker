@@ -41,16 +41,18 @@ const BLACK_SWAN_CHANCE_PER_200MS = 0.00000005;
 // Monetarisierung: Rewarded-Ad-Cooldowns pro Placement (Sekunden), damit dieselbe
 // Ad-Belohnung nicht im Sekundentakt wieder abgegriffen werden kann.
 const AD_COOLDOWN_SEC = {
+  // Nitrogen bleibt bewusst kürzer: reine Sofort-Kühlung + 2x Click Power, kein Geldwert -
+  // alle anderen mit Cooldown sind auf einheitlich 5 Minuten vereinheitlicht.
   nitrogen: 90,
-  grant: 120,
-  power_click: 15 * 60,
+  grant: 5 * 60,
+  power_click: 5 * 60,
   ascend_boost: 5 * 60,
   pivot_boost: 5 * 60,
   // Kein Cooldown: der Golden-Meme-Claim ist bereits durch die Seltenheit des Events
   // begrenzt (~20min) und ist der EINZIGE Weg an den Boost - ein Cooldown könnte das
   // Angebot komplett unbenutzbar machen.
   golden_claim: 0,
-  bubble_clear: 45,
+  bubble_clear: 5 * 60,
   offline_double: 0,
   scheduled_bonus: 0,
 };
