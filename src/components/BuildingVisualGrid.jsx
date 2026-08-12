@@ -7,7 +7,7 @@ import { formatCurrency, formatNumber } from '../utils/formatters';
 
 export function BuildingVisualGrid({ buildings, boughtUpgrades = [], boughtGreenwashingLayoffs = [], t }) {
   const tr = t || ((k) => k);
-  const buildingName = (b) => tr(`building_${b.id}_name`) || b.name;
+  const buildingName = (b) => tr(`building_${b.id}_name`);
   const renderItemArtwork = (b, sizeClass = 'w-6 h-6') => {
     if (b && b.image) {
       return (
@@ -29,10 +29,10 @@ export function BuildingVisualGrid({ buildings, boughtUpgrades = [], boughtGreen
     return (
       <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 text-center mt-2 mb-1 backdrop-blur-md w-full">
         <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-          ⚡ AI Compute Matrix (Empty)
+          {tr('computeMatrixEmpty')}
         </div>
         <div className="text-[11px] text-slate-600 italic">
-          No AI Engines deployed yet. Head to the Store to deploy your first Auto-Prompt Cursors & Prompt Engineers!
+          {tr('noEnginesDeployed')}
         </div>
       </div>
     );
@@ -43,10 +43,10 @@ export function BuildingVisualGrid({ buildings, boughtUpgrades = [], boughtGreen
       <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
         <span className="text-xs font-extrabold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
           <Icons.Cpu className="w-4 h-4 text-cyan-400" />
-          Deployed AI Engines ({ownedBuildings.length} types)
+          {tr('deployedEngines')} ({ownedBuildings.length} {tr('typesLabel')})
         </span>
         <span className="text-[10px] text-slate-400 font-mono">
-          Total Count: {Object.values(buildings).reduce((a, b) => a + b, 0)}
+          {tr('totalCountLabel')} {Object.values(buildings).reduce((a, b) => a + b, 0)}
         </span>
       </div>
 
@@ -116,7 +116,7 @@ export function BuildingVisualGrid({ buildings, boughtUpgrades = [], boughtGreen
                 ))}
                 {count > 15 && (
                   <span className="text-[10px] font-mono text-slate-500 pl-1 font-bold">
-                    +{count - 15} more
+                    +{count - 15} {tr('moreLabel')}
                   </span>
                 )}
               </div>

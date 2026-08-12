@@ -25,6 +25,7 @@ export function PitchDeckModal({
   boughtBuzzwords = [],
   t,
 }) {
+  const tr = t || ((k) => k);
   const [copied, setCopied] = useState(false);
   const [isGeneratingPng, setIsGeneratingPng] = useState(false);
   const [pngDataUrl, setPngDataUrl] = useState(null);
@@ -106,11 +107,11 @@ export function PitchDeckModal({
       ctx.fillStyle = '#f59e0b'; // amber-500
       ctx.font = '900 36px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText('CONFIDENTIAL INVESTOR PITCH DECK', 540, 130);
+      ctx.fillText(tr('pdConfidentialTitle'), 540, 130);
 
       ctx.fillStyle = '#94a3b8';
       ctx.font = '700 28px sans-serif';
-      ctx.fillText('OFFICIAL VC FUNDING PROSPECTUS • SLOPCLICKER.APP', 540, 175);
+      ctx.fillText(tr('pdOfficialSubtitle'), 540, 175);
 
       // Horizontal Divider
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
@@ -128,7 +129,7 @@ export function PitchDeckModal({
       if (hasAiDomainBonus) {
         ctx.fillStyle = '#f59e0b';
         ctx.font = '900 32px monospace';
-        ctx.fillText('✨ .AI HYPE DOMAIN (+10% VPS MULTIPLIER)', 540, 365);
+        ctx.fillText(tr('pdAiHypeDomainLong'), 540, 365);
       }
 
       // 4. Main Metric Card Box: VALUATION
@@ -145,7 +146,7 @@ export function PitchDeckModal({
 
       ctx.fillStyle = '#94a3b8';
       ctx.font = '900 32px monospace';
-      ctx.fillText('ESTIMATED COMPANY VALUATION', 540, 480);
+      ctx.fillText(tr('pdEstimatedValuation'), 540, 480);
 
       ctx.fillStyle = '#10b981'; // emerald-500
       ctx.font = '900 96px monospace';
@@ -153,14 +154,14 @@ export function PitchDeckModal({
 
       ctx.fillStyle = '#67e8f9';
       ctx.font = '700 34px monospace';
-      ctx.fillText(`+${formatCurrency(vps)} / sec Passive Cashflow`, 540, 665);
+      ctx.fillText(`+${formatCurrency(vps)} ${tr('pdPassiveCashflow')}`, 540, 665);
 
       // 5. Financial Highlights Grid (2x2)
       const gridItems = [
-        { label: 'ANNUAL REVENUE', val: '$0.00 (100% Pure Hype)', color: '#f43f5e' },
-        { label: 'HYPE TIER RANK', val: `TIER ${hypeTier} / 10`, color: '#ec4899' },
-        { label: 'TOTAL AI SLOP TOKENS', val: `${formatNumber(slopCount)} tokens`, color: '#c084fc' },
-        { label: 'MELTED GPU CORES', val: `${overheatCount} Overheats`, color: '#fb923c' },
+        { label: tr('pdAnnualRevenue'), val: tr('pdPureHype'), color: '#f43f5e' },
+        { label: tr('pdHypeTierRank'), val: `${tr('pdTierLabel')} ${hypeTier} / 10`, color: '#ec4899' },
+        { label: tr('pdTotalTokens'), val: `${formatNumber(slopCount)} ${tr('pdTokensLabel')}`, color: '#c084fc' },
+        { label: tr('pdMeltedGpuCores'), val: `${overheatCount} ${tr('pdOverheatsLabel')}`, color: '#fb923c' },
       ];
 
       gridItems.forEach((item, idx) => {
@@ -199,7 +200,7 @@ export function PitchDeckModal({
       ctx.fillStyle = '#a855f7';
       ctx.font = '900 30px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText('DEPLOYED AI INFRASTRUCTURE ENGINES', 540, 1235);
+      ctx.fillText(tr('pdDeployedEngines'), 540, 1235);
 
       // Get top 3 owned building engines
       const ownedEngines = BUILDINGS_DATA.map((b) => ({
@@ -210,7 +211,7 @@ export function PitchDeckModal({
       if (ownedEngines.length === 0) {
         ctx.fillStyle = '#94a3b8';
         ctx.font = 'italic 30px sans-serif';
-        ctx.fillText('Manual GPU Tapping Mode active (0 Engines Deployed)', 540, 1340);
+        ctx.fillText(tr('pdManualTappingMode'), 540, 1340);
       } else {
         ownedEngines.forEach((eng, i) => {
           ctx.fillStyle = '#e2e8f0';
@@ -221,7 +222,7 @@ export function PitchDeckModal({
           ctx.fillStyle = '#38bdf8';
           ctx.font = '900 32px monospace';
           ctx.textAlign = 'right';
-          ctx.fillText(`${eng.count}x Deployed`, 940, 1300 + i * 55);
+          ctx.fillText(`${eng.count}x ${tr('pdDeployedLabel')}`, 940, 1300 + i * 55);
         });
       }
 
@@ -238,12 +239,12 @@ export function PitchDeckModal({
         ctx.fillStyle = '#10b981';
         ctx.font = '900 30px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('COLLECTION PORTFOLIO', 540, 1568);
+        ctx.fillText(tr('pdCollectionPortfolio'), 540, 1568);
 
         ctx.fillStyle = '#e2e8f0';
         ctx.font = '800 30px sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText('🏆 Badges Unlocked', 140, 1630);
+        ctx.fillText(`🏆 ${tr('pdBadgesUnlocked')}`, 140, 1630);
         ctx.fillStyle = '#fbbf24';
         ctx.font = '900 30px monospace';
         ctx.textAlign = 'right';
@@ -252,7 +253,7 @@ export function PitchDeckModal({
         ctx.fillStyle = '#e2e8f0';
         ctx.font = '800 30px sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText('🎴 Buzzword Cards', 140, 1685);
+        ctx.fillText(`🎴 ${tr('pdBuzzwordCards')}`, 140, 1685);
         ctx.fillStyle = '#e879f9';
         ctx.font = '900 30px monospace';
         ctx.textAlign = 'right';
@@ -263,7 +264,7 @@ export function PitchDeckModal({
       ctx.fillStyle = '#f59e0b';
       ctx.font = 'italic 900 32px serif';
       ctx.textAlign = 'center';
-      ctx.fillText('"We prioritize Hype over Profit. AGI is imminent."', 540, 1560 + extra);
+      ctx.fillText(tr('pdHypeQuote'), 540, 1560 + extra);
 
       // VC Approved Stamp Badge Box
       ctx.fillStyle = 'rgba(245, 158, 11, 0.15)';
@@ -276,12 +277,12 @@ export function PitchDeckModal({
 
       ctx.fillStyle = '#fef3c7';
       ctx.font = '900 36px monospace';
-      ctx.fillText('APPROVED BY BOARD SYNDICATE', 540, 1672 + extra);
+      ctx.fillText(tr('pdApprovedBySyndicate'), 540, 1672 + extra);
 
       // 8. Footer Call-to-Action Link Branding
       ctx.fillStyle = '#06b6d4';
       ctx.font = '900 34px sans-serif';
-      ctx.fillText('BUILD YOUR AI BUBBLE EMPIRE AT SLOPCLICKER.APP', 540, 1820 + extra);
+      ctx.fillText(tr('pdBuildEmpireFooter'), 540, 1820 + extra);
 
       setPngDataUrl(canvas.toDataURL('image/png'));
       setIsGeneratingPng(false);
@@ -289,17 +290,17 @@ export function PitchDeckModal({
 
     // Small delay to ensure modal open DOM state
     setTimeout(generateCanvas, 100);
-  }, [isOpen, startupName, hasAiDomainBonus, valuation, vps, slopCount, overheatCount, hypeTier, buildings, detailed, badgeCount, badgeTotal, cardCount, cardTotal, cardBonusPct, t]);
+  }, [isOpen, startupName, hasAiDomainBonus, valuation, vps, slopCount, overheatCount, hypeTier, buildings, detailed, badgeCount, badgeTotal, cardCount, cardTotal, cardBonusPct, t, tr]);
 
   if (!isOpen) return null;
 
-  const shareText = `🚀 VC PITCH DECK FOR ${startupName.toUpperCase()} 🚀\n` +
-    `📈 Valuation: ${formatCurrency(valuation)}\n` +
-    `💰 Revenue: $0.00 (Pure Hype)\n` +
-    `⚡ Passive Inflow: +${formatCurrency(vps)}/s\n` +
-    `🔥 Status: AGI near, ${overheatCount} GPUs melted!\n` +
-    (detailed ? `🏆 Badges: ${badgeCount}/${badgeTotal} • 🎴 Cards: ${cardCount}/${cardTotal}\n` : '') +
-    `Build your AI bubble empire on SlopClicker!`;
+  const shareText = `🚀 ${tr('pdShareTitlePrefix')} ${startupName.toUpperCase()} 🚀\n` +
+    `📈 ${tr('pdShareValuation')} ${formatCurrency(valuation)}\n` +
+    `💰 ${tr('pdShareRevenue')}\n` +
+    `⚡ ${tr('pdSharePassiveInflow')} +${formatCurrency(vps)}/s\n` +
+    `🔥 ${tr('pdShareStatus')} ${overheatCount} ${tr('pdGpusMelted')}\n` +
+    (detailed ? `🏆 ${tr('pdBadgesUnlocked')}: ${badgeCount}/${badgeTotal} • 🎴 ${tr('pdBuzzwordCards')}: ${cardCount}/${cardTotal}\n` : '') +
+    tr('pdShareFooter');
 
   const shareUrl = window.location.href;
 
@@ -341,7 +342,7 @@ export function PitchDeckModal({
 
           if (navigator.canShare({ files: [file] })) {
             await navigator.share({
-              title: `${startupName} - VC Pitch Deck`,
+              title: `${startupName} - ${tr('pdGeneratorTitle')}`,
               text: shareText,
               url: shareUrl,
               files: [file],
@@ -393,10 +394,10 @@ export function PitchDeckModal({
             </div>
             <div>
               <h2 className="text-sm font-black text-slate-100 uppercase tracking-wide">
-                VC Pitch Deck Generator
+                {tr('pdGeneratorTitle')}
               </h2>
               <p className="text-[10px] text-slate-400 font-mono">
-                Mobile Story & Social Card (9:16 Format)
+                {tr('pdFormatSubtitle')}
               </p>
             </div>
           </div>
@@ -418,7 +419,7 @@ export function PitchDeckModal({
             className="w-3.5 h-3.5 accent-emerald-400"
           />
           <Award className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Detaillierte Version (inkl. Badges & Buzzword-Karten)</span>
+          <span>{tr('pdDetailedToggleLabel')}</span>
         </label>
 
         {/* Story Card Visual Preview */}
@@ -427,14 +428,14 @@ export function PitchDeckModal({
             {/* Stamp Badge Overlay */}
             <div className="absolute top-3 right-3 opacity-20 pointer-events-none select-none">
               <div className="border-4 border-amber-400 text-amber-300 font-black text-xs p-2 rounded-xl -rotate-12 uppercase tracking-widest text-center">
-                VC APPROVED
+                {tr('pdVcApprovedStamp')}
               </div>
             </div>
 
             {/* Startup Header */}
             <div className="border-b border-slate-800 pb-2">
               <div className="text-[10px] text-amber-400 font-black uppercase tracking-widest">
-                INVESTOR PROSPECTUS
+                {tr('pdInvestorProspectus')}
               </div>
               <div className="text-base font-black text-slate-100 flex items-center justify-between">
                 <span>{startupName.toUpperCase()}</span>
@@ -442,48 +443,48 @@ export function PitchDeckModal({
               </div>
               {hasAiDomainBonus && (
                 <span className="inline-block mt-1 text-[9px] font-black bg-amber-400/20 text-amber-300 border border-amber-400/50 px-2 py-0.5 rounded-full">
-                  ✨ .AI HYPE DOMAIN (+10% VPS)
+                  ✨ {tr('pdAiHypeDomainShort')}
                 </span>
               )}
             </div>
 
             {/* Valuation Featured Box */}
             <div className="bg-slate-900/90 p-3 rounded-xl border border-emerald-500/40 text-center shadow-inner">
-              <div className="text-[10px] text-slate-400 uppercase font-bold">ESTIMATED VALUATION</div>
+              <div className="text-[10px] text-slate-400 uppercase font-bold">{tr('pdEstimatedValuation')}</div>
               <div className="text-xl font-black text-emerald-400">{formatCurrency(valuation)}</div>
-              <div className="text-[11px] text-cyan-300 font-bold mt-0.5">+{formatCurrency(vps)} / sec cashflow</div>
+              <div className="text-[11px] text-cyan-300 font-bold mt-0.5">+{formatCurrency(vps)} {tr('pdCashflowSuffix')}</div>
             </div>
 
             {/* Grid Metrics */}
             <div className="grid grid-cols-2 gap-2 text-[10px]">
               <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-                <span className="text-slate-400 block">Annual Revenue:</span>
-                <span className="text-rose-400 font-bold">$0.00 (Pure Hype)</span>
+                <span className="text-slate-400 block">{tr('pdAnnualRevenue')}:</span>
+                <span className="text-rose-400 font-bold">{tr('pdPureHype')}</span>
               </div>
               <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-                <span className="text-slate-400 block">Hype Tier:</span>
-                <span className="text-fuchsia-300 font-bold">Tier {hypeTier} / 10</span>
+                <span className="text-slate-400 block">{tr('pdHypeTierRank')}:</span>
+                <span className="text-fuchsia-300 font-bold">{tr('pdTierLabel')} {hypeTier} / 10</span>
               </div>
               <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-                <span className="text-slate-400 block">AI Tokens:</span>
+                <span className="text-slate-400 block">{tr('pdAiTokensLabel')}</span>
                 <span className="text-purple-300 font-bold">{formatNumber(slopCount)}</span>
               </div>
               <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-                <span className="text-slate-400 block">GPU Overheats:</span>
-                <span className="text-amber-300 font-bold">{overheatCount} melted</span>
+                <span className="text-slate-400 block">{tr('pdMeltedGpuCores')}:</span>
+                <span className="text-amber-300 font-bold">{overheatCount} {tr('pdMeltedLabel')}</span>
               </div>
             </div>
 
             {/* Collection Portfolio (nur in der detaillierten Version) */}
             {detailed && (
               <div className="bg-slate-900/90 p-3 rounded-xl border border-emerald-500/40 space-y-1.5">
-                <div className="text-[10px] text-emerald-400 uppercase font-bold text-center">Collection Portfolio</div>
+                <div className="text-[10px] text-emerald-400 uppercase font-bold text-center">{tr('pdCollectionPortfolio')}</div>
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-slate-300 flex items-center gap-1"><Award className="w-3 h-3 text-amber-400" /> Badges</span>
+                  <span className="text-slate-300 flex items-center gap-1"><Award className="w-3 h-3 text-amber-400" /> {tr('pdBadgesUnlocked')}</span>
                   <span className="text-amber-300 font-bold">{badgeCount} / {badgeTotal}</span>
                 </div>
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-slate-300 flex items-center gap-1"><Layers className="w-3 h-3 text-fuchsia-400" /> Buzzword Cards</span>
+                  <span className="text-slate-300 flex items-center gap-1"><Layers className="w-3 h-3 text-fuchsia-400" /> {tr('pdBuzzwordCards')}</span>
                   <span className="text-fuchsia-300 font-bold">{cardCount} / {cardTotal} (+{cardBonusPct}% VPS)</span>
                 </div>
               </div>
@@ -491,7 +492,7 @@ export function PitchDeckModal({
 
             {/* Quote Tagline */}
             <div className="text-center italic text-[10px] text-amber-300/90 bg-amber-950/30 p-2 rounded-lg border border-amber-500/30">
-              "We prioritize Hype over Profit. AGI is imminent."
+              {tr('pdHypeQuote')}
             </div>
           </div>
         </div>
@@ -506,7 +507,7 @@ export function PitchDeckModal({
                 className="py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 via-fuchsia-500 to-cyan-400 text-slate-950 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-fuchsia-500/20"
               >
                 <Share2 className="w-4 h-4 text-slate-950" />
-                <span>DIRECT SHARE</span>
+                <span>{tr('pdDirectShare')}</span>
               </button>
             ) : (
               <button
@@ -514,7 +515,7 @@ export function PitchDeckModal({
                 className="py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider bg-cyan-500 text-slate-950 hover:bg-cyan-400 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20"
               >
                 {copied ? <Check className="w-4 h-4 text-slate-950" /> : <Copy className="w-4 h-4" />}
-                <span>{copied ? 'COPIED!' : 'COPY MEME'}</span>
+                <span>{copied ? tr('pdCopied') : tr('pdCopyMeme')}</span>
               </button>
             )}
 
@@ -524,7 +525,7 @@ export function PitchDeckModal({
               className="py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider bg-slate-800 text-cyan-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5 border border-cyan-500/40 shadow-md"
             >
               <Download className="w-4 h-4 text-cyan-400" />
-              <span>SAVE PNG</span>
+              <span>{tr('pdSavePng')}</span>
             </button>
           </div>
 
@@ -535,7 +536,7 @@ export function PitchDeckModal({
               className="py-2 rounded-lg bg-slate-950 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-600 text-[10px] font-bold transition-all flex items-center justify-center gap-1"
             >
               <Send className="w-3.5 h-3.5 text-cyan-400" />
-              <span>X (TWEET)</span>
+              <span>X ({tr('pdTweetLabel')})</span>
             </button>
 
             <button

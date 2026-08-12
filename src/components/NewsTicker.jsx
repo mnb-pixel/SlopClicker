@@ -7,8 +7,9 @@ const RECENT_LOGS_COUNT = 5;
 const PX_PER_SEC = 55; // constant reading speed regardless of how much text is queued up
 const APPROX_CHAR_WIDTH_PX = 6.5; // rough mono-font glyph width at the ticker's font size
 
-export function NewsTicker({ logs = [], lang = 'de', hypeTier, burnRate, isSecTheme }) {
+export function NewsTicker({ logs = [], lang = 'de', hypeTier, burnRate, isSecTheme, t }) {
   const [satireOffset, setSatireOffset] = useState(0);
+  const tr = t || ((k) => k);
 
   useEffect(() => {
     const id = setInterval(() => setSatireOffset((prev) => prev + SATIRE_COUNT), SATIRE_ROTATE_MS);
@@ -24,15 +25,15 @@ export function NewsTicker({ logs = [], lang = 'de', hypeTier, burnRate, isSecTh
     const breakingItems = logs.slice(0, RECENT_LOGS_COUNT).map((l) => l.text);
 
     const items = [
-      `MARKET WATCH: HYPE TIER ${hypeTier}/10 • BURN RATE ${(burnRate * 100).toFixed(2)}%/S • GREENWASHING CERTIFIED`,
+      `${tr('tickerMarketWatch')}: ${tr('tickerHypeTier')} ${hypeTier}/10 • ${tr('tickerBurnRate')} ${(burnRate * 100).toFixed(2)}%/S • ${tr('tickerGreenwashingCertified')}`,
     ];
     const maxLen = Math.max(breakingItems.length, satireItems.length);
     for (let i = 0; i < maxLen; i++) {
-      if (breakingItems[i]) items.push(`BREAKING: ${breakingItems[i]}`);
-      if (satireItems[i]) items.push(`TRENDING: ${satireItems[i]}`);
+      if (breakingItems[i]) items.push(`${tr('tickerBreaking')}: ${breakingItems[i]}`);
+      if (satireItems[i]) items.push(`${tr('tickerTrending')}: ${satireItems[i]}`);
     }
     return items.join('     •     ');
-  }, [logs, lang, satireOffset, hypeTier, burnRate]);
+  }, [logs, lang, satireOffset, hypeTier, burnRate, tr]);
 
   const durationSec = Math.max(20, (combinedText.length * APPROX_CHAR_WIDTH_PX) / PX_PER_SEC);
 

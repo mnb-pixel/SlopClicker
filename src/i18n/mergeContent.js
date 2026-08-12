@@ -10,6 +10,11 @@ import { UPGRADES_CONTENT } from './content/upgrades.content';
 import { GREENWASHING_CONTENT } from './content/greenwashing.content';
 import { ACHIEVEMENTS_CONTENT } from './content/achievements.content';
 import { EVENTS_CONTENT } from './content/events.content';
+import { CREDIBILITY_CONTENT } from './content/credibility.content';
+import { HEAVENLY_CONTENT } from './content/heavenly.content';
+import { BLACKSWAN_CONTENT } from './content/blackswan.content';
+import { MISC_UPGRADES_CONTENT } from './content/miscUpgrades.content';
+import { EPOCHS_CONTENT } from './content/epochs.content';
 
 const LANGS = ['de', 'en'];
 
@@ -59,6 +64,48 @@ export function buildContentTranslations() {
       const text = pick(byLang, lang);
       if (text.title) out[lang][`event_${id}_title`] = text.title;
       if (text.desc) out[lang][`event_${id}_desc`] = text.desc;
+    });
+  });
+
+  Object.entries(CREDIBILITY_CONTENT).forEach(([id, byLang]) => {
+    LANGS.forEach((lang) => {
+      const text = pick(byLang, lang);
+      if (text.name) out[lang][`${id}_name`] = text.name;
+      if (text.quote) out[lang][`${id}_quote`] = text.quote;
+    });
+  });
+
+  Object.entries(HEAVENLY_CONTENT).forEach(([id, byLang]) => {
+    LANGS.forEach((lang) => {
+      const text = pick(byLang, lang);
+      if (text.name) out[lang][`heavenly_${id}_name`] = text.name;
+      if (text.quote) out[lang][`heavenly_${id}_quote`] = text.quote;
+      if (text.description) out[lang][`heavenly_${id}_description`] = text.description;
+    });
+  });
+
+  Object.entries(BLACKSWAN_CONTENT).forEach(([buildingId, byLang]) => {
+    LANGS.forEach((lang) => {
+      const text = pick(byLang, lang);
+      if (text.title) out[lang][`blackswan_${buildingId}_title`] = text.title;
+      if (text.desc) out[lang][`blackswan_${buildingId}_desc`] = text.desc;
+    });
+  });
+
+  Object.entries(MISC_UPGRADES_CONTENT).forEach(([id, byLang]) => {
+    LANGS.forEach((lang) => {
+      const text = pick(byLang, lang);
+      if (text.name) out[lang][`miscup_${id}_name`] = text.name;
+      if (text.quote) out[lang][`miscup_${id}_quote`] = text.quote;
+      if (text.description) out[lang][`miscup_${id}_description`] = text.description;
+    });
+  });
+
+  Object.entries(EPOCHS_CONTENT).forEach(([id, byLang]) => {
+    LANGS.forEach((lang) => {
+      const text = pick(byLang, lang);
+      if (text.name) out[lang][`epoch_${id}_name`] = text.name;
+      if (text.prefix !== undefined) out[lang][`epoch_${id}_prefix`] = text.prefix;
     });
   });
 

@@ -49,7 +49,7 @@ export function StatsTab({
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          KPI Stats
+          {tr('kpiStatsTab')}
         </button>
         <button
           onClick={() => setStatsSection('log')}
@@ -59,7 +59,7 @@ export function StatsTab({
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          VC Audit Log
+          {tr('auditLogTab')}
         </button>
         <button
           onClick={() => {
@@ -72,7 +72,7 @@ export function StatsTab({
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          🏆 Badges ({unlockedCount})
+          🏆 {tr('badgesTab')} ({unlockedCount})
         </button>
       </div>
 
@@ -83,10 +83,10 @@ export function StatsTab({
           <div className="bg-slate-900 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
             <div>
               <div className="text-xs font-extrabold text-cyan-300 uppercase tracking-wider">
-                Hype Index ({hypePct}%)
+                {tr('hypeIndexLabel')} ({hypePct}%)
               </div>
               <div className="text-[11px] text-slate-400">
-                Unlocked milestones boost Board Syndicate Upgrades!
+                {tr('hypeIndexDesc')}
               </div>
             </div>
             <div className="w-12 h-12 bg-slate-950 rounded-full border-2 border-cyan-500/40 flex items-center justify-center text-cyan-400 font-black text-sm">
@@ -96,35 +96,35 @@ export function StatsTab({
 
           <div className="grid grid-cols-2 gap-2 text-xs font-mono">
             <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-              <div className="text-slate-400 text-[10px]">Current Valuation:</div>
+              <div className="text-slate-400 text-[10px]">{tr('statValuation')}</div>
               <div className="text-emerald-400 font-extrabold text-sm">{formatCurrency(valuation)}</div>
             </div>
             <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-              <div className="text-slate-400 text-[10px]">Lifetime Valuation:</div>
+              <div className="text-slate-400 text-[10px]">{tr('statTotalValuation')}</div>
               <div className="text-cyan-400 font-extrabold text-sm">{formatCurrency(totalValuation)}</div>
             </div>
             <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-              <div className="text-slate-400 text-[10px]">Valuation / sec (VPS):</div>
+              <div className="text-slate-400 text-[10px]">{tr('statVpsLabel')}</div>
               <div className="text-amber-400 font-extrabold text-sm">+{formatCurrency(vps)}</div>
             </div>
             <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-              <div className="text-slate-400 text-[10px]">Valuation / tap:</div>
+              <div className="text-slate-400 text-[10px]">{tr('statPerTapLabel')}</div>
               <div className="text-fuchsia-400 font-extrabold text-sm">+{formatCurrency(clickValue)}</div>
             </div>
             <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-              <div className="text-slate-400 text-[10px]">Total AGI Taps:</div>
+              <div className="text-slate-400 text-[10px]">{tr('statTotalClicks')}</div>
               <div className="text-slate-200 font-extrabold text-sm">{formatNumber(stats.totalClicks)}</div>
             </div>
             <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-              <div className="text-slate-400 text-[10px]">AI Slop Count:</div>
+              <div className="text-slate-400 text-[10px]">{tr('statSlopCountLabel')}</div>
               <div className="text-slate-200 font-extrabold text-sm">{formatNumber(slopCount)}</div>
             </div>
             <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-              <div className="text-slate-400 text-[10px]">GPU Overheats:</div>
-              <div className="text-rose-400 font-extrabold text-sm">{stats.overheatCount} times</div>
+              <div className="text-slate-400 text-[10px]">{tr('statOverheats')}</div>
+              <div className="text-rose-400 font-extrabold text-sm">{stats.overheatCount} {tr('timesLabel')}</div>
             </div>
             <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-              <div className="text-slate-400 text-[10px]">Golden Memes Caught:</div>
+              <div className="text-slate-400 text-[10px]">{tr('statGoldenMemesLabel')}</div>
               <div className="text-amber-400 font-extrabold text-sm">{stats.goldenCaught}</div>
             </div>
           </div>
@@ -164,10 +164,10 @@ export function StatsTab({
           </div>
           <div>
             <h3 className="font-black text-sm uppercase tracking-wider text-slate-100">
-              🏆 Board Certified Badges Wall
+              🏆 {tr('badgesWallTitle')}
             </h3>
             <p className="text-xs text-slate-300 mt-1">
-              Badges freigeschaltet: <span className="text-amber-400 font-mono font-black">{unlockedCount} / {totalCount}</span>
+              {tr('badgesUnlockedLabel')} <span className="text-amber-400 font-mono font-black">{unlockedCount} / {totalCount}</span>
             </p>
           </div>
 
@@ -176,7 +176,7 @@ export function StatsTab({
             className="w-full py-3 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-slate-950 hover:brightness-110 active:scale-95 shadow-xl transition-all flex items-center justify-center gap-2"
           >
             <Icons.Sparkles className="w-4 h-4 text-slate-950" />
-            <span>✨ BADGES POPUP ÖFFNEN ({unlockedCount}/{totalCount})</span>
+            <span>✨ {tr('openBadgesPopup')} ({unlockedCount}/{totalCount})</span>
           </button>
         </div>
       )}

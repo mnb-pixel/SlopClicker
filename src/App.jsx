@@ -93,6 +93,7 @@ export default function App() {
         adState={store.adState}
         startAd={store.startAd}
         claimOfflineEarnings={store.claimOfflineEarnings}
+        t={store.t}
       />
 
       {/* AFK-Report (Punkt 1): >=30min inaktiver Tab */}
@@ -102,6 +103,7 @@ export default function App() {
         startAd={store.startAd}
         claimAfkBonus={store.claimAfkBonus}
         dismissAfkReport={store.dismissAfkReport}
+        t={store.t}
       />
 
       {/* Geplantes Ad-Popup (Punkt 9) */}
@@ -111,6 +113,7 @@ export default function App() {
         watchScheduledAdNow={store.watchScheduledAdNow}
         deferScheduledAd={store.deferScheduledAd}
         scheduledAdPreview={store.scheduledAdPreview}
+        t={store.t}
       />
 
       {/* WEB DESKTOP ALL-IN-ONE VIEW (Everything on 1 Page in 3 Columns) */}
@@ -217,13 +220,14 @@ export default function App() {
                 claimUnlockedScheduledAd={store.claimUnlockedScheduledAd}
                 grantAdPreview={store.grantAdPreview}
                 scheduledAdPreview={store.scheduledAdPreview}
+                t={store.t}
               />
             )}
           </main>
 
           {/* Statischer Werbe-Slot (Banner) über der Tab-Leiste */}
           <div className="px-3 pb-2">
-            <AdBanner variant="leaderboard" label="Werbung" />
+            <AdBanner variant="leaderboard" label={store.t('adPlaceholderLabel')} />
           </div>
 
           {/* 5-Tab Navigation Bar */}
@@ -258,6 +262,7 @@ export default function App() {
       <ManualModal
         isOpen={isManualOpen}
         onClose={() => setIsManualOpen(false)}
+        lang={store.lang}
       />
     </div>
   );

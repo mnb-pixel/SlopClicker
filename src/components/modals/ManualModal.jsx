@@ -1,8 +1,23 @@
 import React from 'react';
-import { BookOpen, X, Sparkles, RotateCw, Flame, ShieldAlert, Cpu, Layers, Zap } from 'lucide-react';
+import { BookOpen, X, Sparkles, RotateCw, Flame, ShieldAlert, Cpu, Zap } from 'lucide-react';
+import { MANUAL_CONTENT } from '../../i18n/content/manual.content';
 
-export function ManualModal({ isOpen, onClose }) {
+// Wandelt **fett markierten** Text in <strong>-Segmente um, damit die Übersetzungs-Strings
+// (siehe manual.content.js) einfache Markdown-Bold-Syntax statt eingebetteter JSX nutzen können.
+function renderRich(text) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    return <React.Fragment key={i}>{part}</React.Fragment>;
+  });
+}
+
+export function ManualModal({ isOpen, onClose, lang = 'de' }) {
   if (!isOpen) return null;
+
+  const m = MANUAL_CONTENT[lang] || MANUAL_CONTENT.en;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
@@ -12,7 +27,7 @@ export function ManualModal({ isOpen, onClose }) {
           <div className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-[#8A6A1F]" />
             <h2 className="font-serif font-black text-lg tracking-wide uppercase text-[#EAE7DA]">
-              Confidential Investor Prospectus
+              {m.modalTitle}
             </h2>
           </div>
           <button
@@ -28,86 +43,66 @@ export function ManualModal({ isOpen, onClose }) {
           {/* Section 1 */}
           <section className="bg-[#14202C]/60 p-4 rounded-xl border border-[#8A6A1F]/30">
             <h3 className="font-serif font-extrabold text-sm text-[#8A6A1F] uppercase mb-2 flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4" /> 1. Startup Scale & Token Generation
+              <Sparkles className="w-4 h-4" /> {m.s1Title}
             </h3>
-            <p className="mb-2">
-              Als Gründer eines bahnbrechenden KI-Startups skalierst du deine Unternehmung von bescheidenen Anfängen bis hin zu unerreichbaren Höhen. Durch manuelles Autorisieren und den Bau automatisierter Systeme steigerst du deinen Unternehmenswert kontinuierlich.
-            </p>
+            <p className="mb-2">{renderRich(m.s1Body1)}</p>
             <ul className="list-disc list-inside space-y-1 text-slate-300">
-              <li><strong>Passives Valuation-Wachstum (Netto-VPS)</strong>: Deine Infrastruktur produziert rund um die Uhr neuen Unternehmenswert.</li>
-              <li><strong>Exakte Bewertung</strong>: Verfolge in Echtzeit jeden einzelnen erwirtschafteten Dollar.</li>
+              <li>{renderRich(m.s1Li1)}</li>
+              <li>{renderRich(m.s1Li2)}</li>
             </ul>
           </section>
 
           {/* Section 2 */}
           <section className="bg-[#14202C]/60 p-4 rounded-xl border border-rose-500/30">
             <h3 className="font-serif font-extrabold text-sm text-rose-400 uppercase mb-2 flex items-center gap-1.5">
-              <Flame className="w-4 h-4 text-rose-500" /> 2. Token Burn & Hype-Dynamik
+              <Flame className="w-4 h-4 text-rose-500" /> {m.s2Title}
             </h3>
-            <p className="mb-2">
-              Je weiter deine Unternehmung wächst, desto höher steigt deine Hype-Stufe. Ein höherer Hype zieht mehr Investoren an, erhöht jedoch auch deine laufenden Betriebskosten und die kontinuierliche <strong>Burn Rate</strong>!
-            </p>
-            <p className="text-slate-300">
-              Deine tatsächliche Netto-Generierung ergibt sich aus dem Gesamtertrag abzüglich der Verbrennungsrate. Steuere dagegen mit gezielten Unternehmensmaßnahmen und strategischen Entscheidungen.
-            </p>
+            <p className="mb-2">{renderRich(m.s2Body1)}</p>
+            <p className="text-slate-300">{renderRich(m.s2Body2)}</p>
           </section>
 
           {/* Section 3 */}
           <section className="bg-[#14202C]/60 p-4 rounded-xl border border-cyan-500/30">
             <h3 className="font-serif font-extrabold text-sm text-cyan-400 uppercase mb-2 flex items-center gap-1.5">
-              <Cpu className="w-4 h-4 text-cyan-400" /> 3. Infrastruktur & Strategie-Portfolio
+              <Cpu className="w-4 h-4 text-cyan-400" /> {m.s3Title}
             </h3>
             <div className="space-y-2 text-slate-300">
-              <div>
-                <strong className="text-cyan-300">AI Engines</strong>: Erweitere deine Infrastruktur stufenweise von einfachen Assistenten bis hin zu gigantischen Rechenzentren.
-              </div>
-              <div>
-                <strong className="text-amber-300">Effizienz-Upgrades</strong>: Optimiere deine Klick-Leistung und vervielfache den Output deiner Systeme.
-              </div>
-              <div>
-                <strong className="text-emerald-300">Corporate Actions</strong>: Nutze Greenwashing-Initiativen zur Reduzierung der Burn Rate oder führe Massenentlassungen zur kurzfristigen Ertragssteigerung durch.
-              </div>
-              <div>
-                <strong className="text-fuchsia-300">Buzzword Portfolio</strong>: Sammele wertvolle Buzzword-Karten verschiedener Seltenheiten, um dein gesamtes Wachstum nachhaltig zu beflügeln.
-              </div>
+              <div>{renderRich(m.s3Li1)}</div>
+              <div>{renderRich(m.s3Li2)}</div>
+              <div>{renderRich(m.s3Li3)}</div>
+              <div>{renderRich(m.s3Li4)}</div>
             </div>
           </section>
 
           {/* Section 4 */}
           <section className="bg-[#14202C]/60 p-4 rounded-xl border border-[#8A6A1F]/30">
             <h3 className="font-serif font-extrabold text-sm text-[#8A6A1F] uppercase mb-2 flex items-center gap-1.5">
-              <RotateCw className="w-4 h-4" /> 4. Pivot Strategy & Epochen-Rotation
+              <RotateCw className="w-4 h-4" /> {m.s4Title}
             </h3>
-            <p className="mb-2">
-              Ab einem gewissen Zuwachs an Unternehmenswert kannst du einen strategischen <strong>Pivot</strong> vollziehen. Engines, Upgrades und Valuation bleiben dabei erhalten — ein Pivot belohnt dich mit wertvoller <strong>Credibility</strong> für den Wertzuwachs seit deinem letzten Pivot und rotiert dein Startup in die nächste Hype-Epoche.
-            </p>
+            <p className="mb-2">{renderRich(m.s4Body1)}</p>
             <ul className="list-disc list-inside space-y-1 text-slate-300 mb-2">
-              <li><strong>😇 Idealisten-Pfad</strong>: Investiere Credibility in nachhaltige Strukturen, um deine Burn Rate dauerhaft zu drosseln.</li>
-              <li><strong>😈 Zyniker-Pfad</strong>: Setze auf aggressives Hype-Wachstum, um deine Erträge massiv zu steigern.</li>
+              <li>{renderRich(m.s4Li1)}</li>
+              <li>{renderRich(m.s4Li2)}</li>
             </ul>
           </section>
 
           {/* Section 5 */}
           <section className="bg-[#14202C]/60 p-4 rounded-xl border border-purple-500/30">
             <h3 className="font-serif font-extrabold text-sm text-purple-300 uppercase mb-2 flex items-center gap-1.5">
-              <Zap className="w-4 h-4 text-purple-400" /> 5. Singularity Ascension & Kosmischer Aufstieg
+              <Zap className="w-4 h-4 text-purple-400" /> {m.s5Title}
             </h3>
-            <p className="mb-2">
-              Erreicht dein Startup gigantische Bewertungshöhen, schaltet sich die <strong>Singularity Ascension</strong> frei. Dieser finale Reset verleiht dir ein höheres Prestige-Level und <strong>Heavenly Chips</strong>.
-            </p>
-            <p className="text-slate-300">
-              Prestige-Level und kosmische Upgrades gewähren dir permanente Vorteile, die über alle zukünftigen Neuanfänge hinweg bestehen bleiben.
-            </p>
+            <p className="mb-2">{renderRich(m.s5Body1)}</p>
+            <p className="text-slate-300">{renderRich(m.s5Body2)}</p>
           </section>
 
           {/* Section 6 */}
           <section className="bg-[#14202C]/60 p-4 rounded-xl border border-amber-500/30">
             <h3 className="font-serif font-extrabold text-sm text-amber-300 uppercase mb-2 flex items-center gap-1.5">
-              <ShieldAlert className="w-4 h-4 text-amber-400" /> 6. Hardware-Thermik & Marktevents
+              <ShieldAlert className="w-4 h-4 text-amber-400" /> {m.s6Title}
             </h3>
             <ul className="list-disc list-inside space-y-1 text-slate-300">
-              <li><strong>GPU-Temperatur</strong>: Zu schnelles Manuelles Autorisieren erhitzt deine Prozessoren. Achte darauf, dass das System nicht überhitzt.</li>
-              <li><strong>Markt-Ereignisse & Krisen</strong>: Nutze spontan auftauchende Marktchancen oder wappne dich gegen unvorhergesehene Turbulenzen.</li>
+              <li>{renderRich(m.s6Li1)}</li>
+              <li>{renderRich(m.s6Li2)}</li>
             </ul>
           </section>
         </div>
@@ -118,7 +113,7 @@ export function ManualModal({ isOpen, onClose }) {
             onClick={onClose}
             className="px-5 py-2 bg-[#8A6A1F] text-slate-950 font-black rounded-xl hover:bg-[#C59B3F] transition-all uppercase tracking-wider text-xs shadow-lg"
           >
-            VERSTANDEN & PROSPEKT SCHLIESSEN
+            {m.closeButton}
           </button>
         </div>
       </div>

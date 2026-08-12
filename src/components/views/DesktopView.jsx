@@ -11,7 +11,7 @@ export function DesktopView({ store, setIsPitchDeckOpen }) {
       {/* LEFT COLUMN: Main GPU Clicker, Heat Bar, Golden Memes, Owned Visual Items Grid (4 cols) */}
       <div className="md:col-span-4 bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-3 shadow-xl sticky top-20">
         <h2 className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-2 text-center border-b border-slate-800 pb-2">
-          ⚡ AGI Core Generator
+          ⚡ {store.t('agiCoreGeneratorTitle')}
         </h2>
         <SlopTab
           handleTapAGI={store.handleTapAGI}
@@ -89,6 +89,7 @@ export function DesktopView({ store, setIsPitchDeckOpen }) {
             claimUnlockedScheduledAd={store.claimUnlockedScheduledAd}
             grantAdPreview={store.grantAdPreview}
             scheduledAdPreview={store.scheduledAdPreview}
+            t={store.t}
           />
         </div>
       </div>
@@ -96,7 +97,7 @@ export function DesktopView({ store, setIsPitchDeckOpen }) {
       {/* RIGHT COLUMN: Store (Buildings & Upgrades) (4 cols) */}
       <div className="md:col-span-4 bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-2 shadow-xl sticky top-20 max-h-[calc(100vh-100px)] overflow-y-auto">
         <h2 className="text-xs font-black uppercase tracking-wider text-cyan-400 p-2 text-center border-b border-slate-800">
-          🏬 AI Infrastructure & Upgrades Shop
+          🏬 {store.t('infraShopTitle')}
         </h2>
         <StoreTab
           valuation={store.valuation}

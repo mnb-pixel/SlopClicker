@@ -148,9 +148,7 @@ export function useGameStore() {
     shadowLucky: false,
   });
 
-  const [logs, setLogs] = useState([
-    { id: 1, timestamp: new Date().toLocaleTimeString(), text: 'System initialized. Welcome to the AI Slop Bubble.', type: 'info' }
-  ]);
+  const [logs, setLogs] = useState([]);
 
   const [particles, setParticles] = useState([]);
 
@@ -161,6 +159,16 @@ export function useGameStore() {
 
   const t = useCallback((key) => {
     return TRANSLATIONS[lang]?.[key] || TRANSLATIONS.en[key] || key;
+  }, [lang]);
+
+  // Wie t(), aber mit {var}-Platzhalter-Ersetzung - für Log-/Toast-Sätze, die dynamische
+  // Werte (Namen, Beträge, Zahlen) an fester Stelle im übersetzten Satz brauchen.
+  const tf = useCallback((key, vars = {}) => {
+    let str = TRANSLATIONS[lang]?.[key] || TRANSLATIONS.en[key] || key;
+    Object.entries(vars).forEach(([k, v]) => {
+      str = str.replaceAll(`{${k}}`, v);
+    });
+    return str;
   }, [lang]);
 
   const addLog = useCallback((text, type = 'info') => {
@@ -222,12 +230,17 @@ export function useGameStore() {
 
   // Load state on mount
   useEffect(() => {
+    // Sprache wird synchron aus dem Save aufgelöst (statt über t()/tf(), die erst nach dem
+    // nächsten Render den frisch gesetzten lang-State sehen würden), damit der allererste
+    // Log-Eintrag direkt in der tatsächlich aktiven Sprache erscheint statt immer in 'de'.
+    let resolvedLang = 'de';
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const data = JSON.parse(saved);
         if (data) {
-          setLang(['de', 'en'].includes(data.lang) ? data.lang : 'de');
+          resolvedLang = ['de', 'en'].includes(data.lang) ? data.lang : 'de';
+          setLang(resolvedLang);
           setStartupName(data.startupName || 'tokenkamin');
           setValuation(data.valuation || 0);
           setTotalValuation(data.totalValuation || 0);
@@ -277,6 +290,7 @@ export function useGameStore() {
     } catch (e) {
       console.error('Error loading save state:', e);
     }
+    addLog((TRANSLATIONS[resolvedLang] || TRANSLATIONS.en).log_systemInit, 'info');
   }, [addLog]);
 
   // Auto-save interval (every 8 seconds, matches concept's autosave cadence).
@@ -580,7 +594,7 @@ export function useGameStore() {
         const next = Math.max(0, prev - coolingRate * deltaSec);
         if (isOverheated && next < 50) {
           setIsOverheated(false);
-          addLog('GPU temperature dropped below 50°C. AGI Button unlocked!', 'success');
+          addLog(tf('log_gpuCooled'), 'success');
         }
         return next;
       });
@@ -644,7 +658,7 @@ export function useGameStore() {
           const lost = Math.max(1, Math.floor(owned * event.lossPct));
           setBuildings((prev) => ({ ...prev, [b.id]: Math.max(0, (prev[b.id] || 0) - lost) }));
           setBlackSwanNextEligible((prev) => ({ ...prev, [b.id]: now + BLACK_SWAN_COOLDOWN_MS }));
-          addLog(`${event.title} - ${t(`building_${b.id}_name`)}: -${lost} (-${Math.round(event.lossPct * 100)}%). ${event.desc}`, 'danger');
+          addLog(`${t(`blackswan_${b.id}_title`)} - ${t(`building_${b.id}_name`)}: -${lost} (-${Math.round(event.lossPct * 100)}%). ${t(`blackswan_${b.id}_desc`)}`, 'danger');
         }
       });
 
@@ -671,7 +685,7 @@ export function useGameStore() {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [vps, burnRate, coolingRate, isOverheated, activeEvent, powerClickSurgeTimer, bubblePopTimer, unlockedAchievements, stats, totalValuation, totalBurned, pivotCount, buildings, blackSwanNextEligible, boughtBuzzwords, pageActivity, addLog, t]);
+  }, [vps, burnRate, coolingRate, isOverheated, activeEvent, powerClickSurgeTimer, bubblePopTimer, unlockedAchievements, stats, totalValuation, totalBurned, pivotCount, buildings, blackSwanNextEligible, boughtBuzzwords, pageActivity, addLog, t, tf]);
 
   // Dynamic Sticky Upgrade Unlock Logic (Cash-based & Owned Engine requirement)
   // Sticky rule: Once unlocked by reaching current cash threshold, upgrades stay unlocked even if cash drops!
@@ -736,7 +750,7 @@ export function useGameStore() {
       if (next >= 100.0) {
         setIsOverheated(true);
         setStats((s) => ({ ...s, overheatCount: s.overheatCount + 1 }));
-        addLog('🔥 GPU OVERHEATED AT 100°C! Cooling initiated (-4°C/s). Button locked until < 50°C.', 'danger');
+        addLog(tf('log_gpuOverheated'), 'danger');
         return 100.0;
       }
       return next;
@@ -751,7 +765,7 @@ export function useGameStore() {
         { id, x: e.clientX, y: e.clientY, text: `+$${Math.floor(earned)}` },
       ]);
     }
-  }, [isOverheated, clickValue, addLog]);
+  }, [isOverheated, clickValue, addLog, tf]);
 
   // Buy Building
   const buyBuilding = useCallback((buildingId) => {
@@ -779,7 +793,7 @@ export function useGameStore() {
     }
 
     if (targetCount <= 0 || valuation < cost) {
-      addLog(`Not enough valuation to purchase ${t(`building_${b.id}_name`)}!`, 'danger');
+      addLog(tf('log_notEnoughForBuilding', { name: t(`building_${b.id}_name`) }), 'danger');
       return;
     }
 
@@ -789,8 +803,8 @@ export function useGameStore() {
       [buildingId]: (prev[buildingId] || 0) + targetCount,
     }));
 
-    addLog(`Purchased ${targetCount}x ${t(`building_${b.id}_name`)} for $${cost.toLocaleString()}!`, 'success');
-  }, [buildings, buyMode, valuation, addLog, t]);
+    addLog(tf('log_purchasedBuilding', { count: targetCount, name: t(`building_${b.id}_name`), cost: cost.toLocaleString() }), 'success');
+  }, [buildings, buyMode, valuation, addLog, t, tf]);
 
   // Buy Upgrade
   const buyUpgrade = useCallback((upgradeId) => {
@@ -798,7 +812,7 @@ export function useGameStore() {
     if (!up || boughtUpgrades.includes(upgradeId)) return;
 
     if (valuation < up.cost) {
-      addLog('Not enough valuation for this upgrade!', 'danger');
+      addLog(tf('log_notEnoughForUpgrade'), 'danger');
       return;
     }
 
@@ -809,9 +823,9 @@ export function useGameStore() {
       setCoolingRate(up.effect.value);
     }
 
-    const name = up.type === 'building' ? t(`upgrade_${up.id}_name`) : up.name;
-    addLog(`Purchased upgrade "${name}"`, 'success');
-  }, [boughtUpgrades, valuation, addLog, t]);
+    const name = up.type === 'building' ? t(`upgrade_${up.id}_name`) : t(`miscup_${up.id}_name`);
+    addLog(tf('log_purchasedUpgrade', { name }), 'success');
+  }, [boughtUpgrades, valuation, addLog, t, tf]);
 
   // Native "BUY ALL" Upgrades Button — only from the same eligible set the tile grid shows
   // (must own >=1 of the building etc.), so this can never buy an upgrade the UI hides.
@@ -821,7 +835,7 @@ export function useGameStore() {
     const affordable = eligible.filter((up) => currentMoney >= up.cost);
 
     if (affordable.length === 0) {
-      addLog('No upgrades available to buy.', 'info');
+      addLog(tf('log_noUpgradesToBuy'), 'info');
       return;
     }
 
@@ -841,8 +855,8 @@ export function useGameStore() {
 
     setValuation(currentMoney);
     setBoughtUpgrades(newBought);
-    addLog(`"BUY ALL" executed! Purchased ${newBought.length - boughtUpgrades.length} upgrades for $${spent.toLocaleString()}!`, 'success');
-  }, [boughtUpgrades, valuation, totalValuation, buildings, addLog]);
+    addLog(tf('log_buyAllExecuted', { count: newBought.length - boughtUpgrades.length, cost: spent.toLocaleString() }), 'success');
+  }, [boughtUpgrades, valuation, totalValuation, buildings, addLog, tf]);
 
   // Dismiss the currently active event banner (purely informational - effects already auto-applied on spawn)
   const dismissEvent = useCallback(() => {
@@ -852,14 +866,14 @@ export function useGameStore() {
   // Toggle Power Click
   const togglePowerClick = useCallback(() => {
     if (powerClicks <= 0) {
-      addLog('No Power Clicks accumulated yet! Earn 1 every 30 minutes.', 'info');
+      addLog(tf('log_noPowerClicks'), 'info');
       return;
     }
     setPowerClicks((prev) => prev - 1);
     setPowerClickActive(true);
     setPowerClickSurgeTimer(20);
-    addLog('⚡ POWER CLICK ACTIVATED! Next taps deal double damage + temporary VPS surge!', 'success');
-  }, [powerClicks, addLog]);
+    addLog(tf('log_powerClickActivated'), 'success');
+  }, [powerClicks, addLog, tf]);
 
   // Ist dieser Ad-Placement-Typ gerade nutzbar (kein aktiver Cooldown)?
   const isAdReady = useCallback((type) => Date.now() >= (adCooldowns[type] || 0), [adCooldowns]);
@@ -879,12 +893,12 @@ export function useGameStore() {
   const startAd = useCallback((type, onComplete) => {
     if (adState) return; // schon eine Ad am Laufen
     if (Date.now() < (adCooldowns[type] || 0)) {
-      addLog('⏳ Diese Ad ist noch im Cooldown!', 'info');
+      addLog(tf('log_adOnCooldown'), 'info');
       return;
     }
 
     setAdState({ type, timer: 3 });
-    addLog('▶️ Watching 3-second Rewarded Ad...', 'info');
+    addLog(tf('log_watchingAd'), 'info');
 
     let count = 3;
     const adInterval = setInterval(() => {
@@ -903,40 +917,40 @@ export function useGameStore() {
         if (type === 'nitrogen') {
           setGpuTemp(0);
           setIsOverheated(false);
-          const msg = '🧊 Bonus erhalten: Nitrogen Cooling! GPU auf 0°C + 2x Click Power!';
+          const msg = tf('log_bonusNitrogen');
           addLog(msg, 'success');
           flashAdReward(msg);
         } else if (type === 'grant') {
           const reward = grantAdPreview;
           setValuation((prev) => prev + reward);
           setTotalValuation((prev) => prev + reward);
-          const msg = `💰 Bonus erhalten: Government AI Grant +$${Math.floor(reward).toLocaleString()}!`;
+          const msg = tf('log_bonusGrant', { amount: Math.floor(reward).toLocaleString() });
           addLog(msg, 'success');
           flashAdReward(msg);
         } else if (type === 'power_click') {
           setPowerClicks((prev) => prev + 1);
-          const msg = '⚡ Bonus erhalten: +1 Power Click!';
+          const msg = tf('log_bonusPowerClick');
           addLog(msg, 'success');
           flashAdReward(msg);
         } else if (type === 'ascend_boost') {
           setPendingAscendBoost(true);
-          const msg = '🚀 Bonus erhalten: Nächste Singularity Ascension gewährt +20% Heavenly Chips!';
+          const msg = tf('log_bonusAscendBoost');
           addLog(msg, 'success');
           flashAdReward(msg);
         } else if (type === 'pivot_boost') {
           setPendingPivotBoost(true);
-          const msg = '🚀 Bonus erhalten: Nächster Pivot gewährt +20% Credibility!';
+          const msg = tf('log_bonusPivotBoost');
           addLog(msg, 'success');
           flashAdReward(msg);
         } else if (type === 'golden_extend') {
           setActiveEvent((prev) => (prev && prev.kind === 'golden' ? { ...prev, expiresAt: prev.expiresAt + 15000 } : prev));
-          const msg = '✨ Bonus erhalten: Golden Headline um 15s verlängert!';
+          const msg = tf('log_bonusGoldenExtend');
           addLog(msg, 'success');
           flashAdReward(msg);
         } else if (type === 'bubble_clear') {
           setActiveEvent((prev) => (prev && prev.kind === 'bubble' ? null : prev));
           setBubblePopTimer(0);
-          const msg = '🛡️ Bonus erhalten: Bubble-Pop-Debuff sofort beendet!';
+          const msg = tf('log_bonusBubbleClear');
           addLog(msg, 'success');
           flashAdReward(msg);
         }
@@ -944,7 +958,7 @@ export function useGameStore() {
         if (onComplete) onComplete();
       }
     }, 1000);
-  }, [addLog, adState, adCooldowns, grantAdPreview, flashAdReward]);
+  }, [addLog, adState, adCooldowns, grantAdPreview, flashAdReward, tf]);
 
   // Offline-Ertrag einsammeln (optional per Ad verdoppelt)
   const claimOfflineEarnings = useCallback((doubled = false) => {
@@ -953,10 +967,10 @@ export function useGameStore() {
     setValuation((prev) => prev + amount);
     setTotalValuation((prev) => prev + amount);
     setOfflineReport(null);
-    const msg = `💰 ${doubled ? 'Bonus erhalten: ' : ''}Offline-Ertrag eingesammelt: +$${Math.floor(amount).toLocaleString()}${doubled ? ' (2x per Ad)' : ''}!`;
+    const msg = tf(doubled ? 'log_offlineEarningsDoubled' : 'log_offlineEarnings', { amount: Math.floor(amount).toLocaleString() });
     addLog(msg, 'success');
     if (doubled) flashAdReward(msg);
-  }, [offlineReport, addLog, flashAdReward]);
+  }, [offlineReport, addLog, flashAdReward, tf]);
 
   // AFK-Report schließen (Punkt 1): "nur einsammeln" (nichts extra, Wert wurde schon
   // während der Abwesenheit live gutgeschrieben) oder per Ad verdoppeln.
@@ -968,11 +982,11 @@ export function useGameStore() {
     if (!afkReport) return;
     setValuation((prev) => prev + afkReport.amount);
     setTotalValuation((prev) => prev + afkReport.amount);
-    const msg = `💰 Bonus erhalten: AFK-Bonus per Ad verdoppelt: +$${Math.floor(afkReport.amount).toLocaleString()}!`;
+    const msg = tf('log_afkBonusDoubled', { amount: Math.floor(afkReport.amount).toLocaleString() });
     addLog(msg, 'success');
     flashAdReward(msg);
     setAfkReport(null);
-  }, [afkReport, addLog, flashAdReward]);
+  }, [afkReport, addLog, flashAdReward, tf]);
 
   // Geplantes Ad-Popup (Punkt 9): jetzt ansehen (sofortige Belohnung) oder auf später
   // verschieben (Button erscheint im Menü, keine feste Verfallszeit).
@@ -982,11 +996,11 @@ export function useGameStore() {
       const reward = scheduledAdPreview;
       setValuation((prev) => prev + reward);
       setTotalValuation((prev) => prev + reward);
-      const msg = `💰 Bonus erhalten: Bonus-Werbung eingelöst! +$${Math.floor(reward).toLocaleString()}!`;
+      const msg = tf('log_scheduledAdRedeemed', { amount: Math.floor(reward).toLocaleString() });
       addLog(msg, 'success');
       flashAdReward(msg);
     });
-  }, [scheduledAdPreview, addLog, startAd, flashAdReward]);
+  }, [scheduledAdPreview, addLog, startAd, flashAdReward, tf]);
 
   const deferScheduledAd = useCallback(() => {
     setPendingScheduledAd(false);
@@ -999,11 +1013,11 @@ export function useGameStore() {
       const reward = scheduledAdPreview;
       setValuation((prev) => prev + reward);
       setTotalValuation((prev) => prev + reward);
-      const msg = `💰 Bonus erhalten: Bonus-Werbung eingelöst! +$${Math.floor(reward).toLocaleString()}!`;
+      const msg = tf('log_scheduledAdRedeemed', { amount: Math.floor(reward).toLocaleString() });
       addLog(msg, 'success');
       flashAdReward(msg);
     });
-  }, [scheduledAdPreview, addLog, startAd, flashAdReward]);
+  }, [scheduledAdPreview, addLog, startAd, flashAdReward, tf]);
 
   // Chips, die eine Ascension JETZT bringen würde (ohne Ad-Boost) - von SpecialTab fürs
   // Anzeigen/Deaktivieren des Buttons genutzt, damit die Formel nur an einer Stelle steht.
@@ -1019,7 +1033,7 @@ export function useGameStore() {
     // Prestige (=permanenter VPS-Bonus) geschenkt bekommen, ohne neue Lifetime-Valuation
     // dafür erwirtschaftet zu haben (Exploit + unbegrenzter Zinseszins-Effekt).
     if (earnedChips <= 0) {
-      addLog('Singularity Ascension requires enough NEW lifetime valuation to earn at least 1 Heavenly Chip!', 'warning');
+      addLog(tf('log_notEnoughForAscend'), 'warning');
       return;
     }
 
@@ -1041,8 +1055,8 @@ export function useGameStore() {
 
     if (pendingAscendBoost) setPendingAscendBoost(false);
 
-    addLog(`🌌 SINGULARITY ASCENSION EXECUTED! Earned ${earnedChips} Heavenly Chips!${pendingAscendBoost ? ' (inkl. +20% Ad-Bonus)' : ''}`, 'achievement');
-  }, [totalValuation, addLog, pendingAscendBoost, pendingHeavenlyChips]);
+    addLog(tf('log_ascendExecuted', { chips: earnedChips }) + (pendingAscendBoost ? ` ${tf('log_adBonusSuffix')}` : ''), 'achievement');
+  }, [totalValuation, addLog, pendingAscendBoost, pendingHeavenlyChips, tf]);
 
   // Pivot is a milestone, not a reset: Engines, Upgrades and Valuation all stay. Credibility
   // is earned on lifetime valuation GAINED SINCE THE LAST PIVOT.
@@ -1058,7 +1072,7 @@ export function useGameStore() {
 
   const pivot = useCallback(() => {
     if (pivotCredGain < MIN_PIVOT_CRED_GAIN) {
-      addLog(`Pivot requires at least ${MIN_PIVOT_CRED_GAIN} NEW Credibility earned since your last Pivot!`, 'warning');
+      addLog(tf('log_notEnoughForPivot', { min: MIN_PIVOT_CRED_GAIN }), 'warning');
       return;
     }
     const nextEpoch = (epoch + 1) % EPOCHS.length;
@@ -1074,8 +1088,8 @@ export function useGameStore() {
     setValuationAtLastPivot(totalValuation);
     if (pendingPivotBoost) setPendingPivotBoost(false);
 
-    addLog(`🔄 PIVOT EXECUTED! Epoch rotated to ${EPOCHS[nextEpoch].name}! Earned +${pivotCredGain} Credibility! Credibility-Baum wurde zurückgesetzt.${pendingPivotBoost ? ' (inkl. +20% Ad-Bonus)' : ''}`, 'achievement');
-  }, [pivotCredGain, totalValuation, epoch, addLog, pendingPivotBoost]);
+    addLog(tf('log_pivotExecuted', { epoch: t(`epoch_${EPOCHS[nextEpoch].id}_name`), cred: pivotCredGain }) + (pendingPivotBoost ? ` ${tf('log_adBonusSuffix')}` : ''), 'achievement');
+  }, [pivotCredGain, totalValuation, epoch, addLog, pendingPivotBoost, t, tf]);
 
   // Buy Buzzword Card Directly
   const buyBuzzword = useCallback((buzzId) => {
@@ -1083,15 +1097,15 @@ export function useGameStore() {
     if (!bw || boughtBuzzwords.includes(buzzId)) return false;
 
     if (valuation < bw.cost) {
-      addLog(`Nicht genug Valuation für Buzzword "${bw.name}"!`, 'danger');
+      addLog(tf('log_notEnoughForBuzzword', { name: bw.name }), 'danger');
       return false;
     }
 
     setValuation((prev) => prev - bw.cost);
     setBoughtBuzzwords((prev) => [...prev, buzzId]);
-    addLog(`✨ Buzzword-Karte "${bw.name}" (+${Math.round(bw.bonus * 100)}% VPS) ins Album gelegt!`, 'success');
+    addLog(tf('log_buzzwordAdded', { name: bw.name, pct: Math.round(bw.bonus * 100) }), 'success');
     return true;
-  }, [boughtBuzzwords, valuation, addLog]);
+  }, [boughtBuzzwords, valuation, addLog, tf]);
 
   // Buy Trading Card Booster Pack. Cost is deducted AND the card is committed to
   // boughtBuzzwords in the same call, so autosave/unmount between purchase and the
@@ -1102,7 +1116,7 @@ export function useGameStore() {
   const buyBoosterPack = useCallback(() => {
     const uncollected = BUZZWORDS_DATA.filter((bw) => !boughtBuzzwords.includes(bw.id));
     if (uncollected.length === 0) {
-      addLog('Du hast bereits alle 80 Buzzword-Karten im Sammelalbum vervollständigt!', 'info');
+      addLog(tf('log_albumComplete'), 'info');
       return null;
     }
 
@@ -1110,7 +1124,7 @@ export function useGameStore() {
     const packCost = Math.floor(600 * Math.pow(1.20, boughtBuzzwords.length));
 
     if (valuation < packCost) {
-      addLog(`Nicht genug Valuation für ein Trading Card Booster Pack ($${packCost.toLocaleString()})!`, 'danger');
+      addLog(tf('log_notEnoughForBoosterPack', { cost: packCost.toLocaleString() }), 'danger');
       return null;
     }
 
@@ -1121,7 +1135,7 @@ export function useGameStore() {
     setValuation((prev) => prev - packCost);
 
     return pulledCard;
-  }, [boughtBuzzwords, valuation, addLog]);
+  }, [boughtBuzzwords, valuation, addLog, tf]);
 
   // Add Pulled Card to Album
   const addCardToAlbum = useCallback((cardId) => {
@@ -1129,9 +1143,9 @@ export function useGameStore() {
     const bw = BUZZWORDS_DATA.find((item) => item.id === cardId);
     setBoughtBuzzwords((prev) => [...prev, cardId]);
     if (bw) {
-      addLog(`🎴 Buzzword-Karte "${bw.name}" (+${Math.round(bw.bonus * 100)}% VPS) ins Album einsortiert!`, 'achievement');
+      addLog(tf('log_buzzwordSorted', { name: bw.name, pct: Math.round(bw.bonus * 100) }), 'achievement');
     }
-  }, [boughtBuzzwords, addLog]);
+  }, [boughtBuzzwords, addLog, tf]);
 
   // Buy Corporate Greenwashing & Layoff Action
   const buyGreenwashingLayoff = useCallback((itemId) => {
@@ -1143,14 +1157,14 @@ export function useGameStore() {
     const cost = getCorporateActionCost(item, baseCost, boughtGreenwashingLayoffs.length);
 
     if (valuation < cost) {
-      addLog('Not enough valuation for this action!', 'danger');
+      addLog(tf('log_notEnoughForAction'), 'danger');
       return;
     }
 
     setValuation((prev) => prev - cost);
     setBoughtGreenwashingLayoffs((prev) => [...prev, itemId]);
-    addLog(`Executed Action "${t(`gw_${itemId}_name`)}"`, 'success');
-  }, [boughtGreenwashingLayoffs, valuation, addLog, t]);
+    addLog(tf('log_executedAction', { name: t(`gw_${itemId}_name`) }), 'success');
+  }, [boughtGreenwashingLayoffs, valuation, addLog, t, tf]);
 
   // Buy Idealist Path Level
   const buyIdealistLevel = useCallback(() => {
@@ -1159,14 +1173,14 @@ export function useGameStore() {
     const cost = Math.pow(CREDIBILITY_LEVEL_COST_BASE, idealistLevel);
 
     if (credibility < cost) {
-      addLog(`Not enough Credibility for Idealist level ${idealistLevel + 1}!`, 'danger');
+      addLog(tf('log_notEnoughForIdealist', { level: idealistLevel + 1 }), 'danger');
       return;
     }
 
     setCredibility((prev) => prev - cost);
     setIdealistLevel((prev) => prev + 1);
-    addLog(`Unlocked Idealist Node "${nextNode.name}"!`, 'success');
-  }, [idealistLevel, credibility, addLog]);
+    addLog(tf('log_unlockedIdealistNode', { name: t(`idealist_${nextNode.level}_name`) }), 'success');
+  }, [idealistLevel, credibility, addLog, t, tf]);
 
   // Buy Cynic Path Level
   const buyCynicLevel = useCallback(() => {
@@ -1175,14 +1189,14 @@ export function useGameStore() {
     const cost = Math.pow(CREDIBILITY_LEVEL_COST_BASE, cynicLevel);
 
     if (credibility < cost) {
-      addLog(`Not enough Credibility for Cynic level ${cynicLevel + 1}!`, 'danger');
+      addLog(tf('log_notEnoughForCynic', { level: cynicLevel + 1 }), 'danger');
       return;
     }
 
     setCredibility((prev) => prev - cost);
     setCynicLevel((prev) => prev + 1);
-    addLog(`Unlocked Cynic Node "${nextNode.name}"!`, 'success');
-  }, [cynicLevel, credibility, addLog]);
+    addLog(tf('log_unlockedCynicNode', { name: t(`cynic_${nextNode.level}_name`) }), 'success');
+  }, [cynicLevel, credibility, addLog, t, tf]);
 
   // Theme Mode (SEC Prospectus vs Cyberpunk) - explizite Nutzer-Entscheidung, wird gespeichert
   const toggleThemeMode = useCallback(() => {
@@ -1195,14 +1209,14 @@ export function useGameStore() {
     if (!up || boughtHeavenlyUpgrades.includes(upgradeId)) return;
 
     if (heavenlyChips < up.chipsCost) {
-      addLog(`Not enough Heavenly Chips for "${up.name}"!`, 'danger');
+      addLog(tf('log_notEnoughForHeavenly', { name: t(`heavenly_${up.id}_name`) }), 'danger');
       return;
     }
 
     setHeavenlyChips((prev) => prev - up.chipsCost);
     setBoughtHeavenlyUpgrades((prev) => [...prev, upgradeId]);
-    addLog(`Purchased Heavenly Upgrade "${up.name}"!`, 'success');
-  }, [boughtHeavenlyUpgrades, heavenlyChips, addLog]);
+    addLog(tf('log_purchasedHeavenly', { name: t(`heavenly_${up.id}_name`) }), 'success');
+  }, [boughtHeavenlyUpgrades, heavenlyChips, addLog, t, tf]);
 
   const hasAiDomainBonus = useMemo(() => {
     return (startupName || '').trim().toLowerCase().endsWith('.ai');
@@ -1242,11 +1256,11 @@ export function useGameStore() {
     setOfflineReport(null);
     setPendingAscendBoost(false);
     setPendingPivotBoost(false);
-    addLog('Save data completely wiped. Starting fresh startup round!', 'danger');
-  }, [addLog]);
+    addLog(tf('log_saveWiped'), 'danger');
+  }, [addLog, tf]);
 
   return {
-    lang, setLang, t,
+    lang, setLang, t, tf,
     startupName, setStartupName, hasAiDomainBonus,
     valuation, totalValuation, totalBurned, slopCount,
     gpuTemp, isOverheated, coolingRate,

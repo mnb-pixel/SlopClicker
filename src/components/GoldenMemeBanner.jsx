@@ -11,7 +11,7 @@ export function GoldenMemeBanner({ activeEvent, dismissEvent, adState, startAd, 
   const title = tr(`event_${activeEvent.id}_title`);
   const desc = tr(`event_${activeEvent.id}_desc`);
   const adType = isBubble ? 'bubble_clear' : 'golden_extend';
-  const adLabel = isBubble ? 'Debuff sofort beenden' : 'Event um 15s verlängern';
+  const adLabel = isBubble ? tr('endDebuffLabel') : tr('extendEventLabel');
   const isAdPlaying = adState?.type === adType;
   const adReady = !startAd || !isAdReady || isAdReady(adType);
 
@@ -71,7 +71,7 @@ export function GoldenMemeBanner({ activeEvent, dismissEvent, adState, startAd, 
             }`}
           >
             <Tv className="w-3.5 h-3.5" />
-            {isAdPlaying ? `Ad läuft... (${adState.timer}s)` : `Video ansehen: ${adLabel}`}
+            {isAdPlaying ? `${tr('adPlaying')} (${adState.timer}s)` : `${tr('watchAdPrefix')} ${adLabel}`}
           </button>
         )}
       </div>

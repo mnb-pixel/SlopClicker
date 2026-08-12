@@ -71,7 +71,7 @@ export function Header({
         )}
 
         {/* Financial Newswire Ticker: live game events mixed with satirical filler headlines */}
-        <NewsTicker logs={logs} lang={lang} hypeTier={hypeTier} burnRate={burnRate} isSecTheme={isSecTheme} />
+        <NewsTicker logs={logs} lang={lang} hypeTier={hypeTier} burnRate={burnRate} isSecTheme={isSecTheme} t={t} />
 
         {/* Top Row: Startup Name, Theme Switcher & View Mode */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -89,7 +89,7 @@ export function Header({
               <button type="submit" className={`px-2 py-0.5 rounded text-xs font-bold ${
                 isSecTheme ? 'bg-[#8A6A1F] text-slate-950' : 'bg-cyan-500 text-slate-950'
               }`}>
-                Save
+                {tr('saveLabel')}
               </button>
             </form>
           ) : (
@@ -111,7 +111,7 @@ export function Header({
               {hasAiDomainBonus && (
                 <span className="bg-amber-400/20 text-amber-300 border border-amber-400/60 font-mono text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md shadow-amber-500/20 animate-pulse">
                   <Sparkles className="w-3 h-3 text-amber-300" />
-                  <span>.AI HYPE BONUS (+10% VPS)</span>
+                  <span>{tr('aiHypeBonusLabel')}</span>
                 </span>
               )}
             </div>
@@ -122,7 +122,7 @@ export function Header({
             {/* Collapse/Expand Toggle */}
             <button
               onClick={() => setButtonsCollapsed((prev) => !prev)}
-              title={buttonsCollapsed ? 'Buttons einblenden' : 'Buttons ausblenden'}
+              title={buttonsCollapsed ? tr('showButtonsTitle') : tr('hideButtonsTitle')}
               className="p-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-500 text-xs transition-all flex items-center justify-center"
             >
               {buttonsCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
@@ -156,11 +156,11 @@ export function Header({
             {/* Top Bar Prominent Virality SHARE Button - immer sichtbar */}
             <button
               onClick={onOpenPitchDeck}
-              title="Share Startup Pitch Deck"
+              title={tr('sharePitchDeckTitle')}
               className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-400 via-fuchsia-500 to-cyan-400 text-slate-950 hover:brightness-110 active:scale-95 shadow-md shadow-fuchsia-500/20 transition-all border border-amber-300/60"
             >
               <Share2 className="w-3.5 h-3.5 text-slate-950" />
-              <span>🚀 SHARE</span>
+              <span>🚀 {tr('shareLabel')}</span>
             </button>
           </div>
         </div>
@@ -169,7 +169,7 @@ export function Header({
         <div className="text-center my-0.5">
           <div className="text-[11px] uppercase tracking-widest font-bold flex items-center justify-center gap-1 opacity-80">
             <Sparkles className={`w-3.5 h-3.5 ${isSecTheme ? 'text-[#8A6A1F]' : 'text-cyan-400'}`} />
-            Valuation ($) • Hype Tier {hypeTier}/10
+            {tr('valuationHypeTierLabel')} {hypeTier}/10
           </div>
           <div className={`text-3xl md:text-4xl font-black tracking-tight font-mono ${
             isSecTheme ? 'text-[#38512E]' : 'text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.3)]'
@@ -196,15 +196,15 @@ export function Header({
           <div className="flex justify-between items-center text-xs mb-1 font-mono">
             <span className={`flex items-center gap-1 font-bold ${textColor}`}>
               <Flame className="w-3.5 h-3.5" />
-              GPU Heat: {gpuTemp.toFixed(1)}°C
+              {tr('gpuHeatLabel')} {gpuTemp.toFixed(1)}°C
             </span>
             {isOverheated ? (
               <span className="text-rose-500 font-extrabold flex items-center gap-1 animate-pulse">
-                <ShieldAlert className="w-3.5 h-3.5" /> OVERHEATED! (Cooling to 50°C)
+                <ShieldAlert className="w-3.5 h-3.5" /> {tr('overheatedLabel')}
               </span>
             ) : (
               <span className="opacity-70 text-[10px]">
-                {gpuTemp < 50 ? 'Optimal' : gpuTemp < 85 ? 'Warm' : 'CRITICAL'}
+                {gpuTemp < 50 ? tr('tempOptimal') : gpuTemp < 85 ? tr('tempWarm') : tr('tempCritical')}
               </span>
             )}
           </div>

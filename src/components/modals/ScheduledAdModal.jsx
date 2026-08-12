@@ -6,9 +6,10 @@ import { formatCurrency } from '../../utils/formatters';
 // Punkt 9: Popups zu festen Zeitpunkten seit App-Start (5min, 15min, 30min, ...), die eine
 // Rewarded Ad anbieten. "Später" schaltet statt einer harten Zeitgrenze einen Button im
 // Menü frei, der jederzeit nachträglich eingelöst werden kann.
-export function ScheduledAdModal({ pendingScheduledAd, adState, watchScheduledAdNow, deferScheduledAd, scheduledAdPreview = 0 }) {
+export function ScheduledAdModal({ pendingScheduledAd, adState, watchScheduledAdNow, deferScheduledAd, scheduledAdPreview = 0, t }) {
   if (!pendingScheduledAd) return null;
 
+  const tr = t || ((k) => k);
   const isAdPlaying = !!adState && adState.type === 'scheduled_bonus';
 
   return createPortal(
@@ -20,17 +21,17 @@ export function ScheduledAdModal({ pendingScheduledAd, adState, watchScheduledAd
 
         <div>
           <h2 className="text-base font-black uppercase tracking-wide text-slate-100">
-            Bonus-Werbung verfügbar
+            {tr('bonusAdAvailable')}
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Schau dir jetzt ein kurzes Video an und erhalte +{formatCurrency(scheduledAdPreview)}, oder hol es dir später aus dem Menü.
+            {tr('scheduledAdDesc').replace('{amount}', formatCurrency(scheduledAdPreview))}
           </p>
         </div>
 
         {isAdPlaying ? (
           <div className="w-full bg-slate-950 p-3 rounded-xl border border-amber-500 text-center animate-pulse">
             <div className="font-black text-xs text-amber-300">
-              Ad läuft... ({adState.timer}s)
+              {tr('adPlaying')} ({adState.timer}s)
             </div>
           </div>
         ) : (
@@ -40,14 +41,14 @@ export function ScheduledAdModal({ pendingScheduledAd, adState, watchScheduledAd
               className="w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 to-fuchsia-500 text-slate-950 hover:brightness-110 active:scale-95 shadow-xl transition-all flex items-center justify-center gap-2"
             >
               <Tv className="w-4 h-4" />
-              Jetzt ansehen
+              {tr('watchNowLabel')}
             </button>
             <button
               onClick={deferScheduledAd}
               className="w-full py-2 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5"
             >
               <Clock className="w-3.5 h-3.5" />
-              Später (Button erscheint im Menü)
+              {tr('laterMenuLabel')}
             </button>
           </div>
         )}

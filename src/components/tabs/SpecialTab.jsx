@@ -42,21 +42,22 @@ export function SpecialTab({
     if (pendingActive) {
       return (
         <div className="mt-2 text-[10px] font-mono font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/40 rounded-lg px-2 py-1.5 text-center">
-          ✓ +20% Ad-Bonus aktiv für nächste Ausführung
+          ✓ {tr('adBonusActive')}
         </div>
       );
     }
     if (adState?.type === type) {
       return (
         <div className="mt-2 text-[10px] font-mono font-bold text-amber-300 bg-slate-950/80 border border-amber-500 rounded-lg px-2 py-1.5 text-center animate-pulse">
-          Ad läuft... ({adState.timer}s)
+          {tr('adPlaying')} ({adState.timer}s)
         </div>
       );
     }
     if (isAdReady && !isAdReady(type)) {
+      const mins = getAdCooldownRemaining ? Math.ceil(getAdCooldownRemaining(type) / 60) : 0;
       return (
         <div className="mt-2 text-[10px] text-slate-400 font-mono text-center">
-          Ad-Bonus in {getAdCooldownRemaining ? Math.ceil(getAdCooldownRemaining(type) / 60) : 0}min wieder verfügbar
+          {tr('adBonusCooldown').replace('{min}', mins)}
         </div>
       );
     }
@@ -134,7 +135,7 @@ export function SpecialTab({
               </h2>
             </div>
             <span className="text-[10px] font-mono font-bold bg-[#8A6A1F] text-slate-950 px-2 py-0.5 rounded">
-              {currentEpoch.name}
+              {tr(`epoch_${currentEpoch.id}_name`)}
             </span>
           </div>
 
@@ -163,9 +164,9 @@ export function SpecialTab({
             }`}
           >
             <Icons.RotateCw className="w-4 h-4" />
-            {tr('executePivot')}{credGain} Credibility & Rotate Epoch)
+            {tr('executePivot')}{credGain}{tr('pivotExecuteSuffix')}
           </button>
-          {renderAdBoost('pivot_boost', `Video ansehen: +20% Credibility (+${Math.max(0, Math.floor(credGain * 1.2) - credGain)} mehr)`, pendingPivotBoost)}
+          {renderAdBoost('pivot_boost', tr('watchAdCredBoost').replace('{amount}', Math.max(0, Math.floor(credGain * 1.2) - credGain)), pendingPivotBoost)}
         </div>
       )}
 
@@ -173,8 +174,8 @@ export function SpecialTab({
       {activePathTab === 'idealist' && (
         <div className="flex flex-col gap-2">
           <div className="bg-emerald-950/40 p-3 rounded-xl border border-emerald-500/40 text-xs mb-2">
-            <div className="font-extrabold text-emerald-300 mb-0.5">Idealist Credibility Path</div>
-            <div className="text-[#EAE7DA]/80">Unlocks ethical practices that permanently lower your Token Burn Rate!</div>
+            <div className="font-extrabold text-emerald-300 mb-0.5">{tr('idealistTitle')}</div>
+            <div className="text-[#EAE7DA]/80">{tr('idealistDesc')}</div>
           </div>
 
           {IDEALIST_PATH.slice(0, idealistLevel + 1).map((node, idx) => {
@@ -182,7 +183,8 @@ export function SpecialTab({
             const isNext = idx === idealistLevel;
             const cost = Math.pow(CREDIBILITY_LEVEL_COST_BASE, idx);
             const canAfford = credibility >= cost && isNext;
-            const nodeName = `${currentEpoch.prefix}${node.name}`;
+            const nodeName = `${tr(`epoch_${currentEpoch.id}_prefix`)}${tr(`idealist_${node.level}_name`)}`;
+            const nodeQuote = tr(`idealist_${node.level}_quote`);
 
             return (
               <div
@@ -202,11 +204,11 @@ export function SpecialTab({
                   <div>
                     <div className="font-extrabold text-xs text-slate-100 flex items-center gap-1.5">
                       <span>Level {node.level}: {nodeName}</span>
-                      {isUnlocked && <span className="bg-emerald-500/20 text-emerald-300 text-[9px] px-1 rounded font-mono font-bold">UNLOCKED</span>}
+                      {isUnlocked && <span className="bg-emerald-500/20 text-emerald-300 text-[9px] px-1 rounded font-mono font-bold">{tr('unlockedBadge')}</span>}
                     </div>
-                    <div className="text-[11px] text-slate-400 italic">"{node.quote}"</div>
+                    <div className="text-[11px] text-slate-400 italic">"{nodeQuote}"</div>
                     <div className="text-[10px] text-emerald-400 font-mono font-bold mt-0.5">
-                      Burn Delta: {(node.burnDelta * 100).toFixed(1)}% {node.vpsBonus > 0 && `| VPS: +${Math.round(node.vpsBonus * 100)}%`}
+                      {tr('burnDeltaLabel')}: {(node.burnDelta * 100).toFixed(1)}% {node.vpsBonus > 0 && `| VPS: +${Math.round(node.vpsBonus * 100)}%`}
                     </div>
                   </div>
                 </div>
@@ -221,7 +223,7 @@ export function SpecialTab({
                         : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                     }`}
                   >
-                    {cost.toFixed(1)} Cred
+                    {cost.toFixed(1)} {tr('credUnit')}
                   </button>
                 )}
               </div>
@@ -234,8 +236,8 @@ export function SpecialTab({
       {activePathTab === 'cynic' && (
         <div className="flex flex-col gap-2">
           <div className="bg-rose-950/40 p-3 rounded-xl border border-rose-500/40 text-xs mb-2">
-            <div className="font-extrabold text-rose-300 mb-0.5">Cynic Credibility Path</div>
-            <div className="text-[#EAE7DA]/80">Aggressive hype growth! Skyrockets VPS but increases Burn Rate risk!</div>
+            <div className="font-extrabold text-rose-300 mb-0.5">{tr('cynicTitle')}</div>
+            <div className="text-[#EAE7DA]/80">{tr('cynicDesc')}</div>
           </div>
 
           {CYNIC_PATH.slice(0, cynicLevel + 1).map((node, idx) => {
@@ -243,7 +245,8 @@ export function SpecialTab({
             const isNext = idx === cynicLevel;
             const cost = Math.pow(CREDIBILITY_LEVEL_COST_BASE, idx);
             const canAfford = credibility >= cost && isNext;
-            const nodeName = `${currentEpoch.prefix}${node.name}`;
+            const nodeName = `${tr(`epoch_${currentEpoch.id}_prefix`)}${tr(`cynic_${node.level}_name`)}`;
+            const nodeQuote = tr(`cynic_${node.level}_quote`);
 
             return (
               <div
@@ -263,11 +266,11 @@ export function SpecialTab({
                   <div>
                     <div className="font-extrabold text-xs text-slate-100 flex items-center gap-1.5">
                       <span>Level {node.level}: {nodeName}</span>
-                      {isUnlocked && <span className="bg-rose-500/20 text-rose-300 text-[9px] px-1 rounded font-mono font-bold">UNLOCKED</span>}
+                      {isUnlocked && <span className="bg-rose-500/20 text-rose-300 text-[9px] px-1 rounded font-mono font-bold">{tr('unlockedBadge')}</span>}
                     </div>
-                    <div className="text-[11px] text-slate-400 italic">"{node.quote}"</div>
+                    <div className="text-[11px] text-slate-400 italic">"{nodeQuote}"</div>
                     <div className="text-[10px] text-rose-400 font-mono font-bold mt-0.5">
-                      VPS: +{Math.round(node.vpsBonus * 100)}% {node.burnDelta > 0 && `| Burn: +${(node.burnDelta * 100).toFixed(1)}%`}
+                      VPS: +{Math.round(node.vpsBonus * 100)}% {node.burnDelta > 0 && `| ${tr('burnLabel')}: +${(node.burnDelta * 100).toFixed(1)}%`}
                     </div>
                   </div>
                 </div>
@@ -282,7 +285,7 @@ export function SpecialTab({
                         : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                     }`}
                   >
-                    {cost.toFixed(1)} Cred
+                    {cost.toFixed(1)} {tr('credUnit')}
                   </button>
                 )}
               </div>
@@ -312,27 +315,27 @@ export function SpecialTab({
             <div className="bg-gradient-to-br from-purple-950 via-slate-900 to-indigo-950 p-4 rounded-2xl border-2 border-purple-500/40 shadow-2xl mb-6 relative overflow-hidden group">
               <img
                 src="/singularity_prestige_meme.jpg"
-                alt="Singularity Ascension Portal"
+                alt={tr('ascendTitle')}
                 className="absolute inset-0 w-full h-full object-cover opacity-25 group-hover:opacity-40 transition-opacity"
               />
 
               <div className="relative z-10 flex items-center gap-2 mb-2">
                 <Icons.Sparkles className="w-6 h-6 text-purple-400 animate-pulse" />
                 <h2 className="text-lg font-black tracking-wide text-purple-200 uppercase">
-                  Singularity Ascension
+                  {tr('ascendTitle')}
                 </h2>
               </div>
 
               <div className="relative z-10 grid grid-cols-2 gap-2 bg-slate-950/90 p-3 rounded-xl border border-purple-500/30 mb-4 text-xs font-mono">
                 <div>
-                  <div className="text-slate-400 text-[10px]">Prestige Level:</div>
+                  <div className="text-slate-400 text-[10px]">{tr('prestigeLevelText')}</div>
                   <div className="text-purple-300 font-extrabold text-base">+{prestigeLevel}</div>
-                  <div className="text-emerald-400 text-[10px]">+{currentBonus}% Permanent VPS</div>
+                  <div className="text-emerald-400 text-[10px]">+{currentBonus}% {tr('permanentVpsLabel')}</div>
                 </div>
                 <div>
-                  <div className="text-slate-400 text-[10px]">Heavenly Chips:</div>
+                  <div className="text-slate-400 text-[10px]">{tr('heavenlyChipsText')}</div>
                   <div className="text-amber-400 font-extrabold text-base">{heavenlyChips}</div>
-                  <div className="text-purple-400 text-[10px]">+{pendingChips} on Ascension</div>
+                  <div className="text-purple-400 text-[10px]">+{pendingChips} {tr('onAscensionLabel')}</div>
                 </div>
               </div>
 
@@ -353,10 +356,10 @@ export function SpecialTab({
                 }`}
               >
                 <Icons.Repeat className="w-4 h-4" />
-                Execute Singularity Reset (+{pendingChips} Chips)
+                {tr('executeAscend')}{pendingChips}{tr('ascendExecuteSuffix')}
               </button>
               <div className="relative z-10">
-                {renderAdBoost('ascend_boost', `Video ansehen: +20% Heavenly Chips (+${Math.max(0, Math.floor(pendingChips * 1.2) - pendingChips)} mehr)`, pendingAscendBoost)}
+                {renderAdBoost('ascend_boost', tr('watchAdChipsBoost').replace('{amount}', Math.max(0, Math.floor(pendingChips * 1.2) - pendingChips)), pendingAscendBoost)}
               </div>
             </div>
 
@@ -381,8 +384,8 @@ export function SpecialTab({
                         {renderIcon(up.path === 'angel' ? 'Shield' : up.path === 'demon' ? 'Flame' : 'Sparkles')}
                       </div>
                       <div>
-                        <div className="font-extrabold text-xs text-slate-100">{up.name}</div>
-                        <div className="text-[11px] text-purple-300 font-semibold">{up.description}</div>
+                        <div className="font-extrabold text-xs text-slate-100">{tr(`heavenly_${up.id}_name`)}</div>
+                        <div className="text-[11px] text-purple-300 font-semibold">{tr(`heavenly_${up.id}_description`)}</div>
                       </div>
                     </div>
 
@@ -392,7 +395,7 @@ export function SpecialTab({
                         disabled={!canAfford}
                         className="px-3 py-1.5 rounded bg-purple-600 text-white font-black text-xs"
                       >
-                        {up.chipsCost} Chips
+                        {up.chipsCost} {tr('chipsUnit')}
                       </button>
                     )}
                   </div>

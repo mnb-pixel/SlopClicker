@@ -67,11 +67,11 @@ export function SlopTab({
           {startAd && (
             adState?.type === 'nitrogen' ? (
               <div className="mt-3 bg-slate-950/80 border border-amber-500 rounded-xl p-2.5 text-amber-300 font-black text-xs animate-pulse">
-                Ad läuft... ({adState.timer}s)
+                {tr('adPlaying')} ({adState.timer}s)
               </div>
             ) : isAdReady && !isAdReady('nitrogen') ? (
               <div className="mt-3 text-[10px] text-slate-400 font-mono">
-                Sofort-Kühlung per Ad in {getAdCooldownRemaining ? getAdCooldownRemaining('nitrogen') : 0}s wieder verfügbar
+                {tr('instantCoolingCooldown').replace('{sec}', getAdCooldownRemaining ? getAdCooldownRemaining('nitrogen') : 0)}
               </div>
             ) : (
               <button
@@ -80,7 +80,7 @@ export function SlopTab({
               >
                 <Tv className="w-3.5 h-3.5" />
                 <ThermometerSnowflake className="w-3.5 h-3.5" />
-                Video ansehen: Sofort-Kühlung
+                {tr('watchAdInstantCooling')}
               </button>
             )
           )}
@@ -144,7 +144,7 @@ export function SlopTab({
             {/* GPU Chip Meme Background Graphic */}
             <img
               src="/gpu_chip_meme.jpg"
-              alt="AGI GPU Meme"
+              alt={tr('generateAgiLabel')}
               className="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity"
             />
 
@@ -157,11 +157,11 @@ export function SlopTab({
             </div>
 
             <span className="relative z-10 font-black text-lg tracking-wider uppercase bg-gradient-to-r from-cyan-300 via-cyan-100 to-fuchsia-300 bg-clip-text text-transparent">
-              {isOverheated ? 'MELTDOWN' : '⚡ GENERATE AGI ⚡'}
+              {isOverheated ? tr('meltdownLabel') : tr('generateAgiLabel')}
             </span>
 
             <span className="relative z-10 text-[11px] font-semibold text-slate-300 mt-0.5">
-              +{formatCurrency(clickValue)} / tap (+2°C)
+              +{formatCurrency(clickValue)} {tr('perTap')} (+2°C)
             </span>
           </button>
         )}

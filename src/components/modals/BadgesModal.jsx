@@ -30,7 +30,7 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
   const getAchQuote = (ach) => {
     const key = `ach_${ach.id}_quote`;
     const val = tr(key);
-    return val && val !== key ? val : ach.quote || 'Auszeichnung für herausragenden Hype.';
+    return val && val !== key ? val : ach.quote || tr('badgeFallbackQuote');
   };
 
   const filteredBadges = ACHIEVEMENTS_DATA.filter((ach) => {
@@ -63,10 +63,10 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
             </div>
             <div>
               <h2 className="text-base font-black uppercase tracking-wider text-slate-100 flex items-center gap-2">
-                🏆 Board Certified Badge Wall
+                🏆 {tr('badgesWallTitle')}
               </h2>
               <p className="text-xs text-slate-400 font-mono">
-                Erreichte Meilensteine & Auszeichnungen ({unlockedCount} / {totalCount} Badges)
+                {tr('badgesModalSubtitle')} ({unlockedCount} / {totalCount})
               </p>
             </div>
           </div>
@@ -82,7 +82,7 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
         {/* Progress Bar */}
         <div className="bg-slate-900 p-3 rounded-2xl border border-slate-800 flex flex-col gap-2">
           <div className="flex justify-between items-center text-xs font-mono font-bold">
-            <span className="text-slate-300">Gesamt-Fortschritt Badges</span>
+            <span className="text-slate-300">{tr('overallBadgeProgress')}</span>
             <span className="text-amber-400 font-black">{progressPct}% ({unlockedCount}/{totalCount})</span>
           </div>
           <div className="w-full bg-slate-950 h-3 rounded-full border border-slate-800 overflow-hidden p-0.5">
@@ -102,7 +102,7 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
                 filter === 'ALL' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400 hover:text-slate-200'
               }`}
             >
-              Alle ({totalCount})
+              {tr('filterAll')} ({totalCount})
             </button>
             <button
               onClick={() => setFilter('UNLOCKED')}
@@ -110,7 +110,7 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
                 filter === 'UNLOCKED' ? 'bg-emerald-500 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400 hover:text-slate-200'
               }`}
             >
-              ✨ Freigeschaltet ({unlockedCount})
+              ✨ {tr('filterUnlocked')} ({unlockedCount})
             </button>
             <button
               onClick={() => setFilter('LOCKED')}
@@ -118,7 +118,7 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
                 filter === 'LOCKED' ? 'bg-rose-500 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400 hover:text-slate-200'
               }`}
             >
-              🔒 Sperren ({totalCount - unlockedCount})
+              🔒 {tr('filterLocked')} ({totalCount - unlockedCount})
             </button>
           </div>
 
@@ -126,7 +126,7 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
             <Icons.Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Badge suchen..."
+              placeholder={tr('badgeSearchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full sm:w-48 bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1 text-xs text-slate-200 focus:outline-none focus:border-amber-400 font-mono"
@@ -151,15 +151,15 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
                     </div>
                     <div>
                       <div className="font-mono text-xs text-slate-500 blur-[3px]">
-                        ??? Locked Badge
+                        {tr('lockedBadgeLabel')}
                       </div>
                       <div className="text-[11px] text-slate-600 italic blur-[2px] mt-0.5">
-                        "Unbekannter Meilenstein"
+                        "{tr('unknownMilestone')}"
                       </div>
                     </div>
                   </div>
                   <span className="px-2 py-0.5 rounded text-[9px] font-black bg-slate-900 text-slate-600 border border-slate-800">
-                    LOCKED
+                    {tr('locked')}
                   </span>
                 </div>
               );
@@ -187,7 +187,7 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
           })}
         </div>
 
-        <AdBanner variant="leaderboard" label="Werbung" />
+        <AdBanner variant="leaderboard" label={tr('adPlaceholderLabel')} />
       </div>
     </div>
   );

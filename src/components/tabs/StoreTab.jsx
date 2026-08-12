@@ -44,7 +44,7 @@ export function StoreTab({
       return (
         <img
           src={item.image}
-          alt="AI Engine Meme"
+          alt={tr('subEngines')}
           className="w-7 h-7 rounded-lg object-cover border border-cyan-400/60 shadow-md"
         />
       );
@@ -66,16 +66,16 @@ export function StoreTab({
       return up.req?.buildingId ? `🎯 ${buildingName(up.req.buildingId)}` : `🎯 ${tr('affectsSyndicate')}`;
     }
     if (up.type === 'global') return `🎯 ${tr('affectsGlobal')}`;
-    return '🎯 Global';
+    return `🎯 ${tr('affectsGlobal')}`;
   };
 
   // Für die 260 Gebäude-Upgrades (nur type:'building') gibt es Name/Flavor über t(),
   // description wird dynamisch aus Gebäude-Name + Multiplikator gebaut.
-  const upgradeName = (up) => (up.type === 'building' ? tr(`upgrade_${up.id}_name`) : up.name);
-  const upgradeQuote = (up) => (up.type === 'building' ? tr(`upgrade_${up.id}_quote`) : up.quote);
+  const upgradeName = (up) => (up.type === 'building' ? tr(`upgrade_${up.id}_name`) : tr(`miscup_${up.id}_name`));
+  const upgradeQuote = (up) => (up.type === 'building' ? tr(`upgrade_${up.id}_quote`) : tr(`miscup_${up.id}_quote`));
   const upgradeDescription = (up) => {
-    if (up.type !== 'building') return up.description;
-    return `${buildingName(up.buildingId)} produce +${Math.round((up.effect.value - 1) * 100)}% more Valuation!`;
+    if (up.type !== 'building') return tr(`miscup_${up.id}_description`);
+    return tr('buildingUpgradeEffectDesc').replace('{building}', buildingName(up.buildingId)).replace('{pct}', Math.round((up.effect.value - 1) * 100));
   };
 
   // Für die 100 Greenwashing/Layoff-Aktionen: Name/Flavor über t(), effectDesc dynamisch.
@@ -83,29 +83,26 @@ export function StoreTab({
     const key = `gw_${item.id}_name`;
     const val = tr(key);
     if (val && val !== key) return val;
-    const b = BUILDINGS_DATA.find((itemB) => itemB.id === item.buildingId);
-    const bName = b ? b.name : 'KI-Engine';
+    const bName = buildingName(item.buildingId);
     if (item.type === 'greenwashing') {
-      return `Greenwashing Protokoll Stufe ${item.tier} (${bName})`;
+      return `${tr('gwFallbackName')} ${item.tier} (${bName})`;
     }
-    return `Massenentlassung Stufe ${item.tier} (${bName})`;
+    return `${tr('layoffFallbackName')} ${item.tier} (${bName})`;
   };
 
   const gwQuote = (item) => {
     const key = `gw_${item.id}_quote`;
     const val = tr(key);
     if (val && val !== key) return val;
-    return item.type === 'greenwashing'
-      ? 'Offiziell als nachhaltige Initiative deklariert.'
-      : 'Effizienzsteigerung durch KI-gestützte Restrukturierung.';
+    return item.type === 'greenwashing' ? tr('gwFallbackQuote') : tr('layoffFallbackQuote');
   };
 
   const gwEffectDesc = (item) => {
-    if (item.type === 'greenwashing' && item.tier === 1) return '🔥 Burn Rate -0.1%';
-    if (item.type === 'greenwashing' && item.tier === 2) return '⚡ Engine VPS Output +10%';
-    if (item.type === 'greenwashing' && item.tier === 3) return '✨ Kosmetischer ESG-Hype Boost';
-    if (item.type === 'layoff' && item.tier === 1) return '⚡ Engine VPS Output +20%';
-    if (item.type === 'layoff' && item.tier === 2) return '⚡ Engine VPS Output +15%';
+    if (item.type === 'greenwashing' && item.tier === 1) return tr('gwEffect1');
+    if (item.type === 'greenwashing' && item.tier === 2) return tr('gwEffect2');
+    if (item.type === 'greenwashing' && item.tier === 3) return tr('gwEffect3');
+    if (item.type === 'layoff' && item.tier === 1) return tr('layoffEffect1');
+    if (item.type === 'layoff' && item.tier === 2) return tr('layoffEffect2');
     return '';
   };
 
@@ -228,7 +225,7 @@ export function StoreTab({
         <div>
           {/* Buy Mode Selector Bar */}
           <div className="flex items-center justify-between bg-slate-900/90 p-2 rounded-xl border border-slate-800 mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Buy Mode:</span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{tr('buyModeLabel')}</span>
             <div className="flex gap-1">
               {['1', '10', '100', 'MAX'].map((mode) => (
                 <button
@@ -261,15 +258,15 @@ export function StoreTab({
                       </div>
                       <div>
                         <div className="font-bold text-xs text-slate-500">
-                          ??? Locked Engine Tier
+                          {tr('lockedEngineTier')}
                         </div>
                         <div className="text-[11px] text-slate-500 italic mt-0.5">
-                          Requires owning the previous AI Engine tier.
+                          {tr('lockedEngineTierDesc')}
                         </div>
                       </div>
                     </div>
                     <div className="px-2.5 py-1 rounded text-[10px] font-black bg-slate-900 text-slate-600 border border-slate-800">
-                      LOCKED
+                      {tr('locked')}
                     </div>
                   </div>
                 );
@@ -372,7 +369,7 @@ export function StoreTab({
                           : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
                       }`}
                     >
-                      <span>BUY {buyText}</span>
+                      <span>{tr('buyLabel')} {buyText}</span>
                       <span className="text-[10px] opacity-90 font-mono">
                         {formatCurrency(cost)}
                       </span>
@@ -401,16 +398,16 @@ export function StoreTab({
               <div>
                 <div className="text-xs font-extrabold text-slate-200 flex items-center gap-1.5">
                   <Icons.Sparkles className="w-4 h-4 text-amber-400" />
-                  <span>Verfügbare Upgrades ({availableUpgrades.length})</span>
+                  <span>{tr('availableUpgradesLabel')} ({availableUpgrades.length})</span>
                 </div>
-                <div className="text-[10px] text-slate-400">Kachel antippen für Details, dann unten "KAUFEN" drücken.</div>
+                <div className="text-[10px] text-slate-400">{tr('tileTapHint')}</div>
               </div>
               <button
                 onClick={buyAllUpgrades}
                 disabled={availableUpgrades.filter((u) => valuation >= u.cost).length === 0}
                 className="bg-amber-500 text-slate-950 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg font-black text-xs shadow-md shadow-amber-500/20 active:scale-95 transition-all shrink-0"
               >
-                ⚡ BUY ALL
+                ⚡ {tr('buyAllLabel')}
               </button>
             </div>
 
@@ -432,7 +429,7 @@ export function StoreTab({
                 <div className="flex items-center justify-between text-[10px] font-mono">
                   <span className="text-cyan-300 font-bold">{getTargetBadge(activeUpgrade)}</span>
                   <span className={isActiveBought ? 'text-emerald-400 font-bold' : canAffordActive ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
-                    {isActiveBought ? '✓ Gekauft' : canAffordActive ? '✓ Bezahlbar' : '🔒 Nicht genug Valuation'}
+                    {isActiveBought ? `✓ ${tr('boughtLabel')}` : canAffordActive ? `✓ ${tr('affordableLabel')}` : `🔒 ${tr('notEnoughValuation')}`}
                   </span>
                 </div>
 
@@ -446,7 +443,7 @@ export function StoreTab({
                   <span>⚡ {upgradeDescription(activeUpgrade)}</span>
                   {isActiveBought ? (
                     <span className="px-3 py-1 rounded-lg font-black text-xs shrink-0 bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 flex items-center gap-1">
-                      <Icons.CheckCircle2 className="w-3.5 h-3.5" /> Gekauft
+                      <Icons.CheckCircle2 className="w-3.5 h-3.5" /> {tr('boughtLabel')}
                     </span>
                   ) : (
                   <button
@@ -458,7 +455,7 @@ export function StoreTab({
                         : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
                     }`}
                   >
-                    KAUFEN
+                    {tr('buyActionLabel')}
                   </button>
                   )}
                 </div>
@@ -467,7 +464,7 @@ export function StoreTab({
 
             {availableUpgrades.length === 0 ? (
               <div className="text-center py-8 bg-slate-900/40 rounded-xl border border-slate-800/80 text-slate-400 text-xs italic">
-                Keine neuen Upgrades freigeschaltet. Kaufe mehr KI-Engines für neue Upgrades!
+                {tr('noUpgradesAvailable')}
               </div>
             ) : (
               /* Tile Grid (Kacheln) */
@@ -551,7 +548,7 @@ export function StoreTab({
                                       <span className="truncate">{upgradeName(activeItem)}</span>
                                     </div>
                                     <span className="flex items-center gap-1 text-emerald-400 font-black text-[10px] shrink-0 ml-2">
-                                      <Icons.CheckCircle2 className="w-3.5 h-3.5" /> Gekauft
+                                      <Icons.CheckCircle2 className="w-3.5 h-3.5" /> {tr('boughtLabel')}
                                     </span>
                                   </div>
 
@@ -608,17 +605,17 @@ export function StoreTab({
           <div className="bg-amber-950/40 p-3 rounded-xl border border-amber-500/40 mb-2 text-xs">
             <div className="font-extrabold text-amber-300 flex items-center gap-1.5 mb-1">
               <Icons.ShieldAlert className="w-4 h-4 text-amber-400" />
-              Corporate Actions & Greenwashing Protocol
+              {tr('corporateTitle')}
             </div>
             <div className="text-[#EAE7DA]/80">
-              Mitigate Burn Rate with Greenwashing (-0.1% burn rate) or trigger AI Mass Layoffs (+20% to +35% engine output)!
+              {tr('corporateDesc')}
             </div>
           </div>
 
           {availableCorporate.length === 0 ? (
             <div className="flex flex-col gap-2">
               <div className="text-center py-4 bg-slate-900/40 rounded-xl border border-slate-800/80 text-slate-400 text-xs italic">
-                Keine neuen Corporate Actions für deine gekauften KI-Engines. Kaufe mehr KI-Engines, um neue Protokolle freizuschalten!
+                {tr('noCorporateAvailable')}
               </div>
               {/* Teaser for next locked corporate protocol - gleicher stiller "gesperrt" Look wie bei Engines */}
               {BUILDINGS_DATA.filter((b) => (buildings[b.id] || 0) < 1).slice(0, 2).map((b) => (
@@ -631,14 +628,14 @@ export function StoreTab({
                       <Icons.Lock className="w-4 h-4 text-slate-500" />
                     </div>
                     <div>
-                      <div className="font-extrabold text-xs text-slate-400">??? Sperr-Protokoll ({b.name})</div>
+                      <div className="font-extrabold text-xs text-slate-400">{tr('lockedCorporate')} ({buildingName(b.id)})</div>
                       <div className="text-[11px] text-slate-500 italic mt-0.5">
-                        Erfordert den Kauf von mindestens 1x {b.name}.
+                        {tr('lockedCorporateDesc')}
                       </div>
                     </div>
                   </div>
                   <div className="px-2.5 py-1 rounded text-[10px] font-black bg-slate-900 text-slate-500 border border-slate-800">
-                    GESPERRT
+                    {tr('locked')}
                   </div>
                 </div>
               ))}
@@ -739,7 +736,7 @@ export function StoreTab({
                           </div>
                         </div>
                         <span className="flex items-center gap-1 text-emerald-400 font-black text-[10px] shrink-0 ml-2">
-                          <Icons.CheckCircle2 className="w-3.5 h-3.5" /> Ausgeführt
+                          <Icons.CheckCircle2 className="w-3.5 h-3.5" /> {tr('executed')}
                         </span>
                       </div>
                     );
