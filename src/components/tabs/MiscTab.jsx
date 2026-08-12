@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import * as Icons from 'lucide-react';
-import { AdBanner } from '../AdBanner';
 import { formatCurrency } from '../../utils/formatters';
 
 export function MiscTab({
@@ -149,8 +148,9 @@ export function MiscTab({
         )}
       </div>
 
-      {/* Statischer Werbe-Slot (Banner) */}
-      <AdBanner variant="rectangle" label={tr('adPlaceholderLabel')} />
+      {/* Kein eigener Werbe-Slot mehr: der Anchor über der Tab-Leiste (mobil) bzw. das
+          Rectangle in der linken Spalte (Desktop) ist auf diesem Screen bereits sichtbar.
+          Zwei Flächen gleichzeitig wären eine zu viel. */}
 
       {/* Wipe Save Data (Sprache & Audio sind bereits in der Kopfzeile verfügbar) */}
       <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">

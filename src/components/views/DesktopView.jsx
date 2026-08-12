@@ -4,12 +4,14 @@ import { StoreTab } from '../tabs/StoreTab';
 import { SpecialTab } from '../tabs/SpecialTab';
 import { StatsTab } from '../tabs/StatsTab';
 import { MiscTab } from '../tabs/MiscTab';
+import { AdBanner } from '../AdBanner';
 
 export function DesktopView({ store, setIsPitchDeckOpen }) {
   return (
     <div className="w-full max-w-7xl mx-auto p-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
       {/* LEFT COLUMN: Main GPU Clicker, Heat Bar, Golden Memes, Owned Visual Items Grid (4 cols) */}
-      <div className="md:col-span-4 bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-3 shadow-xl sticky top-20">
+      <div className="md:col-span-4 flex flex-col gap-4 sticky top-20">
+      <div className="bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-3 shadow-xl">
         <h2 className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-2 text-center border-b border-slate-800 pb-2">
           ⚡ {store.t('agiCoreGeneratorTitle')}
         </h2>
@@ -31,6 +33,12 @@ export function DesktopView({ store, setIsPitchDeckOpen }) {
           getAdCooldownRemaining={store.getAdCooldownRemaining}
           t={store.t}
         />
+      </div>
+
+        {/* Statischer Werbe-Slot: eigene Karte unter dem Clicker, bewusst NICHT im selben
+            Panel wie die Tap-Fläche. Die Spalte ist sticky, der Slot bleibt also sichtbar,
+            ohne an ein Bedienelement zu grenzen. */}
+        <AdBanner variant="rectangle" label={store.t('adPlaceholderLabel')} />
       </div>
 
       {/* CENTER COLUMN: Special Ascension, Stats, Logs, Achievements, Misc (4 cols) */}

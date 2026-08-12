@@ -125,7 +125,9 @@ export default function App() {
       ) : (
         /* MOBILE 5-TAB VIEW */
         <div className="w-full max-w-md mx-auto flex-1 flex flex-col relative min-h-screen bg-slate-950 border-x border-slate-900 shadow-2xl">
-          <main className="flex-1 pb-16">
+          {/* pb deckt Tab-Leiste (56px) + Werbe-Anker (~65px) ab, damit der letzte
+              Listeneintrag nicht hinter der unteren Leiste verschwindet. */}
+          <main className="flex-1 pb-32">
             {store.activeTab === 1 && (
               <SlopTab
                 handleTapAGI={store.handleTapAGI}
@@ -226,9 +228,15 @@ export default function App() {
             )}
           </main>
 
-          {/* Statischer Werbe-Slot (Banner) über der Tab-Leiste */}
-          <div className="px-3 pb-2">
-            <AdBanner variant="leaderboard" label={store.t('adPlaceholderLabel')} />
+          {/* Statischer Werbe-Slot, fix über der Tab-Leiste verankert. Vorher lag er im
+              normalen Flow hinter der fixierten NavBar und damit dauerhaft unter der Falz -
+              der Slot war in JEDEM Scroll-Zustand unsichtbar und lieferte null Impressions.
+              pointer-events: der Abstandsrahmen bleibt klickdurchlässig, nur die Anzeigefläche
+              selbst nimmt Klicks entgegen, damit Fehltaps Richtung Tab-Leiste ins Leere gehen. */}
+          <div className="fixed bottom-14 left-0 right-0 z-20 max-w-md mx-auto px-3 pt-1.5 pb-2 bg-slate-950/90 backdrop-blur-sm border-t border-slate-800/60 pointer-events-none">
+            <div className="pointer-events-auto">
+              <AdBanner variant="leaderboard" label={store.t('adPlaceholderLabel')} />
+            </div>
           </div>
 
           {/* 5-Tab Navigation Bar */}
