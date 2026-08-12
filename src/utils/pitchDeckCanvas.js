@@ -1,21 +1,25 @@
 // Rendering der teilbaren 9:16 Pitch-Deck-Story-Card (1080x1920, +250px in der
 // detaillierten Version) - optimiert für Instagram/TikTok Stories & Reels.
 //
-// WICHTIG: Jeder Pfad-Helfer ruft IMMER ctx.beginPath() auf, bevor er einen Pfad
-// baut. Ohne das sammeln sich alle roundRect()-Subpfade im selben Pfad an und ein
-// späteres fill() übermalt sämtliche vorher gezeichneten Boxen samt Text - genau
-// deshalb waren im geteilten Bild vorher die Bewertungs- und Stat-Boxen leer.
+// Zwei Stile stehen zur Wahl (siehe PITCH_DECK_STYLES):
+//   'neon'       - das Cyberpunk-Design der App (diese Datei)
+//   'consulting' - seriöser Berater-Einseiter (pitchDeckConsulting.js)
+//
+// Gemeinsame Zeichen-Helfer liegen in pitchDeckShared.js - dort steht auch,
+// warum jeder Pfad-Helfer beginPath() ruft und warum hier nirgends shadowBlur
+// verwendet wird.
 
-import { BUILDINGS_DATA } from '../data/buildingsData';
 import { formatCurrency, formatNumber } from './formatters';
+import { drawConsultingDeck } from './pitchDeckConsulting';
+import {
+  PITCH_DECK_WIDTH, SANS, MONO, SERIF,
+  fillRound, strokeRound, line, linear, setTracking, fitFont, ellipsize, drawPill,
+  getTopEngines, getPitchDeckHeight,
+} from './pitchDeckShared';
 
-export const PITCH_DECK_WIDTH = 1080;
-export const PITCH_DECK_BASE_HEIGHT = 1920;
-const DETAILED_EXTRA_HEIGHT = 250;
+export { PITCH_DECK_WIDTH, getTopEngines, getPitchDeckHeight };
 
-const SANS = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-const MONO = 'ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Courier New", monospace';
-const SERIF = 'Georgia, "Times New Roman", serif';
+export const PITCH_DECK_STYLES = ['neon', 'consulting'];
 
 const C = {
   cyan: '#22d3ee',
@@ -31,94 +35,6 @@ const C = {
   slateLight: '#e2e8f0',
   ink: '#050815',
 };
-
-/* ---------------------------------------------------------------- helpers */
-
-function roundedPath(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.roundRect(x, y, w, h, r);
-}
-
-function fillRound(ctx, x, y, w, h, r, style) {
-  roundedPath(ctx, x, y, w, h, r);
-  ctx.fillStyle = style;
-  ctx.fill();
-}
-
-function strokeRound(ctx, x, y, w, h, r, style, lineWidth = 2) {
-  roundedPath(ctx, x, y, w, h, r);
-  ctx.strokeStyle = style;
-  ctx.lineWidth = lineWidth;
-  ctx.stroke();
-}
-
-function line(ctx, x1, y1, x2, y2, style, lineWidth = 2) {
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.lineTo(x2, y2);
-  ctx.strokeStyle = style;
-  ctx.lineWidth = lineWidth;
-  ctx.stroke();
-}
-
-function linear(ctx, x0, y0, x1, y1, stops) {
-  const g = ctx.createLinearGradient(x0, y0, x1, y1);
-  stops.forEach(([offset, color]) => g.addColorStop(offset, color));
-  return g;
-}
-
-function setTracking(ctx, px) {
-  // letterSpacing wird von älteren Engines ignoriert - dann rendert es einfach eng.
-  try { ctx.letterSpacing = `${px}px`; } catch { /* nicht unterstützt */ }
-}
-
-// Schriftgröße so lange verkleinern, bis der Text in maxWidth passt.
-function fitFont(ctx, text, maxWidth, weight, size, family, minSize = 14) {
-  let current = size;
-  ctx.font = `${weight} ${current}px ${family}`;
-  while (current > minSize && ctx.measureText(text).width > maxWidth) {
-    current -= 2;
-    ctx.font = `${weight} ${current}px ${family}`;
-  }
-  return current;
-}
-
-// Text mit "…" kürzen, falls er zu breit ist (Font muss vorher gesetzt sein).
-function ellipsize(ctx, text, maxWidth) {
-  if (ctx.measureText(text).width <= maxWidth) return text;
-  let cut = text;
-  while (cut.length > 1 && ctx.measureText(`${cut}…`).width > maxWidth) {
-    cut = cut.slice(0, -1);
-  }
-  return `${cut.trim()}…`;
-}
-
-function drawPill(ctx, cx, cy, text, opts = {}) {
-  const {
-    font = `900 26px ${MONO}`,
-    color = C.slateLight,
-    bg = 'rgba(255,255,255,0.06)',
-    border = null,
-    padX = 30,
-    height = 54,
-    tracking = 0,
-  } = opts;
-
-  ctx.font = font;
-  setTracking(ctx, tracking);
-  const w = ctx.measureText(text).width + padX * 2;
-  const x = cx - w / 2;
-  const y = cy - height / 2;
-
-  fillRound(ctx, x, y, w, height, height / 2, bg);
-  if (border) strokeRound(ctx, x, y, w, height, height / 2, border, 2);
-
-  ctx.fillStyle = color;
-  ctx.textAlign = 'center';
-  ctx.fillText(text, cx, cy);
-  setTracking(ctx, 0);
-  return w;
-}
 
 /* ------------------------------------------------------------- background */
 
@@ -489,23 +405,32 @@ function drawBottom(ctx, tr, H) {
   setTracking(ctx, 0);
 }
 
+function drawNeonDeck(ctx, o) {
+  const { tr, H, detailed } = o;
+
+  drawBackground(ctx, H);
+  drawFrame(ctx, H);
+  drawHeader(ctx, tr);
+  drawTitle(ctx, tr, o.startupName, o.hasAiDomainBonus);
+  drawHeroValuation(ctx, tr, o.valuation, o.vps);
+  drawTierBar(ctx, tr, o.hypeTier);
+  drawStatGrid(ctx, [
+    { label: tr('pdAnnualRevenue'), value: tr('pdPureHype'), color: C.rose },
+    { label: tr('pdTotalTokens'), value: `${formatNumber(o.slopCount)} ${tr('pdTokensLabel')}`, color: C.violet },
+    { label: tr('pdMeltedGpuCores'), value: `${o.overheatCount} ${tr('pdOverheatsLabel')}`, color: C.orange },
+    { label: tr('pdPrestigeLevelStat'), value: `${o.prestigeLevel} ${tr('pdAscensionsLabel')}`, color: C.cyan },
+  ]);
+  drawEngines(ctx, tr, o.engines);
+  if (detailed) {
+    drawCollection(ctx, tr, {
+      badgeCount: o.badgeCount, badgeTotal: o.badgeTotal,
+      cardCount: o.cardCount, cardTotal: o.cardTotal, cardBonusPct: o.cardBonusPct,
+    });
+  }
+  drawBottom(ctx, tr, H);
+}
+
 /* ------------------------------------------------------------------- main */
-
-// Liefert die 3 höchstwertigen gekauften Engines (teuerste zuerst).
-export function getTopEngines(buildings = {}, t) {
-  return BUILDINGS_DATA
-    .map((b) => ({
-      name: (t && t(`building_${b.id}_name`)) || b.id,
-      count: buildings[b.id] || 0,
-    }))
-    .filter((b) => b.count > 0)
-    .slice(-3)
-    .reverse();
-}
-
-export function getPitchDeckHeight(detailed) {
-  return PITCH_DECK_BASE_HEIGHT + (detailed ? DETAILED_EXTRA_HEIGHT : 0);
-}
 
 /**
  * Zeichnet die komplette Story-Card auf das übergebene Canvas.
@@ -523,6 +448,8 @@ export function drawPitchDeck(canvas, opts = {}) {
     hypeTier = 1,
     buildings = {},
     detailed = false,
+    style = 'neon',
+    lang = 'de',
     badgeCount = 0,
     badgeTotal = 0,
     cardCount = 0,
@@ -542,23 +469,18 @@ export function drawPitchDeck(canvas, opts = {}) {
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';
 
-  drawBackground(ctx, H);
-  drawFrame(ctx, H);
-  drawHeader(ctx, tr);
-  drawTitle(ctx, tr, startupName, hasAiDomainBonus);
-  drawHeroValuation(ctx, tr, valuation, vps);
-  drawTierBar(ctx, tr, hypeTier);
-  drawStatGrid(ctx, [
-    { label: tr('pdAnnualRevenue'), value: tr('pdPureHype'), color: C.rose },
-    { label: tr('pdTotalTokens'), value: `${formatNumber(slopCount)} ${tr('pdTokensLabel')}`, color: C.violet },
-    { label: tr('pdMeltedGpuCores'), value: `${overheatCount} ${tr('pdOverheatsLabel')}`, color: C.orange },
-    { label: tr('pdPrestigeLevelStat'), value: `${prestigeLevel} ${tr('pdAscensionsLabel')}`, color: C.cyan },
-  ]);
-  drawEngines(ctx, tr, getTopEngines(buildings, t));
-  if (detailed) {
-    drawCollection(ctx, tr, { badgeCount, badgeTotal, cardCount, cardTotal, cardBonusPct });
+  const shared = {
+    tr, lang, H, detailed, startupName, hasAiDomainBonus, valuation, vps, slopCount,
+    overheatCount, prestigeLevel, hypeTier,
+    engines: getTopEngines(buildings, t),
+    badgeCount, badgeTotal, cardCount, cardTotal, cardBonusPct,
+  };
+
+  if (style === 'consulting') {
+    drawConsultingDeck(ctx, shared);
+  } else {
+    drawNeonDeck(ctx, shared);
   }
-  drawBottom(ctx, tr, H);
 
   return canvas.toDataURL('image/png');
 }
