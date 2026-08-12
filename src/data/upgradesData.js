@@ -19,7 +19,7 @@ const BUILDING_UPGRADES_DATA = BUILDINGS_DATA.flatMap((b) =>
   }))
 );
 
-// --- Zusätzliche SlopClicker-Mechaniken (nicht Teil des Hype-Clicker-Konzepts,
+// --- Zusätzliche Token-Furnace-Mechaniken (nicht Teil des Hype-Clicker-Konzepts,
 // bleiben bestehen weil sie an GPU-Overheat/Power-Click gebunden sind) ---
 const MISC_UPGRADES_DATA = [
   // --- CLICK TAP UPGRADES (Massive Click Boosts) ---

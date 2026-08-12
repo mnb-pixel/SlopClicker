@@ -208,7 +208,7 @@ export function MiscTab({
           </button>
         </div>
         <div>{tr('footerPrivacy')}</div>
-        <div className="text-[10px] text-slate-600">SlopClicker Mobile v1.0.0</div>
+        <div className="text-[10px] text-slate-600">Token Furnace Mobile v1.0.0</div>
       </footer>
     </div>
   );

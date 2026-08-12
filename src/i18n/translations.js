@@ -1,4 +1,4 @@
-// Multi-Language Dictionary (DE, EN) for SlopClicker / Hype Clicker
+// Multi-Language Dictionary (DE, EN) for Token Furnace / Hype Clicker
 
 import { buildContentTranslations } from './mergeContent';
 
@@ -304,7 +304,7 @@ export const TRANSLATIONS = {
 
     // Pitch Deck Modal
     pdConfidentialTitle: 'VERTRAULICHES INVESTOREN-PITCH-DECK',
-    pdOfficialSubtitle: 'OFFIZIELLER VC-FUNDING-PROSPEKT • SLOPCLICKER.APP',
+    pdOfficialSubtitle: 'OFFIZIELLER VC-FUNDING-PROSPEKT • TOKEN-FURNACE.COM',
     pdAiHypeDomainLong: '✨ .AI HYPE-DOMAIN (+10% VPS-MULTIPLIKATOR)',
     pdEstimatedValuation: 'GESCHÄTZTE UNTERNEHMENSBEWERTUNG',
     pdPassiveCashflow: '/ Sek. Passiver Cashflow',
@@ -364,14 +364,14 @@ export const TRANSLATIONS = {
     pdBuzzwordCards: 'Buzzword-Karten',
     pdHypeQuote: '"Wir priorisieren Hype über Profit. AGI steht kurz bevor."',
     pdApprovedBySyndicate: 'GENEHMIGT VOM BOARD SYNDICATE',
-    pdBuildEmpireFooter: 'BAUE DEIN AI-BUBBLE-IMPERIUM AUF SLOPCLICKER.APP',
+    pdBuildEmpireFooter: 'BAUE DEIN AI-BUBBLE-IMPERIUM AUF TOKEN-FURNACE.COM',
     pdShareTitlePrefix: 'VC PITCH DECK FÜR',
     pdShareValuation: 'Valuation:',
     pdShareRevenue: 'Umsatz: $0.00 (Purer Hype)',
     pdSharePassiveInflow: 'Passiver Zufluss:',
     pdShareStatus: 'Status: AGI nah,',
     pdGpusMelted: 'GPUs geschmolzen!',
-    pdShareFooter: 'Baue dein AI-Bubble-Imperium auf SlopClicker!',
+    pdShareFooter: 'Baue dein AI-Bubble-Imperium auf Token Furnace!',
     pdGeneratorTitle: 'VC Pitch Deck Generator',
     pdFormatSubtitle: 'Mobile Story & Social Card (9:16 Format)',
     pdDetailedToggleLabel: 'Detaillierte Version (inkl. Badges & Buzzword-Karten)',
@@ -744,7 +744,7 @@ export const TRANSLATIONS = {
 
     // Pitch Deck Modal
     pdConfidentialTitle: 'CONFIDENTIAL INVESTOR PITCH DECK',
-    pdOfficialSubtitle: 'OFFICIAL VC FUNDING PROSPECTUS • SLOPCLICKER.APP',
+    pdOfficialSubtitle: 'OFFICIAL VC FUNDING PROSPECTUS • TOKEN-FURNACE.COM',
     pdAiHypeDomainLong: '✨ .AI HYPE DOMAIN (+10% VPS MULTIPLIER)',
     pdEstimatedValuation: 'ESTIMATED COMPANY VALUATION',
     pdPassiveCashflow: '/ sec Passive Cashflow',
@@ -804,14 +804,14 @@ export const TRANSLATIONS = {
     pdBuzzwordCards: 'Buzzword Cards',
     pdHypeQuote: '"We prioritize Hype over Profit. AGI is imminent."',
     pdApprovedBySyndicate: 'APPROVED BY BOARD SYNDICATE',
-    pdBuildEmpireFooter: 'BUILD YOUR AI BUBBLE EMPIRE AT SLOPCLICKER.APP',
+    pdBuildEmpireFooter: 'BUILD YOUR AI BUBBLE EMPIRE AT TOKEN-FURNACE.COM',
     pdShareTitlePrefix: 'VC PITCH DECK FOR',
     pdShareValuation: 'Valuation:',
     pdShareRevenue: 'Revenue: $0.00 (Pure Hype)',
     pdSharePassiveInflow: 'Passive Inflow:',
     pdShareStatus: 'Status: AGI near,',
     pdGpusMelted: 'GPUs melted!',
-    pdShareFooter: 'Build your AI bubble empire on SlopClicker!',
+    pdShareFooter: 'Build your AI bubble empire on Token Furnace!',
     pdGeneratorTitle: 'VC Pitch Deck Generator',
     pdFormatSubtitle: 'Mobile Story & Social Card (9:16 Format)',
     pdDetailedToggleLabel: 'Detailed Version (incl. Badges & Buzzword Cards)',
