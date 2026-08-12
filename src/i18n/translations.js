@@ -164,7 +164,14 @@ export const TRANSLATIONS = {
     nitrogenCoolingDesc: 'Kühlt die GPU sofort auf 0°C + gewährt 2x Click Power für 30s.',
     govGrantTitle: 'Staatliches KI-Förderprogramm',
     govGrantDesc: 'Erhält eine sofortige, nicht-verwässernde Staatszahlung von +{amount}.',
-    footerPrivacy: 'Keine Daten gesammelt • 100% Offline • AI-Bubble-sicher',
+    // Bewusst NICHT "keine Daten gesammelt / 100% offline": das stimmt heute, würde aber in
+    // dem Moment falsch, in dem ein Werbenetzwerk eingebunden wird - direkt neben der
+    // Datenschutzerklärung wäre das dann eine irreführende Aussage. Die engere Aussage
+    // "Spielstand bleibt auf deinem Gerät" bezieht sich nur auf den localStorage-Spielstand
+    // und bleibt auch mit Werbung wahr.
+    footerPrivacy: 'Spielstand bleibt auf deinem Gerät • AI-Bubble-sicher',
+    legalImprint: 'Impressum',
+    legalPrivacy: 'Datenschutz',
 
     // Header (ergänzend)
     saveLabel: 'Speichern',
@@ -600,7 +607,9 @@ export const TRANSLATIONS = {
     nitrogenCoolingDesc: 'Instantly cools GPU to 0°C + grants 2x Click Power for 30s.',
     govGrantTitle: 'Government AI Grant',
     govGrantDesc: 'Receives an instant non-dilutive government payout of +{amount}.',
-    footerPrivacy: 'No Data Collected • 100% Offline • AI Bubble Safe',
+    footerPrivacy: 'Your Save Stays on This Device • AI Bubble Safe',
+    legalImprint: 'Legal Notice',
+    legalPrivacy: 'Privacy',
 
     // Header (additional)
     saveLabel: 'Save',

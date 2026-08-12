@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import * as Icons from 'lucide-react';
-import { AdBanner } from '../AdBanner';
 import { formatCurrency } from '../../utils/formatters';
 
 export function MiscTab({
@@ -13,6 +12,7 @@ export function MiscTab({
   claimUnlockedScheduledAd,
   grantAdPreview = 0,
   scheduledAdPreview = 0,
+  onOpenLegal,
   t,
 }) {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
@@ -149,8 +149,9 @@ export function MiscTab({
         )}
       </div>
 
-      {/* Statischer Werbe-Slot (Banner) */}
-      <AdBanner variant="rectangle" label={tr('adPlaceholderLabel')} />
+      {/* Kein eigener Werbe-Slot mehr: der Anchor über der Tab-Leiste (mobil) bzw. das
+          Rectangle in der linken Spalte (Desktop) ist auf diesem Screen bereits sichtbar.
+          Zwei Flächen gleichzeitig wären eine zu viel. */}
 
       {/* Wipe Save Data (Sprache & Audio sind bereits in der Kopfzeile verfügbar) */}
       <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
@@ -187,8 +188,25 @@ export function MiscTab({
         )}
       </div>
 
-      {/* Footer */}
-      <footer className="text-center text-[11px] text-slate-500 my-2 space-y-1">
+      {/* Footer inkl. Pflichtlinks. Impressum und Datenschutzerklärung müssen von jeder
+          Ansicht aus erreichbar sein - der Einstellungen-Tab wird auch in der Desktop-
+          Ansicht gerendert, damit gilt das für beide Layouts. */}
+      <footer className="text-center text-[11px] text-slate-500 my-2 space-y-2">
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={() => onOpenLegal && onOpenLegal('impressum')}
+            className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
+          >
+            {tr('legalImprint')}
+          </button>
+          <span className="text-slate-700">•</span>
+          <button
+            onClick={() => onOpenLegal && onOpenLegal('datenschutz')}
+            className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
+          >
+            {tr('legalPrivacy')}
+          </button>
+        </div>
         <div>{tr('footerPrivacy')}</div>
         <div className="text-[10px] text-slate-600">SlopClicker Mobile v1.0.0</div>
       </footer>
