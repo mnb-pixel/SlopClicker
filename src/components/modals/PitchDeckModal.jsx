@@ -30,14 +30,28 @@ export function PitchDeckModal({
   const [isGeneratingPng, setIsGeneratingPng] = useState(true);
   const [pngDataUrl, setPngDataUrl] = useState(null);
   const [detailed, setDetailed] = useState(false);
+  const [snapshot, setSnapshot] = useState(null);
   const canvasRef = useRef(null);
-  const badgeCount = unlockedAchievements.length;
-  const badgeTotal = BADGE_TOTAL;
-  const cardCount = boughtBuzzwords.length;
-  const cardTotal = CARD_TOTAL;
-  const cardBonusPct = Math.round(
-    BUZZWORDS_DATA.reduce((acc, bw) => (boughtBuzzwords.includes(bw.id) ? acc + bw.bonus : acc), 0) * 100
-  );
+
+  // Die Story-Card ist ein Snapshot fürs Teilen, kein Live-Ticker: Werte werden
+  // NUR beim Öffnen des Modals eingefroren (Effekt hat bewusst nur [isOpen] als
+  // Dependency). Würde man live an valuation/vps/slopCount hängen, feuert der
+  // 100ms-Game-Tick (useGameStore) das Canvas-Redraw pausenlos neu -> Dauer-
+  // Ladeanimation & Geflacker im Preview-Bild.
+  useEffect(() => {
+    if (!isOpen) return;
+    const badgeCount = unlockedAchievements.length;
+    const cardCount = boughtBuzzwords.length;
+    const cardBonusPct = Math.round(
+      BUZZWORDS_DATA.reduce((acc, bw) => (boughtBuzzwords.includes(bw.id) ? acc + bw.bonus : acc), 0) * 100
+    );
+    setSnapshot({
+      startupName, hasAiDomainBonus, valuation, vps, slopCount, overheatCount,
+      prestigeLevel, hypeTier, buildings,
+      badgeCount, badgeTotal: BADGE_TOTAL, cardCount, cardTotal: CARD_TOTAL, cardBonusPct,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   // Trigger confetti when modal opens
   useEffect(() => {
@@ -54,44 +68,27 @@ export function PitchDeckModal({
   // HD 1080x1920 Story-Card rendern - das Ergebnis ist gleichzeitig die Vorschau
   // im Modal, damit die Vorschau exakt dem geteilten Bild entspricht.
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !snapshot) return;
     setIsGeneratingPng(true);
 
     const timer = setTimeout(() => {
       const canvas = canvasRef.current || document.createElement('canvas');
-      const dataUrl = drawPitchDeck(canvas, {
-        startupName,
-        hasAiDomainBonus,
-        valuation,
-        vps,
-        slopCount,
-        overheatCount,
-        prestigeLevel,
-        hypeTier,
-        buildings,
-        detailed,
-        badgeCount,
-        badgeTotal,
-        cardCount,
-        cardTotal,
-        cardBonusPct,
-        t,
-      });
+      const dataUrl = drawPitchDeck(canvas, { ...snapshot, detailed, t });
       setPngDataUrl(dataUrl);
       setIsGeneratingPng(false);
     }, 60);
 
     return () => clearTimeout(timer);
-  }, [isOpen, startupName, hasAiDomainBonus, valuation, vps, slopCount, overheatCount, prestigeLevel, hypeTier, buildings, detailed, badgeCount, badgeTotal, cardCount, cardTotal, cardBonusPct, t]);
+  }, [isOpen, snapshot, detailed, t]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !snapshot) return null;
 
-  const shareText = `🚀 ${tr('pdShareTitlePrefix')} ${startupName.toUpperCase()} 🚀\n` +
-    `📈 ${tr('pdShareValuation')} ${formatCurrency(valuation)}\n` +
+  const shareText = `🚀 ${tr('pdShareTitlePrefix')} ${snapshot.startupName.toUpperCase()} 🚀\n` +
+    `📈 ${tr('pdShareValuation')} ${formatCurrency(snapshot.valuation)}\n` +
     `💰 ${tr('pdShareRevenue')}\n` +
-    `⚡ ${tr('pdSharePassiveInflow')} +${formatCurrency(vps)}/s\n` +
-    `🔥 ${tr('pdShareStatus')} ${overheatCount} ${tr('pdGpusMelted')}\n` +
-    (detailed ? `🏆 ${tr('pdBadgesUnlocked')}: ${badgeCount}/${badgeTotal} • 🎴 ${tr('pdBuzzwordCards')}: ${cardCount}/${cardTotal}\n` : '') +
+    `⚡ ${tr('pdSharePassiveInflow')} +${formatCurrency(snapshot.vps)}/s\n` +
+    `🔥 ${tr('pdShareStatus')} ${snapshot.overheatCount} ${tr('pdGpusMelted')}\n` +
+    (detailed ? `🏆 ${tr('pdBadgesUnlocked')}: ${snapshot.badgeCount}/${snapshot.badgeTotal} • 🎴 ${tr('pdBuzzwordCards')}: ${snapshot.cardCount}/${snapshot.cardTotal}\n` : '') +
     tr('pdShareFooter');
 
   const shareUrl = window.location.href;
@@ -112,7 +109,7 @@ export function PitchDeckModal({
   const handleDownloadPng = () => {
     if (!pngDataUrl) return;
     const link = document.createElement('a');
-    link.download = `${startupName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_pitchdeck.png`;
+    link.download = `${snapshot.startupName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_pitchdeck.png`;
     link.href = pngDataUrl;
     link.click();
     confetti({
@@ -130,11 +127,11 @@ export function PitchDeckModal({
           // Convert dataURL to File for native image sharing
           const res = await fetch(pngDataUrl);
           const blob = await res.blob();
-          const file = new File([blob], `${startupName}_pitchdeck.png`, { type: 'image/png' });
+          const file = new File([blob], `${snapshot.startupName}_pitchdeck.png`, { type: 'image/png' });
 
           if (navigator.canShare({ files: [file] })) {
             await navigator.share({
-              title: `${startupName} - ${tr('pdGeneratorTitle')}`,
+              title: `${snapshot.startupName} - ${tr('pdGeneratorTitle')}`,
               text: shareText,
               url: shareUrl,
               files: [file],
@@ -145,7 +142,7 @@ export function PitchDeckModal({
 
         // Fallback native share without image file
         await navigator.share({
-          title: `${startupName} - VC Pitch Deck`,
+          title: `${snapshot.startupName} - VC Pitch Deck`,
           text: shareText,
           url: shareUrl,
         });
@@ -220,7 +217,7 @@ export function PitchDeckModal({
             {pngDataUrl ? (
               <img
                 src={pngDataUrl}
-                alt={`${startupName} Pitch Deck`}
+                alt={`${snapshot.startupName} Pitch Deck`}
                 className={`w-full block transition-opacity duration-200 ${isGeneratingPng ? 'opacity-40' : 'opacity-100'}`}
               />
             ) : (
