@@ -3,9 +3,11 @@ import { createPortal } from 'react-dom';
 import { Moon, Tv, Sparkles } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 
-// Punkt 1: Wenn der Tab >=30min im Hintergrund war (nicht komplett geschlossen, nur
-// inaktiv), zeigt dieser Screen, wie viel in der Zeit (mit gedrosselter 10%-Rate) erzeugt
-// wurde, und bietet an, den Betrag per Rewarded Ad zu verdoppeln.
+// Wenn der Tab >=30min im Hintergrund war (nicht komplett geschlossen, nur unsichtbar),
+// zeigt dieser Screen, wie viel in der Zeit (mit gedrosselter 50%-Rate) erzeugt wurde. Der
+// Betrag ist zu diesem Zeitpunkt NOCH NICHT gutgeschrieben (siehe useGameStore.js, pageActivity
+// 'hidden') - eine echte Entscheidung ist nötig: Video ansehen schreibt ihn gut, Verzicht
+// verwirft ihn ersatzlos. Kein "wegklicken und trotzdem behalten" mehr.
 export function AfkReportModal({ afkReport, adState, startAd, claimAfkBonus, dismissAfkReport, t }) {
   if (!afkReport) return null;
 
@@ -41,14 +43,14 @@ export function AfkReportModal({ afkReport, adState, startAd, claimAfkBonus, dis
               className="w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 to-fuchsia-500 text-slate-950 hover:brightness-110 active:scale-95 shadow-xl transition-all flex items-center justify-center gap-2"
             >
               <Tv className="w-4 h-4" />
-              {tr('watchAdExtra').replace('{amount}', formatCurrency(afkReport.amount))}
+              {tr('watchAdCollect').replace('{amount}', formatCurrency(afkReport.amount))}
             </button>
             <button
               onClick={dismissAfkReport}
               className="w-full py-2 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              {tr('noticedBtn')}
+              {tr('afkForfeitBtn')}
             </button>
           </div>
         )}

@@ -10,7 +10,6 @@ export function SlopTab({
   clickValue,
   activeEvent,
   powerClickActive,
-  particles,
   buildings,
   boughtUpgrades,
   boughtGreenwashingLayoffs,
@@ -35,16 +34,8 @@ export function SlopTab({
         </div>
       )}
 
-      {/* Floating Particles Container */}
-      {particles.map((p) => (
-        <div
-          key={p.id}
-          className="pointer-events-none fixed z-50 text-cyan-300 font-black text-xl animate-float-particle drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]"
-          style={{ left: p.x - 20, top: p.y - 20 }}
-        >
-          {p.text}
-        </div>
-      ))}
+      {/* Floating "+$X"-Partikel werden jetzt zentral über <ClickParticles> in App.jsx
+          gerendert (via Portal an document.body) - siehe dortiger Kommentar für den Grund. */}
 
       {/* Power Click Active Indicator */}
       {powerClickActive && (

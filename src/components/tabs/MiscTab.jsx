@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import * as Icons from 'lucide-react';
+import { Tv, Loader2, ThermometerSnowflake, Landmark, Zap, Trash2 } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 
 export function MiscTab({
@@ -44,7 +44,7 @@ export function MiscTab({
       {/* Rewarded Ad Monocle */}
       <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <Icons.Tv className="w-5 h-5 text-amber-400" />
+          <Tv className="w-5 h-5 text-amber-400" />
           <div>
             <h3 className="font-black text-sm uppercase text-slate-200">
               {tr('rewardedAdsTitle')}
@@ -57,7 +57,7 @@ export function MiscTab({
 
         {adState ? (
           <div className="bg-slate-950 p-4 rounded-xl border border-amber-500 text-center animate-pulse">
-            <Icons.Loader2 className="w-6 h-6 text-amber-400 animate-spin mx-auto mb-1" />
+            <Loader2 className="w-6 h-6 text-amber-400 animate-spin mx-auto mb-1" />
             <div className="font-black text-xs text-amber-300">
               {tr('adPlayingRemaining').replace('{sec}', adState.timer)}
             </div>
@@ -71,7 +71,7 @@ export function MiscTab({
               >
                 <div>
                   <div className="font-extrabold text-xs text-amber-300 flex items-center gap-1.5">
-                    <Icons.Tv className="w-4 h-4 text-amber-400" />
+                    <Tv className="w-4 h-4 text-amber-400" />
                     🎁 {tr('bonusAdAvailable')}
                   </div>
                   <div className="text-[11px] text-slate-400 mt-0.5">
@@ -90,7 +90,7 @@ export function MiscTab({
             >
               <div>
                 <div className="font-extrabold text-xs text-cyan-300 flex items-center gap-1.5">
-                  <Icons.ThermometerSnowflake className="w-4 h-4 text-cyan-400" />
+                  <ThermometerSnowflake className="w-4 h-4 text-cyan-400" />
                   🧊 {tr('nitrogenCoolingTitle')}
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5">
@@ -111,7 +111,7 @@ export function MiscTab({
             >
               <div>
                 <div className="font-extrabold text-xs text-amber-300 flex items-center gap-1.5">
-                  <Icons.Landmark className="w-4 h-4 text-amber-400" />
+                  <Landmark className="w-4 h-4 text-amber-400" />
                   💰 {tr('govGrantTitle')}
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5">
@@ -132,7 +132,7 @@ export function MiscTab({
             >
               <div>
                 <div className="font-extrabold text-xs text-fuchsia-300 flex items-center gap-1.5">
-                  <Icons.Zap className="w-4 h-4 text-fuchsia-400" />
+                  <Zap className="w-4 h-4 text-fuchsia-400" />
                   ⚡ {tr('bonusPowerClickTitle')}
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5">
@@ -183,7 +183,7 @@ export function MiscTab({
             onClick={() => setShowWipeConfirm(true)}
             className="mt-2 text-xs text-rose-400 hover:text-rose-300 font-bold flex items-center justify-center gap-1 py-2 rounded-xl bg-rose-950/30 border border-rose-500/20"
           >
-            <Icons.Trash2 className="w-3.5 h-3.5" /> {tr('wipeSave')}
+            <Trash2 className="w-3.5 h-3.5" /> {tr('wipeSave')}
           </button>
         )}
       </div>

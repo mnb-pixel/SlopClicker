@@ -1,0 +1,26 @@
+name: CI
+
+# Reine Build/Lint-Absicherung - das eigentliche Deployment läuft bereits über die
+# Cloudflare-Pages-Git-Integration (separat von diesem Workflow konfiguriert, kein
+# Secret hier nötig). Ziel: kaputter Code soll auffallen, bevor/während er auf main landet,
+# nicht erst wenn Cloudflare ihn schon gebaut & ausgeliefert hat.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build

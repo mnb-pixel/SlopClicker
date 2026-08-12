@@ -57,11 +57,12 @@ const AD_COOLDOWN_SEC = {
   scheduled_bonus: 0,
 };
 
-// Offline-Ertrag: gutgeschrieben ab 1 Minute Abwesenheit, gedeckelt auf 4h,
-// zu 50% der zuletzt bekannten VPS (typischer Idle-Game-Offline-Satz).
+// Offline-Ertrag (Browser komplett geschlossen, nicht nur Tab im Hintergrund - dafür siehe
+// pageActivity 'hidden' oben): gutgeschrieben ab 1 Minute Abwesenheit, gedeckelt auf 4h,
+// zu 20% der zuletzt bekannten VPS.
 const OFFLINE_MIN_SECONDS = 60;
 const OFFLINE_CAP_SECONDS = 4 * 3600;
-const OFFLINE_EFFICIENCY = 0.5;
+const OFFLINE_EFFICIENCY = 0.2;
 
 // Singularity Ascension: Chips = sqrt(totalValuation / Divisor). War vorher 1e9 (der erste
 // Chip brauchte $1 Mrd. Lifetime-Valuation - bei den exponentiellen Gebäudekosten praktisch
@@ -142,11 +143,11 @@ export function useGameStore() {
   }, []);
   const dismissAdRewardToast = useCallback(() => setAdRewardToast(null), []);
 
-  // Tab-Aktivität (Punkt 1): 'active' (Tab sichtbar & fokussiert) = 100% Rate,
-  // 'inactive' (Tab sichtbar, aber Fenster/Browser nicht fokussiert) = 20%,
-  // 'hidden' (Tab im Hintergrund/minimiert) = 10%.
+  // Tab-Aktivität: 'active' (Tab sichtbar & fokussiert) = 100% Rate, 'inactive' (Tab sichtbar,
+  // aber Fenster/Browser nicht fokussiert) und 'hidden' (Tab im Hintergrund/minimiert) = 50%.
+  // 'hidden' wird zusätzlich NICHT live gutgeschrieben, siehe Tick-Loop weiter unten.
   const [pageActivity, setPageActivity] = useState('active');
-  const [afkReport, setAfkReport] = useState(null); // { amount } | null - nach >=30min Abwesenheit bei offenem Tab
+  const [afkReport, setAfkReport] = useState(null); // { amount } | null - nach >=30min Abwesenheit bei offenem Tab, PENDING bis Ad/Verzicht
   const hiddenSinceRef = useRef(null);
   const awayEarnedRef = useRef(0);
 
@@ -365,9 +366,15 @@ export function useGameStore() {
     };
   }, []);
 
-  // Tab-Aktivität tracken (Punkt 1): hidden = Tab im Hintergrund, inactive = Tab sichtbar
-  // aber Fenster ohne Fokus. Bei Rückkehr aus "hidden" nach >=30min Abwesenheit wird ein
-  // AFK-Report gezeigt (wie viel in der Zeit erzeugt wurde), einsammelbar per Rewarded Ad.
+  // Tab-Aktivität tracken: hidden = Tab im Hintergrund, inactive = Tab sichtbar aber Fenster
+  // ohne Fokus. Bei Rückkehr aus "hidden" entscheidet die Abwesenheitsdauer, was mit dem im
+  // Hintergrund erzeugten (aber NICHT live gutgeschriebenen, siehe Tick-Loop oben) Wert
+  // passiert:
+  // - < 30 min: automatisch & ohne jeden Hinweis gutgeschrieben - dafür war's zu kurz, um
+  //   eine Entscheidung zu verlangen.
+  // - >= 30 min: bleibt PENDING und wird nur per AfkReportModal aufgelöst - Ad ansehen
+  //   (claimAfkBonus) schreibt den Betrag gut, Verzicht (dismissAfkReport) verwirft ihn
+  //   ersatzlos. Kein "Popup wegklicken und Geld trotzdem behalten" mehr.
   useEffect(() => {
     const updateActivity = () => {
       if (document.visibilityState === 'hidden') {
@@ -379,9 +386,15 @@ export function useGameStore() {
       } else {
         if (hiddenSinceRef.current !== null) {
           const awaySec = (Date.now() - hiddenSinceRef.current) / 1000;
-          if (awaySec >= 1800 && awayEarnedRef.current >= 1) {
-            setAfkReport({ amount: awayEarnedRef.current });
+          const earnedWhileHidden = awayEarnedRef.current;
+          if (awaySec >= 1800 && earnedWhileHidden >= 1) {
+            setAfkReport({ amount: earnedWhileHidden });
+          } else if (earnedWhileHidden > 0) {
+            setValuation((prev) => prev + earnedWhileHidden);
+            setTotalValuation((prev) => prev + earnedWhileHidden);
+            setSlopCount((prev) => prev + Math.max(1, Math.floor(earnedWhileHidden)));
           }
+          awayEarnedRef.current = 0;
           hiddenSinceRef.current = null;
         }
         setPageActivity(document.hasFocus() ? 'active' : 'inactive');
@@ -607,20 +620,33 @@ export function useGameStore() {
       const tickScale = deltaSec / 0.2; // Konzept-Wahrscheinlichkeiten sind pro 200ms-Tick angegeben
 
       // 1. Produktion + kontinuierliches Burn (Konzept Abschnitt 4: Burn frisst den Bestand)
-      // Tab inaktiv/hidden (Punkt 1): Produktion läuft nur mit 20%/10% Rate weiter.
-      const activityMult = pageActivity === 'hidden' ? 0.10 : pageActivity === 'inactive' ? 0.20 : 1.0;
+      // Tab inaktiv/hidden: Produktion läuft nur gedrosselt weiter (50% statt zuvor 10%/20%
+      // gestaffelt - "nicht so tief wie bisher").
+      const activityMult = pageActivity !== 'active' ? 0.5 : 1.0;
+      const isHiddenTab = pageActivity === 'hidden';
       setValuation((prevVal) => {
-        const earned = vps * deltaSec * activityMult;
+        // Burn läuft unverändert mit vollem Tempo weiter, auch im Hintergrund - das war
+        // schon vor dieser Änderung so (siehe burnRate ohne activityMult) und bleibt so.
         const burnLoss = prevVal * burnRate * deltaSec;
+        if (burnLoss > 0) {
+          setTotalBurned((prev) => prev + burnLoss);
+        }
+
+        const earned = vps * deltaSec * activityMult;
+
+        // 'hidden' (Tab wirklich im Hintergrund, nicht nur unfokussiert): NICHT mehr live
+        // gutschreiben, nur im awayEarnedRef-Puffer sammeln. Ob daraus am Ende Wert wird,
+        // entscheidet sich erst bei Rückkehr in der updateActivity()-Effect weiter unten:
+        // < 30 min automatisch & ohne Hinweis, ab 30 min nur per Ad-Ansehen oder explizitem
+        // Verzicht (AfkReportModal) - kein "einfach ignorieren und trotzdem behalten" mehr.
+        if (isHiddenTab) {
+          if (earned > 0) awayEarnedRef.current += earned;
+          return Math.max(0, prevVal - burnLoss);
+        }
+
         if (earned > 0) {
           setTotalValuation((prev) => prev + earned);
           setSlopCount((prev) => prev + Math.max(1, Math.floor(earned)));
-          if (pageActivity === 'hidden') {
-            awayEarnedRef.current += earned;
-          }
-        }
-        if (burnLoss > 0) {
-          setTotalBurned((prev) => prev + burnLoss);
         }
         return Math.max(0, prevVal + earned - burnLoss);
       });
@@ -1035,17 +1061,22 @@ export function useGameStore() {
     if (doubled) flashAdReward(msg);
   }, [offlineReport, addLog, flashAdReward, tf]);
 
-  // AFK-Report schließen (Punkt 1): "nur einsammeln" (nichts extra, Wert wurde schon
-  // während der Abwesenheit live gutgeschrieben) oder per Ad verdoppeln.
+  // AFK-Report: der während der >=30min-Abwesenheit erzeugte Wert wurde NICHT live
+  // gutgeschrieben (siehe pageActivity 'hidden' im Tick-Loop) und ist bis hierhin rein
+  // PENDING. Verzicht verwirft ihn ersatzlos - kein "Popup wegklicken, Geld trotzdem
+  // behalten" mehr.
   const dismissAfkReport = useCallback(() => {
+    if (afkReport) {
+      addLog(tf('log_afkBonusForfeited', { amount: Math.floor(afkReport.amount).toLocaleString() }), 'info');
+    }
     setAfkReport(null);
-  }, []);
+  }, [afkReport, addLog, tf]);
 
   const claimAfkBonus = useCallback(() => {
     if (!afkReport) return;
     setValuation((prev) => prev + afkReport.amount);
     setTotalValuation((prev) => prev + afkReport.amount);
-    const msg = tf('log_afkBonusDoubled', { amount: Math.floor(afkReport.amount).toLocaleString() });
+    const msg = tf('log_afkBonusClaimed', { amount: Math.floor(afkReport.amount).toLocaleString() });
     addLog(msg, 'success');
     flashAdReward(msg);
     setAfkReport(null);

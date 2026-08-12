@@ -12,28 +12,42 @@
 // gerenderten Text auf, ist der Rechtstext nicht veröffentlichungsreif.
 export const LEGAL_TODO = '[[ BITTE EINTRAGEN ]]';
 
+// ================================ HINWEIS ================================
+// Betreiber ist laut quaell.bryopal.ch eine SCHWEIZER GmbH, keine deutsche. Die
+// Abschnittstitel unten ("Angaben gemäß § 5 DDG", "§ 18 Abs. 2 MStV", "USt-IdNr. gemäß
+// § 27a UStG") zitieren deutsches Recht - das ist die Rechtsgrundlage, mit der dieses
+// Modal ursprünglich als Entwurf angelegt wurde, aber für eine Schweizer Gesellschaft
+// vermutlich NICHT die zutreffende (einschlägig wäre u.a. Art. 3 lit. s UWG für die
+// Anbieterkennzeichnung, ggf. revDSG statt DSGVO). Diese Zitate wurden bewusst NICHT
+// eigenmächtig umgeschrieben, da das eine juristische Einschätzung ist - bitte von
+// einer Person mit Rechtskenntnis prüfen lassen, bevor die Seite live geht.
+// ===========================================================================
+
 // Alle betreiberspezifischen Angaben an EINER Stelle - Impressum und
 // Datenschutzerklärung ziehen beide hier heraus, damit nichts doppelt gepflegt
 // werden muss. null bedeutet "fehlt noch" und wird als LEGAL_TODO gerendert.
 export const OPERATOR = {
-  // Vor- und Nachname bzw. Firmierung inkl. Rechtsform (Pflicht, § 5 Abs. 1 Nr. 1 DDG)
-  name: null,
-  // Ladungsfähige Anschrift - Postfach genügt NICHT (Pflicht, § 5 Abs. 1 Nr. 1 DDG)
-  street: null,
-  postalCode: null,
-  city: null,
-  country: 'Deutschland',
-  // Kontakt (Pflicht, § 5 Abs. 1 Nr. 2 DDG). E-Mail stammt aus dem Projekt-Account.
-  email: 'moosmann.b@gmail.com',
+  // Quelle: quaell.bryopal.ch (Impressum der Bryopal GmbH)
+  name: 'Bryopal GmbH',
+  street: 'Seeblickstrasse 6a',
+  postalCode: '9010',
+  city: 'St. Gallen',
+  country: 'Schweiz',
+  email: 'contact@bryopal.ch',
+  // Auf quaell.bryopal.ch ebenfalls nicht angegeben.
   phone: null,
-  // Nur falls vorhanden: USt-IdNr. nach § 27a UStG, Handelsregister + Nummer
+  // Schweizer UID ist kein EU-USt-IdNr. nach § 27a UStG - deshalb nicht hier eingetragen
+  // (würde eine falsche Rechtsgrundlage suggerieren), sondern unten unter "register" mit
+  // korrekter Bezeichnung.
   vatId: null,
-  register: null,
-  // Inhaltlich Verantwortlicher nach § 18 Abs. 2 MStV (nur bei redaktionellen Inhalten)
-  contentResponsible: null,
-  // Wer die Seite ausliefert (z. B. Cloudflare Pages, Vercel, Netlify) - wird in der
-  // Datenschutzerklärung als Empfänger der Server-Logfiles genannt.
-  hostingProvider: null,
+  register: 'UID: CHE-194.217.671, Handelsregisteramt des Kantons St. Gallen',
+  // Auf quaell.bryopal.ch als "vertretungsberechtigte Person" gelistet, nicht explizit als
+  // inhaltlich Verantwortlicher - für diese Seite mangels anderer Angabe übernommen.
+  contentResponsible: 'Björn Moosmann',
+  // Bestätigt: Cloudflare (Deployment läuft über *.workers.dev). Für eine vollständige
+  // Anbieterkennzeichnung ggf. noch auf "Cloudflare, Inc." vs. konkretes Cloudflare-Produkt
+  // (Pages/Workers) präzisieren.
+  hostingProvider: 'Cloudflare, Inc.',
 };
 
 export function formatOperatorField(value) {

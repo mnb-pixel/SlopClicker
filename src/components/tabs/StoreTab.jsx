@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import * as Icons from 'lucide-react';
+import { Lock, Sparkles, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { getIcon } from '../../utils/iconMap';
 import { BUILDINGS_DATA } from '../../data/buildingsData';
 import { UPGRADES_DATA, getAvailableUpgrades } from '../../data/upgradesData';
 import { GREENWASHING_LAYOFFS_DATA, getCorporateActionCost } from '../../data/greenwashingLayoffsData';
@@ -23,6 +24,7 @@ export function StoreTab({
   addCardToAlbum,
   boughtGreenwashingLayoffs = [],
   buyGreenwashingLayoff,
+  stickyTopPx = 0,
   t,
 }) {
   const [storeSection, setStoreSection] = useState('engines'); // 'engines' | 'upgrades' | 'corporate' | 'buzzwords'
@@ -34,7 +36,7 @@ export function StoreTab({
 
   // Dynamic Icon Resolver helper
   const renderIcon = (iconName, className = 'w-4 h-4') => {
-    const IconComp = Icons[iconName] || Icons.Zap;
+    const IconComp = getIcon(iconName, 'Zap');
     return <IconComp className={className} />;
   };
 
@@ -184,8 +186,16 @@ export function StoreTab({
 
   return (
     <div className="p-4 pb-20 max-w-md mx-auto">
-      {/* 4 Store Sub-Category Selector */}
-      <div className="grid grid-cols-4 gap-1 mb-4 bg-slate-900 p-1 rounded-xl border border-slate-800 text-[11px] font-bold">
+      {/* 4 Store Sub-Category Selector. Sticky statt im normalen Fluss: bei langen Listen
+          (v.a. Upgrades/Corporate mit hunderten Einträgen) scrollte die Leiste bisher weg,
+          man musste zum Wechseln immer erst zurück nach oben. top kommt von außen, weil
+          "darunter andocken" je nach Layout etwas anderes bedeutet - auf Mobile relativ zum
+          ebenfalls sticky App-Header (dessen Höhe variiert, z.B. durch das SEC-Theme-Banner
+          oder umbrechende Startup-Namen), auf Desktop relativ zur eigenen Scroll-Spalte (dort 0). */}
+      <div
+        className="sticky z-10 grid grid-cols-4 gap-1 mb-4 bg-slate-900 p-1 rounded-xl border border-slate-800 text-[11px] font-bold"
+        style={{ top: stickyTopPx }}
+      >
         <button
           onClick={() => setStoreSection('engines')}
           className={`py-1.5 rounded-lg transition-all ${
@@ -254,7 +264,7 @@ export function StoreTab({
                   >
                     <div className="flex items-center gap-2.5">
                       <div className="bg-slate-900 p-2 rounded-lg border border-slate-800 text-slate-600">
-                        <Icons.Lock className="w-4 h-4" />
+                        <Lock className="w-4 h-4" />
                       </div>
                       <div>
                         <div className="font-bold text-xs text-slate-500">
@@ -397,7 +407,7 @@ export function StoreTab({
             <div className="flex justify-between items-center bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
               <div>
                 <div className="text-xs font-extrabold text-slate-200 flex items-center gap-1.5">
-                  <Icons.Sparkles className="w-4 h-4 text-amber-400" />
+                  <Sparkles className="w-4 h-4 text-amber-400" />
                   <span>{tr('availableUpgradesLabel')} ({availableUpgrades.length})</span>
                 </div>
                 <div className="text-[10px] text-slate-400">{tr('tileTapHint')}</div>
@@ -443,7 +453,7 @@ export function StoreTab({
                   <span>⚡ {upgradeDescription(activeUpgrade)}</span>
                   {isActiveBought ? (
                     <span className="px-3 py-1 rounded-lg font-black text-xs shrink-0 bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 flex items-center gap-1">
-                      <Icons.CheckCircle2 className="w-3.5 h-3.5" /> {tr('boughtLabel')}
+                      <CheckCircle2 className="w-3.5 h-3.5" /> {tr('boughtLabel')}
                     </span>
                   ) : (
                   <button
@@ -507,7 +517,7 @@ export function StoreTab({
                 className="w-full p-3 flex items-center justify-between font-extrabold text-xs text-emerald-400 hover:bg-slate-800/60 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <Icons.CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                   <span>{tr('boughtUpgradesTitle')} ({boughtUpgradesObjects.length})</span>
                 </div>
                 <span className="text-[10px] font-mono font-bold text-slate-400">
@@ -548,7 +558,7 @@ export function StoreTab({
                                       <span className="truncate">{upgradeName(activeItem)}</span>
                                     </div>
                                     <span className="flex items-center gap-1 text-emerald-400 font-black text-[10px] shrink-0 ml-2">
-                                      <Icons.CheckCircle2 className="w-3.5 h-3.5" /> {tr('boughtLabel')}
+                                      <CheckCircle2 className="w-3.5 h-3.5" /> {tr('boughtLabel')}
                                     </span>
                                   </div>
 
@@ -604,7 +614,7 @@ export function StoreTab({
         <div className="flex flex-col gap-2">
           <div className="bg-amber-950/40 p-3 rounded-xl border border-amber-500/40 mb-2 text-xs">
             <div className="font-extrabold text-amber-300 flex items-center gap-1.5 mb-1">
-              <Icons.ShieldAlert className="w-4 h-4 text-amber-400" />
+              <ShieldAlert className="w-4 h-4 text-amber-400" />
               {tr('corporateTitle')}
             </div>
             <div className="text-[#EAE7DA]/80">
@@ -625,7 +635,7 @@ export function StoreTab({
                 >
                   <div className="flex items-center gap-2.5">
                     <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-600">
-                      <Icons.Lock className="w-4 h-4 text-slate-500" />
+                      <Lock className="w-4 h-4 text-slate-500" />
                     </div>
                     <div>
                       <div className="font-extrabold text-xs text-slate-400">{tr('lockedCorporate')} ({buildingName(b.id)})</div>
@@ -697,7 +707,7 @@ export function StoreTab({
               className="w-full p-3 flex items-center justify-between font-extrabold text-xs text-emerald-400 hover:bg-slate-800/60 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <Icons.CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <span>{tr('boughtCorporateTitle')} ({boughtCorporateObjects.length})</span>
               </div>
               <span className="text-[10px] font-mono font-bold text-slate-400">
@@ -736,7 +746,7 @@ export function StoreTab({
                           </div>
                         </div>
                         <span className="flex items-center gap-1 text-emerald-400 font-black text-[10px] shrink-0 ml-2">
-                          <Icons.CheckCircle2 className="w-3.5 h-3.5" /> {tr('executed')}
+                          <CheckCircle2 className="w-3.5 h-3.5" /> {tr('executed')}
                         </span>
                       </div>
                     );

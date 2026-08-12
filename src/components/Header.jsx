@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, forwardRef } from 'react';
 import { Flame, Edit3, Sparkles, ShieldAlert, Cpu, ChevronUp, ChevronDown, BookOpen, Share2 } from 'lucide-react';
 import { formatCurrency, formatExactValuation, formatNumber } from '../utils/formatters';
 import { NewsTicker } from './NewsTicker';
 
-export function Header({
+// forwardRef, damit App.jsx die tatsächliche Höhe DES <header>-Elements messen kann (für
+// Sticky-Elemente, die direkt darunter andocken sollen). Ein zusätzlicher Wrapper-Div um
+// Header herum wäre hierfür der falsche Weg: dessen Elternbox wäre exakt so hoch wie der
+// Header selbst und würde position:sticky jeden Spielraum nehmen - der Header würde beim
+// Scrollen komplett verschwinden statt oben kleben zu bleiben.
+export const Header = forwardRef(function Header({
   startupName,
   setStartupName,
   hasAiDomainBonus,
@@ -23,7 +28,7 @@ export function Header({
   setLang,
   logs,
   t,
-}) {
+}, ref) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(startupName);
   const [buttonsCollapsed, setButtonsCollapsed] = useState(false);
@@ -51,7 +56,7 @@ export function Header({
   const tr = t || ((k) => k);
 
   return (
-    <header className={`${
+    <header ref={ref} className={`${
       isSecTheme
         ? 'bg-[#FBF9F5] border-b-4 border-slate-900 text-slate-900 shadow-md font-serif'
         : 'bg-slate-900/95 backdrop-blur-md border-b border-cyan-500/20 text-slate-100'
@@ -221,4 +226,4 @@ export function Header({
       </div>
     </header>
   );
-}
+});

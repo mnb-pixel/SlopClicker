@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import * as Icons from 'lucide-react';
+import { Layers, Sparkles, BookOpen, Zap, Search, Lock, CheckCircle2, X, PlusCircle } from 'lucide-react';
+import { getIcon } from '../utils/iconMap';
 import { BUZZWORDS_DATA } from '../data/buzzwordsData';
 import { formatCurrency } from '../utils/formatters';
 
@@ -24,7 +25,7 @@ export function BuzzwordAlbum({
 
   // Dynamic Lucide Icon Renderer
   const renderCardIcon = (iconName, className = 'w-5 h-5') => {
-    const IconComp = Icons[iconName] || Icons.Sparkles;
+    const IconComp = getIcon(iconName, 'Sparkles');
     return <IconComp className={className} />;
   };
 
@@ -104,7 +105,7 @@ export function BuzzwordAlbum({
       <div className="rounded-2xl bg-gradient-to-r from-purple-950 via-slate-900 to-fuchsia-950 border-2 border-fuchsia-500/50 p-4 shadow-xl flex flex-col items-center text-center gap-3">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
           <div className="p-3 rounded-2xl bg-gradient-to-br from-fuchsia-500 via-purple-600 to-amber-400 text-slate-950 border-2 border-amber-300 shadow-lg shrink-0">
-            <Icons.Layers className="w-7 h-7 text-slate-950" />
+            <Layers className="w-7 h-7 text-slate-950" />
           </div>
           <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
             <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
@@ -134,7 +135,7 @@ export function BuzzwordAlbum({
               : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
           }`}
         >
-          <Icons.Sparkles className="w-4 h-4 shrink-0" />
+          <Sparkles className="w-4 h-4 shrink-0" />
           <span>{boughtCount >= totalCards ? tr('allCollected') : `${tr('openPackLabel')} (${formatCurrency(packCost)})`}</span>
         </button>
       </div>
@@ -144,14 +145,14 @@ export function BuzzwordAlbum({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-black text-slate-100 uppercase tracking-tight flex items-center gap-2">
-              <Icons.BookOpen className="w-5 h-5 text-fuchsia-400" />
+              <BookOpen className="w-5 h-5 text-fuchsia-400" />
               {tr('albumPortfolioTitle')} ({boughtCount}/{totalCards})
             </h2>
           </div>
 
           {/* Cumulative Bonus Badge */}
           <div className="bg-emerald-950/80 border border-emerald-500/50 px-3 py-1 rounded-xl shadow-md flex items-center gap-2 shrink-0">
-            <Icons.Zap className="w-4 h-4 text-emerald-400 animate-pulse" />
+            <Zap className="w-4 h-4 text-emerald-400 animate-pulse" />
             <div>
               <div className="text-[9px] text-slate-400 uppercase font-mono font-bold">{tr('totalPortfolioBonus')}</div>
               <div className="text-emerald-300 text-xs font-mono font-black">+ {totalBonusPct}% {tr('vpsGlobalLabel')}</div>
@@ -222,7 +223,7 @@ export function BuzzwordAlbum({
 
           {/* Search Box */}
           <div className="relative min-w-[140px]">
-            <Icons.Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               placeholder={tr('cardSearchPlaceholder')}
@@ -280,7 +281,7 @@ export function BuzzwordAlbum({
                 {/* Silhouette Placeholder Content */}
                 <div className="my-2 flex flex-col items-center justify-center py-2.5 rounded-lg border border-slate-900 bg-slate-900/40 text-slate-600 group-hover:text-fuchsia-400 transition-colors">
                   <div className="p-2 rounded-xl bg-slate-900 border border-slate-800 mb-1">
-                    <Icons.Lock className="w-5 h-5 text-slate-600 group-hover:text-fuchsia-400 transition-colors" />
+                    <Lock className="w-5 h-5 text-slate-600 group-hover:text-fuchsia-400 transition-colors" />
                   </div>
                   <div className="text-[10px] font-bold text-slate-500 select-none blur-[3px] mt-0.5">
                     ??? {tr('secretLabel')} ???
@@ -345,7 +346,7 @@ export function BuzzwordAlbum({
                 </div>
 
                 <div className="w-full py-0.5 rounded font-black text-[10px] bg-slate-950 text-slate-300 border border-slate-800 text-center flex items-center justify-center gap-1">
-                  <Icons.CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                   <span>{tr('inAlbumBadge')}</span>
                 </div>
               </div>
@@ -365,7 +366,7 @@ export function BuzzwordAlbum({
             {openingState === 'SHAKING' && (
               <div className="flex flex-col items-center my-6">
                 <div className="w-20 h-28 rounded-2xl bg-gradient-to-tr from-fuchsia-600 via-purple-600 to-amber-400 border-4 border-amber-300 shadow-2xl flex flex-col items-center justify-center text-slate-950 animate-pulse">
-                  <Icons.Sparkles className="w-10 h-10 text-slate-950 animate-spin" />
+                  <Sparkles className="w-10 h-10 text-slate-950 animate-spin" />
                   <span className="font-black text-[10px] uppercase tracking-wider mt-2">{tr('openingLabel')}</span>
                 </div>
                 <div className="text-amber-300 font-extrabold text-xs font-mono mt-4 animate-pulse">
@@ -378,7 +379,7 @@ export function BuzzwordAlbum({
             {openingState === 'REVEALED' && (
               <div className="flex flex-col items-center w-full animate-fadeIn">
                 <div className="text-xs font-mono font-black text-amber-400 uppercase tracking-widest mb-2 flex items-center gap-1">
-                  <Icons.Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
+                  <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
                   {tr('newCardDrawn')}
                 </div>
 
@@ -415,7 +416,7 @@ export function BuzzwordAlbum({
                   onClick={handleInsertIntoAlbum}
                   className="w-full mt-3 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-amber-400 text-slate-950 hover:bg-amber-300 active:scale-95 shadow-xl transition-all flex items-center justify-center gap-1.5"
                 >
-                  <Icons.CheckCircle2 className="w-4 h-4 text-slate-950" />
+                  <CheckCircle2 className="w-4 h-4 text-slate-950" />
                   <span>✨ {tr('insertIntoAlbumLabel')}</span>
                 </button>
               </div>
@@ -445,7 +446,7 @@ export function BuzzwordAlbum({
                 onClick={() => setSelectedCard(null)}
                 className="absolute top-3 right-3 p-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white"
               >
-                <Icons.X className="w-4 h-4" />
+                <X className="w-4 h-4" />
               </button>
 
               {/* Card Header */}
@@ -472,7 +473,7 @@ export function BuzzwordAlbum({
               ) : (
                 <div className="my-2 p-4 rounded-xl bg-slate-950 border-2 border-slate-800 flex flex-col items-center justify-center gap-2 relative overflow-hidden select-none">
                   <div className="p-3 rounded-2xl bg-slate-900 text-slate-700">
-                    <Icons.Lock className="w-8 h-8 text-fuchsia-400" />
+                    <Lock className="w-8 h-8 text-fuchsia-400" />
                   </div>
                   <div className="text-xs font-black text-center text-slate-400 uppercase">
                     {tr('notYetUnlocked')}
@@ -515,7 +516,7 @@ export function BuzzwordAlbum({
                       : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
                   }`}
                 >
-                  <Icons.PlusCircle className="w-4 h-4" />
+                  <PlusCircle className="w-4 h-4" />
                   <span>{tr('buyCardDirectLabel')} ({formatCurrency(bw.cost)})</span>
                 </button>
               )}
