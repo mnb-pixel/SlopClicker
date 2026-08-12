@@ -67,14 +67,6 @@ function linear(ctx, x0, y0, x1, y1, stops) {
   return g;
 }
 
-function withGlow(ctx, color, blur, draw) {
-  ctx.save();
-  ctx.shadowColor = color;
-  ctx.shadowBlur = blur;
-  draw();
-  ctx.restore();
-}
-
 function setTracking(ctx, px) {
   // letterSpacing wird von älteren Engines ignoriert - dann rendert es einfach eng.
   try { ctx.letterSpacing = `${px}px`; } catch { /* nicht unterstützt */ }
@@ -140,11 +132,12 @@ function drawBackground(ctx, H) {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, PITCH_DECK_WIDTH, H);
 
-  // Weiche Neon-Blobs für Tiefe
+  // Weiche Neon-Blobs für Tiefe - bewusst nur 2 statt vieler: jeder Blob ist ein
+  // radialer Fill über das komplette Canvas, und zusammen mit der Vignette darunter
+  // ergeben zu viele davon auf iOS Safari messbar teures Rendering.
   const blobs = [
-    { x: 140, y: 260, r: 620, color: 'rgba(34, 211, 238, 0.20)' },
-    { x: 980, y: H * 0.42, r: 700, color: 'rgba(217, 70, 239, 0.18)' },
-    { x: 420, y: H - 220, r: 640, color: 'rgba(99, 102, 241, 0.20)' },
+    { x: 160, y: 280, r: 640, color: 'rgba(34, 211, 238, 0.18)' },
+    { x: 940, y: H - 260, r: 680, color: 'rgba(217, 70, 239, 0.16)' },
   ];
   blobs.forEach(({ x, y, r, color }) => {
     const g = ctx.createRadialGradient(x, y, 0, x, y, r);
@@ -174,9 +167,11 @@ function drawFrame(ctx, H) {
     [0.5, C.violet],
     [1, C.amber],
   ]);
-  withGlow(ctx, 'rgba(34, 211, 238, 0.45)', 30, () => {
-    strokeRound(ctx, 34, 34, PITCH_DECK_WIDTH - 68, H - 68, 46, frameGrad, 6);
-  });
+  // KEIN ctx.shadowBlur hier: wiederholte Shadow-Blur-Aufrufe auf einem großen
+  // Canvas sind auf iOS Safari extrem teuer und haben die App-Seite mit einem
+  // Renderer-Crash ("A problem repeatedly occurred") abstürzen lassen. Der
+  // Farbverlauf im Rahmen selbst sorgt schon für genug visuellen Pop.
+  strokeRound(ctx, 34, 34, PITCH_DECK_WIDTH - 68, H - 68, 46, frameGrad, 6);
   strokeRound(ctx, 50, 50, PITCH_DECK_WIDTH - 100, H - 100, 36, 'rgba(255,255,255,0.10)', 2);
 }
 
@@ -217,11 +212,9 @@ function drawTitle(ctx, tr, startupName, hasAiDomainBonus) {
     [1, C.fuchsia],
   ]);
   ctx.textAlign = 'center';
-  withGlow(ctx, 'rgba(217, 70, 239, 0.55)', 34, () => {
-    ctx.font = `900 ${size}px ${SANS}`;
-    ctx.fillStyle = grad;
-    ctx.fillText(name, 540, 300);
-  });
+  ctx.font = `900 ${size}px ${SANS}`;
+  ctx.fillStyle = grad;
+  ctx.fillText(name, 540, 300);
 
   if (hasAiDomainBonus) {
     drawPill(ctx, 540, 372, tr('pdAiHypeDomainShort'), {
@@ -241,12 +234,10 @@ function drawHeroValuation(ctx, tr, valuation, vps) {
   const w = 900;
   const h = 320;
 
-  withGlow(ctx, 'rgba(52, 211, 153, 0.28)', 40, () => {
-    fillRound(ctx, x, y, w, h, 40, linear(ctx, x, y, x + w, y + h, [
-      [0, 'rgba(13, 22, 45, 0.92)'],
-      [1, 'rgba(30, 20, 66, 0.92)'],
-    ]));
-  });
+  fillRound(ctx, x, y, w, h, 40, linear(ctx, x, y, x + w, y + h, [
+    [0, 'rgba(13, 22, 45, 0.92)'],
+    [1, 'rgba(30, 20, 66, 0.92)'],
+  ]));
   strokeRound(ctx, x, y, w, h, 40, linear(ctx, x, y, x + w, y, [
     [0, 'rgba(52, 211, 153, 0.85)'],
     [1, 'rgba(34, 211, 238, 0.85)'],
@@ -261,14 +252,12 @@ function drawHeroValuation(ctx, tr, valuation, vps) {
 
   const value = formatCurrency(valuation);
   const valueSize = fitFont(ctx, value, 780, 900, 124, SANS, 48);
-  withGlow(ctx, 'rgba(52, 211, 153, 0.65)', 36, () => {
-    ctx.font = `900 ${valueSize}px ${SANS}`;
-    ctx.fillStyle = linear(ctx, 180, 0, 900, 0, [
-      [0, C.emerald],
-      [1, C.cyanSoft],
-    ]);
-    ctx.fillText(value, 540, y + 160);
-  });
+  ctx.font = `900 ${valueSize}px ${SANS}`;
+  ctx.fillStyle = linear(ctx, 180, 0, 900, 0, [
+    [0, C.emerald],
+    [1, C.cyanSoft],
+  ]);
+  ctx.fillText(value, 540, y + 160);
 
   drawPill(ctx, 540, y + 258, `+${formatCurrency(vps)} ${tr('pdPassiveCashflow')}`, {
     font: `800 28px ${MONO}`,
@@ -309,9 +298,7 @@ function drawTierBar(ctx, tr, hypeTier) {
   for (let i = 0; i < 10; i++) {
     const sx = barX + i * (segW + gap);
     if (i < tier) {
-      withGlow(ctx, 'rgba(168, 85, 247, 0.55)', 16, () => {
-        fillRound(ctx, sx, barY, segW, barH, 8, fillGrad);
-      });
+      fillRound(ctx, sx, barY, segW, barH, 8, fillGrad);
     } else {
       fillRound(ctx, sx, barY, segW, barH, 8, 'rgba(255,255,255,0.07)');
       strokeRound(ctx, sx, barY, segW, barH, 8, 'rgba(255,255,255,0.10)', 2);
@@ -487,13 +474,11 @@ function drawBottom(ctx, tr, H) {
   const barY = H - 140;
   const barW = 900;
   const barH = 72;
-  withGlow(ctx, 'rgba(34, 211, 238, 0.45)', 28, () => {
-    fillRound(ctx, barX, barY, barW, barH, 36, linear(ctx, barX, 0, barX + barW, 0, [
-      [0, C.cyan],
-      [0.5, C.fuchsia],
-      [1, C.amber],
-    ]));
-  });
+  fillRound(ctx, barX, barY, barW, barH, 36, linear(ctx, barX, 0, barX + barW, 0, [
+    [0, C.cyan],
+    [0.5, C.fuchsia],
+    [1, C.amber],
+  ]));
 
   const cta = tr('pdBuildEmpireFooter');
   setTracking(ctx, 1);
