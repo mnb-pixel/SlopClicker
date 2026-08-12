@@ -486,7 +486,7 @@ export function useGameStore() {
     return sum;
   }, [boughtBuzzwords]);
 
-  // --- GROSS TPS/VPS (Konzept Abschnitt 4, plus SlopClicker Board-Syndicate/Prestige-Boni) ---
+  // --- GROSS TPS/VPS (Konzept Abschnitt 4, plus Token-Furnace Board-Syndicate/Prestige-Boni) ---
   const grossVps = useMemo(() => {
     let totalCps = 0;
 
@@ -515,7 +515,7 @@ export function useGameStore() {
       }
     });
 
-    // Zusätzliche SlopClicker-Multiplikatoren (Global-Upgrades, Board-Syndicate, Prestige, Power-Click)
+    // Zusätzliche Token-Furnace-Multiplikatoren (Global-Upgrades, Board-Syndicate, Prestige, Power-Click)
     let globalMult = 1.0;
     boughtUpgrades.forEach((upId) => {
       const up = UPGRADES_DATA.find((u) => u.id === upId);
@@ -581,7 +581,7 @@ export function useGameStore() {
   // Was der Bestand gerade netto pro Sekunde macht (Produktion minus laufendem Burn) - nur fürs Display
   const netFlow = useMemo(() => vps - valuation * burnRate, [vps, valuation, burnRate]);
 
-  // --- TAP-WERT (Konzept: max(1, Gesamt-TPS x 0.05), zzgl. SlopClicker Click-Upgrades) ---
+  // --- TAP-WERT (Konzept: max(1, Gesamt-TPS x 0.05), zzgl. Token-Furnace Click-Upgrades) ---
   const clickValue = useMemo(() => {
     let baseClick = Math.max(1, vps * 0.05);
 
@@ -1119,7 +1119,7 @@ export function useGameStore() {
     return Math.floor(Math.sqrt(Math.max(0, totalValuation) / ASCEND_CHIP_DIVISOR));
   }, [totalValuation]);
 
-  // Singularity Ascension (SlopClicker Prestige Reset - bleibt zusätzlich zu Pivot bestehen)
+  // Singularity Ascension (Token-Furnace Prestige Reset - bleibt zusätzlich zu Pivot bestehen)
   const ascend = useCallback(() => {
     const earnedChips = pendingAscendBoost ? Math.floor(pendingHeavenlyChips * 1.2) : pendingHeavenlyChips;
     // STRICT: muss tatsächlich >=1 Heavenly Chip verdient haben - sonst konnte man nach dem

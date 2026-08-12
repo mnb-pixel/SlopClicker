@@ -342,7 +342,7 @@ function drawFooter(ctx, tr, H) {
   ctx.font = `800 24px ${SANS}`;
   setTracking(ctx, 3);
   ctx.fillStyle = '#ffffff';
-  ctx.fillText('SLOPCLICKER.APP', PITCH_DECK_WIDTH / 2, H - 27);
+  ctx.fillText('TOKEN-FURNACE.COM', PITCH_DECK_WIDTH / 2, H - 27);
   setTracking(ctx, 0);
 }
 
