@@ -13,12 +13,23 @@ import { formatCurrency, getBuildingCost, getBuildingBulkCost, getMaxAffordableB
 
 const STORAGE_KEY = 'SLOP_CLICKER_GAME_SAVE_V1';
 
-// Konzept Abschnitt 4: Zufallsereignisse, geprüft pro Tick (Referenz-Takt 200ms)
-const GOLDEN_CHANCE_PER_200MS = 0.0006; // 0.06%
-const BUBBLE_CHANCE_PER_200MS = 0.0004; // 0.04%
+// Konzept Abschnitt 4: Zufallsereignisse, geprüft pro Tick (Referenz-Takt 200ms).
+// Beide Event-Arten kamen früher viel zu oft (Golden ~5,5min, Bubble ~8min, also im Schnitt
+// alle ~3min irgendein Banner). Auf je ~20 Minuten Erwartungswert gesenkt, damit ein Meme
+// wieder ein Ereignis ist: 1 / (20min * 300 Ticks/min) ≈ 0,000167.
+const GOLDEN_CHANCE_PER_200MS = 0.000167; // ~alle 20 Minuten
+const BUBBLE_CHANCE_PER_200MS = 0.000167; // ~alle 20 Minuten
 const SHADOW_CHANCE_PER_200MS = 0.0000015; // 0.00015%
-const GOLDEN_DURATION_SEC = 15;
 const BUBBLE_BURN_DURATION_SEC = 30;
+const BUBBLE_GLITCH_SEC = 4;
+
+// Golden Meme: der Boost läuft NICHT mehr automatisch beim Spawnen an. Das Banner ist ein
+// Angebot, das GOLDEN_OFFER_SEC lang offen steht; eingelöst wird es ausschließlich über die
+// Rewarded Ad. Als Gegenwert für Seltenheit + Ad-Pflicht ist der Boost doppelt so stark und
+// doppelt so lang wie der frühere Auto-Boost (war 5x / 15s).
+const GOLDEN_OFFER_SEC = 20;
+const GOLDEN_BOOST_SEC = 30;
+const GOLDEN_BOOST_MULT = 10;
 
 // Black Swan Events (pro Engine-Typ, siehe blackSwanEventsData.js): harte Untergrenze von
 // 24h zwischen zwei Events DERSELBEN Engine, obendrauf eine sehr niedrige Tick-Chance, damit
@@ -35,7 +46,10 @@ const AD_COOLDOWN_SEC = {
   power_click: 15 * 60,
   ascend_boost: 5 * 60,
   pivot_boost: 5 * 60,
-  golden_extend: 20,
+  // Kein Cooldown: der Golden-Meme-Claim ist bereits durch die Seltenheit des Events
+  // begrenzt (~20min) und ist der EINZIGE Weg an den Boost - ein Cooldown könnte das
+  // Angebot komplett unbenutzbar machen.
+  golden_claim: 0,
   bubble_clear: 45,
   offline_double: 0,
   scheduled_bonus: 0,
@@ -91,6 +105,13 @@ export function useGameStore() {
   const [pivotCount, setPivotCount] = useState(0);
   const [valuationAtLastPivot, setValuationAtLastPivot] = useState(0);
   const [bubblePopTimer, setBubblePopTimer] = useState(0);
+  // Restlaufzeit (Sek.) des per Ad eingelösten Golden-Meme-Boosts. Bewusst getrennt von
+  // activeEvent: das Banner ist nur das Angebot, dieser Timer ist der tatsächliche Effekt.
+  const [goldenBoostTimer, setGoldenBoostTimer] = useState(0);
+  // Endzeit (ms) des Vollbild-Glitch-Effekts bei Bubble Pop. Bewusst NICHT an die Lebensdauer
+  // des Banners gekoppelt: der Glitch ist ein kurzer Schock-Effekt, das Banner steht die
+  // gesamten 30s Debuff-Dauer - 30s Dauerglitch wäre unbenutzbar.
+  const [bubbleGlitchUntil, setBubbleGlitchUntil] = useState(0);
 
   const [buildings, setBuildings] = useState(INITIAL_BUILDINGS);
   // Black Swan Events: nächstmöglicher Zeitpunkt (ms) für ein Event PRO Engine-Typ.
@@ -102,7 +123,9 @@ export function useGameStore() {
   const [boughtHeavenlyUpgrades, setBoughtHeavenlyUpgrades] = useState([]);
   const [unlockedAchievements, setUnlockedAchievements] = useState([]);
 
-  const [activeEvent, setActiveEvent] = useState(null); // { id, kind: 'golden'|'bubble', expiresAt }
+  // { id, kind: 'golden'|'bubble', expiresAt, claimed? }. Bei 'golden' ist expiresAt vor dem
+  // Claim das Ende der Überlegzeit und danach das Ende des Boosts.
+  const [activeEvent, setActiveEvent] = useState(null);
   const [adState, setAdState] = useState(null); // { type, timer }
   const [adCooldowns, setAdCooldowns] = useState({}); // { [adType]: readyAtTimestamp }
   const [offlineReport, setOfflineReport] = useState(null); // { amount, elapsedSec } | null
@@ -520,8 +543,9 @@ export function useGameStore() {
       else if (boughtHeavenlyUpgrades.includes('demon_1')) powerSurgeMult = 1.2;
     }
 
-    // Golden Headline: 5x TPS für 15 Sekunden (Konzept Abschnitt 4)
-    const goldenMult = activeEvent?.kind === 'golden' ? 5 : 1.0;
+    // Golden Meme: 10x TPS für 30s - aber nur, wenn das Angebot per Ad eingelöst wurde.
+    // Ein bloß sichtbares Banner (activeEvent) boostet nichts mehr.
+    const goldenMult = goldenBoostTimer > 0 ? GOLDEN_BOOST_MULT : 1.0;
 
     // 9. Easter Egg: .ai Company Domain Bonus (+10% VPS)
     const aiDomainMult = (startupName || '').trim().toLowerCase().endsWith('.ai') ? 1.10 : 1.0;
@@ -530,7 +554,7 @@ export function useGameStore() {
     const bubbleMult = bubblePopTimer > 0 ? 0.65 : 1.0;
 
     return totalCps * globalMult * syndicateBoost * pathMult * prestigeBonus * powerSurgeMult * aiDomainMult * goldenMult * bubbleMult;
-  }, [buildings, boughtUpgrades, boughtGreenwashingLayoffs, boughtHeavenlyUpgrades, unlockedAchievements, buzzwordBonus, idealistLevel, cynicLevel, prestigeLevel, powerClickActive, powerClickSurgeTimer, activeEvent, bubblePopTimer, startupName]);
+  }, [buildings, boughtUpgrades, boughtGreenwashingLayoffs, boughtHeavenlyUpgrades, unlockedAchievements, buzzwordBonus, idealistLevel, cynicLevel, prestigeLevel, powerClickActive, powerClickSurgeTimer, goldenBoostTimer, bubblePopTimer, startupName]);
 
   // vps = gross production rate (Konzept: Gesamt-TPS, vor Burn Rate - Burn frisst den Bestand, nicht den Fluss)
   const vps = grossVps;
@@ -626,24 +650,41 @@ export function useGameStore() {
         setBubblePopTimer((prev) => Math.max(0, prev - deltaSec));
       }
 
-      // 5. Aktives Event ablaufen lassen
+      // 4b. Golden-Meme-Boost auslaufen lassen (10x TPS, nach Ad-Claim gesetzt)
+      if (goldenBoostTimer > 0) {
+        setGoldenBoostTimer((prev) => Math.max(0, prev - deltaSec));
+      }
+
+      // 4c. Bubble-Glitch nach kurzer Schock-Phase beenden (Banner läuft länger weiter)
+      if (bubbleGlitchUntil && now >= bubbleGlitchUntil) {
+        setBubbleGlitchUntil(0);
+      }
+
+      // 5. Aktives Event ablaufen lassen. Ein nicht eingelöstes Golden Meme verfällt
+      // ersatzlos - das ist der Preis dafür, dass der Boost jetzt deutlich stärker ist.
       if (activeEvent && now >= activeEvent.expiresAt) {
+        if (activeEvent.kind === 'golden' && !activeEvent.claimed) addLog(tf('log_goldenExpired'), 'info');
         setActiveEvent(null);
       }
 
-      // 6. Golden Headline (0.06%/Tick@200ms): purely a temporary rate boost - 5x TPS for 15s.
-      // No item reward: Buzzword cards are earned only via booster packs / direct purchase now.
+      // 6. Golden Meme (~alle 20 Min): spawnt NUR das Angebot. Der 10x-Boost wird
+      // ausschließlich über die Rewarded Ad im Banner eingelöst (siehe startAd/'golden_claim'),
+      // das Banner selbst hat keinerlei Effekt auf die Produktion.
       if (!activeEvent && Math.random() < GOLDEN_CHANCE_PER_200MS * tickScale) {
         const id = GOLDEN_EVENT_IDS[Math.floor(Math.random() * GOLDEN_EVENT_IDS.length)];
-        setActiveEvent({ id, kind: 'golden', expiresAt: now + GOLDEN_DURATION_SEC * 1000 });
-        setStats((s) => ({ ...s, goldenCaught: s.goldenCaught + 1 }));
+        setActiveEvent({ id, kind: 'golden', startedAt: now, expiresAt: now + GOLDEN_OFFER_SEC * 1000 });
         addLog(`${t(`event_${id}_title`)} - ${t(`event_${id}_desc`)}`, 'warning');
-      // 7. Bubble Pop (0.04%/Tick@200ms): purely a temporary rate hit for 30s - VPS production
-      // cut and burn rate spiked. No instant stock loss, same "rates only" rule as Golden Headline.
+      // 7. Bubble Pop (~alle 20 Min): purely a temporary rate hit for 30s - VPS production
+      // cut and burn rate spiked. No instant stock loss ("rates only"). Wirkt anders als das
+      // Golden Meme sofort und ungefragt - man kann sich nur per Ad davon freikaufen.
       } else if (!activeEvent && Math.random() < BUBBLE_CHANCE_PER_200MS * tickScale) {
         const id = BUBBLE_EVENT_IDS[Math.floor(Math.random() * BUBBLE_EVENT_IDS.length)];
-        setActiveEvent({ id, kind: 'bubble', expiresAt: now + 4000 });
+        // Banner läuft synchron mit dem Debuff (statt wie früher nach 4s zu verschwinden,
+        // während der Effekt noch 26s weiterlief): so stimmt der Countdown und die
+        // "Debuff sofort beenden"-Ad ist überhaupt lange genug erreichbar.
+        setActiveEvent({ id, kind: 'bubble', startedAt: now, expiresAt: now + BUBBLE_BURN_DURATION_SEC * 1000 });
         setBubblePopTimer(BUBBLE_BURN_DURATION_SEC);
+        setBubbleGlitchUntil(now + BUBBLE_GLITCH_SEC * 1000);
         addLog(`${t(`event_${id}_title`)} - ${t(`event_${id}_desc`)}`, 'danger');
       }
 
@@ -695,7 +736,7 @@ export function useGameStore() {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [vps, burnRate, coolingRate, isOverheated, activeEvent, powerClickSurgeTimer, bubblePopTimer, unlockedAchievements, stats, totalValuation, totalBurned, pivotCount, buildings, blackSwanNextEligible, boughtBuzzwords, pageActivity, addLog, t, tf]);
+  }, [vps, burnRate, coolingRate, isOverheated, activeEvent, powerClickSurgeTimer, bubblePopTimer, goldenBoostTimer, bubbleGlitchUntil, unlockedAchievements, stats, totalValuation, totalBurned, pivotCount, buildings, blackSwanNextEligible, boughtBuzzwords, pageActivity, addLog, t, tf]);
 
   // Dynamic Sticky Upgrade Unlock Logic (Cash-based & Owned Engine requirement)
   // Sticky rule: Once unlocked by reaching current cash threshold, upgrades stay unlocked even if cash drops!
@@ -952,14 +993,24 @@ export function useGameStore() {
           const msg = tf('log_bonusPivotBoost');
           addLog(msg, 'success');
           flashAdReward(msg);
-        } else if (type === 'golden_extend') {
-          setActiveEvent((prev) => (prev && prev.kind === 'golden' ? { ...prev, expiresAt: prev.expiresAt + 15000 } : prev));
-          const msg = tf('log_bonusGoldenExtend');
-          addLog(msg, 'success');
-          flashAdReward(msg);
+        } else if (type === 'golden_claim') {
+          // Einziger Weg an den Boost: 10x TPS für 30s scharf schalten. Das Banner bleibt als
+          // "claimed" stehen und läuft synchron mit dem Boost aus, damit der laufende Effekt
+          // sichtbar ist statt kommentarlos im Hintergrund zu ticken.
+          setActiveEvent((prev) => (
+            prev && prev.kind === 'golden'
+              ? { ...prev, claimed: true, startedAt: Date.now(), expiresAt: Date.now() + GOLDEN_BOOST_SEC * 1000 }
+              : prev
+          ));
+          setGoldenBoostTimer(GOLDEN_BOOST_SEC);
+          setStats((s) => ({ ...s, goldenCaught: (s.goldenCaught || 0) + 1 }));
+          // Kein flashAdReward: der Toast sitzt an derselben Position wie das Banner und würde
+          // es überdecken - das Banner zeigt den laufenden Boost ohnehin selbst an.
+          addLog(tf('log_bonusGoldenClaim', { mult: GOLDEN_BOOST_MULT, sec: GOLDEN_BOOST_SEC }), 'success');
         } else if (type === 'bubble_clear') {
           setActiveEvent((prev) => (prev && prev.kind === 'bubble' ? null : prev));
           setBubblePopTimer(0);
+          setBubbleGlitchUntil(0);
           const msg = tf('log_bonusBubbleClear');
           addLog(msg, 'success');
           flashAdReward(msg);
@@ -1279,7 +1330,7 @@ export function useGameStore() {
     buildings, buyBuilding, buyMode, setBuyMode,
     boughtUpgrades, unlockedUpgrades, buyUpgrade, buyAllUpgrades,
     unlockedAchievements,
-    activeEvent, dismissEvent,
+    activeEvent, dismissEvent, bubbleGlitchUntil,
     adState, startAd, isAdReady, getAdCooldownRemaining,
     adRewardToast, dismissAdRewardToast, grantAdPreview, scheduledAdPreview,
     offlineReport, claimOfflineEarnings,
