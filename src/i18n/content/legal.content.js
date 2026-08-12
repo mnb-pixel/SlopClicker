@@ -69,6 +69,7 @@ export const LEGAL_CONTENT = {
       ' markierten Pflichtangaben fehlen und müssen vor einer Veröffentlichung ergänzt werden.',
     lastUpdatedLabel: 'Stand',
     lastUpdated: 'August 2026',
+    dsarFormTitle: 'Anfrage zu deinen Daten stellen',
 
     impressum: {
       title: 'Impressum',
@@ -177,6 +178,7 @@ export const LEGAL_CONTENT = {
       ' are still missing and must be filled in before going live.',
     lastUpdatedLabel: 'Last updated',
     lastUpdated: 'August 2026',
+    dsarFormTitle: 'Submit a data request',
 
     impressum: {
       title: 'Legal Notice',
