@@ -95,11 +95,15 @@ export function PitchDeckModal({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Direct PNG Download
+  // Der Neon-Stil exportiert als JPEG statt PNG (siehe pitchDeckCanvas.js) - Dateiname
+  // & MIME-Type also aus der tatsächlichen Daten-URL ableiten statt hart auf .png.
+  const imageExt = pngDataUrl?.startsWith('data:image/jpeg') ? 'jpg' : 'png';
+
+  // Direct Image Download
   const handleDownloadPng = () => {
     if (!pngDataUrl) return;
     const link = document.createElement('a');
-    link.download = `${snapshot.startupName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_pitchdeck_${style}.png`;
+    link.download = `${snapshot.startupName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_pitchdeck_${style}.${imageExt}`;
     link.href = pngDataUrl;
     link.click();
     confetti({
@@ -114,10 +118,11 @@ export function PitchDeckModal({
     if (navigator.share) {
       try {
         if (pngDataUrl && navigator.canShare) {
-          // Convert dataURL to File for native image sharing
+          // Convert dataURL to File for native image sharing - blob.type kommt
+          // direkt aus der Daten-URL mit, kein Bedarf, den Mime-Type separat zu raten.
           const res = await fetch(pngDataUrl);
           const blob = await res.blob();
-          const file = new File([blob], `${snapshot.startupName}_pitchdeck.png`, { type: 'image/png' });
+          const file = new File([blob], `${snapshot.startupName}_pitchdeck.${imageExt}`, { type: blob.type });
 
           if (navigator.canShare({ files: [file] })) {
             await navigator.share({
