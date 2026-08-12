@@ -39,6 +39,11 @@ const C = {
 /* ------------------------------------------------------------- background */
 
 function drawBackground(ctx, H) {
+  // Bewusst NUR ein linearer Verlauf für den Hintergrund - keine radialen "Neon-
+  // Blob"-Verläufe und keine Vignette mehr. Selbst ganz ohne shadowBlur hat allein
+  // das mehrfache Füllen des kompletten Canvas mit radialen Gradients (2 Blobs +
+  // Vignette = 3x ~2,3 Mio. Pixel) auf iOS Safari noch für den Renderer-Crash
+  // gereicht - das Consulting-Design (keine radialen Verläufe) crasht nicht.
   const bg = linear(ctx, 0, 0, PITCH_DECK_WIDTH, H, [
     [0, '#05060f'],
     [0.35, '#0b1026'],
@@ -48,33 +53,9 @@ function drawBackground(ctx, H) {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, PITCH_DECK_WIDTH, H);
 
-  // Weiche Neon-Blobs für Tiefe - bewusst nur 2 statt vieler: jeder Blob ist ein
-  // radialer Fill über das komplette Canvas, und zusammen mit der Vignette darunter
-  // ergeben zu viele davon auf iOS Safari messbar teures Rendering.
-  const blobs = [
-    { x: 160, y: 280, r: 640, color: 'rgba(34, 211, 238, 0.18)' },
-    { x: 940, y: H - 260, r: 680, color: 'rgba(217, 70, 239, 0.16)' },
-  ];
-  blobs.forEach(({ x, y, r, color }) => {
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, color);
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, PITCH_DECK_WIDTH, H);
-  });
-
-  // Tech-Grid
-  ctx.strokeStyle = 'rgba(148, 163, 184, 0.06)';
-  ctx.lineWidth = 2;
-  for (let x = 0; x <= PITCH_DECK_WIDTH; x += 72) line(ctx, x, 0, x, H, 'rgba(148, 163, 184, 0.06)', 2);
-  for (let y = 0; y <= H; y += 72) line(ctx, 0, y, PITCH_DECK_WIDTH, y, 'rgba(148, 163, 184, 0.06)', 2);
-
-  // Vignette
-  const vign = ctx.createRadialGradient(540, H / 2, H * 0.28, 540, H / 2, H * 0.72);
-  vign.addColorStop(0, 'rgba(0,0,0,0)');
-  vign.addColorStop(1, 'rgba(0,0,0,0.55)');
-  ctx.fillStyle = vign;
-  ctx.fillRect(0, 0, PITCH_DECK_WIDTH, H);
+  // Tech-Grid (reine Strokes, kein Fill über die volle Fläche - günstig)
+  for (let x = 0; x <= PITCH_DECK_WIDTH; x += 90) line(ctx, x, 0, x, H, 'rgba(148, 163, 184, 0.06)', 2);
+  for (let y = 0; y <= H; y += 90) line(ctx, 0, y, PITCH_DECK_WIDTH, y, 'rgba(148, 163, 184, 0.06)', 2);
 }
 
 function drawFrame(ctx, H) {
@@ -122,14 +103,12 @@ function drawHeader(ctx, tr) {
 function drawTitle(ctx, tr, startupName, hasAiDomainBonus) {
   const name = String(startupName || '').toUpperCase();
   const size = fitFont(ctx, name, 860, 900, 108, SANS, 44);
-  const grad = linear(ctx, 140, 0, 940, 0, [
-    [0, C.cyanSoft],
-    [0.5, '#ffffff'],
-    [1, C.fuchsia],
-  ]);
+  // Volltonfarbe statt Farbverlauf: einen Gradient als fillStyle auf riesigen fetten
+  // Glyphen anzuwenden zwingt Safari, jedes Zeichen erst als Maske zu rendern und
+  // dann den Verlauf durchzukomponieren - bei ~100px Schriftgröße spürbar teuer.
   ctx.textAlign = 'center';
   ctx.font = `900 ${size}px ${SANS}`;
-  ctx.fillStyle = grad;
+  ctx.fillStyle = '#ffffff';
   ctx.fillText(name, 540, 300);
 
   if (hasAiDomainBonus) {
@@ -169,10 +148,7 @@ function drawHeroValuation(ctx, tr, valuation, vps) {
   const value = formatCurrency(valuation);
   const valueSize = fitFont(ctx, value, 780, 900, 124, SANS, 48);
   ctx.font = `900 ${valueSize}px ${SANS}`;
-  ctx.fillStyle = linear(ctx, 180, 0, 900, 0, [
-    [0, C.emerald],
-    [1, C.cyanSoft],
-  ]);
+  ctx.fillStyle = C.emerald;
   ctx.fillText(value, 540, y + 160);
 
   drawPill(ctx, 540, y + 258, `+${formatCurrency(vps)} ${tr('pdPassiveCashflow')}`, {

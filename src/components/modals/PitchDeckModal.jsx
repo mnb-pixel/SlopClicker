@@ -55,18 +55,6 @@ export function PitchDeckModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // Trigger confetti when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      confetti({
-        particleCount: 80,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#06b6d4', '#a855f7', '#ec4899', '#f59e0b'],
-      });
-    }
-  }, [isOpen]);
-
   // HD 1080x1920 Story-Card rendern - das Ergebnis ist gleichzeitig die Vorschau
   // im Modal, damit die Vorschau exakt dem geteilten Bild entspricht.
   useEffect(() => {
