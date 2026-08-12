@@ -48,7 +48,7 @@ export default function App() {
   return (
     <div className={`min-h-screen flex flex-col select-none transition-colors ${
       isW9Theme ? 'sec-w9-theme bg-[#F4F1EA] text-[#0F172A]' : 'bg-slate-950 text-slate-100 font-sans'
-    } ${store.activeEvent?.kind === 'bubble' ? 'glitch-mode' : ''}`}>
+    } ${store.bubbleGlitchUntil ? 'glitch-mode' : ''}`}>
       {/* Top Status Header */}
       <Header
         startupName={store.startupName}
@@ -80,6 +80,7 @@ export default function App() {
         startAd={store.startAd}
         isAdReady={store.isAdReady}
         t={store.t}
+        tf={store.tf}
       />
 
       <AdRewardToast
