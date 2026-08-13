@@ -448,6 +448,7 @@ export const TRANSLATIONS = {
     log_notEnoughForHeavenly: 'Nicht genug Heavenly Chips für "{name}"!',
     log_purchasedHeavenly: 'Heavenly Upgrade "{name}" gekauft!',
     log_saveWiped: 'Spielstand vollständig gelöscht. Neue Runde gestartet!',
+    log_saveFailed: 'ACHTUNG: Spielstand kann nicht gespeichert werden! Browser-Speicher voll oder privater Modus aktiv - dein Fortschritt geht beim Schließen des Tabs verloren.',
   },
 
   en: {
@@ -890,6 +891,7 @@ export const TRANSLATIONS = {
     log_notEnoughForHeavenly: 'Not enough Heavenly Chips for "{name}"!',
     log_purchasedHeavenly: 'Purchased Heavenly Upgrade "{name}"!',
     log_saveWiped: 'Save data completely wiped. Starting fresh startup round!',
+    log_saveFailed: 'WARNING: Cannot save your game! Browser storage is full or private mode is active - your progress will be lost when you close this tab.',
   },
 };
 

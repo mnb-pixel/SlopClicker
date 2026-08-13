@@ -224,6 +224,11 @@ export function useGameStore() {
   // Effect direkt nach der vps-Berechnung aktuell gehalten.
   const vpsRef = useRef(0);
 
+  // Merkt sich, ob das letzte Speichern fehlgeschlagen ist, damit der Autosave-Takt
+  // (alle 8s) den Nutzer nicht mit derselben Fehlermeldung überschüttet. Ref statt State:
+  // eine Änderung darf keinen Re-Render auslösen.
+  const saveFailedRef = useRef(false);
+
   // `||` würde einen bewusst leeren String (z.B. der leere Epochen-Präfix bei 'ai') als
   // "fehlt" behandeln und bis zum rohen Key durchfallen lassen - darum hier explizit auf
   // undefined/null statt auf Falsy prüfen.
@@ -293,8 +298,18 @@ export function useGameStore() {
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+      saveFailedRef.current = false;
     } catch (e) {
+      // Bisher nur console.error: schlug das Speichern fehl (voller Speicher, oder
+      // Safari im privaten Modus, wo setItem wirft), spielte der Nutzer stundenlang
+      // weiter und verlor beim Schließen des Tabs alles - ohne jeden Hinweis. Der
+      // Autosave läuft alle 8 Sekunden, deshalb nur EINE Meldung pro Fehlerphase,
+      // sonst wäre das Audit-Log innerhalb einer Minute zugemüllt.
       console.error('Failed to save game state:', e);
+      if (!saveFailedRef.current) {
+        saveFailedRef.current = true;
+        addLog(tf('log_saveFailed'), 'danger');
+      }
     }
   }, [
     lang, startupName, valuation, totalValuation, totalBurned, slopCount, gpuTemp, isOverheated,
@@ -302,7 +317,7 @@ export function useGameStore() {
     boughtGreenwashingLayoffs, epoch, idealistLevel, cynicLevel, credibility, pivotCount,
     valuationAtLastPivot, buildings, blackSwanNextEligible,
     boughtUpgrades, unlockedUpgrades, boughtHeavenlyUpgrades, unlockedAchievements, stats,
-    fancyGraphics
+    fancyGraphics, addLog, tf
   ]);
 
   // Load state on mount
@@ -332,7 +347,11 @@ export function useGameStore() {
           setPowerClicks(safeNumber(data.powerClicks, 0, { min: 0 }));
           setPrestigeLevel(safeNumber(data.prestigeLevel, 0, { min: 0 }));
           setHeavenlyChips(safeNumber(data.heavenlyChips, 0, { min: 0 }));
-          setThemeMode(data.themeMode === 'sec_prospectus' ? 'sec_prospectus' : 'modern_slop');
+          // 'cyberpunk' als Gegenwert, nicht 'modern_slop': der Initial-State und
+          // toggleThemeMode benutzen 'cyberpunk', der Ladepfad hatte dafür bisher einen
+          // dritten Namen. Ausgewertet wird ohnehin nur === 'sec_prospectus', deshalb ist
+          // das nie aufgefallen - ein drittes Synonym im State ist trotzdem eine Falle.
+          setThemeMode(data.themeMode === 'sec_prospectus' ? 'sec_prospectus' : 'cyberpunk');
           setBoughtBuzzwords(safeIdList(data.boughtBuzzwords));
           setBoughtGreenwashingLayoffs(safeIdList(data.boughtGreenwashingLayoffs));
           setEpoch(safeNumber(data.epoch, 2, { min: 0 }));
@@ -1421,6 +1440,14 @@ export function useGameStore() {
       overheatCount: 0, ascensionCount: 0, gpuBounced: false,
       ascendTrillion: false, shadowLucky: false,
     });
+    // Diese vier wurden beim Wipe bisher übersehen, obwohl sie mitgespeichert werden:
+    // der Spielstand war danach nicht wirklich leer, sondern behielt die erspielte
+    // Kühlrate, die Power-Clicks und den Pivot-Referenzwert - und schrieb sie beim
+    // nächsten Autosave (8s später) direkt wieder in den localStorage zurück.
+    setCoolingRate(4.0);
+    setPowerClicks(0);
+    setValuationAtLastPivot(0);
+    setScheduledAdUnlocked(false);
     setAdCooldowns({});
     setOfflineReport(null);
     setPendingAscendBoost(false);
