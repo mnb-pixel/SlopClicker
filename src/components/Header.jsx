@@ -2,6 +2,7 @@ import React, { useState, forwardRef } from 'react';
 import { Flame, Edit3, Sparkles, ShieldAlert, Cpu, ChevronUp, ChevronDown, BookOpen, Share2 } from 'lucide-react';
 import { formatCurrency, formatExactValuation, formatNumber } from '../utils/formatters';
 import { NewsTicker } from './NewsTicker';
+import { AdBanner } from './AdBanner';
 
 // forwardRef, damit App.jsx die tatsächliche Höhe DES <header>-Elements messen kann (für
 // Sticky-Elemente, die direkt darunter andocken sollen). Ein zusätzlicher Wrapper-Div um
@@ -27,6 +28,10 @@ export const Header = forwardRef(function Header({
   lang = 'de',
   setLang,
   logs,
+  // Nur in der Desktop-Ansicht true: die Mobil-Ansicht hat bereits den Anchor-Slot über
+  // der Tab-Leiste, zwei Flächen gleichzeitig wären eine zu viel (und der md:-Breakpoint
+  // allein würde auf Tablets mit Mobile-UA genau das auslösen).
+  showAdSlot = false,
   t,
 }, ref) {
   const [isEditingName, setIsEditingName] = useState(false);
@@ -170,30 +175,55 @@ export const Header = forwardRef(function Header({
           </div>
         </div>
 
-        {/* Valuation Display */}
-        <div className="text-center my-0.5">
-          <div className="text-[11px] uppercase tracking-widest font-bold flex items-center justify-center gap-1 opacity-80">
-            <Sparkles className={`w-3.5 h-3.5 ${isSecTheme ? 'text-[#8A6A1F]' : 'text-cyan-400'}`} />
-            {tr('valuationHypeTierLabel')} {hypeTier}/10
+        {/* Valuation Display + Desktop-Werbeslot.
+            Der Slot sitzt rechts NEBEN der Bewertung, nicht darunter: der Header ist das
+            einzige dauerhaft sichtbare (sticky) Element der Desktop-Ansicht, eine Fläche
+            hier ist also in jedem Scroll-Zustand im Viewport - anders als der frühere
+            Rectangle-Slot unter dem Clicker, der auf niedrigen Laptop-Displays aus der
+            sticky Spalte unten herauslief.
+            Der leere Spacer links spiegelt den Slot, damit die Bewertung optisch in der
+            Seitenmitte bleibt statt durch die Anzeige nach links zu rutschen.
+            Die Breiten-Aufteilung ist bewusst herum: die Bewertung ist der Kern der
+            Kopfzeile und bekommt mit shrink-0 ihre volle Content-Breite, Spacer und Slot
+            teilen sich per flex-1 nur den REST (gedeckelt auf 468px, das Half-Banner-
+            Maß). Andersherum - fester Slot, flexible Bewertung - brach die Zeile
+            "Netto-VPS / Burn / Slop" auf drei Zeilen um und der Header wurde höher. */}
+        <div className="my-0.5 flex items-center justify-center gap-3">
+          {showAdSlot && <div className="hidden md:block flex-1 min-w-0 max-w-[468px]" aria-hidden="true" />}
+
+          {/* Ohne Slot (Mobil-Ansicht) bleibt es bei flex-1: die Bewertung darf dort die
+              volle Breite nutzen UND umbrechen, sonst könnte ein sehr langer Betrag auf
+              schmalen Displays seitlich aus dem Viewport laufen. */}
+          <div className={`text-center ${showAdSlot ? 'shrink-0' : 'flex-1'}`}>
+            <div className="text-[11px] uppercase tracking-widest font-bold flex items-center justify-center gap-1 opacity-80">
+              <Sparkles className={`w-3.5 h-3.5 ${isSecTheme ? 'text-[#8A6A1F]' : 'text-cyan-400'}`} />
+              {tr('valuationHypeTierLabel')} {hypeTier}/10
+            </div>
+            <div className={`text-3xl md:text-4xl font-black tracking-tight font-mono ${
+              isSecTheme ? 'text-[#38512E]' : 'text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.3)]'
+            }`}>
+              {formatExactValuation(valuation)}
+            </div>
+            <div className="flex items-center justify-center gap-3 text-xs mt-0.5">
+              <span className={isSecTheme ? 'text-[#38512E] font-bold' : 'text-cyan-400 font-semibold'}>
+                {tr('netVps')} {netFlow >= 0 ? '+' : ''}{formatCurrency(netFlow ?? vps)}/s
+              </span>
+              <span className="opacity-40">•</span>
+              <span className={`font-mono font-bold ${isSecTheme ? 'text-[#8C2F26]' : 'text-rose-400'}`}>
+                {tr('burnRate')} {(burnRate * 100).toFixed(1)}%/s
+              </span>
+              <span className="opacity-40">•</span>
+              <span className="opacity-80 font-semibold flex items-center gap-0.5">
+                <Cpu className="w-3 h-3 inline" /> {tr('slopCount')} {formatNumber(slopCount)}
+              </span>
+            </div>
           </div>
-          <div className={`text-3xl md:text-4xl font-black tracking-tight font-mono ${
-            isSecTheme ? 'text-[#38512E]' : 'text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.3)]'
-          }`}>
-            {formatExactValuation(valuation)}
-          </div>
-          <div className="flex items-center justify-center gap-3 text-xs mt-0.5">
-            <span className={isSecTheme ? 'text-[#38512E] font-bold' : 'text-cyan-400 font-semibold'}>
-              {tr('netVps')} {netFlow >= 0 ? '+' : ''}{formatCurrency(netFlow ?? vps)}/s
-            </span>
-            <span className="opacity-40">•</span>
-            <span className={`font-mono font-bold ${isSecTheme ? 'text-[#8C2F26]' : 'text-rose-400'}`}>
-              {tr('burnRate')} {(burnRate * 100).toFixed(1)}%/s
-            </span>
-            <span className="opacity-40">•</span>
-            <span className="opacity-80 font-semibold flex items-center gap-0.5">
-              <Cpu className="w-3 h-3 inline" /> {tr('slopCount')} {formatNumber(slopCount)}
-            </span>
-          </div>
+
+          {showAdSlot && (
+            <div className="hidden md:flex flex-1 min-w-0 max-w-[468px]">
+              <AdBanner variant="headerBanner" label={tr('adPlaceholderLabel')} />
+            </div>
+          )}
         </div>
 
         {/* GPU Temperature Bar */}

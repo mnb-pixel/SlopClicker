@@ -8,6 +8,11 @@ import { Megaphone } from 'lucide-react';
 const SIZES = {
   leaderboard: 'h-[50px] md:h-[90px] max-w-[728px]', // Footer-Leiste
   rectangle: 'h-[250px] max-w-[300px]', // Sidebar/Modal-Slot
+  // Kopfzeilen-Slot (Desktop): Half-Banner-Format neben der Bewertung. Bewusst flach -
+  // der Header ist sticky, jeder zusätzliche Pixel Höhe geht dauerhaft vom Spielfeld ab.
+  // Die Breite darf schrumpfen (w-full), damit der Slot auf schmalen Desktops nicht die
+  // Bewertung aus der Mitte drückt.
+  headerBanner: 'h-[60px] max-w-[468px]',
 };
 
 export function AdBanner({ variant = 'leaderboard', label = 'Werbung' }) {

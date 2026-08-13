@@ -4,7 +4,6 @@ import { StoreTab } from '../tabs/StoreTab';
 import { SpecialTab } from '../tabs/SpecialTab';
 import { StatsTab } from '../tabs/StatsTab';
 import { MiscTab } from '../tabs/MiscTab';
-import { AdBanner } from '../AdBanner';
 
 export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
   return (
@@ -34,10 +33,11 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
         />
       </div>
 
-        {/* Statischer Werbe-Slot: eigene Karte unter dem Clicker, bewusst NICHT im selben
-            Panel wie die Tap-Fläche. Die Spalte ist sticky, der Slot bleibt also sichtbar,
-            ohne an ein Bedienelement zu grenzen. */}
-        <AdBanner variant="rectangle" label={store.t('adPlaceholderLabel')} />
+        {/* Der frühere Rectangle-Slot lag hier unter dem Clicker. Er ist in die Kopfzeile
+            neben die Bewertung gewandert (siehe Header.jsx): diese Spalte ist zwar sticky,
+            ihr Inhalt (Panel + 250px Anzeige) überschritt aber auf niedrigen Laptop-
+            Displays die Viewport-Höhe, wodurch der Slot unten abgeschnitten wurde. Der
+            Header ist dauerhaft und vollständig sichtbar. */}
       </div>
 
       {/* CENTER COLUMN: Special Ascension, Stats, Logs, Achievements, Misc (4 cols) */}

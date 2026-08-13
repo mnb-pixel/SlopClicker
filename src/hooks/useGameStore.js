@@ -13,6 +13,47 @@ import { formatCurrency, getBuildingCost, getBuildingBulkCost, getMaxAffordableB
 
 const STORAGE_KEY = 'SLOP_CLICKER_GAME_SAVE_V1';
 
+// ---------------------------------------------------------------------------
+// Validierung beim Laden des Spielstands.
+//
+// Der Save liegt im localStorage und ist damit vollständig unter Kontrolle des
+// Clients - er kann durch einen abgebrochenen Schreibvorgang, eine ältere
+// Spielversion oder schlicht durch Bearbeiten in der DevTools-Konsole beliebige
+// Typen enthalten. Das ist keine Sicherheitsgrenze (wer seinen eigenen Spielstand
+// manipuliert, betrügt nur sich selbst), aber ein Robustheitsproblem:
+//   - `data.valuation` als String => alle Folgerechnungen ergeben NaN, die
+//     Bewertung zeigt dauerhaft "NaN" und lässt sich durch nichts mehr beheben.
+//   - `data.boughtUpgrades` als Objekt/String => .includes() bzw. .filter() wirft
+//     beim ersten Render, die ErrorBoundary fängt ab und der Spieler sieht bei
+//     JEDEM Neuladen nur noch den Fehlerscreen (der kaputte Save wird ja erneut
+//     geladen) - ohne Weg zurück außer manuellem Leeren der Browserdaten.
+// Deshalb: jeder Wert wird beim Laden auf seinen erwarteten Typ geprüft und fällt
+// sonst auf den Default zurück.
+// ---------------------------------------------------------------------------
+
+// Number.isFinite schließt NaN und ±Infinity mit ein - beide "vergiften" jede
+// weitere Rechnung und sind aus einem manipulierten Save direkt erzeugbar.
+function safeNumber(value, fallback = 0, { min = -Infinity } = {}) {
+  return typeof value === 'number' && Number.isFinite(value) && value >= min ? value : fallback;
+}
+
+function safeBool(value, fallback = false) {
+  return typeof value === 'boolean' ? value : fallback;
+}
+
+// Nur Strings, und begrenzt: der Startup-Name landet u.a. im document.title und auf
+// dem Pitch-Deck-Canvas - ein megabytegroßer String aus einem manipulierten Save
+// würde dort das Rendering blockieren.
+function safeString(value, fallback, maxLength = 60) {
+  return typeof value === 'string' && value.trim() ? value.slice(0, maxLength) : fallback;
+}
+
+// Listen im Save sind durchweg ID-Listen (Upgrades, Achievements, Buzzwords). Nicht-
+// Strings werden aussortiert, damit spätere .includes()-Vergleiche verlässlich bleiben.
+function safeIdList(value) {
+  return Array.isArray(value) ? value.filter((id) => typeof id === 'string') : [];
+}
+
 // Konzept Abschnitt 4: Zufallsereignisse, geprüft pro Tick (Referenz-Takt 200ms).
 // Beide Event-Arten kamen früher viel zu oft (Golden ~5,5min, Bubble ~8min, also im Schnitt
 // alle ~3min irgendein Banner). Auf je ~20 Minuten Erwartungswert gesenkt, damit ein Meme
@@ -275,45 +316,70 @@ export function useGameStore() {
       if (saved) {
         const data = JSON.parse(saved);
         if (data) {
+          // Alle Werte laufen durch die safe*-Helfer oben: ein durch Abbruch, Alt-
+          // version oder DevTools beschädigter Save darf das Spiel nicht in einen
+          // NaN- oder Crash-Zustand laden, aus dem der Spieler nicht mehr herauskommt.
           resolvedLang = ['de', 'en'].includes(data.lang) ? data.lang : 'de';
           setLang(resolvedLang);
-          setStartupName(data.startupName || 'tokenkamin');
-          setValuation(data.valuation || 0);
-          setTotalValuation(data.totalValuation || 0);
-          setTotalBurned(data.totalBurned || 0);
-          setSlopCount(data.slopCount || 0);
-          setGpuTemp(data.gpuTemp || 0);
-          setIsOverheated(data.isOverheated || false);
-          setCoolingRate(data.coolingRate || 4.0);
-          setPowerClicks(data.powerClicks || 0);
-          setPrestigeLevel(data.prestigeLevel || 0);
-          setHeavenlyChips(data.heavenlyChips || 0);
-          setThemeMode(data.themeMode || 'modern_slop');
-          setBoughtBuzzwords(data.boughtBuzzwords || []);
-          setBoughtGreenwashingLayoffs(data.boughtGreenwashingLayoffs || []);
-          setEpoch(data.epoch !== undefined ? data.epoch : 2);
-          setIdealistLevel(data.idealistLevel || 0);
-          setCynicLevel(data.cynicLevel || 0);
-          setCredibility(data.credibility || 0);
-          setPivotCount(data.pivotCount || 0);
-          setValuationAtLastPivot(data.valuationAtLastPivot || 0);
-          setBuildings({ ...INITIAL_BUILDINGS, ...data.buildings });
-          setBlackSwanNextEligible(data.blackSwanNextEligible || {});
-          setBoughtUpgrades(data.boughtUpgrades || []);
-          setUnlockedUpgrades(data.unlockedUpgrades || []);
-          setBoughtHeavenlyUpgrades(data.boughtHeavenlyUpgrades || []);
-          setUnlockedAchievements(data.unlockedAchievements || []);
-          setStats(data.stats || {
-            totalClicks: 0, adsWatched: 0, goldenCaught: 0,
-            overheatCount: 0, ascensionCount: 0, gpuBounced: false,
-            ascendTrillion: false, shadowLucky: false,
+          setStartupName(safeString(data.startupName, 'tokenkamin'));
+          setValuation(safeNumber(data.valuation, 0, { min: 0 }));
+          setTotalValuation(safeNumber(data.totalValuation, 0, { min: 0 }));
+          setTotalBurned(safeNumber(data.totalBurned, 0, { min: 0 }));
+          setSlopCount(safeNumber(data.slopCount, 0, { min: 0 }));
+          setGpuTemp(safeNumber(data.gpuTemp, 0, { min: 0 }));
+          setIsOverheated(safeBool(data.isOverheated));
+          setCoolingRate(safeNumber(data.coolingRate, 4.0, { min: 0 }));
+          setPowerClicks(safeNumber(data.powerClicks, 0, { min: 0 }));
+          setPrestigeLevel(safeNumber(data.prestigeLevel, 0, { min: 0 }));
+          setHeavenlyChips(safeNumber(data.heavenlyChips, 0, { min: 0 }));
+          setThemeMode(data.themeMode === 'sec_prospectus' ? 'sec_prospectus' : 'modern_slop');
+          setBoughtBuzzwords(safeIdList(data.boughtBuzzwords));
+          setBoughtGreenwashingLayoffs(safeIdList(data.boughtGreenwashingLayoffs));
+          setEpoch(safeNumber(data.epoch, 2, { min: 0 }));
+          setIdealistLevel(safeNumber(data.idealistLevel, 0, { min: 0 }));
+          setCynicLevel(safeNumber(data.cynicLevel, 0, { min: 0 }));
+          setCredibility(safeNumber(data.credibility, 0, { min: 0 }));
+          setPivotCount(safeNumber(data.pivotCount, 0, { min: 0 }));
+          setValuationAtLastPivot(safeNumber(data.valuationAtLastPivot, 0, { min: 0 }));
+          // Nur bekannte Engine-IDs übernehmen: unbekannte Schlüssel aus einem
+          // manipulierten Save würden sonst in jede Iteration über buildings wandern.
+          const savedBuildings = data.buildings;
+          setBuildings(
+            Object.keys(INITIAL_BUILDINGS).reduce((acc, id) => {
+              acc[id] = Math.floor(safeNumber(savedBuildings?.[id], 0, { min: 0 }));
+              return acc;
+            }, {})
+          );
+          const savedEligible = data.blackSwanNextEligible;
+          setBlackSwanNextEligible(
+            savedEligible && typeof savedEligible === 'object' && !Array.isArray(savedEligible)
+              ? Object.fromEntries(
+                  Object.entries(savedEligible).filter(([, ts]) => typeof ts === 'number' && Number.isFinite(ts))
+                )
+              : {}
+          );
+          setBoughtUpgrades(safeIdList(data.boughtUpgrades));
+          setUnlockedUpgrades(safeIdList(data.unlockedUpgrades));
+          setBoughtHeavenlyUpgrades(safeIdList(data.boughtHeavenlyUpgrades));
+          setUnlockedAchievements(safeIdList(data.unlockedAchievements));
+          const savedStats = data.stats;
+          setStats({
+            totalClicks: safeNumber(savedStats?.totalClicks, 0, { min: 0 }),
+            adsWatched: safeNumber(savedStats?.adsWatched, 0, { min: 0 }),
+            goldenCaught: safeNumber(savedStats?.goldenCaught, 0, { min: 0 }),
+            overheatCount: safeNumber(savedStats?.overheatCount, 0, { min: 0 }),
+            ascensionCount: safeNumber(savedStats?.ascensionCount, 0, { min: 0 }),
+            gpuBounced: safeBool(savedStats?.gpuBounced),
+            ascendTrillion: safeBool(savedStats?.ascendTrillion),
+            shadowLucky: safeBool(savedStats?.shadowLucky),
           });
           setFancyGraphics(data.fancyGraphics !== false);
 
           // Offline-Ertrag: nur wenn Spieler >= 1 Minute weg war und beim letzten
           // Speichern tatsächlich etwas produziert hat.
-          const elapsedSec = (Date.now() - (data.timestamp || Date.now())) / 1000;
-          const savedVps = data.vps || 0;
+          const savedTimestamp = safeNumber(data.timestamp, Date.now(), { min: 0 });
+          const elapsedSec = (Date.now() - savedTimestamp) / 1000;
+          const savedVps = safeNumber(data.vps, 0, { min: 0 });
           if (elapsedSec >= OFFLINE_MIN_SECONDS && savedVps > 0) {
             const cappedSec = Math.min(elapsedSec, OFFLINE_CAP_SECONDS);
             const amount = savedVps * cappedSec * OFFLINE_EFFICIENCY;
@@ -344,6 +410,15 @@ export function useGameStore() {
   useEffect(() => {
     document.title = `${formatCurrency(valuation)} - ${startupName}`;
   }, [valuation, startupName]);
+
+  // <html lang> mit der tatsächlich angezeigten Sprache synchron halten. index.html kann
+  // nur einen statischen Wert setzen, die Oberfläche startet aber auf Deutsch und ist zur
+  // Laufzeit umschaltbar. Ein falsches lang-Attribut lässt Screenreader die Texte mit der
+  // falschen Aussprache vorlesen (WCAG 3.1.1/3.1.2) und führt Übersetzungsdienste sowie
+  // Suchmaschinen in die Irre.
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   useEffect(() => {
     const saveTimer = setInterval(() => {

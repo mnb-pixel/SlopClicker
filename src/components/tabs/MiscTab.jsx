@@ -149,9 +149,9 @@ export function MiscTab({
         )}
       </div>
 
-      {/* Kein eigener Werbe-Slot mehr: der Anchor über der Tab-Leiste (mobil) bzw. das
-          Rectangle in der linken Spalte (Desktop) ist auf diesem Screen bereits sichtbar.
-          Zwei Flächen gleichzeitig wären eine zu viel. */}
+      {/* Kein eigener Werbe-Slot mehr: der Anchor über der Tab-Leiste (mobil) bzw. der
+          Kopfzeilen-Slot neben der Bewertung (Desktop) ist auf diesem Screen bereits
+          sichtbar. Zwei Flächen gleichzeitig wären eine zu viel. */}
 
       {/* Wipe Save Data (Sprache & Audio sind bereits in der Kopfzeile verfügbar) */}
       <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">

@@ -1,5 +1,7 @@
 <!doctype html>
-<html lang="en" class="dark">
+<!-- lang="de": die Oberfläche startet auf Deutsch (siehe useGameStore, Default 'de').
+     Beim Umschalten im Kopfzeilen-Menü wird das Attribut zur Laufzeit nachgezogen. -->
+<html lang="de" class="dark">
   <head>
     <meta charset="UTF-8" />
 
@@ -11,14 +13,22 @@
 
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="description" content="Token Furnace - The satirical AI bubble & VC startup idle clicker game." />
-    <title>$0 - tokenkamin</title>
+    <meta name="description" content="Token Furnace – Baue dein KI-Startup zur Milliardenbewertung auf, ganz ohne Produkt. Satirischer Idle Clicker über den AI-Hype." />
+
+    <!-- Statischer Titel für Crawler und Social-Bots, die kein JavaScript ausführen: die
+         App überschreibt document.title nach dem Mount ohnehin mit dem Live-Spielstand
+         ("$1,2 Mio. - tokenkamin"), aber genau dieser Wert hier landet im Suchindex und
+         als Fallback in Link-Vorschauen - "$0 - tokenkamin" war dafür unbrauchbar. -->
+    <title>Token Furnace – Der AI-Bubble Idle Clicker</title>
 
     <!-- Google AdSense: Inhaberschaftsbestätigung + späteres Ausliefern von Anzeigen.
          Lädt nur die Bibliothek, fragt noch keine personalisierten Anzeigen an. Der Termly
          Auto Blocker oben soll dieses Skript erkennen und bis zur Cookie-Einwilligung
-         blockieren (siehe Datenschutz-Abschnitt "Werbung" in legal.content.js, dort noch als
-         "kein Netzwerk eingebunden" zu aktualisieren, sobald der Consent-Banner produktiv ist). -->
+         blockieren. Beschrieben ist das in der Datenschutzerklärung, Ziffer 4
+         (Einwilligungsverwaltung) und Ziffer 5 (Werbung) in legal.content.js - wird die
+         client-ID hier geändert oder das Netzwerk getauscht, muss Ziffer 5 mitgezogen werden.
+         Vor dem Livegang bitte einmal praktisch prüfen, dass ohne Einwilligung tatsächlich
+         KEIN Request an pagead2.googlesyndication.com rausgeht (DevTools > Network). -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6020764817262332"
      crossorigin="anonymous"></script>
 
