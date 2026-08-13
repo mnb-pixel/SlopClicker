@@ -11,7 +11,7 @@ export function NavBar({ activeTab, setActiveTab, affordableUpgradesCount, t }) 
   ];
 
   return (
-    <nav className="bg-slate-900/95 backdrop-blur-lg border-t border-cyan-500/20 fixed bottom-0 left-0 right-0 z-30 max-w-md mx-auto shadow-2xl">
+    <nav className="bg-slate-900/95 backdrop-blur-lg border-t border-cyan-500/20 fixed bottom-0 left-0 right-0 z-30 max-w-md mx-auto shadow-2xl navbar-safe-bottom">
       <div className="grid grid-cols-5 h-14">
         {tabs.map((t) => {
           const Icon = t.icon;

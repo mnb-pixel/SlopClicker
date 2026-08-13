@@ -58,7 +58,7 @@ export function GoldenMemeBanner({ activeEvent, dismissEvent, adState, requestBo
   const progressPct = Math.min(100, Math.max(0, (remainingMs / totalMs) * 100));
 
   return (
-    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl px-3 pointer-events-auto">
+    <div className="fixed banner-safe-top left-1/2 -translate-x-1/2 z-50 w-full max-w-xl px-3 pointer-events-auto">
       <div className={`w-full p-3 md:p-4 rounded-2xl border-4 shadow-2xl golden-meme-pulse ${accent.card}`}>
         {/* min-w-0 auf dem Textblock: ohne das kann der Titel nicht umbrechen und drückt
             die rechte Spalte aus dem Banner heraus (lange Event-Titel, schmale Displays). */}

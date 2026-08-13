@@ -289,7 +289,7 @@ export default function App() {
               Mit adFree rendert AdBanner selbst null - der Abstandsrahmen bliebe sonst als
               leere Lücke stehen, deshalb fällt er hier komplett weg. */}
           {!store.adFree && (
-            <div className="fixed bottom-14 left-0 right-0 z-20 max-w-md mx-auto px-3 pt-1.5 pb-2 bg-slate-950/90 backdrop-blur-sm border-t border-slate-800/60 pointer-events-none">
+            <div className="fixed ad-anchor-safe-bottom left-0 right-0 z-20 max-w-md mx-auto px-3 pt-1.5 pb-2 bg-slate-950/90 backdrop-blur-sm border-t border-slate-800/60 pointer-events-none">
               <div className="pointer-events-auto">
                 <AdBanner variant="leaderboard" label={store.t('adPlaceholderLabel')} adFree={store.adFree} />
               </div>

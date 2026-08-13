@@ -12,6 +12,9 @@ import { TRANSLATIONS } from '../i18n/translations';
 import { formatCurrency, getBuildingCost, getBuildingBulkCost, getMaxAffordableBuildings } from '../utils/formatters';
 import { selectAdBridge } from '../monetization/AdBridge';
 import { selectPurchaseBridge, AD_FREE_PRODUCT_ID } from '../monetization/PurchaseBridge';
+import { getItem as getStorageItem, setItem as setStorageItem, removeItem as removeStorageItem } from '../platform/storage';
+import { subscribeNativeAppState } from '../platform/appState';
+import { tapFeedback } from '../platform/haptics';
 
 const STORAGE_KEY = 'SLOP_CLICKER_GAME_SAVE_V1';
 
@@ -337,11 +340,10 @@ export function useGameStore() {
       scheduledAdAnchor: sessionStartRef.current,
       scheduledAdIndex: nextScheduledIndexRef.current,
     };
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
-    } catch (e) {
-      console.error('Failed to save game state:', e);
-    }
+    // Fire-and-forget wie zuvor bei localStorage.setItem: Aufrufer (Autosave-Interval,
+    // pagehide/visibilitychange-Handler) warten nicht auf den Abschluss. setItem() fängt
+    // eigene Fehler bereits ab (siehe platform/storage.js).
+    setStorageItem(STORAGE_KEY, JSON.stringify(saveData));
   }, [
     lang, startupName, valuation, totalValuation, totalBurned, slopCount, gpuTemp, isOverheated,
     coolingRate, powerClicks, prestigeLevel, heavenlyChips, themeMode, boughtBuzzwords,
@@ -351,14 +353,18 @@ export function useGameStore() {
     fancyGraphics
   ]);
 
-  // Load state on mount
+  // Load state on mount. Async (await getStorageItem) statt synchronem localStorage.getItem,
+  // weil die native Preferences-Bridge (siehe platform/storage.js) über Capacitor läuft und
+  // damit zwingend ein Promise liefert - auf Web löst das Promise praktisch sofort auf, der
+  // erste Render bleibt also unverändert kurz.
   useEffect(() => {
+    let resolvedLang = 'de';
+    (async () => {
     // Sprache wird synchron aus dem Save aufgelöst (statt über t()/tf(), die erst nach dem
     // nächsten Render den frisch gesetzten lang-State sehen würden), damit der allererste
     // Log-Eintrag direkt in der tatsächlich aktiven Sprache erscheint statt immer in 'de'.
-    let resolvedLang = 'de';
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = await getStorageItem(STORAGE_KEY);
       if (saved) {
         const data = JSON.parse(saved);
         if (data) {
@@ -425,6 +431,7 @@ export function useGameStore() {
       console.error('Error loading save state:', e);
     }
     addLog((TRANSLATIONS[resolvedLang] || TRANSLATIONS.en).log_systemInit, 'info');
+    })();
   }, [addLog]);
 
   // Auto-save interval (every 8 seconds, matches concept's autosave cadence).
@@ -473,9 +480,16 @@ export function useGameStore() {
   // - >= 30 min: bleibt PENDING und wird nur per AfkReportModal aufgelöst - Ad ansehen
   //   (claimAfkBonus) schreibt den Betrag gut, Verzicht (dismissAfkReport) verwirft ihn
   //   ersatzlos. Kein "Popup wegklicken und Geld trotzdem behalten" mehr.
+  // nativeBackgroundRef: zusätzliches Signal von @capacitor/app (siehe platform/appState.js).
+  // document.visibilityState allein reicht auf iOS nicht - eine WKWebView meldet Hintergrund/
+  // Vordergrund darüber nicht durchgängig zuverlässig. Auf Web bleibt der Ref immer false
+  // (subscribeNativeAppState ist dort ein No-Op), ändert also nichts am bisherigen Verhalten.
+  const nativeBackgroundRef = useRef(false);
+
   useEffect(() => {
     const updateActivity = () => {
-      if (document.visibilityState === 'hidden') {
+      const isHidden = document.visibilityState === 'hidden' || nativeBackgroundRef.current;
+      if (isHidden) {
         if (hiddenSinceRef.current === null) {
           hiddenSinceRef.current = Date.now();
           awayEarnedRef.current = 0;
@@ -505,11 +519,16 @@ export function useGameStore() {
     // hasFocus() Wechsel feuern nicht immer zuverlässig ein Event (z.B. Alt-Tab in
     // manchen Browsern) - Poll als Fallback.
     const poll = setInterval(updateActivity, 2000);
+    const unsubscribeNativeAppState = subscribeNativeAppState((isActive) => {
+      nativeBackgroundRef.current = !isActive;
+      updateActivity();
+    });
     return () => {
       document.removeEventListener('visibilitychange', updateActivity);
       window.removeEventListener('focus', updateActivity);
       window.removeEventListener('blur', updateActivity);
       clearInterval(poll);
+      unsubscribeNativeAppState();
     };
   }, []);
 
@@ -925,6 +944,8 @@ export function useGameStore() {
     if (isOverheated) {
       return;
     }
+
+    tapFeedback();
 
     const earned = clickValue;
     setValuation((prev) => prev + earned);
@@ -1446,7 +1467,7 @@ export function useGameStore() {
 
   // Wipe Save Data
   const resetSave = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+    removeStorageItem(STORAGE_KEY);
     setStartupName('tokenkamin');
     setValuation(0);
     setTotalValuation(0);

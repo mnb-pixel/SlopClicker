@@ -60,7 +60,7 @@ export const Header = forwardRef(function Header({
       isSecTheme
         ? 'bg-[#FBF9F5] border-b-4 border-slate-900 text-slate-900 shadow-md font-serif'
         : 'bg-slate-900/95 backdrop-blur-md border-b border-cyan-500/20 text-slate-100'
-    } sticky top-0 z-40 p-3 w-full transition-colors`}>
+    } sticky top-0 z-40 p-3 header-safe-top w-full transition-colors`}>
       <div className="max-w-7xl mx-auto flex flex-col gap-2">
         {/* Official Header Banner in Ledger Mode */}
         {isSecTheme && (
