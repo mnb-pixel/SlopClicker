@@ -258,15 +258,26 @@ nicht anfasst. **Ein Spielstand-Reset darf den Kauf niemals entfernen.**
 - **ATT** (`AppTrackingTransparency`) für personalisierte Werbung: nach dem UMP-Formular,
   und **nicht** beim Kaltstart, sondern nach der ersten sinnvollen Spielinteraktion. Vorher
   ein eigener Erklärbildschirm, warum gefragt wird — das hebt die Zustimmungsrate deutlich.
-- **Ladefehler dürfen nie blocken.** Rewarded Ads werden vorgeladen; wenn nach ~3 Sekunden
-  keine Ad da ist (kein Fill, offline, Flugmodus), **wird der Bonus trotzdem gewährt**, mit
-  einem Log-Eintrag im Ton des Spiels („Sponsor nicht erreichbar — Bonus geht aufs Haus").
-  Beim Golden Meme mit seinen 20 Sekunden Fenster ist das keine Kür: eine nicht ladende Ad
-  würde sonst den einzigen Weg zum Boost zusperren. Missbrauch (dauerhaft Flugmodus) ist
-  durch die Cooldowns gedeckelt und wirtschaftlich belanglos.
+- **Ladefehler dürfen nie blocken — aber auch nicht den Kauf ersetzen.** Ein Ad-Fehlschlag
+  (kein Fill, offline, Flugmodus) setzt **keinen Cooldown**, der Versuch ist also sofort
+  wiederholbar; der Log-Eintrag sagt das auch so. Ausgezahlt wird bei einem Fehlschlag nur
+  beim **Golden Meme**, weil dort das Angebot nach 20 Sekunden ersatzlos verfällt und die Ad
+  der einzige Weg zum Boost ist — ein Ladefehler in diesem Fenster darf es nicht vernichten.
+  (Ursprünglich war „bei Fehlschlag immer auszahlen" vorgesehen. Das wurde im Audit
+  verworfen: sobald Werbefreiheit ein Bezahlprodukt ist, wäre „Flugmodus an" ein
+  vollwertiger kostenloser Ersatz dafür — jede Ad schlägt fehl, jeder Bonus kommt trotzdem.
+  Die Cooldowns hätten das nicht gedeckelt, weil sie den bezahlten Modus genauso begrenzen.)
+  Bei einmaligen, schon geschlossenen Angeboten (Zeitbonus-Popup) wird der Bonus bei einem
+  Fehlschlag in den „später einlösen"-Zustand zurückgeführt statt zu verpuffen; Offline- und
+  AFK-Report bleiben schlicht offen und sind erneut einlösbar.
 - **Nach dem Kauf wird das Ad-SDK gar nicht erst initialisiert.** Nicht nur ausgeblendet —
   nicht geladen. „Werbefrei" muss auch technisch stimmen; Apple prüft das gelegentlich, und
-  Rezensionen prüfen es zuverlässig.
+  Rezensionen prüfen es zuverlässig. Das gilt ausdrücklich auch für die **HTML-Ebene**: die
+  Web-Version bindet AdSense und den Termly-Consent-Banner direkt in `index.html` ein, und
+  beide würden im nativen Build unabhängig vom Kaufstatus laden. Der iOS-Build
+  (`npm run build:ios`, siehe `vite.config.js`) entfernt sie deshalb aus dem HTML — AdSense
+  ist in einer App-WebView ohnehin nicht zulässig, und Termly würde mit dem nativen
+  UMP-Consent kollidieren.
 
 ---
 

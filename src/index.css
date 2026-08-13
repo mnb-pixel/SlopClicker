@@ -13,9 +13,12 @@
 /* iOS/Capacitor: Touch-Verhalten für einen Clicker. Ohne das lösen Schnelltaps auf dem
    Haupt-Button die Textauswahl-Lupe/Kontextmenü aus, der Doppeltap zoomt (300ms Verzögerung
    auf jeden einzelnen Tap) und ein Swipe von oben löst Pull-to-refresh/Bounce-Scrolling aus.
-   Auf Web (kein natives WKWebView-Chrome) sind das No-Ops, die nichts kaputt machen - deshalb
-   global statt hinter einer Capacitor-Prüfung. Siehe docs/ios-app-konzept.md §7. */
-html, body {
+   Bewusst NUR nativ (Klasse wird in main.jsx gesetzt): das sind keine No-Ops im Web -
+   overscroll-behavior deaktiviert Pull-to-refresh und touch-action den Doppeltap-Zoom auch
+   im mobilen Browser. Die Web-Version soll sich unverändert wie eine Webseite verhalten.
+   Siehe docs/ios-app-konzept.md §7. */
+.native-app,
+.native-app body {
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;

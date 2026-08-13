@@ -89,6 +89,16 @@ const SCHEDULED_AD_MINUTES = [5, 15, 30, 60, 120];
 // wirklich weg" überall im Spiel dieselbe Bedeutung hat.
 const SCHEDULED_AD_RESET_GAP_SEC = 1800;
 
+// Placements, die bei einem Ad-Fehlschlag (kein Fill, offline) TROTZDEM auszahlen. Bewusst
+// nur dort, wo die Ad der einzige Weg zu etwas ist, das sonst unwiederbringlich verfällt:
+// Das Golden-Meme-Angebot steht nur GOLDEN_OFFER_SEC lang, ein Ladefehler in diesen 20
+// Sekunden darf es nicht ersatzlos vernichten.
+//
+// Alles andere ist wiederholbar und wird bei Fehlschlag NICHT ausgezahlt - sonst wäre
+// "Flugmodus einschalten" ein vollwertiger, kostenloser Ersatz für den Werbefrei-Kauf:
+// jede Ad schlüge fehl, jeder Bonus käme trotzdem. Genau die Leistung, die der IAP verkauft.
+const GRANT_ON_AD_FAILURE = new Set(['golden_claim']);
+
 const INITIAL_BUILDINGS = BUILDINGS_DATA.reduce((acc, b) => {
   acc[b.id] = 0;
   return acc;
@@ -1174,10 +1184,11 @@ export function useGameStore() {
   // Belohnungslogik anhängen (z.B. Booster-Pack-Reveal), die nicht generisch genug für
   // grantReward() ist.
   //
-  // "Nie blockieren": schlägt die Ad-Präsentation fehl (kein Fill, offline), wird die
-  // Belohnung TROTZDEM ausgezahlt - bei golden_claim ist die Ad sonst der einzige Weg zum
-  // Boost, ein Ladefehler dürfte das Angebot nicht ersatzlos verfallen lassen (§6).
-  const requestBonus = useCallback((type, onComplete) => {
+  // Fehlgeschlagene Ad: siehe GRANT_ON_AD_FAILURE oben - nur das Golden Meme zahlt trotzdem
+  // aus, alles andere ist ohne Cooldown sofort erneut versuchbar. `onFailed` lässt Aufrufer
+  // einen verworfenen Einmal-Zustand wiederherstellen (z.B. den Scheduled-Bonus wieder
+  // einlösbar machen, statt ihn an einem Ladefehler verpuffen zu lassen).
+  const requestBonus = useCallback((type, onComplete, onFailed) => {
     if (adState) return; // schon eine Ad/ein Claim am Laufen
     if (Date.now() < (adCooldowns[type] || 0)) {
       addLog(tf('log_adOnCooldown'), 'info');
@@ -1186,11 +1197,20 @@ export function useGameStore() {
 
     const finish = (rewarded, wasAdFree) => {
       setAdState(null);
+
+      if (!rewarded && !wasAdFree && !GRANT_ON_AD_FAILURE.has(type)) {
+        // Kein Cooldown setzen: der Fehlversuch war nicht die Schuld der Spielenden, ein
+        // sofortiger zweiter Versuch muss möglich bleiben.
+        addLog(tf('log_adFailedRetry'), 'info');
+        if (onFailed) onFailed();
+        return;
+      }
+
       if (!wasAdFree) {
         if (rewarded) {
           setStats((s) => ({ ...s, adsWatched: (s.adsWatched || 0) + 1 }));
         } else {
-          addLog(tf('log_adFailed'), 'info');
+          addLog(tf('log_adFailedGranted'), 'info');
         }
       }
 
@@ -1212,7 +1232,13 @@ export function useGameStore() {
     addLog(tf('log_watchingAd'), 'info');
     adBridge
       .present(type, (secondsLeft) => setAdState({ type, timer: Math.max(0, secondsLeft) }))
-      .then((result) => finish(result === 'rewarded', false));
+      .then((result) => finish(result === 'rewarded', false))
+      // Ohne catch bliebe adState bei einem rejecteten Promise für immer gesetzt und der
+      // Guard ganz oben (`if (adState) return`) würde JEDEN weiteren Bonus-Button sperren.
+      .catch((e) => {
+        console.error('Ad bridge threw:', e);
+        finish(false, false);
+      });
   }, [addLog, adState, adCooldowns, adFree, adBridge, grantReward, tf]);
 
   // Offline-Ertrag einsammeln (optional per Ad verdoppelt)
@@ -1259,7 +1285,9 @@ export function useGameStore() {
       const msg = tf('log_scheduledAdRedeemed', { amount: Math.floor(reward).toLocaleString() });
       addLog(msg, 'success');
       flashAdReward(msg);
-    });
+    // Ad fehlgeschlagen: das Popup ist schon zu, der Bonus wäre sonst weg. Stattdessen in
+    // den "später einlösen"-Zustand überführen - dieselbe Behandlung wie bei "Später".
+    }, () => setScheduledAdUnlocked(true));
   }, [scheduledAdPreview, addLog, requestBonus, flashAdReward, tf]);
 
   const deferScheduledAd = useCallback(() => {
@@ -1276,7 +1304,8 @@ export function useGameStore() {
       const msg = tf('log_scheduledAdRedeemed', { amount: Math.floor(reward).toLocaleString() });
       addLog(msg, 'success');
       flashAdReward(msg);
-    });
+    // Ad fehlgeschlagen: Button zurückholen statt den Bonus verfallen zu lassen.
+    }, () => setScheduledAdUnlocked(true));
   }, [scheduledAdPreview, addLog, requestBonus, flashAdReward, tf]);
 
   // Chips, die eine Ascension JETZT bringen würde (ohne Ad-Boost) - von SpecialTab fürs

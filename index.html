@@ -3,24 +3,35 @@
   <head>
     <meta charset="UTF-8" />
 
+    <!-- web-only:start -->
     <!-- Termly Consent-Banner + Auto Blocker (autoBlock=on in der URL). Muss laut Termly
          der ALLERERSTE <script>-Tag der Seite sein - auch vor dem AdSense-Snippet weiter
          unten -, damit der Auto Blocker dessen Cookie-setzende Skripte erkennen und bis zur
-         Einwilligung blockieren kann, statt dass AdSense schon vor der Zustimmung feuert. -->
+         Einwilligung blockieren kann, statt dass AdSense schon vor der Zustimmung feuert.
+         NICHT im nativen Build: dort übernimmt Googles UMP-SDK die Einwilligung
+         (src/monetization/adConsent.js), zwei parallele Consent-Layer wären widersprüchlich.
+         Wird für --mode native aus dem HTML entfernt, siehe vite.config.js. -->
     <script src="https://app.termly.io/resource-blocker/4810446e-db26-4a1e-a96a-1bbdefde2c01?autoBlock=on"></script>
+    <!-- web-only:end -->
 
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="description" content="Token Furnace - The satirical AI bubble & VC startup idle clicker game." />
     <title>$0 - tokenkamin</title>
 
+    <!-- web-only:start -->
     <!-- Google AdSense: Inhaberschaftsbestätigung + späteres Ausliefern von Anzeigen.
          Lädt nur die Bibliothek, fragt noch keine personalisierten Anzeigen an. Der Termly
          Auto Blocker oben soll dieses Skript erkennen und bis zur Cookie-Einwilligung
          blockieren (siehe Datenschutz-Abschnitt "Werbung" in legal.content.js, dort noch als
-         "kein Netzwerk eingebunden" zu aktualisieren, sobald der Consent-Banner produktiv ist). -->
+         "kein Netzwerk eingebunden" zu aktualisieren, sobald der Consent-Banner produktiv ist).
+         NICHT im nativen Build: AdSense ist für Webseiten lizenziert und darf nicht in einer
+         App-WebView ausgeliefert werden - dort läuft AdMob (src/monetization/nativeAdBridge.js).
+         Vor allem würde es sonst auch für Werbefrei-Käufer:innen laden und damit genau das
+         Versprechen brechen, das der IAP verkauft. Entfernt für --mode native, s. vite.config.js. -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6020764817262332"
      crossorigin="anonymous"></script>
+    <!-- web-only:end -->
 
     <!-- Social-Share-Vorschau (Open Graph / Twitter Card): das Pitch-Deck-Feature verschickt
          aktiv window.location.href über navigator.share() (siehe PitchDeckModal.jsx) - ohne

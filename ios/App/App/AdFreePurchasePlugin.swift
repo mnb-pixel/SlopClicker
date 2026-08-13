@@ -36,7 +36,14 @@ public class AdFreePurchasePlugin: CAPPlugin, CAPBridgedPlugin {
             for await result in Transaction.updates {
                 if case .verified(let transaction) = result, transaction.productID == self.productId {
                     await transaction.finish()
-                    self.notifyListeners("entitlementChange", data: ["adFree": true])
+                    // NICHT blind "adFree: true" melden: über denselben Kanal liefert
+                    // StoreKit auch Widerrufe (Rückerstattung, transaction.revocationDate
+                    // gesetzt) - sonst bliebe Werbefrei nach einem Refund dauerhaft aktiv.
+                    // Statt das hier einzeln zu prüfen, wird der Anspruch komplett neu aus
+                    // Transaction.currentEntitlements abgeleitet: dort sind widerrufene Käufe
+                    // bereits herausgefiltert, es gibt also nur eine Wahrheitsquelle.
+                    let adFree = await self.hasAdFreeEntitlement()
+                    self.notifyListeners("entitlementChange", data: ["adFree": adFree])
                 }
             }
         }

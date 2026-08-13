@@ -30,10 +30,18 @@ und committet. Diese Anleitung ist der Übergabepunkt — ab hier auf einem Mac 
 
 ```bash
 npm install
-npm run build
+npm run build:ios      # NICHT `npm run build` - siehe Kasten unten
 npx cap sync ios
 open ios/App/App.xcodeproj
 ```
+
+> **Immer `build:ios`, nie `build`.** Der normale Web-Build lässt die AdSense- und
+> Termly-Skripte in `index.html` stehen. Beide gehören nicht in die App: AdSense ist für
+> Webseiten lizenziert und in einer WebView nicht zulässig, Termly würde parallel zum
+> nativen UMP-Consent laufen — und beide würden auch für Werbefrei-Käufer:innen laden.
+> `build:ios` (= `vite build --mode native`) entfernt sie, siehe `vite.config.js`.
+> Kontrolle nach dem Sync:
+> `grep -c "termly\|googlesyndication" ios/App/App/public/index.html` muss `0` ergeben.
 
 **Wichtig: `App.xcodeproj` öffnen, nicht nach einer `.xcworkspace` suchen.** Es gibt bewusst
 keine CocoaPods-`Pods.xcworkspace` — Plugins kommen über SPM. `pod install` NICHT ausführen,
@@ -86,7 +94,7 @@ angemeldetem Sandbox-Account.
 ## Bei jeder weiteren Code-Änderung
 
 ```bash
-npm run build
+npm run build:ios
 npx cap sync ios     # nach neuen/entfernten Plugins oder package.json-Änderungen
 # ODER, wenn sich nur src/ geändert hat und keine Plugins dazukamen:
 npx cap copy ios
@@ -105,6 +113,10 @@ einmal bewusst durchgehen:
   einem mit Dynamic Island prüfen (z.B. iPhone SE vs. iPhone 15 Pro) — die `calc()`-Werte
   sind aus den bisherigen Tailwind-Abständen abgeleitet, aber nie gegen eine echte
   Safe-Area-Inset getestet.
+- **Touch-Verhalten**: die Regeln (kein Doppeltap-Zoom, keine Auswahl-Lupe, kein Bounce)
+  hängen an der Klasse `.native-app`, die `src/main.jsx` nur setzt, wenn Capacitor eine
+  native Plattform meldet — bewusst so, damit die Web-Version unverändert bleibt. Falls das
+  Verhalten in der App ausbleibt, zuerst prüfen, ob `<html>` die Klasse trägt.
 - **`AdRewardToast`** (`src/components/AdRewardToast.jsx`, `fixed top-24`) hat *keine*
   Safe-Area-Anpassung bekommen (siehe Commit-Notiz) — bei Bedarf nachziehen, falls er auf
   einem Gerät mit Dynamic Island sichtbar überlappt.
