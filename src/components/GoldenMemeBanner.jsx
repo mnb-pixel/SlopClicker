@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles, ShieldAlert, Tv, X, Zap } from 'lucide-react';
+import { Sparkles, ShieldAlert, Tv, Gift, X, Zap } from 'lucide-react';
 
 // Golden Memes sind selten (~20 Min) und laufen NICHT mehr automatisch an: das Banner ist ein
-// zeitlich begrenztes Angebot, das ausschließlich per Rewarded Ad eingelöst wird. Nach dem Claim
+// zeitlich begrenztes Angebot, das ohne adFree ausschließlich per Rewarded Ad eingelöst wird
+// (mit adFree ein Instant-Claim, siehe requestBonus in useGameStore.js). Nach dem Claim
 // bleibt dasselbe Banner als Boost-Anzeige stehen, bis der Effekt ausläuft.
-// Bubble Pops bleiben rein informativ - der Debuff wirkt sofort, die Ad beendet ihn vorzeitig.
-export function GoldenMemeBanner({ activeEvent, dismissEvent, adState, startAd, isAdReady, t, tf }) {
+// Bubble Pops bleiben rein informativ - der Debuff wirkt sofort, die Ad/der Claim beendet ihn vorzeitig.
+export function GoldenMemeBanner({ activeEvent, dismissEvent, adState, requestBonus, isAdReady, adFree = false, t, tf }) {
   const expiresAt = activeEvent?.expiresAt ?? 0;
   const [remainingMs, setRemainingMs] = useState(0);
 
@@ -31,9 +32,9 @@ export function GoldenMemeBanner({ activeEvent, dismissEvent, adState, startAd, 
 
   const adType = isBubble ? 'bubble_clear' : 'golden_claim';
   const isAdPlaying = adState?.type === adType;
-  const adReady = !startAd || !isAdReady || isAdReady(adType);
+  const adReady = !requestBonus || !isAdReady || isAdReady(adType);
   // Nach dem Claim gibt es nichts mehr zu holen - dann ist das Banner reine Statusanzeige.
-  const showAdButton = Boolean(startAd) && !isClaimed;
+  const showAdButton = Boolean(requestBonus) && !isClaimed;
 
   const accent = isBubble
     ? {
@@ -101,7 +102,7 @@ export function GoldenMemeBanner({ activeEvent, dismissEvent, adState, startAd, 
         {showAdButton && (
           <button
             onClick={() => {
-              if (adReady && !isAdPlaying) startAd(adType);
+              if (adReady && !isAdPlaying) requestBonus(adType);
             }}
             disabled={!adReady || isAdPlaying}
             className={`mt-2.5 w-full py-3 rounded-xl font-black text-xs md:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg ${
@@ -112,7 +113,7 @@ export function GoldenMemeBanner({ activeEvent, dismissEvent, adState, startAd, 
                 : 'bg-slate-950/40 border border-slate-700 text-slate-500 cursor-not-allowed'
             }`}
           >
-            <Tv className="w-4 h-4 shrink-0" />
+            {adFree ? <Gift className="w-4 h-4 shrink-0" /> : <Tv className="w-4 h-4 shrink-0" />}
             <span className="break-words">
               {isAdPlaying
                 ? `${tr('adPlaying')} (${adState.timer}s)`
@@ -125,7 +126,7 @@ export function GoldenMemeBanner({ activeEvent, dismissEvent, adState, startAd, 
 
         {!isBubble && !isClaimed && (
           <div className="mt-1.5 text-center text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            {tr('memeAdOnlyHint')}
+            {adFree ? tr('memeInstantHint') : tr('memeAdOnlyHint')}
           </div>
         )}
       </div>

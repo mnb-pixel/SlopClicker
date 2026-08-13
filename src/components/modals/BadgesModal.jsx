@@ -5,7 +5,7 @@ import { getIcon } from '../../utils/iconMap';
 import { ACHIEVEMENTS_DATA } from '../../data/achievementsData';
 import { AdBanner } from '../AdBanner';
 
-export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [], t }) {
+export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [], adFree = false, t }) {
   const [filter, setFilter] = useState('ALL'); // 'ALL' | 'UNLOCKED' | 'LOCKED'
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -188,7 +188,7 @@ export function BadgesModal({ isOpen = true, onClose, unlockedAchievements = [],
           })}
         </div>
 
-        <AdBanner variant="leaderboard" label={tr('adPlaceholderLabel')} />
+        <AdBanner variant="leaderboard" label={tr('adPlaceholderLabel')} adFree={adFree} />
       </div>
     </div>
   );

@@ -115,8 +115,9 @@ export default function App() {
         activeEvent={store.activeEvent}
         dismissEvent={store.dismissEvent}
         adState={store.adState}
-        startAd={store.startAd}
+        requestBonus={store.requestBonus}
         isAdReady={store.isAdReady}
+        adFree={store.adFree}
         t={store.t}
         tf={store.tf}
       />
@@ -132,8 +133,9 @@ export default function App() {
       <OfflineEarningsModal
         offlineReport={store.offlineReport}
         adState={store.adState}
-        startAd={store.startAd}
+        requestBonus={store.requestBonus}
         claimOfflineEarnings={store.claimOfflineEarnings}
+        adFree={store.adFree}
         t={store.t}
       />
 
@@ -141,9 +143,10 @@ export default function App() {
       <AfkReportModal
         afkReport={store.afkReport}
         adState={store.adState}
-        startAd={store.startAd}
+        requestBonus={store.requestBonus}
         claimAfkBonus={store.claimAfkBonus}
         dismissAfkReport={store.dismissAfkReport}
+        adFree={store.adFree}
         t={store.t}
       />
 
@@ -166,8 +169,9 @@ export default function App() {
         /* MOBILE 5-TAB VIEW */
         <div className="w-full max-w-md mx-auto flex-1 flex flex-col relative min-h-screen bg-slate-950 border-x border-slate-900 shadow-2xl">
           {/* pb deckt Tab-Leiste (56px) + Werbe-Anker (~65px) ab, damit der letzte
-              Listeneintrag nicht hinter der unteren Leiste verschwindet. */}
-          <main className="flex-1 pb-32">
+              Listeneintrag nicht hinter der unteren Leiste verschwindet. Mit adFree entfällt
+              der Werbe-Anker (siehe unten), daher reicht dann die kleinere Tab-Leisten-Höhe. */}
+          <main className={`flex-1 ${store.adFree ? 'pb-16' : 'pb-32'}`}>
             {store.activeTab === 1 && (
               <SlopTab
                 handleTapAGI={store.handleTapAGI}
@@ -182,9 +186,10 @@ export default function App() {
                 boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}
                 themeMode={store.themeMode}
                 adState={store.adState}
-                startAd={store.startAd}
+                requestBonus={store.requestBonus}
                 isAdReady={store.isAdReady}
                 getAdCooldownRemaining={store.getAdCooldownRemaining}
+                adFree={store.adFree}
                 t={store.t}
               />
             )}
@@ -229,11 +234,12 @@ export default function App() {
                 pivot={store.pivot}
                 pivotCredGain={store.pivotCredGain}
                 adState={store.adState}
-                startAd={store.startAd}
+                requestBonus={store.requestBonus}
                 isAdReady={store.isAdReady}
                 getAdCooldownRemaining={store.getAdCooldownRemaining}
                 pendingAscendBoost={store.pendingAscendBoost}
                 pendingPivotBoost={store.pendingPivotBoost}
+                adFree={store.adFree}
                 t={store.t}
               />
             )}
@@ -248,6 +254,7 @@ export default function App() {
                 slopCount={store.slopCount}
                 unlockedAchievements={store.unlockedAchievements}
                 logs={store.logs}
+                adFree={store.adFree}
                 t={store.t}
               />
             )}
@@ -255,7 +262,7 @@ export default function App() {
             {store.activeTab === 5 && (
               <MiscTab
                 adState={store.adState}
-                startAd={store.startAd}
+                requestBonus={store.requestBonus}
                 isAdReady={store.isAdReady}
                 getAdCooldownRemaining={store.getAdCooldownRemaining}
                 resetSave={store.resetSave}
@@ -263,6 +270,11 @@ export default function App() {
                 claimUnlockedScheduledAd={store.claimUnlockedScheduledAd}
                 grantAdPreview={store.grantAdPreview}
                 scheduledAdPreview={store.scheduledAdPreview}
+                adFree={store.adFree}
+                purchaseAvailable={store.purchaseAvailable}
+                purchaseState={store.purchaseState}
+                purchaseAdFree={store.purchaseAdFree}
+                restorePurchases={store.restorePurchases}
                 onOpenLegal={setLegalPage}
                 t={store.t}
               />
@@ -273,12 +285,16 @@ export default function App() {
               normalen Flow hinter der fixierten NavBar und damit dauerhaft unter der Falz -
               der Slot war in JEDEM Scroll-Zustand unsichtbar und lieferte null Impressions.
               pointer-events: der Abstandsrahmen bleibt klickdurchlässig, nur die Anzeigefläche
-              selbst nimmt Klicks entgegen, damit Fehltaps Richtung Tab-Leiste ins Leere gehen. */}
-          <div className="fixed bottom-14 left-0 right-0 z-20 max-w-md mx-auto px-3 pt-1.5 pb-2 bg-slate-950/90 backdrop-blur-sm border-t border-slate-800/60 pointer-events-none">
-            <div className="pointer-events-auto">
-              <AdBanner variant="leaderboard" label={store.t('adPlaceholderLabel')} />
+              selbst nimmt Klicks entgegen, damit Fehltaps Richtung Tab-Leiste ins Leere gehen.
+              Mit adFree rendert AdBanner selbst null - der Abstandsrahmen bliebe sonst als
+              leere Lücke stehen, deshalb fällt er hier komplett weg. */}
+          {!store.adFree && (
+            <div className="fixed bottom-14 left-0 right-0 z-20 max-w-md mx-auto px-3 pt-1.5 pb-2 bg-slate-950/90 backdrop-blur-sm border-t border-slate-800/60 pointer-events-none">
+              <div className="pointer-events-auto">
+                <AdBanner variant="leaderboard" label={store.t('adPlaceholderLabel')} adFree={store.adFree} />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* 5-Tab Navigation Bar */}
           <NavBar

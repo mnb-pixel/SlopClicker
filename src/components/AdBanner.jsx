@@ -10,7 +10,10 @@ const SIZES = {
   rectangle: 'h-[250px] max-w-[300px]', // Sidebar/Modal-Slot
 };
 
-export function AdBanner({ variant = 'leaderboard', label = 'Werbung' }) {
+export function AdBanner({ variant = 'leaderboard', label = 'Werbung', adFree = false }) {
+  // Werbefrei-IAP: kein Platzhalter, kein Ad-SDK - die Fläche verschwindet komplett statt nur
+  // leer/ausgegraut dazustehen (siehe docs/ios-app-konzept.md §2, Punkt 1).
+  if (adFree) return null;
   return (
     <div className="w-full flex justify-center">
       <div

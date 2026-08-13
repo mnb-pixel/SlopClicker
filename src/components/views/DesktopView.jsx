@@ -27,17 +27,18 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
           boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}
           themeMode={store.themeMode}
           adState={store.adState}
-          startAd={store.startAd}
+          requestBonus={store.requestBonus}
           isAdReady={store.isAdReady}
           getAdCooldownRemaining={store.getAdCooldownRemaining}
+          adFree={store.adFree}
           t={store.t}
         />
       </div>
 
         {/* Statischer Werbe-Slot: eigene Karte unter dem Clicker, bewusst NICHT im selben
             Panel wie die Tap-Fläche. Die Spalte ist sticky, der Slot bleibt also sichtbar,
-            ohne an ein Bedienelement zu grenzen. */}
-        <AdBanner variant="rectangle" label={store.t('adPlaceholderLabel')} />
+            ohne an ein Bedienelement zu grenzen. Mit adFree rendert AdBanner selbst null. */}
+        <AdBanner variant="rectangle" label={store.t('adPlaceholderLabel')} adFree={store.adFree} />
       </div>
 
       {/* CENTER COLUMN: Special Ascension, Stats, Logs, Achievements, Misc (4 cols) */}
@@ -60,11 +61,12 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
             pivot={store.pivot}
             pivotCredGain={store.pivotCredGain}
             adState={store.adState}
-            startAd={store.startAd}
+            requestBonus={store.requestBonus}
             isAdReady={store.isAdReady}
             getAdCooldownRemaining={store.getAdCooldownRemaining}
             pendingAscendBoost={store.pendingAscendBoost}
             pendingPivotBoost={store.pendingPivotBoost}
+            adFree={store.adFree}
             t={store.t}
           />
         </div>
@@ -80,6 +82,7 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
             slopCount={store.slopCount}
             unlockedAchievements={store.unlockedAchievements}
             logs={store.logs}
+            adFree={store.adFree}
             t={store.t}
           />
         </div>
@@ -88,7 +91,7 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
         <div className="bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-2 shadow-xl">
           <MiscTab
             adState={store.adState}
-            startAd={store.startAd}
+            requestBonus={store.requestBonus}
             isAdReady={store.isAdReady}
             getAdCooldownRemaining={store.getAdCooldownRemaining}
             resetSave={store.resetSave}
@@ -96,6 +99,11 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
             claimUnlockedScheduledAd={store.claimUnlockedScheduledAd}
             grantAdPreview={store.grantAdPreview}
             scheduledAdPreview={store.scheduledAdPreview}
+            adFree={store.adFree}
+            purchaseAvailable={store.purchaseAvailable}
+            purchaseState={store.purchaseState}
+            purchaseAdFree={store.purchaseAdFree}
+            restorePurchases={store.restorePurchases}
             onOpenLegal={onOpenLegal}
             t={store.t}
           />

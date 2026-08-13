@@ -1,12 +1,14 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Rocket, Tv, Sparkles } from 'lucide-react';
+import { Rocket, Tv, Gift, Sparkles } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 
 // Willkommen-zurück-Screen: zeigt den passiv erwirtschafteten Offline-Ertrag seit dem
 // letzten Speichern (gedeckelt, siehe useGameStore) und bietet an, ihn per Rewarded Ad
-// zu verdoppeln, bevor er gutgeschrieben wird.
-export function OfflineEarningsModal({ offlineReport, adState, startAd, claimOfflineEarnings, t }) {
+// zu verdoppeln, bevor er gutgeschrieben wird. Mit adFree ist die Verdopplung ein
+// kostenloser Tap - der "nur einfach einsammeln"-Pfad entfällt dann, eine Wahl bei der
+// eine Option strikt schlechter ist, ist keine Wahl (docs/ios-app-konzept.md §4.2).
+export function OfflineEarningsModal({ offlineReport, adState, requestBonus, claimOfflineEarnings, adFree = false, t }) {
   if (!offlineReport) return null;
 
   const tr = t || ((k) => k);
@@ -47,19 +49,21 @@ export function OfflineEarningsModal({ offlineReport, adState, startAd, claimOff
         ) : (
           <div className="w-full flex flex-col gap-2">
             <button
-              onClick={() => startAd('offline_double', () => claimOfflineEarnings(true))}
+              onClick={() => requestBonus('offline_double', () => claimOfflineEarnings(true))}
               className="w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 to-fuchsia-500 text-slate-950 hover:brightness-110 active:scale-95 shadow-xl transition-all flex items-center justify-center gap-2"
             >
-              <Tv className="w-4 h-4" />
-              {tr('watchAdCollect').replace('{amount}', formatCurrency(offlineReport.amount * 2))}
+              {adFree ? <Gift className="w-4 h-4" /> : <Tv className="w-4 h-4" />}
+              {tr(adFree ? 'claimBonusCollect' : 'watchAdCollect').replace('{amount}', formatCurrency(offlineReport.amount * 2))}
             </button>
-            <button
-              onClick={() => claimOfflineEarnings(false)}
-              className="w-full py-2 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              {tr('collectOnly').replace('{amount}', formatCurrency(offlineReport.amount))}
-            </button>
+            {!adFree && (
+              <button
+                onClick={() => claimOfflineEarnings(false)}
+                className="w-full py-2 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                {tr('collectOnly').replace('{amount}', formatCurrency(offlineReport.amount))}
+              </button>
+            )}
           </div>
         )}
       </div>

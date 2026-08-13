@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Moon, Tv, Sparkles } from 'lucide-react';
+import { Moon, Tv, Gift, Sparkles } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 
 // Wenn der Tab >=30min im Hintergrund war (nicht komplett geschlossen, nur unsichtbar),
@@ -8,7 +8,10 @@ import { formatCurrency } from '../../utils/formatters';
 // Betrag ist zu diesem Zeitpunkt NOCH NICHT gutgeschrieben (siehe useGameStore.js, pageActivity
 // 'hidden') - eine echte Entscheidung ist nötig: Video ansehen schreibt ihn gut, Verzicht
 // verwirft ihn ersatzlos. Kein "wegklicken und trotzdem behalten" mehr.
-export function AfkReportModal({ afkReport, adState, startAd, claimAfkBonus, dismissAfkReport, t }) {
+// Mit adFree entfällt der Verzichten-Pfad: es gibt keinen Grund, einen kostenlosen Bonus
+// abzulehnen, den man ohnehin nur mit einem Tap statt einem Video bekommt (siehe
+// docs/ios-app-konzept.md §4.2).
+export function AfkReportModal({ afkReport, adState, requestBonus, claimAfkBonus, dismissAfkReport, adFree = false, t }) {
   if (!afkReport) return null;
 
   const tr = t || ((k) => k);
@@ -39,19 +42,21 @@ export function AfkReportModal({ afkReport, adState, startAd, claimAfkBonus, dis
         ) : (
           <div className="w-full flex flex-col gap-2">
             <button
-              onClick={() => startAd('afk_bonus', claimAfkBonus)}
+              onClick={() => requestBonus('afk_bonus', claimAfkBonus)}
               className="w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 to-fuchsia-500 text-slate-950 hover:brightness-110 active:scale-95 shadow-xl transition-all flex items-center justify-center gap-2"
             >
-              <Tv className="w-4 h-4" />
-              {tr('watchAdCollect').replace('{amount}', formatCurrency(afkReport.amount))}
+              {adFree ? <Gift className="w-4 h-4" /> : <Tv className="w-4 h-4" />}
+              {tr(adFree ? 'claimBonusCollect' : 'watchAdCollect').replace('{amount}', formatCurrency(afkReport.amount))}
             </button>
-            <button
-              onClick={dismissAfkReport}
-              className="w-full py-2 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              {tr('afkForfeitBtn')}
-            </button>
+            {!adFree && (
+              <button
+                onClick={dismissAfkReport}
+                className="w-full py-2 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                {tr('afkForfeitBtn')}
+              </button>
+            )}
           </div>
         )}
       </div>

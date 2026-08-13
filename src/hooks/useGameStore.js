@@ -10,6 +10,8 @@ import { BLACK_SWAN_EVENTS_DATA } from '../data/blackSwanEventsData';
 import { GOLDEN_EVENT_IDS, BUBBLE_EVENT_IDS } from '../i18n/content/events.content';
 import { TRANSLATIONS } from '../i18n/translations';
 import { formatCurrency, getBuildingCost, getBuildingBulkCost, getMaxAffordableBuildings } from '../utils/formatters';
+import { selectAdBridge } from '../monetization/AdBridge';
+import { selectPurchaseBridge, AD_FREE_PRODUCT_ID } from '../monetization/PurchaseBridge';
 
 const STORAGE_KEY = 'SLOP_CLICKER_GAME_SAVE_V1';
 
@@ -69,9 +71,17 @@ const OFFLINE_EFFICIENCY = 0.2;
 // unerreichbar, fühlte sich also wie "kaputt" an). Auf 1e7 gesenkt: erster Chip ab $10M.
 const ASCEND_CHIP_DIVISOR = 10000000;
 
-// Geplante Ad-Popups (Punkt 9): feste Zeitpunkte seit App-Start, an denen ein Popup eine
-// Rewarded Ad anbietet.
+// Geplante Ad-Popups (Punkt 9): feste Zeitpunkte seit Beginn der aktuellen "Sitzung", an
+// denen ein Popup eine Rewarded Ad anbietet.
 const SCHEDULED_AD_MINUTES = [5, 15, 30, 60, 120];
+
+// Der Anker für "seit Beginn der Sitzung" wird im Save persistiert statt bei jedem Mount neu
+// gesetzt zu werden - sonst ließe sich der 5-Minuten-Bonus durch simples Neuladen/Neustarten
+// der App im Minutentakt farmen (auf iOS trivial, da Nutzer Apps ständig beenden/neu
+// starten). Eine neue Sitzung beginnt erst, wenn seit dem letzten Save wirklich Zeit verging
+// - derselbe 30-Minuten-Schwellwert wie beim AFK-Report oben (awaySec >= 1800), damit "war
+// wirklich weg" überall im Spiel dieselbe Bedeutung hat.
+const SCHEDULED_AD_RESET_GAP_SEC = 1800;
 
 const INITIAL_BUILDINGS = BUILDINGS_DATA.reduce((acc, b) => {
   acc[b.id] = 0;
@@ -143,6 +153,37 @@ export function useGameStore() {
   }, []);
   const dismissAdRewardToast = useCallback(() => setAdRewardToast(null), []);
 
+  // Werbefrei-IAP (iOS): Entitlement kommt aus dem PurchaseBridge (StoreKit nativ, immer
+  // false im Web-Build), NICHT aus dem Save - ein Save-Reset (resetSave) oder ein
+  // manipulierter localStorage-Eintrag darf den Kauf niemals löschen bzw. vortäuschen.
+  // Siehe docs/ios-app-konzept.md Abschnitt 5.
+  const [adFree, setAdFree] = useState(false);
+  const [purchaseState, setPurchaseState] = useState('idle'); // 'idle' | 'purchasing' | 'pending' | 'restoring' | 'failed'
+  // Bridge-Auswahl selbst ist stabil für die Lebensdauer des Hooks (native Injection kommt
+  // über selectPurchaseBridge/selectAdBridge, siehe dortige TODOs für die Native-Anbindung).
+  const purchaseBridge = useMemo(() => selectPurchaseBridge({}), []);
+  const adBridge = useMemo(() => selectAdBridge({ adFree }), [adFree]);
+
+  useEffect(() => {
+    let cancelled = false;
+    purchaseBridge.getEntitlements().then((ent) => {
+      if (!cancelled) setAdFree(!!ent.adFree);
+    });
+    // Deckt Ask-to-Buy-Freigaben und Family-Sharing-Transaktionen ab, die außerhalb eines
+    // expliziten purchaseAdFree()-Aufrufs eintreffen (siehe docs/ios-app-konzept.md §5.3).
+    const unsubscribe = purchaseBridge.onEntitlementChange((ent) => {
+      setAdFree(!!ent.adFree);
+    });
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [purchaseBridge]);
+
+  // purchaseAdFree/restorePurchases folgen weiter unten, direkt nach der addLog-Deklaration
+  // (sie loggen das Kaufergebnis) - addLog existiert an dieser Stelle im Hook-Body noch nicht
+  // (TDZ), deshalb hier nur die addLog-freien Teile.
+
   // Tab-Aktivität: 'active' (Tab sichtbar & fokussiert) = 100% Rate, 'inactive' (Tab sichtbar,
   // aber Fenster/Browser nicht fokussiert) und 'hidden' (Tab im Hintergrund/minimiert) = 50%.
   // 'hidden' wird zusätzlich NICHT live gutgeschrieben, siehe Tick-Loop weiter unten.
@@ -152,6 +193,9 @@ export function useGameStore() {
   const awayEarnedRef = useRef(0);
 
   // Bei "später" wird statt einer harten Zeitgrenze ein Button im Menü freigeschaltet.
+  // Default-Werte gelten nur für einen brandneuen Save ohne vorherigen Stand - der Load-
+  // Effect unten überschreibt beide, sobald feststeht, ob die aktuelle Sitzung fortgesetzt
+  // oder neu begonnen wird (siehe SCHEDULED_AD_RESET_GAP_SEC).
   const sessionStartRef = useRef(Date.now());
   const nextScheduledIndexRef = useRef(0);
   const [pendingScheduledAd, setPendingScheduledAd] = useState(false);
@@ -214,6 +258,45 @@ export function useGameStore() {
     ]);
   }, []);
 
+  const purchaseAdFree = useCallback(async () => {
+    if (!purchaseBridge.isAvailable) return;
+    setPurchaseState('purchasing');
+    try {
+      const result = await purchaseBridge.purchase(AD_FREE_PRODUCT_ID);
+      if (result === 'purchased') {
+        setAdFree(true);
+        setPurchaseState('idle');
+        addLog(tf('log_adFreePurchased'), 'achievement');
+      } else if (result === 'pending') {
+        setPurchaseState('pending');
+        addLog(tf('log_adFreePending'), 'info');
+      } else if (result === 'cancelled') {
+        setPurchaseState('idle');
+      } else {
+        setPurchaseState('failed');
+        addLog(tf('log_adFreePurchaseFailed'), 'danger');
+      }
+    } catch (e) {
+      console.error('Purchase failed:', e);
+      setPurchaseState('failed');
+      addLog(tf('log_adFreePurchaseFailed'), 'danger');
+    }
+  }, [purchaseBridge, addLog, tf]);
+
+  const restorePurchases = useCallback(async () => {
+    setPurchaseState('restoring');
+    try {
+      const ent = await purchaseBridge.restore();
+      setAdFree(!!ent.adFree);
+      setPurchaseState('idle');
+      addLog(tf(ent.adFree ? 'log_adFreeRestored' : 'log_adFreeRestoreNone'), ent.adFree ? 'achievement' : 'info');
+    } catch (e) {
+      console.error('Restore failed:', e);
+      setPurchaseState('failed');
+      addLog(tf('log_adFreePurchaseFailed'), 'danger');
+    }
+  }, [purchaseBridge, addLog, tf]);
+
   // --- SAVE & LOAD LOCALSTORAGE ---
   const saveGame = useCallback(() => {
     const saveData = {
@@ -249,6 +332,10 @@ export function useGameStore() {
       stats,
       fancyGraphics,
       vps: vpsRef.current, // für Offline-Ertrag-Berechnung beim nächsten Laden
+      // Für die Geplante-Ad-Popups-Härtung (SCHEDULED_AD_RESET_GAP_SEC): Anker + Fortschritt
+      // der aktuellen Sitzung, damit ein Neuladen sie fortsetzt statt zurückzusetzen.
+      scheduledAdAnchor: sessionStartRef.current,
+      scheduledAdIndex: nextScheduledIndexRef.current,
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
@@ -320,6 +407,17 @@ export function useGameStore() {
             if (amount >= 1) {
               setOfflineReport({ amount, elapsedSec: cappedSec });
             }
+          }
+
+          // Geplante Ad-Popups (SCHEDULED_AD_RESET_GAP_SEC): dieselbe Abwesenheitsdauer wie
+          // oben entscheidet, ob die Sitzung fortgesetzt (Anker + Fortschritt aus dem Save
+          // übernehmen) oder neu begonnen wird (Anker = jetzt, Fortschritt = 0 - die
+          // useRef-Defaults von oben gelten dann unverändert weiter). Ein bloßes
+          // Neuladen/Neustarten innerhalb der Schwelle darf den Fortschritt NICHT
+          // zurücksetzen, sonst ließe sich der 5-Minuten-Bonus farmen.
+          if (elapsedSec < SCHEDULED_AD_RESET_GAP_SEC && typeof data.scheduledAdAnchor === 'number') {
+            sessionStartRef.current = data.scheduledAdAnchor;
+            nextScheduledIndexRef.current = data.scheduledAdIndex || 0;
           }
         }
       }
@@ -415,18 +513,27 @@ export function useGameStore() {
     };
   }, []);
 
-  // Geplante Ad-Popups (Punkt 9): pollt gegen SCHEDULED_AD_MINUTES seit App-Start.
+  // Geplante Ad-Popups (Punkt 9): pollt gegen SCHEDULED_AD_MINUTES seit Sitzungsbeginn
+  // (sessionStartRef - persistiert & vor Farming gehärtet, siehe SCHEDULED_AD_RESET_GAP_SEC
+  // oben). Mit adFree wird das unterbrechende Vollbild-Popup übersprungen: der Bonus landet
+  // direkt im nicht-modalen "später einlösen"-Zustand (scheduledAdUnlocked), den es für den
+  // Ad-Pfad ohnehin schon gibt (siehe deferScheduledAd) - kein Interrupt für jemanden, der
+  // gerade für Ruhe bezahlt hat (docs/ios-app-konzept.md §4.3).
   useEffect(() => {
     const poll = setInterval(() => {
       const elapsedMin = (Date.now() - sessionStartRef.current) / 60000;
       const nextIdx = nextScheduledIndexRef.current;
       if (nextIdx < SCHEDULED_AD_MINUTES.length && elapsedMin >= SCHEDULED_AD_MINUTES[nextIdx]) {
         nextScheduledIndexRef.current = nextIdx + 1;
-        setPendingScheduledAd(true);
+        if (adFree) {
+          setScheduledAdUnlocked(true);
+        } else {
+          setPendingScheduledAd(true);
+        }
       }
     }, 5000);
     return () => clearInterval(poll);
-  }, []);
+  }, [adFree]);
 
   // --- HYPE TIER & BURN RATE CALCULATIONS (Konzept Abschnitt 4) ---
   const hypeTier = useMemo(() => {
@@ -696,7 +803,7 @@ export function useGameStore() {
       }
 
       // 6. Golden Meme (~alle 20 Min): spawnt NUR das Angebot. Der 10x-Boost wird
-      // ausschließlich über die Rewarded Ad im Banner eingelöst (siehe startAd/'golden_claim'),
+      // ausschließlich über die Rewarded Ad im Banner eingelöst (siehe requestBonus/'golden_claim'),
       // das Banner selbst hat keinerlei Effekt auf die Produktion.
       if (!activeEvent && Math.random() < GOLDEN_CHANCE_PER_200MS * tickScale) {
         const id = GOLDEN_EVENT_IDS[Math.floor(Math.random() * GOLDEN_EVENT_IDS.length)];
@@ -967,87 +1074,108 @@ export function useGameStore() {
   const grantAdPreview = useMemo(() => Math.max(500, vps * 100), [vps]);
   const scheduledAdPreview = useMemo(() => Math.max(250, vps * 60), [vps]);
 
-  // Watch Rewarded Ad. `onComplete` lässt Aufrufer eigene Belohnungslogik anhängen
-  // (z.B. Booster-Pack-Reveal), die nicht generisch genug für den Switch unten ist.
-  const startAd = useCallback((type, onComplete) => {
-    if (adState) return; // schon eine Ad am Laufen
+  // Zahlt die eigentliche Belohnung für einen Placement-Typ aus. Geteilt zwischen dem
+  // Ad-Pfad (nach erfolgreicher Rewarded Ad) und dem Werbefrei-Direktclaim-Pfad in
+  // requestBonus, damit die Auszahlungslogik nur an einer Stelle steht.
+  const grantReward = useCallback((type) => {
+    if (type === 'nitrogen') {
+      setGpuTemp(0);
+      setIsOverheated(false);
+      const msg = tf('log_bonusNitrogen');
+      addLog(msg, 'success');
+      flashAdReward(msg);
+    } else if (type === 'grant') {
+      const reward = grantAdPreview;
+      setValuation((prev) => prev + reward);
+      setTotalValuation((prev) => prev + reward);
+      const msg = tf('log_bonusGrant', { amount: Math.floor(reward).toLocaleString() });
+      addLog(msg, 'success');
+      flashAdReward(msg);
+    } else if (type === 'power_click') {
+      setPowerClicks((prev) => prev + 1);
+      const msg = tf('log_bonusPowerClick');
+      addLog(msg, 'success');
+      flashAdReward(msg);
+    } else if (type === 'ascend_boost') {
+      setPendingAscendBoost(true);
+      const msg = tf('log_bonusAscendBoost');
+      addLog(msg, 'success');
+      flashAdReward(msg);
+    } else if (type === 'pivot_boost') {
+      setPendingPivotBoost(true);
+      const msg = tf('log_bonusPivotBoost');
+      addLog(msg, 'success');
+      flashAdReward(msg);
+    } else if (type === 'golden_claim') {
+      // Einziger Weg an den Boost: 10x TPS für 30s scharf schalten. Das Banner bleibt als
+      // "claimed" stehen und läuft synchron mit dem Boost aus, damit der laufende Effekt
+      // sichtbar ist statt kommentarlos im Hintergrund zu ticken.
+      setActiveEvent((prev) => (
+        prev && prev.kind === 'golden'
+          ? { ...prev, claimed: true, startedAt: Date.now(), expiresAt: Date.now() + GOLDEN_BOOST_SEC * 1000 }
+          : prev
+      ));
+      setGoldenBoostTimer(GOLDEN_BOOST_SEC);
+      setStats((s) => ({ ...s, goldenCaught: (s.goldenCaught || 0) + 1 }));
+      // Kein flashAdReward: der Toast sitzt an derselben Position wie das Banner und würde
+      // es überdecken - das Banner zeigt den laufenden Boost ohnehin selbst an.
+      addLog(tf('log_bonusGoldenClaim', { mult: GOLDEN_BOOST_MULT, sec: GOLDEN_BOOST_SEC }), 'success');
+    } else if (type === 'bubble_clear') {
+      setActiveEvent((prev) => (prev && prev.kind === 'bubble' ? null : prev));
+      setBubblePopTimer(0);
+      setBubbleGlitchUntil(0);
+      const msg = tf('log_bonusBubbleClear');
+      addLog(msg, 'success');
+      flashAdReward(msg);
+    }
+  }, [grantAdPreview, addLog, flashAdReward, tf]);
+
+  // Fordert einen Ad-Placement-Bonus an. Ohne adFree läuft das über die AdBridge (Web:
+  // Fake-Timer, iOS: AdMob Rewarded); mit adFree wird sofort ausgezahlt, ohne jedes Ad-SDK
+  // anzufassen (siehe docs/ios-app-konzept.md §3.2/§4). `onComplete` lässt Aufrufer eigene
+  // Belohnungslogik anhängen (z.B. Booster-Pack-Reveal), die nicht generisch genug für
+  // grantReward() ist.
+  //
+  // "Nie blockieren": schlägt die Ad-Präsentation fehl (kein Fill, offline), wird die
+  // Belohnung TROTZDEM ausgezahlt - bei golden_claim ist die Ad sonst der einzige Weg zum
+  // Boost, ein Ladefehler dürfte das Angebot nicht ersatzlos verfallen lassen (§6).
+  const requestBonus = useCallback((type, onComplete) => {
+    if (adState) return; // schon eine Ad/ein Claim am Laufen
     if (Date.now() < (adCooldowns[type] || 0)) {
       addLog(tf('log_adOnCooldown'), 'info');
       return;
     }
 
+    const finish = (rewarded, wasAdFree) => {
+      setAdState(null);
+      if (!wasAdFree) {
+        if (rewarded) {
+          setStats((s) => ({ ...s, adsWatched: (s.adsWatched || 0) + 1 }));
+        } else {
+          addLog(tf('log_adFailed'), 'info');
+        }
+      }
+
+      const cooldownSec = AD_COOLDOWN_SEC[type] ?? 60;
+      if (cooldownSec > 0) {
+        setAdCooldowns((prev) => ({ ...prev, [type]: Date.now() + cooldownSec * 1000 }));
+      }
+
+      grantReward(type);
+      if (onComplete) onComplete();
+    };
+
+    if (adFree) {
+      finish(true, true);
+      return;
+    }
+
     setAdState({ type, timer: 3 });
     addLog(tf('log_watchingAd'), 'info');
-
-    let count = 3;
-    const adInterval = setInterval(() => {
-      count -= 1;
-      setAdState({ type, timer: count });
-      if (count <= 0) {
-        clearInterval(adInterval);
-        setAdState(null);
-        setStats((s) => ({ ...s, adsWatched: (s.adsWatched || 0) + 1 }));
-
-        const cooldownSec = AD_COOLDOWN_SEC[type] ?? 60;
-        if (cooldownSec > 0) {
-          setAdCooldowns((prev) => ({ ...prev, [type]: Date.now() + cooldownSec * 1000 }));
-        }
-
-        if (type === 'nitrogen') {
-          setGpuTemp(0);
-          setIsOverheated(false);
-          const msg = tf('log_bonusNitrogen');
-          addLog(msg, 'success');
-          flashAdReward(msg);
-        } else if (type === 'grant') {
-          const reward = grantAdPreview;
-          setValuation((prev) => prev + reward);
-          setTotalValuation((prev) => prev + reward);
-          const msg = tf('log_bonusGrant', { amount: Math.floor(reward).toLocaleString() });
-          addLog(msg, 'success');
-          flashAdReward(msg);
-        } else if (type === 'power_click') {
-          setPowerClicks((prev) => prev + 1);
-          const msg = tf('log_bonusPowerClick');
-          addLog(msg, 'success');
-          flashAdReward(msg);
-        } else if (type === 'ascend_boost') {
-          setPendingAscendBoost(true);
-          const msg = tf('log_bonusAscendBoost');
-          addLog(msg, 'success');
-          flashAdReward(msg);
-        } else if (type === 'pivot_boost') {
-          setPendingPivotBoost(true);
-          const msg = tf('log_bonusPivotBoost');
-          addLog(msg, 'success');
-          flashAdReward(msg);
-        } else if (type === 'golden_claim') {
-          // Einziger Weg an den Boost: 10x TPS für 30s scharf schalten. Das Banner bleibt als
-          // "claimed" stehen und läuft synchron mit dem Boost aus, damit der laufende Effekt
-          // sichtbar ist statt kommentarlos im Hintergrund zu ticken.
-          setActiveEvent((prev) => (
-            prev && prev.kind === 'golden'
-              ? { ...prev, claimed: true, startedAt: Date.now(), expiresAt: Date.now() + GOLDEN_BOOST_SEC * 1000 }
-              : prev
-          ));
-          setGoldenBoostTimer(GOLDEN_BOOST_SEC);
-          setStats((s) => ({ ...s, goldenCaught: (s.goldenCaught || 0) + 1 }));
-          // Kein flashAdReward: der Toast sitzt an derselben Position wie das Banner und würde
-          // es überdecken - das Banner zeigt den laufenden Boost ohnehin selbst an.
-          addLog(tf('log_bonusGoldenClaim', { mult: GOLDEN_BOOST_MULT, sec: GOLDEN_BOOST_SEC }), 'success');
-        } else if (type === 'bubble_clear') {
-          setActiveEvent((prev) => (prev && prev.kind === 'bubble' ? null : prev));
-          setBubblePopTimer(0);
-          setBubbleGlitchUntil(0);
-          const msg = tf('log_bonusBubbleClear');
-          addLog(msg, 'success');
-          flashAdReward(msg);
-        }
-
-        if (onComplete) onComplete();
-      }
-    }, 1000);
-  }, [addLog, adState, adCooldowns, grantAdPreview, flashAdReward, tf]);
+    adBridge
+      .present(type, (secondsLeft) => setAdState({ type, timer: Math.max(0, secondsLeft) }))
+      .then((result) => finish(result === 'rewarded', false));
+  }, [addLog, adState, adCooldowns, adFree, adBridge, grantReward, tf]);
 
   // Offline-Ertrag einsammeln (optional per Ad verdoppelt)
   const claimOfflineEarnings = useCallback((doubled = false) => {
@@ -1086,7 +1214,7 @@ export function useGameStore() {
   // verschieben (Button erscheint im Menü, keine feste Verfallszeit).
   const watchScheduledAdNow = useCallback(() => {
     setPendingScheduledAd(false);
-    startAd('scheduled_bonus', () => {
+    requestBonus('scheduled_bonus', () => {
       const reward = scheduledAdPreview;
       setValuation((prev) => prev + reward);
       setTotalValuation((prev) => prev + reward);
@@ -1094,7 +1222,7 @@ export function useGameStore() {
       addLog(msg, 'success');
       flashAdReward(msg);
     });
-  }, [scheduledAdPreview, addLog, startAd, flashAdReward, tf]);
+  }, [scheduledAdPreview, addLog, requestBonus, flashAdReward, tf]);
 
   const deferScheduledAd = useCallback(() => {
     setPendingScheduledAd(false);
@@ -1103,7 +1231,7 @@ export function useGameStore() {
 
   const claimUnlockedScheduledAd = useCallback(() => {
     setScheduledAdUnlocked(false);
-    startAd('scheduled_bonus', () => {
+    requestBonus('scheduled_bonus', () => {
       const reward = scheduledAdPreview;
       setValuation((prev) => prev + reward);
       setTotalValuation((prev) => prev + reward);
@@ -1111,7 +1239,7 @@ export function useGameStore() {
       addLog(msg, 'success');
       flashAdReward(msg);
     });
-  }, [scheduledAdPreview, addLog, startAd, flashAdReward, tf]);
+  }, [scheduledAdPreview, addLog, requestBonus, flashAdReward, tf]);
 
   // Chips, die eine Ascension JETZT bringen würde (ohne Ad-Boost) - von SpecialTab fürs
   // Anzeigen/Deaktivieren des Buttons genutzt, damit die Formel nur an einer Stelle steht.
@@ -1364,8 +1492,9 @@ export function useGameStore() {
     boughtUpgrades, unlockedUpgrades, buyUpgrade, buyAllUpgrades,
     unlockedAchievements,
     activeEvent, dismissEvent, bubbleGlitchUntil,
-    adState, startAd, isAdReady, getAdCooldownRemaining,
+    adState, requestBonus, isAdReady, getAdCooldownRemaining,
     adRewardToast, dismissAdRewardToast, grantAdPreview, scheduledAdPreview,
+    adFree, purchaseState, purchaseAvailable: purchaseBridge.isAvailable, purchaseAdFree, restorePurchases,
     offlineReport, claimOfflineEarnings,
     pageActivity, afkReport, dismissAfkReport, claimAfkBonus,
     pendingScheduledAd, watchScheduledAdNow, deferScheduledAd,
