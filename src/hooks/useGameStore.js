@@ -12,6 +12,8 @@ import { TRANSLATIONS } from '../i18n/translations';
 import { formatCurrency, getBuildingCost, getBuildingBulkCost, getMaxAffordableBuildings } from '../utils/formatters';
 import { selectAdBridge } from '../monetization/AdBridge';
 import { selectPurchaseBridge, AD_FREE_PRODUCT_ID } from '../monetization/PurchaseBridge';
+import { nativeAdBridge } from '../monetization/nativeAdBridge';
+import { ensureAdConsent, requestTrackingIfNeeded } from '../monetization/adConsent';
 import { getItem as getStorageItem, setItem as setStorageItem, removeItem as removeStorageItem } from '../platform/storage';
 import { subscribeNativeAppState } from '../platform/appState';
 import { tapFeedback } from '../platform/haptics';
@@ -165,12 +167,21 @@ export function useGameStore() {
   // Bridge-Auswahl selbst ist stabil für die Lebensdauer des Hooks (native Injection kommt
   // über selectPurchaseBridge/selectAdBridge, siehe dortige TODOs für die Native-Anbindung).
   const purchaseBridge = useMemo(() => selectPurchaseBridge({}), []);
-  const adBridge = useMemo(() => selectAdBridge({ adFree }), [adFree]);
+  const adBridge = useMemo(() => selectAdBridge({ adFree, nativeAdBridge }), [adFree]);
 
   useEffect(() => {
     let cancelled = false;
     purchaseBridge.getEntitlements().then((ent) => {
-      if (!cancelled) setAdFree(!!ent.adFree);
+      if (cancelled) return;
+      const purchased = !!ent.adFree;
+      setAdFree(purchased);
+      // Erst NACH der Entitlement-Prüfung initialisieren, nie vorher: sonst würde für
+      // wiederkehrende Käufer:innen bei jedem Kaltstart kurz das Ad-SDK anlaufen, bevor der
+      // (async) Kaufstatus überhaupt feststeht - genau das darf laut Konzept nicht passieren
+      // (docs/ios-app-konzept.md §6, "Ad-SDK wird gar nicht erst initialisiert").
+      if (!purchased) {
+        ensureAdConsent().catch((e) => console.error('Ad consent init failed:', e));
+      }
     });
     // Deckt Ask-to-Buy-Freigaben und Family-Sharing-Transaktionen ab, die außerhalb eines
     // expliziten purchaseAdFree()-Aufrufs eintreffen (siehe docs/ios-app-konzept.md §5.3).
@@ -946,6 +957,11 @@ export function useGameStore() {
     }
 
     tapFeedback();
+    // ATT-Prompt an der ersten "sinnvollen Interaktion" statt beim Kaltstart (siehe
+    // docs/ios-app-konzept.md §6) - requestTrackingIfNeeded() ist intern idempotent, der
+    // Guard hier verhindert nur, dass adFree-Käufer:innen (kein Ad-SDK, keine Tracking-
+    // Notwendigkeit) den Prompt überhaupt zu sehen bekommen.
+    if (!adFree) requestTrackingIfNeeded();
 
     const earned = clickValue;
     setValuation((prev) => prev + earned);
@@ -972,7 +988,7 @@ export function useGameStore() {
         { id, x: e.clientX, y: e.clientY, text: `+$${Math.floor(earned)}` },
       ]);
     }
-  }, [isOverheated, clickValue, addLog, tf]);
+  }, [isOverheated, clickValue, addLog, tf, adFree]);
 
   // Buy Building
   const buyBuilding = useCallback((buildingId) => {

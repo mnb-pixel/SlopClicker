@@ -15,6 +15,7 @@ import { AdBanner } from './components/AdBanner';
 import { OfflineEarningsModal } from './components/modals/OfflineEarningsModal';
 import { AfkReportModal } from './components/modals/AfkReportModal';
 import { ScheduledAdModal } from './components/modals/ScheduledAdModal';
+import { showNativeBanner, hideNativeBanner } from './monetization/nativeBanner';
 import { UPGRADES_DATA } from './data/upgradesData';
 
 // Lazy geladen statt statisch importiert: alle drei sind reine Klick-zum-Öffnen-Modals,
@@ -39,6 +40,16 @@ export default function App() {
   // null | 'impressum' | 'datenschutz' - Rechtstexte als Modal, damit sie aus jeder
   // Ansicht (mobil wie Desktop) über die Einstellungen erreichbar bleiben.
   const [legalPage, setLegalPage] = useState(null);
+
+  // Natives AdMob-Banner (kein DOM-Element, siehe AdBanner.jsx) folgt adFree. Auf Web ist
+  // showNativeBanner/hideNativeBanner ein No-Op.
+  useEffect(() => {
+    if (store.adFree) {
+      hideNativeBanner();
+    } else {
+      showNativeBanner();
+    }
+  }, [store.adFree]);
 
   // Live gemessene Header-Höhe (statt fest verdrahtetem px-Wert): der Header wechselt seine
   // Höhe je nach Zustand (SEC-Theme blendet eine zusätzliche Banner-Zeile ein, ein langer
