@@ -13,6 +13,7 @@ import { formatCurrency, getBuildingCost, getBuildingBulkCost, getMaxAffordableB
 import { selectAdBridge } from '../monetization/AdBridge';
 import { selectPurchaseBridge, AD_FREE_PRODUCT_ID } from '../monetization/PurchaseBridge';
 import { nativeAdBridge } from '../monetization/nativeAdBridge';
+import { nativePurchaseBridge } from '../monetization/nativePurchaseBridge';
 import { ensureAdConsent, requestTrackingIfNeeded } from '../monetization/adConsent';
 import { getItem as getStorageItem, setItem as setStorageItem, removeItem as removeStorageItem } from '../platform/storage';
 import { subscribeNativeAppState } from '../platform/appState';
@@ -166,7 +167,7 @@ export function useGameStore() {
   const [purchaseState, setPurchaseState] = useState('idle'); // 'idle' | 'purchasing' | 'pending' | 'restoring' | 'failed'
   // Bridge-Auswahl selbst ist stabil für die Lebensdauer des Hooks (native Injection kommt
   // über selectPurchaseBridge/selectAdBridge, siehe dortige TODOs für die Native-Anbindung).
-  const purchaseBridge = useMemo(() => selectPurchaseBridge({}), []);
+  const purchaseBridge = useMemo(() => selectPurchaseBridge({ nativePurchaseBridge }), []);
   const adBridge = useMemo(() => selectAdBridge({ adFree, nativeAdBridge }), [adFree]);
 
   useEffect(() => {
