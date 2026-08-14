@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Tv, Loader2, ThermometerSnowflake, Landmark, Zap, Trash2 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Tv, Loader2, ThermometerSnowflake, Landmark, Zap, Trash2, Download, Upload } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 
 export function MiscTab({
@@ -8,15 +8,35 @@ export function MiscTab({
   isAdReady,
   getAdCooldownRemaining,
   resetSave,
+  exportSave,
+  importSave,
   scheduledAdUnlocked,
   claimUnlockedScheduledAd,
   grantAdPreview = 0,
   scheduledAdPreview = 0,
   onOpenLegal,
   t,
+  tf,
 }) {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
+  // Hält die per <input type="file"> gelesene Datei (Name + Inhalt) zwischen Auswahl und
+  // Bestätigung fest - Import überschreibt den aktuellen Spielstand, deshalb erst ein
+  // Bestätigungsschritt wie beim Wipe, statt sofort beim Dateidialog-Schluss zu importieren.
+  const [pendingImport, setPendingImport] = useState(null);
+  const fileInputRef = useRef(null);
   const tr = t || ((k) => k);
+  const trf = tf || ((k) => k);
+
+  const handleFileSelected = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // erlaubt erneutes Auswählen derselben Datei
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPendingImport({ name: file.name, text: String(reader.result || '') });
+    };
+    reader.readAsText(file);
+  };
 
   // Kompakter Ad-Button, der je nach Cooldown-Status Play-Button / Countdown / "läuft" zeigt.
   const renderAdCta = (type) => {
@@ -152,6 +172,74 @@ export function MiscTab({
       {/* Kein eigener Werbe-Slot mehr: der Anchor über der Tab-Leiste (mobil) bzw. der
           Kopfzeilen-Slot neben der Bewertung (Desktop) ist auf diesem Screen bereits
           sichtbar. Zwei Flächen gleichzeitig wären eine zu viel. */}
+
+      {/* Export/Import: lokale Sicherung bzw. Übertragung des Spielstands, unabhängig vom
+          automatischen localStorage-Autosave. */}
+      <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={() => exportSave && exportSave()}
+            className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500 text-left transition-all flex items-center justify-between group"
+          >
+            <div>
+              <div className="font-extrabold text-xs text-cyan-300 flex items-center gap-1.5">
+                <Download className="w-4 h-4 text-cyan-400" />
+                {tr('exportSave')}
+              </div>
+              <div className="text-[11px] text-slate-400 mt-0.5">
+                {tr('exportSaveDesc')}
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500 text-left transition-all flex items-center justify-between group"
+          >
+            <div>
+              <div className="font-extrabold text-xs text-cyan-300 flex items-center gap-1.5">
+                <Upload className="w-4 h-4 text-cyan-400" />
+                {tr('importSave')}
+              </div>
+              <div className="text-[11px] text-slate-400 mt-0.5">
+                {tr('importSaveDesc')}
+              </div>
+            </div>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            onChange={handleFileSelected}
+            className="hidden"
+          />
+        </div>
+
+        {pendingImport && (
+          <div className="bg-rose-950/80 p-3 rounded-xl border border-rose-500 flex flex-col gap-2">
+            <div className="text-xs font-extrabold text-rose-300">
+              {trf('importConfirm', { name: pendingImport.name })}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  importSave && importSave(pendingImport.text);
+                  setPendingImport(null);
+                }}
+                className="flex-1 py-1.5 bg-rose-600 text-white rounded font-bold text-xs"
+              >
+                {tr('yesImport')}
+              </button>
+              <button
+                onClick={() => setPendingImport(null)}
+                className="flex-1 py-1.5 bg-slate-800 text-slate-300 rounded font-bold text-xs"
+              >
+                {tr('cancel')}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Wipe Save Data (Sprache & Audio sind bereits in der Kopfzeile verfügbar) */}
       <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">

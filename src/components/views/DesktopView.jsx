@@ -92,12 +92,15 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
             isAdReady={store.isAdReady}
             getAdCooldownRemaining={store.getAdCooldownRemaining}
             resetSave={store.resetSave}
+            exportSave={store.exportSave}
+            importSave={store.importSave}
             scheduledAdUnlocked={store.scheduledAdUnlocked}
             claimUnlockedScheduledAd={store.claimUnlockedScheduledAd}
             grantAdPreview={store.grantAdPreview}
             scheduledAdPreview={store.scheduledAdPreview}
             onOpenLegal={onOpenLegal}
             t={store.t}
+            tf={store.tf}
           />
         </div>
       </div>

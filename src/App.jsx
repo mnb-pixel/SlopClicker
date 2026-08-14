@@ -261,12 +261,15 @@ export default function App() {
                 isAdReady={store.isAdReady}
                 getAdCooldownRemaining={store.getAdCooldownRemaining}
                 resetSave={store.resetSave}
+                exportSave={store.exportSave}
+                importSave={store.importSave}
                 scheduledAdUnlocked={store.scheduledAdUnlocked}
                 claimUnlockedScheduledAd={store.claimUnlockedScheduledAd}
                 grantAdPreview={store.grantAdPreview}
                 scheduledAdPreview={store.scheduledAdPreview}
                 onOpenLegal={setLegalPage}
                 t={store.t}
+                tf={store.tf}
               />
             )}
           </main>

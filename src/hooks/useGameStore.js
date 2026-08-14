@@ -1627,6 +1627,47 @@ export function useGameStore() {
     addLog(tf('log_saveWiped'), 'danger');
   }, [addLog, tf]);
 
+  // Export Save Data: erzwingt erst einen frischen saveGame()-Schreibvorgang (der letzte
+  // Autosave-Tick kann bis zu 8s alt sein), liest danach exakt das, was auch beim nächsten
+  // Laden gelesen würde, statt eine zweite, potenziell abweichende Kopie des Save-Objekts
+  // zu bauen.
+  const exportSave = useCallback(() => {
+    saveGame();
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const blob = new Blob([raw], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `token-furnace-save-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    addLog(tf('log_exportSuccess'), 'info');
+  }, [saveGame, addLog, tf]);
+
+  // Import Save Data: läuft durch dieselbe migrateSave()/applyLoadedState()-Pipeline wie das
+  // Laden beim Mount und der Cross-Tab-Resync (siehe dort) - eine manipulierte oder von einer
+  // uralten Version stammende Datei darf das Spiel nicht in einen NaN-/Crash-Zustand bringen.
+  const importSave = useCallback((jsonString) => {
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonString);
+    } catch (e) {
+      parsed = null;
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      addLog(tf('log_importFailed'), 'danger');
+      return false;
+    }
+    const data = migrateSave(parsed);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    applyLoadedState(data);
+    addLog(tf('log_importSuccess'), 'success');
+    return true;
+  }, [addLog, tf, applyLoadedState]);
+
   return {
     lang, setLang, t, tf,
     startupName, setStartupName, hasAiDomainBonus,
@@ -1649,7 +1690,7 @@ export function useGameStore() {
     fancyGraphics, setFancyGraphics,
     activeTab, setActiveTab,
     vps, grossVps, netFlow, clickValue, handleTapAGI,
-    resetSave, particles,
+    resetSave, exportSave, importSave, particles,
 
     // Investor Ledger & Hype Features
     themeMode, toggleThemeMode,

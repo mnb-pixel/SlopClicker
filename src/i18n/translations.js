@@ -95,6 +95,12 @@ export const TRANSLATIONS = {
     wipeConfirm: 'Bist du sicher? Alle Fortschritte werden gelöscht!',
     yesWipe: 'JA, SPIELSTAND LÖSCHEN',
     cancel: 'ABBRECHEN',
+    exportSave: 'Spielstand exportieren',
+    exportSaveDesc: 'Lädt deinen Spielstand als Datei herunter - z.B. als Backup oder zum Übertragen auf ein anderes Gerät.',
+    importSave: 'Spielstand importieren',
+    importSaveDesc: 'Lädt einen zuvor exportierten Spielstand. Der aktuelle Fortschritt wird dabei überschrieben.',
+    importConfirm: 'Import bestätigen? Dein aktueller Spielstand wird durch die Datei "{name}" ersetzt!',
+    yesImport: 'JA, IMPORTIEREN',
     pitchDeck: 'Meme Pitch Deck Exportieren',
     manualTitle: 'Investor & Startup Handbuch',
 
@@ -449,6 +455,9 @@ export const TRANSLATIONS = {
     log_purchasedHeavenly: 'Heavenly Upgrade "{name}" gekauft!',
     log_saveWiped: 'Spielstand vollständig gelöscht. Neue Runde gestartet!',
     log_saveFailed: 'ACHTUNG: Spielstand kann nicht gespeichert werden! Browser-Speicher voll oder privater Modus aktiv - dein Fortschritt geht beim Schließen des Tabs verloren.',
+    log_exportSuccess: 'Spielstand als Datei heruntergeladen.',
+    log_importSuccess: 'Spielstand erfolgreich importiert!',
+    log_importFailed: 'Import fehlgeschlagen: Datei ist kein gültiger Spielstand.',
   },
 
   en: {
@@ -543,6 +552,12 @@ export const TRANSLATIONS = {
     wipeConfirm: 'Are you sure? This will delete all startup progress!',
     yesWipe: 'YES, WIPE SAVE',
     cancel: 'CANCEL',
+    exportSave: 'Export Save Game',
+    exportSaveDesc: 'Downloads your save as a file - e.g. as a backup or to move it to another device.',
+    importSave: 'Import Save Game',
+    importSaveDesc: 'Loads a previously exported save. This overwrites your current progress.',
+    importConfirm: 'Confirm import? Your current save will be replaced by the file "{name}"!',
+    yesImport: 'YES, IMPORT',
     pitchDeck: 'Export Meme Pitch Deck',
     manualTitle: 'Investor & Startup Manual',
 
@@ -892,6 +907,9 @@ export const TRANSLATIONS = {
     log_purchasedHeavenly: 'Purchased Heavenly Upgrade "{name}"!',
     log_saveWiped: 'Save data completely wiped. Starting fresh startup round!',
     log_saveFailed: 'WARNING: Cannot save your game! Browser storage is full or private mode is active - your progress will be lost when you close this tab.',
+    log_exportSuccess: 'Save file downloaded.',
+    log_importSuccess: 'Save imported successfully!',
+    log_importFailed: 'Import failed: file is not a valid save.',
   },
 };
 
