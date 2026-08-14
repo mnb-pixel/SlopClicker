@@ -282,6 +282,10 @@ export function useGameStore() {
   // (z.B. ein Link in neuem Tab geöffnet, alten vergessen) hätte das Spiel so in JEDEM
   // Tab lautlos am Speichern gehindert - schlimmer als das Problem, das es lösen sollte.
   const lastKnownSaveTimestampRef = useRef(null);
+  // Wächter für den Resync-Effect unten: wird nur bei einem selbst beobachteten Wechsel
+  // auf 'hidden' gesetzt, damit ein Resync ausschließlich nach einem ECHTEN eigenen
+  // Hintergrund-Aufenthalt läuft - nicht bei jedem 'visibilitychange'-Event.
+  const wasHiddenRef = useRef(false);
 
   // `||` würde einen bewusst leeren String (z.B. der leere Epochen-Präfix bei 'ai') als
   // "fehlt" behandeln und bis zum rohen Key durchfallen lassen - darum hier explizit auf
@@ -539,15 +543,30 @@ export function useGameStore() {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         saveGameRef.current();
+        wasHiddenRef.current = true;
         return;
       }
+      // Resync NUR nach einem selbst beobachteten Hidden-Zustand, nicht bei jedem
+      // 'visibilitychange'-Event: Chromium (mindestens im Headless-Betrieb, siehe Test)
+      // feuert dieses Event teils auch dann, wenn document.visibilityState nie wirklich
+      // auf 'hidden' wechselt - z.B. schon beim bloßen Öffnen eines zweiten Tabs. Ohne
+      // dieses Wächter-Flag hätte JEDES solche Ereignis versucht "nachzuladen", obwohl
+      // dieser Tab nie im Hintergrund war und gerade eigenen, noch ungespeicherten
+      // Fortschritt im State hat - im Test wurden so 25 echte Klicks ($25) durch den
+      // älteren Stand von der Platte überschrieben, BEVOR der eigene Autosave sie
+      // überhaupt erreichen konnte.
+      if (!wasHiddenRef.current) return;
+      wasHiddenRef.current = false;
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (!saved) return;
         const parsed = JSON.parse(saved);
         const data = parsed ? migrateSave(parsed) : null;
         const savedTimestamp = data ? safeNumber(data.timestamp, null) : null;
-        if (data && savedTimestamp !== null && savedTimestamp !== lastKnownSaveTimestampRef.current) {
+        // Strikt NEUER statt nur "anders": schützt zusätzlich gegen Uhren-Ungenauigkeiten
+        // und stellt sicher, dass wirklich nur ein ECHTER fremder Fortschritt übernommen
+        // wird, nie einfach nur ein abweichender Wert.
+        if (data && savedTimestamp !== null && savedTimestamp > lastKnownSaveTimestampRef.current) {
           applyLoadedState(data);
         }
       } catch (e) {
