@@ -14,13 +14,13 @@ export const LEGAL_TODO = '[[ BITTE EINTRAGEN ]]';
 
 // ================================ HINWEIS ================================
 // Betreiber ist laut quaell.bryopal.ch eine SCHWEIZER GmbH, keine deutsche. Die
-// Abschnittstitel unten ("Angaben gemäß § 5 DDG", "§ 18 Abs. 2 MStV", "USt-IdNr. gemäß
-// § 27a UStG") zitieren deutsches Recht - das ist die Rechtsgrundlage, mit der dieses
-// Modal ursprünglich als Entwurf angelegt wurde, aber für eine Schweizer Gesellschaft
-// vermutlich NICHT die zutreffende (einschlägig wäre u.a. Art. 3 lit. s UWG für die
-// Anbieterkennzeichnung, ggf. revDSG statt DSGVO). Diese Zitate wurden bewusst NICHT
-// eigenmächtig umgeschrieben, da das eine juristische Einschätzung ist - bitte von
-// einer Person mit Rechtskenntnis prüfen lassen, bevor die Seite live geht.
+// Abschnittstitel unten ("Angaben gemäß § 5 DDG", "§ 18 Abs. 2 MStV") zitieren deutsches
+// Recht - das ist die Rechtsgrundlage, mit der dieses Modal ursprünglich als Entwurf
+// angelegt wurde, aber für eine Schweizer Gesellschaft vermutlich NICHT die zutreffende
+// (einschlägig wäre u.a. Art. 3 lit. s UWG für die Anbieterkennzeichnung, ggf. revDSG statt
+// DSGVO). Diese Zitate wurden bewusst NICHT eigenmächtig umgeschrieben, da das eine
+// juristische Einschätzung ist - bitte von einer Person mit Rechtskenntnis prüfen lassen,
+// bevor die Seite live geht.
 //
 // Das gilt ausdrücklich auch für die Datenschutz-Ziffern 4 (Termly) und 5 (Google
 // AdSense): sie beschreiben die in index.html tatsächlich eingebundenen Dienste - vorher
@@ -41,12 +41,9 @@ export const OPERATOR = {
   city: 'St. Gallen',
   country: 'Schweiz',
   email: 'contact@bryopal.ch',
-  // Auf quaell.bryopal.ch ebenfalls nicht angegeben.
-  phone: null,
-  // Schweizer UID ist kein EU-USt-IdNr. nach § 27a UStG - deshalb nicht hier eingetragen
-  // (würde eine falsche Rechtsgrundlage suggerieren), sondern unten unter "register" mit
-  // korrekter Bezeichnung.
-  vatId: null,
+  // Schweizer UID ist kein EU-USt-IdNr. nach § 27a UStG, deshalb kein eigenes vatId-Feld
+  // (würde eine falsche Rechtsgrundlage suggerieren) - stattdessen hier mit korrekter
+  // Bezeichnung.
   register: 'UID: CHE-194.217.671, Handelsregisteramt des Kantons St. Gallen',
   // Auf quaell.bryopal.ch als "vertretungsberechtigte Person" gelistet, nicht explizit als
   // inhaltlich Verantwortlicher - für diese Seite mangels anderer Angabe übernommen.
@@ -61,10 +58,12 @@ export function formatOperatorField(value) {
   return value === null || value === undefined || value === '' ? LEGAL_TODO : value;
 }
 
-// true, solange noch Pflichtangaben fehlen -> Entwurfs-Banner im Modal einblenden.
+// true, solange noch Pflichtangaben fehlen -> Entwurfs-Banner im Modal einblenden. phone
+// bewusst NICHT geprüft: wie vatId ist es dauerhaft null (auf quaell.bryopal.ch ebenfalls
+// nicht angegeben), kein fehlendes Pflichtfeld.
 export function hasOpenTodos() {
   return [
-    OPERATOR.name, OPERATOR.street, OPERATOR.postalCode, OPERATOR.city, OPERATOR.phone,
+    OPERATOR.name, OPERATOR.street, OPERATOR.postalCode, OPERATOR.city,
     OPERATOR.hostingProvider,
   ].some((v) => v === null || v === undefined || v === '');
 }
@@ -94,13 +93,12 @@ export const LEGAL_CONTENT = {
           title: 'Kontakt',
           lines: [
             'E-Mail: {email}',
-            'Telefon: {phone}',
           ],
         },
         {
-          title: 'Umsatzsteuer-Identifikationsnummer',
+          title: 'Handelsregister',
           lines: [
-            'USt-IdNr. gemäß § 27a Umsatzsteuergesetz: {vatId}',
+            '{register}',
           ],
         },
         {
@@ -159,7 +157,7 @@ export const LEGAL_CONTENT = {
             'Wir setzen die Consent-Management-Plattform **Termly** (Termly, Inc., USA) ein, um deine Einwilligung in nicht zwingend erforderliche Cookies einzuholen, zu dokumentieren und verwaltbar zu machen.',
             'Termly speichert deine Auswahl in deinem Browser und blockiert einwilligungspflichtige Skripte (u. a. das Werbenetzwerk unter Ziffer 5), solange keine Einwilligung vorliegt. Dabei wird deine IP-Adresse an Termly übermittelt.',
             'Rechtsgrundlage für die Einwilligungsverwaltung selbst ist Art. 6 Abs. 1 lit. c und lit. f DSGVO – die Pflicht zur Einholung und Dokumentation von Einwilligungen sowie das berechtigte Interesse an einem rechtskonformen Betrieb.',
-            'Deine Einwilligung kannst du jederzeit über den Link „Cookie-Richtlinie" in den Einstellungen mit Wirkung für die Zukunft ändern oder widerrufen.',
+            'Deine Einwilligung kannst du jederzeit über das Termly-Consent-Banner mit Wirkung für die Zukunft ändern oder widerrufen.',
           ],
         },
         {
@@ -222,13 +220,12 @@ export const LEGAL_CONTENT = {
           title: 'Contact',
           lines: [
             'Email: {email}',
-            'Phone: {phone}',
           ],
         },
         {
-          title: 'VAT Identification Number',
+          title: 'Commercial Register',
           lines: [
-            'VAT ID pursuant to § 27a German VAT Act: {vatId}',
+            '{register}',
           ],
         },
         {
@@ -287,7 +284,7 @@ export const LEGAL_CONTENT = {
             'We use the consent management platform **Termly** (Termly, Inc., USA) to obtain, document and manage your consent to non-essential cookies.',
             'Termly stores your choice in your browser and blocks consent-requiring scripts (including the advertising network under section 5) for as long as no consent has been given. Your IP address is transmitted to Termly in the process.',
             'The legal basis for consent management itself is Art. 6(1)(c) and (f) GDPR – the obligation to obtain and document consent, and the legitimate interest in legally compliant operation.',
-            'You can change or withdraw your consent at any time with effect for the future via the "Cookie Policy" link in the settings.',
+            'You can change or withdraw your consent at any time with effect for the future via the Termly consent banner.',
           ],
         },
         {

@@ -348,30 +348,6 @@ export function MiscTab({
           >
             {tr('legalPrivacy')}
           </button>
-          <span className="text-slate-700">•</span>
-          <button
-            onClick={() => onOpenLegal && onOpenLegal('cookies')}
-            className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
-          >
-            {tr('legalCookies')}
-          </button>
-          <span className="text-slate-700">•</span>
-          {/* class "termly-display-preferences" bleibt für Termlys eigenen Klick-Handler
-              erhalten, reicht in dieser SPA aber allein nicht: Termlys Script bindet diesen
-              Handler nur an Elemente, die schon im DOM stehen, wenn das Script die Seite
-              einmalig scannt - der Link steckt aber im lazy gerenderten Settings-Tab und
-              existiert zu dem Zeitpunkt oft noch nicht. Deshalb zusätzlich Termlys
-              dokumentierte SPA-Lösung: die global exponierte API-Funktion direkt aufrufen. */}
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              window.Termly?.displayPreferenceModal?.();
-            }}
-            className="termly-display-preferences text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
-          >
-            {tr('consentPreferences')}
-          </a>
         </div>
         <div>{tr('footerPrivacy')}</div>
         <div className="text-[10px] text-slate-600">Token Furnace Mobile v1.0.0</div>
