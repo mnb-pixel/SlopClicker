@@ -266,16 +266,22 @@ export function useGameStore() {
   // eine Änderung darf keinen Re-Render auslösen.
   const saveFailedRef = useRef(false);
 
-  // Cross-Tab-Schutz: zwei gleichzeitig offene Tabs speichern beide alle 8s in denselben
-  // localStorage-Key. Ohne Erkennung würde der jüngere Autosave-Tick den älteren Tab
-  // stillschweigend überschreiben - Fortschritt aus dem "verlierenden" Tab wäre für immer
-  // weg, ohne dass irgendjemand das bemerkt. lastOwnSaveAtRef hält den Timestamp des
-  // zuletzt selbst geschriebenen Saves fest; taucht im 'storage'-Event (das NUR in
-  // anderen Tabs feuert, nie im schreibenden selbst) ein abweichender Timestamp auf, hat
-  // ein anderer Tab geschrieben. Dieser Tab friert dann ein statt weiter zu überschreiben
-  // - der andere, zuletzt aktive Tab bleibt die "Quelle der Wahrheit".
-  const lastOwnSaveAtRef = useRef(null);
-  const foreignTabDetectedRef = useRef(false);
+  // Cross-Tab-Schutz: siehe die beiden Effects weiter unten ("Autosave pausiert, während
+  // der Tab im Hintergrund ist" und "Resync beim Zurückkehren aus dem Hintergrund"). Hält
+  // den Timestamp des Saves fest, den DIESER Tab zuletzt selbst geschrieben ODER geladen
+  // hat, um zu erkennen, ob beim Zurückkehren aus dem Hintergrund ein ANDERER Tab
+  // inzwischen etwas Neueres geschrieben hat.
+  //
+  // Ein früherer Ansatz hier nutzte ein 'storage'-Event, um jeden fremden Schreibvorgang
+  // sofort zu erkennen und den Tab dauerhaft "einzufrieren". Das erwies sich als fataler
+  // Fehlschluss: mit zwei offenen Tabs sieht JEDER Tab die routinemäßigen Autosave-Ticks
+  // des JEWEILS ANDEREN als "fremden Schreiber" - im Test fror dadurch der Tab ein, der
+  // gerade AKTIV bespielt wurde (25 echte Klicks gingen komplett verloren, $25 wurden nie
+  // gespeichert), nur weil der andere, untätige Tab zufällig eine Nanosekunde früher
+  // seinen eigenen harmlosen Autosave-Tick geschrieben hatte. Zwei Tabs offen zu haben
+  // (z.B. ein Link in neuem Tab geöffnet, alten vergessen) hätte das Spiel so in JEDEM
+  // Tab lautlos am Speichern gehindert - schlimmer als das Problem, das es lösen sollte.
+  const lastKnownSaveTimestampRef = useRef(null);
 
   // `||` würde einen bewusst leeren String (z.B. der leere Epochen-Präfix bei 'ai') als
   // "fehlt" behandeln und bis zum rohen Key durchfallen lassen - darum hier explizit auf
@@ -345,12 +351,9 @@ export function useGameStore() {
       adCooldowns,
       vps: vpsRef.current, // für Offline-Ertrag-Berechnung beim nächsten Laden
     };
-    // Eingefrorener Tab (siehe lastOwnSaveAtRef oben) schreibt nicht mehr - würde er es
-    // doch tun, überschriebe er genau den neueren Save, dessentwegen er eingefroren wurde.
-    if (foreignTabDetectedRef.current) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
-      lastOwnSaveAtRef.current = saveData.timestamp;
+      lastKnownSaveTimestampRef.current = saveData.timestamp;
       saveFailedRef.current = false;
     } catch (e) {
       // Bisher nur console.error: schlug das Speichern fehl (voller Speicher, oder
@@ -373,26 +376,76 @@ export function useGameStore() {
     fancyGraphics, adCooldowns, addLog, tf
   ]);
 
-  // Cross-Tab-Erkennung: siehe foreignTabDetectedRef oben. Eigenständiger Effect statt
-  // Teil von saveGame, weil er unabhängig vom Autosave-Takt laufen und für die gesamte
-  // Lebensdauer der Komponente bestehen muss.
-  useEffect(() => {
-    const handleStorage = (e) => {
-      if (e.key !== STORAGE_KEY || !e.newValue || foreignTabDetectedRef.current) return;
-      let foreignTimestamp;
-      try {
-        foreignTimestamp = JSON.parse(e.newValue)?.timestamp;
-      } catch {
-        return;
-      }
-      if (typeof foreignTimestamp === 'number' && foreignTimestamp !== lastOwnSaveAtRef.current) {
-        foreignTabDetectedRef.current = true;
-        addLog(tf('log_foreignTabDetected'), 'danger');
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, [addLog, tf]);
+  // Wendet einen validierten (migrierten) Save auf den React-State an. Gemeinsam genutzt
+  // vom initialen Laden beim Mount UND vom Resync, wenn ein Tab aus dem Hintergrund
+  // zurückkehrt und dabei feststellt, dass ein ANDERER Tab inzwischen etwas Neueres
+  // geschrieben hat (siehe die Effects weiter unten) - beide Stellen sollen exakt dieselbe
+  // Feld-für-Feld-Validierung durchlaufen, keine zweite, leicht abweichende Kopie pflegen.
+  // useState-Setter haben eine stabile Identität über Re-Renders hinweg (React-Garantie),
+  // deshalb ist ein leeres Dependency-Array hier korrekt.
+  const applyLoadedState = useCallback((data) => {
+    // Alle Werte laufen durch die safe*-Helfer oben: ein durch Abbruch, Altversion oder
+    // DevTools beschädigter Save darf das Spiel nicht in einen NaN- oder Crash-Zustand
+    // laden, aus dem der Spieler nicht mehr herauskommt.
+    const resolvedLang = ['de', 'en'].includes(data.lang) ? data.lang : 'de';
+    setLang(resolvedLang);
+    setStartupName(safeString(data.startupName, 'tokenkamin'));
+    setValuation(safeNumber(data.valuation, 0, { min: 0 }));
+    setTotalValuation(safeNumber(data.totalValuation, 0, { min: 0 }));
+    setTotalBurned(safeNumber(data.totalBurned, 0, { min: 0 }));
+    setSlopCount(safeNumber(data.slopCount, 0, { min: 0 }));
+    setGpuTemp(safeNumber(data.gpuTemp, 0, { min: 0 }));
+    setIsOverheated(safeBool(data.isOverheated));
+    setCoolingRate(safeNumber(data.coolingRate, 4.0, { min: 0 }));
+    setPowerClicks(safeNumber(data.powerClicks, 0, { min: 0 }));
+    setPrestigeLevel(safeNumber(data.prestigeLevel, 0, { min: 0 }));
+    setHeavenlyChips(safeNumber(data.heavenlyChips, 0, { min: 0 }));
+    // 'cyberpunk' als Gegenwert, nicht 'modern_slop': der Initial-State und
+    // toggleThemeMode benutzen 'cyberpunk', der Ladepfad hatte dafür bisher einen
+    // dritten Namen. Ausgewertet wird ohnehin nur === 'sec_prospectus', deshalb ist
+    // das nie aufgefallen - ein drittes Synonym im State ist trotzdem eine Falle.
+    setThemeMode(data.themeMode === 'sec_prospectus' ? 'sec_prospectus' : 'cyberpunk');
+    setBoughtBuzzwords(safeIdList(data.boughtBuzzwords));
+    setBoughtGreenwashingLayoffs(safeIdList(data.boughtGreenwashingLayoffs));
+    setEpoch(safeNumber(data.epoch, 2, { min: 0 }));
+    setIdealistLevel(safeNumber(data.idealistLevel, 0, { min: 0 }));
+    setCynicLevel(safeNumber(data.cynicLevel, 0, { min: 0 }));
+    setCredibility(safeNumber(data.credibility, 0, { min: 0 }));
+    setPivotCount(safeNumber(data.pivotCount, 0, { min: 0 }));
+    setValuationAtLastPivot(safeNumber(data.valuationAtLastPivot, 0, { min: 0 }));
+    // Nur bekannte Engine-IDs übernehmen: unbekannte Schlüssel aus einem manipulierten
+    // Save würden sonst in jede Iteration über buildings wandern.
+    const savedBuildings = data.buildings;
+    setBuildings(
+      Object.keys(INITIAL_BUILDINGS).reduce((acc, id) => {
+        acc[id] = Math.floor(safeNumber(savedBuildings?.[id], 0, { min: 0 }));
+        return acc;
+      }, {})
+    );
+    setBlackSwanNextEligible(safeTimestampMap(data.blackSwanNextEligible));
+    // Ad-Cooldowns wurden bisher NICHT gespeichert: ein Reload setzte jede Rewarded-Ad-
+    // Sperre zurück (z.B. die 5-Minuten-Sperre auf 'grant'), solange die Ads simuliert
+    // sind folgenlos, mit echten Rewarded Ads wäre das ein Exploit.
+    setAdCooldowns(safeTimestampMap(data.adCooldowns));
+    setBoughtUpgrades(safeIdList(data.boughtUpgrades));
+    setUnlockedUpgrades(safeIdList(data.unlockedUpgrades));
+    setBoughtHeavenlyUpgrades(safeIdList(data.boughtHeavenlyUpgrades));
+    setUnlockedAchievements(safeIdList(data.unlockedAchievements));
+    const savedStats = data.stats;
+    setStats({
+      totalClicks: safeNumber(savedStats?.totalClicks, 0, { min: 0 }),
+      adsWatched: safeNumber(savedStats?.adsWatched, 0, { min: 0 }),
+      goldenCaught: safeNumber(savedStats?.goldenCaught, 0, { min: 0 }),
+      overheatCount: safeNumber(savedStats?.overheatCount, 0, { min: 0 }),
+      ascensionCount: safeNumber(savedStats?.ascensionCount, 0, { min: 0 }),
+      gpuBounced: safeBool(savedStats?.gpuBounced),
+      ascendTrillion: safeBool(savedStats?.ascendTrillion),
+      shadowLucky: safeBool(savedStats?.shadowLucky),
+    });
+    setFancyGraphics(data.fancyGraphics !== false);
+    lastKnownSaveTimestampRef.current = safeNumber(data.timestamp, null);
+    return resolvedLang;
+  }, []);
 
   // Load state on mount
   useEffect(() => {
@@ -406,70 +459,7 @@ export function useGameStore() {
         const parsed = JSON.parse(saved);
         const data = parsed ? migrateSave(parsed) : null;
         if (data) {
-          // Alle Werte laufen durch die safe*-Helfer oben: ein durch Abbruch, Alt-
-          // version oder DevTools beschädigter Save darf das Spiel nicht in einen
-          // NaN- oder Crash-Zustand laden, aus dem der Spieler nicht mehr herauskommt.
-          resolvedLang = ['de', 'en'].includes(data.lang) ? data.lang : 'de';
-          setLang(resolvedLang);
-          setStartupName(safeString(data.startupName, 'tokenkamin'));
-          setValuation(safeNumber(data.valuation, 0, { min: 0 }));
-          setTotalValuation(safeNumber(data.totalValuation, 0, { min: 0 }));
-          setTotalBurned(safeNumber(data.totalBurned, 0, { min: 0 }));
-          setSlopCount(safeNumber(data.slopCount, 0, { min: 0 }));
-          setGpuTemp(safeNumber(data.gpuTemp, 0, { min: 0 }));
-          setIsOverheated(safeBool(data.isOverheated));
-          setCoolingRate(safeNumber(data.coolingRate, 4.0, { min: 0 }));
-          setPowerClicks(safeNumber(data.powerClicks, 0, { min: 0 }));
-          setPrestigeLevel(safeNumber(data.prestigeLevel, 0, { min: 0 }));
-          setHeavenlyChips(safeNumber(data.heavenlyChips, 0, { min: 0 }));
-          // 'cyberpunk' als Gegenwert, nicht 'modern_slop': der Initial-State und
-          // toggleThemeMode benutzen 'cyberpunk', der Ladepfad hatte dafür bisher einen
-          // dritten Namen. Ausgewertet wird ohnehin nur === 'sec_prospectus', deshalb ist
-          // das nie aufgefallen - ein drittes Synonym im State ist trotzdem eine Falle.
-          setThemeMode(data.themeMode === 'sec_prospectus' ? 'sec_prospectus' : 'cyberpunk');
-          setBoughtBuzzwords(safeIdList(data.boughtBuzzwords));
-          setBoughtGreenwashingLayoffs(safeIdList(data.boughtGreenwashingLayoffs));
-          setEpoch(safeNumber(data.epoch, 2, { min: 0 }));
-          setIdealistLevel(safeNumber(data.idealistLevel, 0, { min: 0 }));
-          setCynicLevel(safeNumber(data.cynicLevel, 0, { min: 0 }));
-          setCredibility(safeNumber(data.credibility, 0, { min: 0 }));
-          setPivotCount(safeNumber(data.pivotCount, 0, { min: 0 }));
-          setValuationAtLastPivot(safeNumber(data.valuationAtLastPivot, 0, { min: 0 }));
-          // Nur bekannte Engine-IDs übernehmen: unbekannte Schlüssel aus einem
-          // manipulierten Save würden sonst in jede Iteration über buildings wandern.
-          const savedBuildings = data.buildings;
-          setBuildings(
-            Object.keys(INITIAL_BUILDINGS).reduce((acc, id) => {
-              acc[id] = Math.floor(safeNumber(savedBuildings?.[id], 0, { min: 0 }));
-              return acc;
-            }, {})
-          );
-          setBlackSwanNextEligible(safeTimestampMap(data.blackSwanNextEligible));
-          // Ad-Cooldowns wurden bisher NICHT gespeichert: ein Reload setzte jede
-          // Rewarded-Ad-Sperre zurück (z.B. die 5-Minuten-Sperre auf 'grant'), solange die
-          // Ads simuliert sind folgenlos, mit echten Rewarded Ads waere das ein Exploit.
-          setAdCooldowns(safeTimestampMap(data.adCooldowns));
-          setBoughtUpgrades(safeIdList(data.boughtUpgrades));
-          setUnlockedUpgrades(safeIdList(data.unlockedUpgrades));
-          setBoughtHeavenlyUpgrades(safeIdList(data.boughtHeavenlyUpgrades));
-          setUnlockedAchievements(safeIdList(data.unlockedAchievements));
-          const savedStats = data.stats;
-          setStats({
-            totalClicks: safeNumber(savedStats?.totalClicks, 0, { min: 0 }),
-            adsWatched: safeNumber(savedStats?.adsWatched, 0, { min: 0 }),
-            goldenCaught: safeNumber(savedStats?.goldenCaught, 0, { min: 0 }),
-            overheatCount: safeNumber(savedStats?.overheatCount, 0, { min: 0 }),
-            ascensionCount: safeNumber(savedStats?.ascensionCount, 0, { min: 0 }),
-            gpuBounced: safeBool(savedStats?.gpuBounced),
-            ascendTrillion: safeBool(savedStats?.ascendTrillion),
-            shadowLucky: safeBool(savedStats?.shadowLucky),
-          });
-          setFancyGraphics(data.fancyGraphics !== false);
-          // Referenzpunkt für die Cross-Tab-Erkennung (siehe lastOwnSaveAtRef oben): der
-          // gerade geladene Stand gilt als "zuletzt selbst gesehen", damit ein zweiter Tab,
-          // der denselben Save nur ebenfalls lädt, nicht fälschlich als fremder Schreiber
-          // erkannt wird.
-          lastOwnSaveAtRef.current = safeNumber(data.timestamp, null);
+          resolvedLang = applyLoadedState(data);
 
           // Offline-Ertrag: nur wenn Spieler >= 1 Minute weg war und beim letzten
           // Speichern tatsächlich etwas produziert hat.
@@ -489,7 +479,7 @@ export function useGameStore() {
       console.error('Error loading save state:', e);
     }
     addLog((TRANSLATIONS[resolvedLang] || TRANSLATIONS.en).log_systemInit, 'info');
-  }, [addLog]);
+  }, [addLog, applyLoadedState]);
 
   // Auto-save interval (every 8 seconds, matches concept's autosave cadence).
   // saveGame's identity changes on almost every tick (valuation, gpuTemp, etc. are all
@@ -518,15 +508,51 @@ export function useGameStore() {
 
   useEffect(() => {
     const saveTimer = setInterval(() => {
+      // Ein Tab im Hintergrund speichert nicht: sonst überschreibt ein bloß offen
+      // gelassener, untätiger Tab den Stand eines anderen Tabs, den die Person gerade
+      // tatsächlich bespielt. Der Moment des Backgrounding selbst ist trotzdem
+      // abgesichert (siehe handleVisibilityChange unten, feuert einmalig beim Wechsel
+      // auf 'hidden') - hier geht nur der WEITERLAUFENDE 8s-Takt im Hintergrund aus.
+      if (document.visibilityState !== 'visible') return;
       saveGameRef.current();
     }, 8000);
     return () => clearInterval(saveTimer);
   }, []);
 
-  // Also save on tab close/backgrounding/refresh so nothing since the last 8s tick is lost.
+  // Save on tab close/backgrounding/refresh so nothing since the last 8s tick is lost.
+  // Beim Zurückkehren aus dem Hintergrund zusätzlich prüfen, ob ein ANDERER Tab
+  // inzwischen etwas Neueres gespeichert hat (siehe applyLoadedState/
+  // lastKnownSaveTimestampRef oben) und in dem Fall dessen Stand nachladen, statt mit dem
+  // eigenen, jetzt veralteten In-Memory-Stand weiterzuspielen und ihn beim nächsten
+  // eigenen Autosave zu überschreiben. Ein früherer Ansatz erkannte fremde Schreibvorgänge
+  // per 'storage'-Event sofort und fror den Tab dauerhaft ein - das erwies sich als
+  // fataler Fehlschluss: mit zwei offenen Tabs sah JEDER Tab die routinemäßigen Autosave-
+  // Ticks des JEWEILS ANDEREN als "fremden Schreiber" und konnte sich dadurch selbst
+  // einfrieren, noch bevor er seinen eigenen ersten Autosave geschrieben hatte - im Test
+  // gingen so 25 echte Klicks komplett verloren. Die Pause-während-Hintergrund-Lösung
+  // hier umgeht das Problem strukturell: nur der zuletzt aktiv angesehene Tab speichert
+  // überhaupt, ein Wettlauf zwischen zwei gleichzeitig schreibenden Tabs kann gar nicht
+  // erst entstehen (außer bei zwei GLEICHZEITIG sichtbaren Tabs, z.B. Splitscreen - dieser
+  // Randfall bleibt wie zuvor: letzter Schreibvorgang gewinnt, wie bei den meisten Apps
+  // ohne Realtime-Sync-Infrastruktur).
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') saveGameRef.current();
+      if (document.visibilityState === 'hidden') {
+        saveGameRef.current();
+        return;
+      }
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
+        const parsed = JSON.parse(saved);
+        const data = parsed ? migrateSave(parsed) : null;
+        const savedTimestamp = data ? safeNumber(data.timestamp, null) : null;
+        if (data && savedTimestamp !== null && savedTimestamp !== lastKnownSaveTimestampRef.current) {
+          applyLoadedState(data);
+        }
+      } catch (e) {
+        console.error('Error resyncing save state:', e);
+      }
     };
     const handlePageHide = () => saveGameRef.current();
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -535,7 +561,7 @@ export function useGameStore() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('pagehide', handlePageHide);
     };
-  }, []);
+  }, [applyLoadedState]);
 
   // Tab-Aktivität tracken: hidden = Tab im Hintergrund, inactive = Tab sichtbar aber Fenster
   // ohne Fokus. Bei Rückkehr aus "hidden" entscheidet die Abwesenheitsdauer, was mit dem im
