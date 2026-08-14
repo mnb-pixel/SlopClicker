@@ -1,6 +1,8 @@
-# Sicherheits-Header für Cloudflare Pages (Datei wird von Vite unverändert nach dist/
-# kopiert und von Cloudflare beim Deploy ausgewertet). Ohne diese Datei liefert die Seite
-# ausschließlich Default-Header aus - der Browser hat dann keinerlei Schutzhinweise.
+# Sicherheits-Header für Cloudflare Workers Static Assets (Datei wird von Vite unverändert
+# nach dist/ kopiert; wrangler.jsonc verweist mit assets.directory auf genau dieses
+# Verzeichnis, Cloudflare wertet _headers dort automatisch aus - unverändert seit der
+# alten "Pages"-Produktbezeichnung, siehe wrangler.jsonc). Ohne diese Datei liefert die
+# Seite ausschließlich Default-Header aus - der Browser hat dann keinerlei Schutzhinweise.
 /*
   # Verhindert MIME-Sniffing: ein hochgeladenes/ausgeliefertes Asset wird nur als der
   # Content-Type interpretiert, den der Server angibt, nicht als geratenes text/html.

@@ -1,0 +1,18 @@
+{
+  // Cloudflare Workers Builds (Git-Integration) lief bisher ohne dieses File und brach
+  // beim Deploy-Schritt ab ("Missing entry-point to Worker script or to assets directory") -
+  // der Vite-Build selbst war immer schon fehlerfrei, nur der anschließende
+  // `wrangler versions upload` wusste nicht, WAS es hochladen soll. "name" muss exakt der
+  // bestehende Worker-Service-Name aus dem Cloudflare-Dashboard sein (siehe Build-Check
+  // "Workers Builds: tokenfurnace"), sonst legt wrangler versehentlich einen NEUEN,
+  // separaten Worker an statt den bestehenden zu aktualisieren.
+  "name": "tokenfurnace",
+  "compatibility_date": "2026-08-14",
+  // Reine statische SPA ohne eigenen Server-Code oder URL-basiertes Routing (kein
+  // react-router im Einsatz, Tabs sind reiner React-State) - "assets" statt "main" reicht,
+  // kein Worker-Script nötig. public/_headers (Security-Header) landet unverändert in
+  // dist/ und wird von Cloudflare automatisch wie gewohnt ausgewertet.
+  "assets": {
+    "directory": "./dist"
+  }
+}
