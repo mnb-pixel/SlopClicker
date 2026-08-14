@@ -135,6 +135,7 @@ export default function App() {
         adState={store.adState}
         startAd={store.startAd}
         claimOfflineEarnings={store.claimOfflineEarnings}
+        dismissOfflineEarnings={store.dismissOfflineEarnings}
         t={store.t}
       />
 

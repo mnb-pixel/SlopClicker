@@ -131,13 +131,21 @@ const AD_COOLDOWN_SEC = {
   // Angebot komplett unbenutzbar machen.
   golden_claim: 0,
   bubble_clear: 5 * 60,
-  offline_double: 0,
+  offline_claim: 0,
   scheduled_bonus: 0,
 };
 
+// Schwelle, ab der Abwesenheit (Tab im Hintergrund ODER Browser komplett geschlossen)
+// nicht mehr automatisch gutgeschrieben wird, sondern nur noch per Ad claimbar ist - unten
+// sowohl für pageActivity 'hidden' (Tab offen, im Hintergrund) als auch für den Offline-
+// Ertrag (Browser komplett zu) verwendet, damit beide Wege dieselbe Grenze benutzen.
+const AFK_THRESHOLD_SECONDS = 1800; // 30 Minuten
+
 // Offline-Ertrag (Browser komplett geschlossen, nicht nur Tab im Hintergrund - dafür siehe
-// pageActivity 'hidden' oben): gutgeschrieben ab 1 Minute Abwesenheit, gedeckelt auf 4h,
-// zu 20% der zuletzt bekannten VPS.
+// pageActivity 'hidden' oben): ab 1 Minute Abwesenheit berechnet, gedeckelt auf 4h, zu 20%
+// der zuletzt bekannten VPS. Unter AFK_THRESHOLD_SECONDS wird der Betrag automatisch und
+// ohne Rückfrage gutgeschrieben; ab der Schwelle ist er PENDING und nur per Ad claimbar
+// (alles oder nichts) - exakt dieselbe Regel wie beim Tab-im-Hintergrund-Fall unten.
 const OFFLINE_MIN_SECONDS = 60;
 const OFFLINE_CAP_SECONDS = 4 * 3600;
 const OFFLINE_EFFICIENCY = 0.2;
@@ -466,7 +474,11 @@ export function useGameStore() {
           resolvedLang = applyLoadedState(data);
 
           // Offline-Ertrag: nur wenn Spieler >= 1 Minute weg war und beim letzten
-          // Speichern tatsächlich etwas produziert hat.
+          // Speichern tatsächlich etwas produziert hat. Die Schwellenentscheidung
+          // (automatisch vs. nur per Ad) läuft über die UNGEDECKELTE Abwesenheitsdauer
+          // (elapsedSec), exakt wie beim Tab-im-Hintergrund-Fall unten - der Deckel
+          // (cappedSec) bestimmt nur, wie viel von einer SEHR langen Abwesenheit noch in
+          // die Betragsberechnung einfließt, nicht ob geclaimt werden muss.
           const savedTimestamp = safeNumber(data.timestamp, Date.now(), { min: 0 });
           const elapsedSec = (Date.now() - savedTimestamp) / 1000;
           const savedVps = safeNumber(data.vps, 0, { min: 0 });
@@ -474,7 +486,22 @@ export function useGameStore() {
             const cappedSec = Math.min(elapsedSec, OFFLINE_CAP_SECONDS);
             const amount = savedVps * cappedSec * OFFLINE_EFFICIENCY;
             if (amount >= 1) {
-              setOfflineReport({ amount, elapsedSec: cappedSec });
+              if (elapsedSec >= AFK_THRESHOLD_SECONDS) {
+                // >= 30 Minuten: PENDING, nur per Ad claimbar (alles oder nichts) - siehe
+                // claimOfflineEarnings/dismissOfflineEarnings.
+                setOfflineReport({ amount, elapsedSec: cappedSec });
+              } else {
+                // < 30 Minuten: sofort und ohne Rückfrage gutgeschrieben, kein Modal.
+                setValuation((prev) => prev + amount);
+                setTotalValuation((prev) => prev + amount);
+                setSlopCount((prev) => prev + Math.max(1, Math.floor(amount)));
+                // tf()/t() hängen an der 'lang'-State, die zu diesem Zeitpunkt im selben
+                // Tick noch nicht aktualisiert ist (siehe resolvedLang-Kommentar oben) -
+                // deshalb direkt wie beim systemInit-Log über TRANSLATIONS[resolvedLang].
+                const msg = ((TRANSLATIONS[resolvedLang] || TRANSLATIONS.en).log_offlineEarnings || '')
+                  .replace('{amount}', Math.floor(amount).toLocaleString());
+                addLog(msg, 'success');
+              }
             }
           }
         }
@@ -603,7 +630,7 @@ export function useGameStore() {
         if (hiddenSinceRef.current !== null) {
           const awaySec = (Date.now() - hiddenSinceRef.current) / 1000;
           const earnedWhileHidden = awayEarnedRef.current;
-          if (awaySec >= 1800 && earnedWhileHidden >= 1) {
+          if (awaySec >= AFK_THRESHOLD_SECONDS && earnedWhileHidden >= 1) {
             setAfkReport({ amount: earnedWhileHidden });
           } else if (earnedWhileHidden > 0) {
             setValuation((prev) => prev + earnedWhileHidden);
@@ -836,10 +863,12 @@ export function useGameStore() {
       const tickScale = deltaSec / 0.2; // Konzept-Wahrscheinlichkeiten sind pro 200ms-Tick angegeben
 
       // 1. Produktion + kontinuierliches Burn (Konzept Abschnitt 4: Burn frisst den Bestand)
-      // Tab inaktiv/hidden: Produktion läuft nur gedrosselt weiter (50% statt zuvor 10%/20%
-      // gestaffelt - "nicht so tief wie bisher").
-      const activityMult = pageActivity !== 'active' ? 0.5 : 1.0;
+      // Tab inaktiv (sichtbar, aber Fenster ohne Fokus): 50% Produktion, live gutgeschrieben.
+      // Tab hidden (im Hintergrund): 40% Produktion, NICHT live gutgeschrieben (siehe
+      // awayEarnedRef-Puffer unten) - eigene, niedrigere Rate, weil dieser Wert erst nach
+      // Rückkehr per AFK-Regel (< 30min automatisch, sonst nur per Ad) ausgezahlt wird.
       const isHiddenTab = pageActivity === 'hidden';
+      const activityMult = isHiddenTab ? 0.4 : (pageActivity !== 'active' ? 0.5 : 1.0);
       setValuation((prevVal) => {
         // Burn läuft unverändert mit vollem Tempo weiter, auch im Hintergrund - das war
         // schon vor dieser Änderung so (siehe burnRate ohne activityMult) und bleibt so.
@@ -1265,17 +1294,29 @@ export function useGameStore() {
     }, 1000);
   }, [addLog, adState, adCooldowns, grantAdPreview, flashAdReward, tf]);
 
-  // Offline-Ertrag einsammeln (optional per Ad verdoppelt)
-  const claimOfflineEarnings = useCallback((doubled = false) => {
+  // Offline-Ertrag (>= 30min Abwesenheit, siehe Mount-Effect oben) per Ad claimen - exakt
+  // dieselbe alles-oder-nichts-Logik wie beim AFK-Report unten, kein Verdopplungs-Bonus
+  // mehr: die Ad ist die Voraussetzung, um überhaupt etwas zu bekommen, kein Multiplikator
+  // auf einen ohnehin schon kostenlos verfügbaren Betrag.
+  const claimOfflineEarnings = useCallback(() => {
     if (!offlineReport) return;
-    const amount = doubled ? offlineReport.amount * 2 : offlineReport.amount;
+    const amount = offlineReport.amount;
     setValuation((prev) => prev + amount);
     setTotalValuation((prev) => prev + amount);
     setOfflineReport(null);
-    const msg = tf(doubled ? 'log_offlineEarningsDoubled' : 'log_offlineEarnings', { amount: Math.floor(amount).toLocaleString() });
+    const msg = tf('log_offlineEarningsClaimed', { amount: Math.floor(amount).toLocaleString() });
     addLog(msg, 'success');
-    if (doubled) flashAdReward(msg);
+    flashAdReward(msg);
   }, [offlineReport, addLog, flashAdReward, tf]);
+
+  // Verzicht auf einen >= 30min-Offline-Ertrag: verfällt ersatzlos, wie dismissAfkReport
+  // unten - kein "wegklicken und trotzdem behalten".
+  const dismissOfflineEarnings = useCallback(() => {
+    if (offlineReport) {
+      addLog(tf('log_offlineEarningsForfeited', { amount: Math.floor(offlineReport.amount).toLocaleString() }), 'info');
+    }
+    setOfflineReport(null);
+  }, [offlineReport, addLog, tf]);
 
   // AFK-Report: der während der >=30min-Abwesenheit erzeugte Wert wurde NICHT live
   // gutgeschrieben (siehe pageActivity 'hidden' im Tick-Loop) und ist bis hierhin rein
@@ -1599,7 +1640,7 @@ export function useGameStore() {
     activeEvent, dismissEvent, bubbleGlitchUntil,
     adState, startAd, isAdReady, getAdCooldownRemaining,
     adRewardToast, dismissAdRewardToast, grantAdPreview, scheduledAdPreview,
-    offlineReport, claimOfflineEarnings,
+    offlineReport, claimOfflineEarnings, dismissOfflineEarnings,
     pageActivity, afkReport, dismissAfkReport, claimAfkBonus,
     pendingScheduledAd, watchScheduledAdNow, deferScheduledAd,
     scheduledAdUnlocked, claimUnlockedScheduledAd,
