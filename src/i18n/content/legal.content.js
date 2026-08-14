@@ -21,6 +21,13 @@ export const LEGAL_TODO = '[[ BITTE EINTRAGEN ]]';
 // Anbieterkennzeichnung, ggf. revDSG statt DSGVO). Diese Zitate wurden bewusst NICHT
 // eigenmächtig umgeschrieben, da das eine juristische Einschätzung ist - bitte von
 // einer Person mit Rechtskenntnis prüfen lassen, bevor die Seite live geht.
+//
+// Das gilt ausdrücklich auch für die Datenschutz-Ziffern 4 (Termly) und 5 (Google
+// AdSense): sie beschreiben die in index.html tatsächlich eingebundenen Dienste - vorher
+// stand dort noch "kein Werbenetzwerk eingebunden", was schlicht nicht mehr stimmte -,
+// sind aber eine Standardformulierung und keine geprüfte Rechtsberatung. Insbesondere die
+// Angaben zu Drittlandtransfer und Rechtsgrundlage sollten vor dem Livegang bestätigt
+// werden, ebenso ob für die Schweizer Betreibergesellschaft zusätzlich das revDSG greift.
 // ===========================================================================
 
 // Alle betreiberspezifischen Angaben an EINER Stelle - Impressum und
@@ -147,20 +154,32 @@ export const LEGAL_CONTENT = {
           ],
         },
         {
-          title: '4. Werbung',
+          title: '4. Einwilligungsverwaltung (Termly)',
           lines: [
-            'Derzeit ist **kein Werbenetzwerk eingebunden**. Die im Spiel sichtbaren Werbeflächen sind reine Platzhalter ohne Datenverarbeitung, ohne Cookies und ohne Tracking.',
-            'Sobald ein echtes Werbenetzwerk integriert wird, ist dieser Abschnitt zwingend zu ergänzen: Name und Anbieter des Netzwerks, verarbeitete Daten, Empfänger, Drittlandtransfer sowie – bei nicht zwingend erforderlichen Cookies – die Einholung einer Einwilligung nach § 25 Abs. 1 TDDDG und Art. 6 Abs. 1 lit. a DSGVO.',
+            'Wir setzen die Consent-Management-Plattform **Termly** (Termly, Inc., USA) ein, um deine Einwilligung in nicht zwingend erforderliche Cookies einzuholen, zu dokumentieren und verwaltbar zu machen.',
+            'Termly speichert deine Auswahl in deinem Browser und blockiert einwilligungspflichtige Skripte (u. a. das Werbenetzwerk unter Ziffer 5), solange keine Einwilligung vorliegt. Dabei wird deine IP-Adresse an Termly übermittelt.',
+            'Rechtsgrundlage für die Einwilligungsverwaltung selbst ist Art. 6 Abs. 1 lit. c und lit. f DSGVO – die Pflicht zur Einholung und Dokumentation von Einwilligungen sowie das berechtigte Interesse an einem rechtskonformen Betrieb.',
+            'Deine Einwilligung kannst du jederzeit über den Link „Cookie-Richtlinie" in den Einstellungen mit Wirkung für die Zukunft ändern oder widerrufen.',
           ],
         },
         {
-          title: '5. Belohnungs-Videos im Spiel',
+          title: '5. Werbung (Google AdSense)',
+          lines: [
+            'Diese Website bindet **Google AdSense** ein, einen Dienst der **Google Ireland Limited**, Gordon House, Barrow Street, Dublin 4, Irland. Über AdSense werden die im Spiel sichtbaren Werbeflächen mit Anzeigen befüllt.',
+            'Dabei verarbeitet Google unter anderem deine IP-Adresse, Angaben zu deinem Gerät und Browser sowie Informationen zu ausgelieferten und angeklickten Anzeigen. Google kann hierfür Cookies und vergleichbare Technologien einsetzen, um Anzeigen auszuwählen, deren Auslieferung zu messen und Missbrauch (z. B. Klickbetrug) zu erkennen.',
+            'Rechtsgrundlage ist deine **Einwilligung** nach § 25 Abs. 1 TDDDG und Art. 6 Abs. 1 lit. a DSGVO. Ohne Einwilligung wird das AdSense-Skript durch die Einwilligungsverwaltung unter Ziffer 4 blockiert und nicht geladen.',
+            'Google verarbeitet Daten auch in den **USA**. Google LLC ist unter dem EU-US Data Privacy Framework zertifiziert; ergänzend werden Standardvertragsklauseln nach Art. 46 Abs. 2 lit. c DSGVO herangezogen.',
+            'Weitere Informationen: Datenschutzerklärung von Google unter policies.google.com/privacy sowie die Einstellungen zu personalisierter Werbung unter myadcenter.google.com.',
+          ],
+        },
+        {
+          title: '6. Belohnungs-Videos im Spiel',
           lines: [
             'Die im Spiel angebotenen „Video ansehen"-Belohnungen sind aktuell simuliert. Es wird kein echtes Video geladen und es findet keine Übertragung an Dritte statt.',
           ],
         },
         {
-          title: '6. Deine Rechte',
+          title: '7. Deine Rechte',
           lines: [
             'Du hast das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) sowie Widerspruch gegen die Verarbeitung (Art. 21 DSGVO).',
             'Erteilte Einwilligungen kannst du jederzeit mit Wirkung für die Zukunft widerrufen.',
@@ -263,20 +282,32 @@ export const LEGAL_CONTENT = {
           ],
         },
         {
-          title: '4. Advertising',
+          title: '4. Consent Management (Termly)',
           lines: [
-            'No advertising network is currently integrated. The ad areas visible in the game are pure placeholders with no data processing, no cookies and no tracking.',
-            'As soon as a real advertising network is integrated, this section must be extended accordingly: the name and provider of the network, the data processed, recipients, transfers to third countries, and – for non-essential cookies – consent pursuant to § 25(1) TDDDG and Art. 6(1)(a) GDPR.',
+            'We use the consent management platform **Termly** (Termly, Inc., USA) to obtain, document and manage your consent to non-essential cookies.',
+            'Termly stores your choice in your browser and blocks consent-requiring scripts (including the advertising network under section 5) for as long as no consent has been given. Your IP address is transmitted to Termly in the process.',
+            'The legal basis for consent management itself is Art. 6(1)(c) and (f) GDPR – the obligation to obtain and document consent, and the legitimate interest in legally compliant operation.',
+            'You can change or withdraw your consent at any time with effect for the future via the "Cookie Policy" link in the settings.',
           ],
         },
         {
-          title: '5. In-Game Reward Videos',
+          title: '5. Advertising (Google AdSense)',
+          lines: [
+            'This website integrates **Google AdSense**, a service provided by **Google Ireland Limited**, Gordon House, Barrow Street, Dublin 4, Ireland. AdSense fills the ad areas visible in the game with advertisements.',
+            'In doing so, Google processes your IP address, information about your device and browser, and data about the ads served and clicked, among other things. Google may use cookies and comparable technologies to select ads, measure their delivery and detect abuse (e.g. click fraud).',
+            'The legal basis is your **consent** pursuant to § 25(1) TDDDG and Art. 6(1)(a) GDPR. Without consent, the AdSense script is blocked by the consent management described in section 4 and is not loaded.',
+            'Google also processes data in the **USA**. Google LLC is certified under the EU-US Data Privacy Framework; in addition, standard contractual clauses pursuant to Art. 46(2)(c) GDPR are relied upon.',
+            'Further information: Google\'s privacy policy at policies.google.com/privacy and the personalised advertising settings at myadcenter.google.com.',
+          ],
+        },
+        {
+          title: '6. In-Game Reward Videos',
           lines: [
             'The "watch video" rewards offered in the game are currently simulated. No actual video is loaded and no data is transmitted to third parties.',
           ],
         },
         {
-          title: '6. Your Rights',
+          title: '7. Your Rights',
           lines: [
             'You have the right of access (Art. 15 GDPR), rectification (Art. 16), erasure (Art. 17), restriction of processing (Art. 18), data portability (Art. 20) and to object to processing (Art. 21 GDPR).',
             'You may withdraw any consent given at any time with effect for the future.',

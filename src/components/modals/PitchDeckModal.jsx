@@ -149,20 +149,25 @@ export function PitchDeckModal({
     }
   };
 
-  // Social Shortcuts
+  // Social Shortcuts.
+  // 'noopener,noreferrer' ist Pflicht: ohne noopener bekommt die geöffnete Seite über
+  // window.opener eine Referenz zurück auf diesen Tab und kann ihn per opener.location
+  // auf eine beliebige (z.B. Phishing-)URL umleiten - Reverse Tabnabbing. Betrifft auch
+  // Weiterleitungsketten der Zielseiten, nicht nur die hier fest verdrahteten Domains.
+  const openShareWindow = (url) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   const handleShareX = () => {
-    const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`;
-    window.open(tweetUrl, '_blank');
+    openShareWindow(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`);
   };
 
   const handleShareWhatsApp = () => {
-    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`;
-    window.open(waUrl, '_blank');
+    openShareWindow(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`);
   };
 
   const handleShareLinkedIn = () => {
-    const liUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
-    window.open(liUrl, '_blank');
+    openShareWindow(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`);
   };
 
   return (

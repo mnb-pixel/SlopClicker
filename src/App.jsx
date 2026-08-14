@@ -107,6 +107,7 @@ export default function App() {
         lang={store.lang}
         setLang={store.setLang}
         logs={store.logs}
+        showAdSlot={layoutMode === 'desktop'}
         t={store.t}
       />
 
@@ -134,6 +135,7 @@ export default function App() {
         adState={store.adState}
         startAd={store.startAd}
         claimOfflineEarnings={store.claimOfflineEarnings}
+        dismissOfflineEarnings={store.dismissOfflineEarnings}
         t={store.t}
       />
 

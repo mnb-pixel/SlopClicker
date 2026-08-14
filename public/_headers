@@ -1,0 +1,49 @@
+# Sicherheits-Header für Cloudflare Pages (Datei wird von Vite unverändert nach dist/
+# kopiert und von Cloudflare beim Deploy ausgewertet). Ohne diese Datei liefert die Seite
+# ausschließlich Default-Header aus - der Browser hat dann keinerlei Schutzhinweise.
+/*
+  # Verhindert MIME-Sniffing: ein hochgeladenes/ausgeliefertes Asset wird nur als der
+  # Content-Type interpretiert, den der Server angibt, nicht als geratenes text/html.
+  X-Content-Type-Options: nosniff
+
+  # Clickjacking-Schutz. frame-ancestors ist der moderne Ersatz für X-Frame-Options;
+  # beide gesetzt, weil ältere Browser nur letzteren kennen. 'self' statt 'none', damit
+  # die Seite sich notfalls selbst einbetten kann - Fremdeinbettung bleibt blockiert.
+  # Achtung: hier bewusst NUR frame-ancestors, keine script-src/connect-src-Direktiven.
+  # AdSense lädt zur Laufzeit von wechselnden Google-Domains nach; eine unvollständige
+  # script-src würde die Anzeigenauslieferung stillschweigend abwürgen. Eine vollständige
+  # CSP ist sinnvoll, muss aber gegen die real geladenen Domains getestet werden
+  # (erst als Content-Security-Policy-Report-Only ausrollen).
+  Content-Security-Policy: frame-ancestors 'self'
+  X-Frame-Options: SAMEORIGIN
+
+  # Testlauf fuer eine vollstaendige CSP, siehe Kommentar oben. Report-Only blockiert
+  # NICHTS - Verstoesse landen nur in der DevTools-Konsole (Reiter "Issues"/"Console").
+  # Domains unten sind die, die der Code TATSAECHLICH laedt (index.html, LegalModal.jsx):
+  # Termly (Consent-Banner, Embed-Skript, DSAR-iFrame) und Googles AdSense-Bibliothek.
+  # AdSense selbst laedt zur Anzeigenauslieferung weitere Google-Werbedomains NACH
+  # (z.B. doubleclick.net, weitere googlesyndication.com-Subdomains) - welche das genau
+  # sind, zeigt erst dieser Report-Only-Lauf in der Praxis. Vor einem Wechsel zu
+  # durchsetzender "Content-Security-Policy" hier also erst eine Weile in der Konsole
+  # beobachten und die von Google gemeldeten Domains ergaenzen.
+  # style-src 'unsafe-inline': die App nutzt durchgehend React-Inline-Styles (dynamische
+  # Balken/Farben, z.B. GPU-Hitze-Anzeige in Header.jsx) - das laesst sich nur mit einem
+  # groesseren Refactor auf CSS-Custom-Properties vermeiden, nicht mit einer Header-Zeile.
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' https://app.termly.io https://pagead2.googlesyndication.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://app.termly.io https://pagead2.googlesyndication.com; frame-src https://app.termly.io; object-src 'none'; base-uri 'self'
+
+  # Referrer nur als Origin an fremde Ziele (die Share-Links gehen an X/WhatsApp/LinkedIn),
+  # innerhalb der eigenen Seite weiterhin voller Pfad.
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # Browser-APIs, die dieses Spiel nicht braucht, werden für die Seite UND alle
+  # eingebetteten iframes (Termly-Consent/DSAR) deaktiviert.
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+
+  # HSTS: erzwingt HTTPS für ein Jahr. includeSubDomains bewusst gesetzt, preload NICHT -
+  # ein Preload-Eintrag ist praktisch nicht mehr rückgängig zu machen und sollte eine
+  # bewusste Entscheidung des Domain-Inhabers sein.
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+# Gehashte Build-Assets sind unveränderlich - dauerhaft cachebar.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

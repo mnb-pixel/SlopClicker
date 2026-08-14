@@ -4,13 +4,16 @@ import { Rocket, Tv, Sparkles } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 
 // Willkommen-zurück-Screen: zeigt den passiv erwirtschafteten Offline-Ertrag seit dem
-// letzten Speichern (gedeckelt, siehe useGameStore) und bietet an, ihn per Rewarded Ad
-// zu verdoppeln, bevor er gutgeschrieben wird.
-export function OfflineEarningsModal({ offlineReport, adState, startAd, claimOfflineEarnings, t }) {
+// letzten Speichern (gedeckelt, siehe useGameStore). Dieses Modal erscheint NUR noch für
+// die >= 30min-Abwesenheit (siehe useGameStore-Mount-Effect) - kürzere Abwesenheiten
+// werden automatisch und ohne Rückfrage gutgeschrieben, kein Modal nötig. Ab der Schwelle
+// gilt dieselbe alles-oder-nichts-Regel wie beim AfkReportModal: Ad ansehen zum Einsammeln,
+// sonst verfällt der Betrag ersatzlos - kein "Nur einsammeln"-Ausweg mehr.
+export function OfflineEarningsModal({ offlineReport, adState, startAd, claimOfflineEarnings, dismissOfflineEarnings, t }) {
   if (!offlineReport) return null;
 
   const tr = t || ((k) => k);
-  const isAdPlaying = !!adState && adState.type === 'offline_double';
+  const isAdPlaying = !!adState && adState.type === 'offline_claim';
   const hours = Math.floor(offlineReport.elapsedSec / 3600);
   const minutes = Math.floor((offlineReport.elapsedSec % 3600) / 60);
   const timeAwayText = hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
@@ -47,18 +50,18 @@ export function OfflineEarningsModal({ offlineReport, adState, startAd, claimOff
         ) : (
           <div className="w-full flex flex-col gap-2">
             <button
-              onClick={() => startAd('offline_double', () => claimOfflineEarnings(true))}
+              onClick={() => startAd('offline_claim', claimOfflineEarnings)}
               className="w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 to-fuchsia-500 text-slate-950 hover:brightness-110 active:scale-95 shadow-xl transition-all flex items-center justify-center gap-2"
             >
               <Tv className="w-4 h-4" />
-              {tr('watchAdCollect').replace('{amount}', formatCurrency(offlineReport.amount * 2))}
+              {tr('watchAdCollect').replace('{amount}', formatCurrency(offlineReport.amount))}
             </button>
             <button
-              onClick={() => claimOfflineEarnings(false)}
+              onClick={dismissOfflineEarnings}
               className="w-full py-2 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              {tr('collectOnly').replace('{amount}', formatCurrency(offlineReport.amount))}
+              {tr('afkForfeitBtn')}
             </button>
           </div>
         )}
