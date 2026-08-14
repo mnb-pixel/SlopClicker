@@ -449,6 +449,7 @@ export const TRANSLATIONS = {
     log_purchasedHeavenly: 'Heavenly Upgrade "{name}" gekauft!',
     log_saveWiped: 'Spielstand vollständig gelöscht. Neue Runde gestartet!',
     log_saveFailed: 'ACHTUNG: Spielstand kann nicht gespeichert werden! Browser-Speicher voll oder privater Modus aktiv - dein Fortschritt geht beim Schließen des Tabs verloren.',
+    log_foreignTabDetected: 'Dieses Spiel läuft bereits in einem anderen Tab. Dieser Tab speichert nicht mehr, um deinen Fortschritt dort nicht zu überschreiben - bitte dort weiterspielen oder diesen Tab neu laden.',
   },
 
   en: {
@@ -892,6 +893,7 @@ export const TRANSLATIONS = {
     log_purchasedHeavenly: 'Purchased Heavenly Upgrade "{name}"!',
     log_saveWiped: 'Save data completely wiped. Starting fresh startup round!',
     log_saveFailed: 'WARNING: Cannot save your game! Browser storage is full or private mode is active - your progress will be lost when you close this tab.',
+    log_foreignTabDetected: 'This game is already running in another tab. This tab has stopped saving to avoid overwriting your progress there - please continue playing there, or reload this tab.',
   },
 };
 

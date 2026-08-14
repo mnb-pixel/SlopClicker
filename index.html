@@ -12,7 +12,13 @@
     <script src="https://app.termly.io/resource-blocker/4810446e-db26-4a1e-a96a-1bbdefde2c01?autoBlock=on"></script>
 
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- Ohne maximum-scale/user-scalable=no: die vorige Fassung blockierte Pinch-Zoom
+         vollständig, das verletzt WCAG 2.1 Kriterium 1.4.4 (Resize Text) - Menschen mit
+         Sehbehinderung MÜSSEN reinzoomen können, auch in einem Spiel. touch-action:
+         manipulation in index.css übernimmt den eigentlichen Zweck der alten Einstellung
+         (kein 300ms-Tap-Delay / kein versehentlicher Doppeltipp-Zoom beim schnellen
+         Klicken), ohne Pinch-Zoom mit zu blockieren. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Token Furnace – Baue dein KI-Startup zur Milliardenbewertung auf, ganz ohne Produkt. Satirischer Idle Clicker über den AI-Hype." />
 
     <!-- Statischer Titel für Crawler und Social-Bots, die kein JavaScript ausführen: die

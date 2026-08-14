@@ -54,6 +54,43 @@ function safeIdList(value) {
   return Array.isArray(value) ? value.filter((id) => typeof id === 'string') : [];
 }
 
+// Für blackSwanNextEligible und adCooldowns: beides sind { [id]: timestampMs }-Maps.
+// Nicht-Objekt-Werte werden verworfen, Einträge mit kaputtem Timestamp einzeln
+// aussortiert statt die ganze Map wegzuwerfen - ein einzelner beschädigter Eintrag soll
+// nicht auch die Cooldowns aller anderen, intakten Ad-Placements zurücksetzen.
+function safeTimestampMap(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value).filter(([, ts]) => typeof ts === 'number' && Number.isFinite(ts))
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Versions-Migration.
+//
+// SAVE_MIGRATIONS[N] hebt einen Save von Version N auf N+1 an. migrateSave() verkettet
+// das automatisch von der im Save gefundenen Version bis SAVE_VERSION, eine künftige
+// Formatänderung braucht also nur EINEN neuen Eintrag, keine Anpassung an anderer
+// Stelle. Aktuell leer: das Format hat sich seit V2 nicht strukturell geändert, neue
+// Felder werden von den safe*-Helfern beim Laden ohnehin mit sinnvollen Defaults
+// aufgefüllt. Beispiel für eine künftige Migration (Feld umbenannt):
+//   1: (data) => { const { altesFeld, ...rest } = data; return { ...rest, version: 2, neuesFeld: altesFeld }; }
+const SAVE_VERSION = 2;
+const SAVE_MIGRATIONS = {};
+
+function migrateSave(data) {
+  let migrated = data;
+  let fromVersion = safeNumber(data.version, 1, { min: 1 });
+  // Save ist NEUER als diese Build-Version (Nutzer war kurz auf einer neueren Version,
+  // dann Rollback auf einen älteren Build): nicht verwerfen. Die safe*-Helfer unten lesen
+  // jedes bekannte Feld korrekt, unbekannte Zusatzfelder werden schlicht ignoriert.
+  while (fromVersion < SAVE_VERSION && typeof SAVE_MIGRATIONS[fromVersion] === 'function') {
+    migrated = SAVE_MIGRATIONS[fromVersion](migrated);
+    fromVersion += 1;
+  }
+  return migrated;
+}
+
 // Konzept Abschnitt 4: Zufallsereignisse, geprüft pro Tick (Referenz-Takt 200ms).
 // Beide Event-Arten kamen früher viel zu oft (Golden ~5,5min, Bubble ~8min, also im Schnitt
 // alle ~3min irgendein Banner). Auf je ~20 Minuten Erwartungswert gesenkt, damit ein Meme
@@ -229,6 +266,17 @@ export function useGameStore() {
   // eine Änderung darf keinen Re-Render auslösen.
   const saveFailedRef = useRef(false);
 
+  // Cross-Tab-Schutz: zwei gleichzeitig offene Tabs speichern beide alle 8s in denselben
+  // localStorage-Key. Ohne Erkennung würde der jüngere Autosave-Tick den älteren Tab
+  // stillschweigend überschreiben - Fortschritt aus dem "verlierenden" Tab wäre für immer
+  // weg, ohne dass irgendjemand das bemerkt. lastOwnSaveAtRef hält den Timestamp des
+  // zuletzt selbst geschriebenen Saves fest; taucht im 'storage'-Event (das NUR in
+  // anderen Tabs feuert, nie im schreibenden selbst) ein abweichender Timestamp auf, hat
+  // ein anderer Tab geschrieben. Dieser Tab friert dann ein statt weiter zu überschreiben
+  // - der andere, zuletzt aktive Tab bleibt die "Quelle der Wahrheit".
+  const lastOwnSaveAtRef = useRef(null);
+  const foreignTabDetectedRef = useRef(false);
+
   // `||` würde einen bewusst leeren String (z.B. der leere Epochen-Präfix bei 'ai') als
   // "fehlt" behandeln und bis zum rohen Key durchfallen lassen - darum hier explizit auf
   // undefined/null statt auf Falsy prüfen.
@@ -294,10 +342,15 @@ export function useGameStore() {
       unlockedAchievements,
       stats,
       fancyGraphics,
+      adCooldowns,
       vps: vpsRef.current, // für Offline-Ertrag-Berechnung beim nächsten Laden
     };
+    // Eingefrorener Tab (siehe lastOwnSaveAtRef oben) schreibt nicht mehr - würde er es
+    // doch tun, überschriebe er genau den neueren Save, dessentwegen er eingefroren wurde.
+    if (foreignTabDetectedRef.current) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+      lastOwnSaveAtRef.current = saveData.timestamp;
       saveFailedRef.current = false;
     } catch (e) {
       // Bisher nur console.error: schlug das Speichern fehl (voller Speicher, oder
@@ -317,8 +370,29 @@ export function useGameStore() {
     boughtGreenwashingLayoffs, epoch, idealistLevel, cynicLevel, credibility, pivotCount,
     valuationAtLastPivot, buildings, blackSwanNextEligible,
     boughtUpgrades, unlockedUpgrades, boughtHeavenlyUpgrades, unlockedAchievements, stats,
-    fancyGraphics, addLog, tf
+    fancyGraphics, adCooldowns, addLog, tf
   ]);
+
+  // Cross-Tab-Erkennung: siehe foreignTabDetectedRef oben. Eigenständiger Effect statt
+  // Teil von saveGame, weil er unabhängig vom Autosave-Takt laufen und für die gesamte
+  // Lebensdauer der Komponente bestehen muss.
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key !== STORAGE_KEY || !e.newValue || foreignTabDetectedRef.current) return;
+      let foreignTimestamp;
+      try {
+        foreignTimestamp = JSON.parse(e.newValue)?.timestamp;
+      } catch {
+        return;
+      }
+      if (typeof foreignTimestamp === 'number' && foreignTimestamp !== lastOwnSaveAtRef.current) {
+        foreignTabDetectedRef.current = true;
+        addLog(tf('log_foreignTabDetected'), 'danger');
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [addLog, tf]);
 
   // Load state on mount
   useEffect(() => {
@@ -329,7 +403,8 @@ export function useGameStore() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const data = JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        const data = parsed ? migrateSave(parsed) : null;
         if (data) {
           // Alle Werte laufen durch die safe*-Helfer oben: ein durch Abbruch, Alt-
           // version oder DevTools beschädigter Save darf das Spiel nicht in einen
@@ -369,14 +444,11 @@ export function useGameStore() {
               return acc;
             }, {})
           );
-          const savedEligible = data.blackSwanNextEligible;
-          setBlackSwanNextEligible(
-            savedEligible && typeof savedEligible === 'object' && !Array.isArray(savedEligible)
-              ? Object.fromEntries(
-                  Object.entries(savedEligible).filter(([, ts]) => typeof ts === 'number' && Number.isFinite(ts))
-                )
-              : {}
-          );
+          setBlackSwanNextEligible(safeTimestampMap(data.blackSwanNextEligible));
+          // Ad-Cooldowns wurden bisher NICHT gespeichert: ein Reload setzte jede
+          // Rewarded-Ad-Sperre zurück (z.B. die 5-Minuten-Sperre auf 'grant'), solange die
+          // Ads simuliert sind folgenlos, mit echten Rewarded Ads waere das ein Exploit.
+          setAdCooldowns(safeTimestampMap(data.adCooldowns));
           setBoughtUpgrades(safeIdList(data.boughtUpgrades));
           setUnlockedUpgrades(safeIdList(data.unlockedUpgrades));
           setBoughtHeavenlyUpgrades(safeIdList(data.boughtHeavenlyUpgrades));
@@ -393,6 +465,11 @@ export function useGameStore() {
             shadowLucky: safeBool(savedStats?.shadowLucky),
           });
           setFancyGraphics(data.fancyGraphics !== false);
+          // Referenzpunkt für die Cross-Tab-Erkennung (siehe lastOwnSaveAtRef oben): der
+          // gerade geladene Stand gilt als "zuletzt selbst gesehen", damit ein zweiter Tab,
+          // der denselben Save nur ebenfalls lädt, nicht fälschlich als fremder Schreiber
+          // erkannt wird.
+          lastOwnSaveAtRef.current = safeNumber(data.timestamp, null);
 
           // Offline-Ertrag: nur wenn Spieler >= 1 Minute weg war und beim letzten
           // Speichern tatsächlich etwas produziert hat.
@@ -1452,6 +1529,15 @@ export function useGameStore() {
     setOfflineReport(null);
     setPendingAscendBoost(false);
     setPendingPivotBoost(false);
+    // Vollständiger Wipe statt nur Fortschritt: "Spielstand löschen" setzt jetzt auch die
+    // Einstellungen zurück, die vorher bewusst als "kein Fortschritt" verschont blieben.
+    // addLog() unten läuft noch mit der ALTEN Sprache (React-State-Updates sind async,
+    // die tf()-Closure sieht in dieser Funktion noch den bisherigen lang-Wert) - die
+    // Bestätigung erscheint also einmalig in der Sprache, die gerade aktiv war, bevor
+    // die Oberfläche direkt danach auf Deutsch zurückspringt.
+    setLang('de');
+    setThemeMode('cyberpunk');
+    setFancyGraphics(true);
     addLog(tf('log_saveWiped'), 'danger');
   }, [addLog, tf]);
 
