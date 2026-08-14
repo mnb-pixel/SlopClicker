@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Tv, RotateCw, Sparkles, ShieldAlert, Repeat } from 'lucide-react';
+import { Tv, Gift, RotateCw, Sparkles, ShieldAlert, Repeat } from 'lucide-react';
 import { getIcon } from '../../utils/iconMap';
 import { HEAVENLY_UPGRADES_DATA } from '../../data/heavenlyUpgradesData';
 import { IDEALIST_PATH, CYNIC_PATH, EPOCHS, CREDIBILITY_LEVEL_COST_BASE } from '../../data/credibilityTreeData';
@@ -21,11 +21,12 @@ export function SpecialTab({
   pivot,
   pivotCredGain = 0,
   adState,
-  startAd,
+  requestBonus,
   isAdReady,
   getAdCooldownRemaining,
   pendingAscendBoost = false,
   pendingPivotBoost = false,
+  adFree = false,
   t,
 }) {
   const [activePathTab, setActivePathTab] = useState('pivot'); // 'pivot' | 'idealist' | 'cynic' | 'heavenly'
@@ -39,7 +40,7 @@ export function SpecialTab({
   // Rewarded-Ad-Boost-Button, wiederverwendet für Pivot & Ascension: gewährt +20% auf
   // die nächste Ausführung, kein Cash/Gate - reiner Bonus an einem ohnehin großen Meilenstein.
   const renderAdBoost = (type, label, pendingActive) => {
-    if (!startAd) return null;
+    if (!requestBonus) return null;
     if (pendingActive) {
       return (
         <div className="mt-2 text-[10px] font-mono font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/40 rounded-lg px-2 py-1.5 text-center">
@@ -64,10 +65,10 @@ export function SpecialTab({
     }
     return (
       <button
-        onClick={() => startAd(type)}
+        onClick={() => requestBonus(type)}
         className="mt-2 w-full py-2 rounded-xl font-black text-[10px] uppercase tracking-wider bg-slate-800 border border-purple-400/60 text-purple-200 hover:bg-slate-700 active:scale-95 shadow-md transition-all flex items-center justify-center gap-1.5"
       >
-        <Tv className="w-3.5 h-3.5" />
+        {adFree ? <Gift className="w-3.5 h-3.5" /> : <Tv className="w-3.5 h-3.5" />}
         {label}
       </button>
     );
@@ -167,7 +168,7 @@ export function SpecialTab({
             <RotateCw className="w-4 h-4" />
             {tr('executePivot')}{credGain}{tr('pivotExecuteSuffix')}
           </button>
-          {renderAdBoost('pivot_boost', tr('watchAdCredBoost').replace('{amount}', Math.max(0, Math.floor(credGain * 1.2) - credGain)), pendingPivotBoost)}
+          {renderAdBoost('pivot_boost', tr(adFree ? 'claimCredBoost' : 'watchAdCredBoost').replace('{amount}', Math.max(0, Math.floor(credGain * 1.2) - credGain)), pendingPivotBoost)}
         </div>
       )}
 
@@ -360,7 +361,7 @@ export function SpecialTab({
                 {tr('executeAscend')}{pendingChips}{tr('ascendExecuteSuffix')}
               </button>
               <div className="relative z-10">
-                {renderAdBoost('ascend_boost', tr('watchAdChipsBoost').replace('{amount}', Math.max(0, Math.floor(pendingChips * 1.2) - pendingChips)), pendingAscendBoost)}
+                {renderAdBoost('ascend_boost', tr(adFree ? 'claimChipsBoost' : 'watchAdChipsBoost').replace('{amount}', Math.max(0, Math.floor(pendingChips * 1.2) - pendingChips)), pendingAscendBoost)}
               </div>
             </div>
 

@@ -18,6 +18,7 @@ export function StatsTab({
   slopCount,
   unlockedAchievements,
   logs,
+  adFree = false,
   t,
 }) {
   const [statsSection, setStatsSection] = useState('overview'); // 'overview' | 'log' | 'achievements'
@@ -36,6 +37,7 @@ export function StatsTab({
             isOpen={isBadgesModalOpen}
             unlockedAchievements={unlockedAchievements}
             onClose={() => setIsBadgesModalOpen(false)}
+            adFree={adFree}
             t={t}
           />
         </Suspense>

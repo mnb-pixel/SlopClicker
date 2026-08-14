@@ -32,6 +32,7 @@ export const Header = forwardRef(function Header({
   // der Tab-Leiste, zwei Flächen gleichzeitig wären eine zu viel (und der md:-Breakpoint
   // allein würde auf Tablets mit Mobile-UA genau das auslösen).
   showAdSlot = false,
+  adFree = false,
   t,
 }, ref) {
   const [isEditingName, setIsEditingName] = useState(false);
@@ -65,7 +66,7 @@ export const Header = forwardRef(function Header({
       isSecTheme
         ? 'bg-[#FBF9F5] border-b-4 border-slate-900 text-slate-900 shadow-md font-serif'
         : 'bg-slate-900/95 backdrop-blur-md border-b border-cyan-500/20 text-slate-100'
-    } sticky top-0 z-40 p-3 w-full transition-colors`}>
+    } sticky top-0 z-40 p-3 header-safe-top w-full transition-colors`}>
       <div className="max-w-7xl mx-auto flex flex-col gap-2">
         {/* Official Header Banner in Ledger Mode */}
         {isSecTheme && (
@@ -221,7 +222,7 @@ export const Header = forwardRef(function Header({
 
           {showAdSlot && (
             <div className="hidden md:flex flex-1 min-w-0 max-w-[468px]">
-              <AdBanner variant="headerBanner" label={tr('adPlaceholderLabel')} />
+              <AdBanner variant="headerBanner" label={tr('adPlaceholderLabel')} adFree={adFree} />
             </div>
           )}
         </div>

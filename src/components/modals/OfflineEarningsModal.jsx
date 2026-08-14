@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Rocket, Tv, Sparkles } from 'lucide-react';
+import { Rocket, Tv, Gift, Sparkles } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 
 // Willkommen-zurück-Screen: zeigt den passiv erwirtschafteten Offline-Ertrag seit dem
@@ -9,7 +9,10 @@ import { formatCurrency } from '../../utils/formatters';
 // werden automatisch und ohne Rückfrage gutgeschrieben, kein Modal nötig. Ab der Schwelle
 // gilt dieselbe alles-oder-nichts-Regel wie beim AfkReportModal: Ad ansehen zum Einsammeln,
 // sonst verfällt der Betrag ersatzlos - kein "Nur einsammeln"-Ausweg mehr.
-export function OfflineEarningsModal({ offlineReport, adState, startAd, claimOfflineEarnings, dismissOfflineEarnings, t }) {
+// Mit adFree entfällt der Verzichten-Pfad: es gibt keinen Grund, einen kostenlosen Bonus
+// abzulehnen, den man ohnehin nur mit einem Tap statt einem Video bekommt (siehe
+// docs/ios-app-konzept.md §4.2).
+export function OfflineEarningsModal({ offlineReport, adState, startAd, claimOfflineEarnings, dismissOfflineEarnings, adFree = false, t }) {
   if (!offlineReport) return null;
 
   const tr = t || ((k) => k);
@@ -50,19 +53,21 @@ export function OfflineEarningsModal({ offlineReport, adState, startAd, claimOff
         ) : (
           <div className="w-full flex flex-col gap-2">
             <button
-              onClick={() => startAd('offline_claim', claimOfflineEarnings)}
+              onClick={() => (adFree ? claimOfflineEarnings() : startAd('offline_claim', claimOfflineEarnings))}
               className="w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 to-fuchsia-500 text-slate-950 hover:brightness-110 active:scale-95 shadow-xl transition-all flex items-center justify-center gap-2"
             >
-              <Tv className="w-4 h-4" />
-              {tr('watchAdCollect').replace('{amount}', formatCurrency(offlineReport.amount))}
+              {adFree ? <Gift className="w-4 h-4" /> : <Tv className="w-4 h-4" />}
+              {tr(adFree ? 'claimBonusCollect' : 'watchAdCollect').replace('{amount}', formatCurrency(offlineReport.amount))}
             </button>
-            <button
-              onClick={dismissOfflineEarnings}
-              className="w-full py-2 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              {tr('afkForfeitBtn')}
-            </button>
+            {!adFree && (
+              <button
+                onClick={dismissOfflineEarnings}
+                className="w-full py-2 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                {tr('afkForfeitBtn')}
+              </button>
+            )}
           </div>
         )}
       </div>

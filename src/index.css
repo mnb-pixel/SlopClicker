@@ -15,6 +15,42 @@
   }
 }
 
+/* iOS/Capacitor: Touch-Verhalten für einen Clicker. Ohne das lösen Schnelltaps auf dem
+   Haupt-Button die Textauswahl-Lupe/Kontextmenü aus, der Doppeltap zoomt (300ms Verzögerung
+   auf jeden einzelnen Tap) und ein Swipe von oben löst Pull-to-refresh/Bounce-Scrolling aus.
+   Bewusst NUR nativ (Klasse wird in main.jsx gesetzt): das sind keine No-Ops im Web -
+   overscroll-behavior deaktiviert Pull-to-refresh und touch-action den Doppeltap-Zoom auch
+   im mobilen Browser. Die Web-Version soll sich unverändert wie eine Webseite verhalten.
+   Siehe docs/ios-app-konzept.md §7. */
+.native-app,
+.native-app body {
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+/* Safe-Area-Hilfsklassen für die fixierten Chrome-Elemente (Sticky Header, Golden-Meme-
+   Banner, Werbe-Anker, Tab-Leiste). env() ist auf Web/Geräten ohne Notch/Dynamic Island 0px,
+   die calc()-Basis entspricht jeweils dem bisherigen Tailwind-Wert an der Stelle, die diese
+   Klasse ersetzt/ergänzt - ohne calc() würde env() den bestehenden Abstand ersetzen statt
+   ergänzen. Exakte Werte sind am echten Gerät/Simulator zu verifizieren, siehe README. */
+.header-safe-top {
+  padding-top: calc(0.75rem + env(safe-area-inset-top)); /* ersetzt p-3s padding-top */
+}
+
+.banner-safe-top {
+  top: calc(5rem + env(safe-area-inset-top)); /* ersetzt top-20 */
+}
+
+.ad-anchor-safe-bottom {
+  bottom: calc(3.5rem + env(safe-area-inset-bottom)); /* ersetzt bottom-14 */
+}
+
+.navbar-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom); /* zusätzlich zu bottom-0, siehe NavBar.jsx */
+}
+
 /* Floating animation for click text particles */
 @keyframes floatUpFade {
   0% {
