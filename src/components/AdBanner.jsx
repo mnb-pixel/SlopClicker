@@ -15,7 +15,16 @@ const SIZES = {
   headerBanner: 'h-[60px] max-w-[468px]',
 };
 
-export function AdBanner({ variant = 'leaderboard', label = 'Werbung' }) {
+export function AdBanner({ variant = 'leaderboard', label = 'Werbung', adFree = false }) {
+  // Werbefrei-IAP: kein Platzhalter, kein Ad-SDK - die Fläche verschwindet komplett statt nur
+  // leer/ausgegraut dazustehen (siehe docs/ios-app-konzept.md §2, Punkt 1).
+  if (adFree) return null;
+  // Nativ (iOS): die eigentliche Banner-Anzeige ist kein DOM-Element, sondern ein
+  // natives Overlay, das AdMob selbst positioniert (siehe monetization/nativeBanner.js,
+  // von App.jsx anhand von adFree gesteuert). Dieser Platzhalter-Kasten ist rein für Web/
+  // AdSense gedacht und würde nativ nur eine leere, verwirrende zweite Fläche zeigen.
+  const isNative = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
+  if (isNative) return null;
   return (
     <div className="w-full flex justify-center">
       <div

@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { Tv, Loader2, ThermometerSnowflake, Landmark, Zap, Trash2, Download, Upload } from 'lucide-react';
+import { Tv, Gift, Loader2, ThermometerSnowflake, Landmark, Zap, Trash2, ShieldCheck, RotateCcw, Download, Upload } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 
 export function MiscTab({
   adState,
-  startAd,
+  requestBonus,
   isAdReady,
   getAdCooldownRemaining,
   resetSave,
@@ -14,6 +14,11 @@ export function MiscTab({
   claimUnlockedScheduledAd,
   grantAdPreview = 0,
   scheduledAdPreview = 0,
+  adFree = false,
+  purchaseAvailable = false,
+  purchaseState = 'idle',
+  purchaseAdFree,
+  restorePurchases,
   onOpenLegal,
   t,
   tf,
@@ -38,6 +43,10 @@ export function MiscTab({
     reader.readAsText(file);
   };
 
+  // Icon/Label je Placement: mit adFree gibt es keine Ad mehr zu "ansehen", nur noch einen
+  // Bonus abzuholen - Cooldowns/Beträge bleiben unverändert (siehe requestBonus).
+  const CtaIcon = adFree ? Gift : Tv;
+
   // Kompakter Ad-Button, der je nach Cooldown-Status Play-Button / Countdown / "läuft" zeigt.
   const renderAdCta = (type) => {
     if (adState?.type === type) {
@@ -61,16 +70,61 @@ export function MiscTab({
     <div className="p-4 pb-20 max-w-md mx-auto flex flex-col gap-5">
 
 
-      {/* Rewarded Ad Monocle */}
+      {/* Werbefrei-IAP: Kaufkarte / Status. Immer oben, damit der Einstieg von den
+          Bonus-Buttons direkt darunter aus sichtbar ist. Auf Web (purchaseAvailable=false)
+          unsichtbar - siehe PurchaseBridge.js, Guideline 3.1.1 verbietet einen Web-Checkout
+          für denselben IAP. */}
+      {purchaseAvailable && (
+        <div className="bg-slate-900 p-4 rounded-2xl border border-amber-500/30 flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className={`w-5 h-5 ${adFree ? 'text-emerald-400' : 'text-amber-400'}`} />
+            <div>
+              <h3 className="font-black text-sm uppercase text-slate-200">
+                {tr('adFreeSettingTitle')}
+              </h3>
+              <div className="text-[10px] text-slate-400">
+                {adFree ? tr('adFreeSettingDescActive') : tr('adFreeSettingDescInactive')}
+              </div>
+            </div>
+          </div>
+
+          {!adFree && (
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={purchaseAdFree}
+                disabled={purchaseState === 'purchasing' || purchaseState === 'pending'}
+                className="w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 to-fuchsia-500 text-slate-950 hover:brightness-110 active:scale-95 shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                {purchaseState === 'purchasing'
+                  ? tr('adFreePurchasing')
+                  : purchaseState === 'pending'
+                  ? tr('adFreePendingLabel')
+                  : tr('adFreePurchaseBtn')}
+              </button>
+              <button
+                onClick={restorePurchases}
+                disabled={purchaseState === 'restoring'}
+                className="w-full py-2 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                {purchaseState === 'restoring' ? tr('adFreeRestoring') : tr('adFreeRestoreBtn')}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Rewarded Ad Monocle / Bonus-Liste (adFree: identische Boni, ohne Video) */}
       <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <Tv className="w-5 h-5 text-amber-400" />
+          <CtaIcon className="w-5 h-5 text-amber-400" />
           <div>
             <h3 className="font-black text-sm uppercase text-slate-200">
-              {tr('rewardedAdsTitle')}
+              {adFree ? tr('claimBonusesTitle') : tr('rewardedAdsTitle')}
             </h3>
             <div className="text-[10px] text-slate-400">
-              {tr('rewardedAdsDesc')}
+              {adFree ? tr('claimBonusesDesc') : tr('rewardedAdsDesc')}
             </div>
           </div>
         </div>
@@ -91,7 +145,7 @@ export function MiscTab({
               >
                 <div>
                   <div className="font-extrabold text-xs text-amber-300 flex items-center gap-1.5">
-                    <Tv className="w-4 h-4 text-amber-400" />
+                    <CtaIcon className="w-4 h-4 text-amber-400" />
                     🎁 {tr('bonusAdAvailable')}
                   </div>
                   <div className="text-[11px] text-slate-400 mt-0.5">
@@ -99,12 +153,12 @@ export function MiscTab({
                   </div>
                 </div>
                 <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black px-2 py-1 rounded border border-amber-500/30 group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors shrink-0">
-                  {tr('watchAdShort')}
+                  {adFree ? tr('claimBonusShort') : tr('watchAdShort')}
                 </span>
               </button>
             )}
             <button
-              onClick={() => startAd('nitrogen')}
+              onClick={() => requestBonus('nitrogen')}
               disabled={isAdReady && !isAdReady('nitrogen')}
               className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500 text-left transition-all flex items-center justify-between group disabled:opacity-40 disabled:cursor-not-allowed"
             >
@@ -119,13 +173,13 @@ export function MiscTab({
               </div>
               {renderAdCta('nitrogen') || (
                 <span className="bg-cyan-500/20 text-cyan-300 text-[10px] font-black px-2 py-1 rounded border border-cyan-500/30 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors shrink-0">
-                  {tr('watchAd3s')}
+                  {adFree ? tr('claimBonusShort') : tr('watchAd3s')}
                 </span>
               )}
             </button>
 
             <button
-              onClick={() => startAd('grant')}
+              onClick={() => requestBonus('grant')}
               disabled={isAdReady && !isAdReady('grant')}
               className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-amber-500 text-left transition-all flex items-center justify-between group disabled:opacity-40 disabled:cursor-not-allowed"
             >
@@ -140,13 +194,13 @@ export function MiscTab({
               </div>
               {renderAdCta('grant') || (
                 <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black px-2 py-1 rounded border border-amber-500/30 group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors shrink-0">
-                  {tr('watchAd3s')}
+                  {adFree ? tr('claimBonusShort') : tr('watchAd3s')}
                 </span>
               )}
             </button>
 
             <button
-              onClick={() => startAd('power_click')}
+              onClick={() => requestBonus('power_click')}
               disabled={isAdReady && !isAdReady('power_click')}
               className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-fuchsia-500 text-left transition-all flex items-center justify-between group disabled:opacity-40 disabled:cursor-not-allowed"
             >
@@ -161,7 +215,7 @@ export function MiscTab({
               </div>
               {renderAdCta('power_click') || (
                 <span className="bg-fuchsia-500/20 text-fuchsia-300 text-[10px] font-black px-2 py-1 rounded border border-fuchsia-500/30 group-hover:bg-fuchsia-500 group-hover:text-slate-950 transition-colors shrink-0">
-                  {tr('watchAd3s')}
+                  {adFree ? tr('claimBonusShort') : tr('watchAd3s')}
                 </span>
               )}
             </button>
