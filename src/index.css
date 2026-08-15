@@ -260,3 +260,80 @@
   );
 }
 
+/* Roher HTML-Rechtstext von datenschutz-generator.de (LegalModal.jsx, dangerouslySetInnerHTML)
+   - kommt ohne eigene Klassen, deshalb Tag-Selektoren statt Tailwind-Utilities. */
+.legal-html {
+  font-size: 12px;
+  line-height: 1.65;
+  color: rgb(203 213 225); /* text-slate-300 */
+}
+
+.legal-html h2 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgb(34 211 238); /* text-cyan-400 */
+}
+.legal-html h2:first-child {
+  margin-top: 0;
+}
+
+.legal-html h3 {
+  margin-top: 1rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: rgb(241 245 249); /* text-slate-100 */
+}
+
+.legal-html p {
+  margin-bottom: 0.6rem;
+}
+
+.legal-html ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.legal-html a {
+  color: rgb(34 211 238); /* text-cyan-400 */
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-word;
+}
+.legal-html a:hover {
+  color: rgb(103 232 249); /* text-cyan-300 */
+}
+
+.legal-html strong {
+  color: rgb(241 245 249); /* text-slate-100 */
+  font-weight: 700;
+}
+
+/* Inhaltsübersicht am Anfang des Textes: als Zeilen statt als Absätze, damit die vielen
+   Sprungmarken nicht wie Fließtext wirken. */
+.legal-html ul.index {
+  list-style: none;
+  padding-left: 0;
+  font-size: 11px;
+}
+
+/* Attributions-Siegel des Generators (datenschutz-generator.de) - vermutlich Bedingung der
+   kostenlosen Nutzung, deshalb bewusst NICHT entfernt, nur kompakt eingepasst. */
+.legal-html p.seal {
+  margin-top: 1rem;
+}
+.legal-html p.seal img {
+  width: 96px;
+  height: 96px;
+  border-radius: 0.5rem;
+  opacity: 0.85;
+}
+

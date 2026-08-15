@@ -5,17 +5,6 @@
   <head>
     <meta charset="UTF-8" />
 
-    <!-- web-only:start -->
-    <!-- Termly Consent-Banner + Auto Blocker (autoBlock=on in der URL). Muss laut Termly
-         der ALLERERSTE <script>-Tag der Seite sein - auch vor dem AdSense-Snippet weiter
-         unten -, damit der Auto Blocker dessen Cookie-setzende Skripte erkennen und bis zur
-         Einwilligung blockieren kann, statt dass AdSense schon vor der Zustimmung feuert.
-         NICHT im nativen Build: dort übernimmt Googles UMP-SDK die Einwilligung
-         (src/monetization/adConsent.js), zwei parallele Consent-Layer wären widersprüchlich.
-         Wird für --mode native aus dem HTML entfernt, siehe vite.config.js. -->
-    <script src="https://app.termly.io/resource-blocker/4810446e-db26-4a1e-a96a-1bbdefde2c01?autoBlock=on"></script>
-    <!-- web-only:end -->
-
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>" />
     <!-- Ohne maximum-scale/user-scalable=no: die vorige Fassung blockierte Pinch-Zoom
          vollständig, das verletzt WCAG 2.1 Kriterium 1.4.4 (Resize Text) - Menschen mit
@@ -34,13 +23,10 @@
 
     <!-- web-only:start -->
     <!-- Google AdSense: Inhaberschaftsbestätigung + späteres Ausliefern von Anzeigen.
-         Lädt nur die Bibliothek, fragt noch keine personalisierten Anzeigen an. Der Termly
-         Auto Blocker oben soll dieses Skript erkennen und bis zur Cookie-Einwilligung
-         blockieren. Beschrieben ist das in der Datenschutzerklärung, Ziffer 4
-         (Einwilligungsverwaltung) und Ziffer 5 (Werbung) in legal.content.js - wird die
-         client-ID hier geändert oder das Netzwerk getauscht, muss Ziffer 5 mitgezogen werden.
-         Vor dem Livegang bitte einmal praktisch prüfen, dass ohne Einwilligung tatsächlich
-         KEIN Request an pagead2.googlesyndication.com rausgeht (DevTools > Network).
+         Lädt nur die Bibliothek, fragt noch keine personalisierten Anzeigen an. Die
+         Einwilligungsverwaltung (Consent Mode / CMP) für die Cookie-/Werbe-Einwilligung
+         läuft direkt über Google (AdSense-Konto > Datenschutz & Zustimmung), nicht mehr
+         über einen separaten Drittanbieter wie zuvor.
          NICHT im nativen Build: AdSense ist für Webseiten lizenziert und darf nicht in einer
          App-WebView ausgeliefert werden - dort läuft AdMob (src/monetization/nativeAdBridge.js).
          Vor allem würde es sonst auch für Werbefrei-Käufer:innen laden und damit genau das
