@@ -13,14 +13,13 @@
 export const LEGAL_TODO = '[[ BITTE EINTRAGEN ]]';
 
 // ================================ HINWEIS ================================
-// Betreiber ist laut quaell.bryopal.ch eine SCHWEIZER GmbH, keine deutsche. Die
-// Abschnittstitel unten ("Angaben gemäß § 5 DDG", "§ 18 Abs. 2 MStV") zitieren deutsches
-// Recht - das ist die Rechtsgrundlage, mit der dieses Modal ursprünglich als Entwurf
-// angelegt wurde, aber für eine Schweizer Gesellschaft vermutlich NICHT die zutreffende
-// (einschlägig wäre u.a. Art. 3 lit. s UWG für die Anbieterkennzeichnung, ggf. revDSG statt
-// DSGVO). Diese Zitate wurden bewusst NICHT eigenmächtig umgeschrieben, da das eine
-// juristische Einschätzung ist - bitte von einer Person mit Rechtskenntnis prüfen lassen,
-// bevor die Seite live geht.
+// Betreiber ist laut quaell.bryopal.ch eine SCHWEIZER GmbH, keine deutsche - die
+// Abschnittstitel im Impressum zitieren deshalb bewusst KEIN deutsches Recht mehr (früher
+// "Angaben gemäß § 5 DDG" / "§ 18 Abs. 2 MStV", das war ein Überbleibsel aus einem
+// deutschen Entwurfs-Template). Die Neutral-Titel unten sind aber ebenfalls keine
+// geprüfte Rechtsberatung - einschlägig für die Anbieterkennzeichnung wäre u.a. Art. 3
+// lit. s UWG, ggf. revDSG statt DSGVO -, bitte von einer Person mit Rechtskenntnis prüfen
+// lassen, bevor die Seite live geht.
 //
 // Die Datenschutzerklärung (datenschutz.html unten) ist dagegen der unveränderte, von
 // https://datenschutz-generator.de/ (Dr. Schwenke) erzeugte Rechtstext - kein eigener
@@ -43,9 +42,10 @@ export const OPERATOR = {
   country: 'Schweiz',
   email: 'contact@bryopal.ch',
   // Schweizer UID ist kein EU-USt-IdNr. nach § 27a UStG, deshalb kein eigenes vatId-Feld
-  // (würde eine falsche Rechtsgrundlage suggerieren) - stattdessen hier mit korrekter
-  // Bezeichnung.
-  register: 'UID: CHE-194.217.671, Handelsregisteramt des Kantons St. Gallen',
+  // (würde eine falsche Rechtsgrundlage suggerieren) - stattdessen zwei eigene Felder mit
+  // korrekter Bezeichnung.
+  uid: 'CHE-194.217.671',
+  registryOffice: 'Kanton St. Gallen',
   // Auf quaell.bryopal.ch als "vertretungsberechtigte Person" gelistet, nicht explizit als
   // inhaltlich Verantwortlicher - für diese Seite mangels anderer Angabe übernommen.
   contentResponsible: 'Björn Moosmann',
@@ -169,7 +169,7 @@ export const LEGAL_CONTENT = {
       title: 'Impressum',
       sections: [
         {
-          title: 'Angaben gemäß § 5 DDG',
+          title: 'Angaben zum Unternehmen',
           lines: [
             '{name}',
             '{street}',
@@ -184,13 +184,15 @@ export const LEGAL_CONTENT = {
           ],
         },
         {
-          title: 'Handelsregister',
+          title: 'Handelsregister-Eintrag',
           lines: [
-            '{register}',
+            'Eingetragener Firmenname: {name}',
+            'Unternehmens-Identifikationsnummer (UID): {uid}',
+            'Handelsregisteramt: {registryOffice}',
           ],
         },
         {
-          title: 'Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV',
+          title: 'Vertretungsberechtigte Person(en)',
           lines: [
             '{contentResponsible}',
           ],
@@ -206,7 +208,7 @@ export const LEGAL_CONTENT = {
           lines: [
             'Die Inhalte dieses Angebots wurden mit Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte wird jedoch keine Gewähr übernommen.',
             'Dieses Angebot ist eine **Satire**. Alle dargestellten Firmen, Personen, Produkte, Auszeichnungen und Meldungen sind **frei erfunden**. Ähnlichkeiten mit real existierenden Unternehmen oder Personen sind nicht beabsichtigt.',
-            'Für Inhalte externer Links sind ausschließlich deren Betreiber verantwortlich. Zum Zeitpunkt der Verlinkung waren keine Rechtsverstöße erkennbar.',
+            'Für Inhalte externer Links sind ausschließlich deren Betreiber verantwortlich.',
           ],
         },
       ],
@@ -230,7 +232,7 @@ export const LEGAL_CONTENT = {
       title: 'Legal Notice',
       sections: [
         {
-          title: 'Information pursuant to § 5 DDG (German Digital Services Act)',
+          title: 'Company Details',
           lines: [
             '{name}',
             '{street}',
@@ -245,13 +247,15 @@ export const LEGAL_CONTENT = {
           ],
         },
         {
-          title: 'Commercial Register',
+          title: 'Commercial Register Entry',
           lines: [
-            '{register}',
+            'Registered company name: {name}',
+            'Business Identification Number (UID): {uid}',
+            'Commercial Register Office: {registryOffice}',
           ],
         },
         {
-          title: 'Responsible for content pursuant to § 18 (2) MStV',
+          title: 'Authorized Representative(s)',
           lines: [
             '{contentResponsible}',
           ],
@@ -267,7 +271,7 @@ export const LEGAL_CONTENT = {
           lines: [
             'The content of this service has been compiled with care. No guarantee is given for its accuracy, completeness or timeliness.',
             'This service is a **satire**. All companies, people, products, awards and news items depicted are **entirely fictional**. Any resemblance to real companies or people is unintended.',
-            'The operators of linked external pages are solely responsible for their content. No legal violations were apparent at the time of linking.',
+            'The operators of linked external pages are solely responsible for their content.',
           ],
         },
       ],
