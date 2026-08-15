@@ -98,7 +98,7 @@ export function SlopTab({
           <button
             onClick={handleTapAGI}
             disabled={isOverheated}
-            className={`relative w-64 h-56 rounded-lg border-4 border-slate-900 bg-[#FBF9F5] text-slate-900 flex flex-col items-center justify-center p-4 text-center transition-all transform active:scale-95 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] group overflow-hidden ${
+            className={`relative w-64 h-56 rounded-lg border-4 border-slate-900 bg-[#FBF9F5] text-slate-900 flex flex-col items-center justify-center p-4 text-center transition-all transform active:scale-95 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] group overflow-hidden touch-manipulation ${
               isOverheated ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-[#F4F1EA]'
             }`}
           >
@@ -125,7 +125,7 @@ export function SlopTab({
           <button
             onClick={handleTapAGI}
             disabled={isOverheated}
-            className={`relative w-56 h-56 rounded-full border-4 flex flex-col items-center justify-center p-3 text-center transition-all transform active:scale-95 shadow-2xl overflow-hidden group ${
+            className={`relative w-56 h-56 rounded-full border-4 flex flex-col items-center justify-center p-3 text-center transition-all transform active:scale-95 shadow-2xl overflow-hidden group touch-manipulation ${
               isOverheated
                 ? 'bg-slate-900/90 border-rose-600 text-slate-600 cursor-not-allowed grayscale'
                 : powerClickActive
