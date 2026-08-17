@@ -30,6 +30,21 @@
   touch-action: manipulation;
 }
 
+/* iOS/Safari zoomt beim Fokussieren eines Eingabefelds automatisch rein, sobald dessen
+   Schriftgröße unter 16px liegt (z.B. der Firmenname-Editor in Header.jsx, text-sm = 14px,
+   oder die Suchfelder in BuzzwordAlbum.jsx/BadgesModal.jsx, text-xs = 12px) - und springt
+   danach beim Verlassen des Felds nicht zuverlässig auf den vorherigen Zoomstand zurück,
+   die Seite bleibt eingezoomt hängen. @supports(-webkit-touch-callout) grenzt das gezielt
+   auf WebKit (Safari/iOS-WKWebView) ein, ohne die bewusst kompakte Schrift auf
+   Android/Desktop zu vergrößern. */
+@supports (-webkit-touch-callout: none) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 /* Safe-Area-Hilfsklassen für die fixierten Chrome-Elemente (Sticky Header, Golden-Meme-
    Banner, Werbe-Anker, Tab-Leiste). env() ist auf Web/Geräten ohne Notch/Dynamic Island 0px,
    die calc()-Basis entspricht jeweils dem bisherigen Tailwind-Wert an der Stelle, die diese
@@ -37,6 +52,11 @@
    ergänzen. Exakte Werte sind am echten Gerät/Simulator zu verifizieren, siehe README. */
 .header-safe-top {
   padding-top: calc(0.75rem + env(safe-area-inset-top)); /* ersetzt p-3s padding-top */
+  /* w-full bis an den Geräterand: im Querformat sitzt die Notch/Dynamic Island seitlich und
+     schnitt Inhalte links/rechts an, ohne diese zusätzlichen Insets (ergänzen p-3s
+     padding-left/-right, ersetzen sie nicht). */
+  padding-left: calc(0.75rem + env(safe-area-inset-left));
+  padding-right: calc(0.75rem + env(safe-area-inset-right));
 }
 
 .banner-safe-top {
@@ -45,10 +65,16 @@
 
 .ad-anchor-safe-bottom {
   bottom: calc(3.5rem + env(safe-area-inset-bottom)); /* ersetzt bottom-14 */
+  padding-left: env(safe-area-inset-left); /* zusätzlich zum bestehenden px-3, siehe App.jsx */
+  padding-right: env(safe-area-inset-right);
 }
 
 .navbar-safe-bottom {
   padding-bottom: env(safe-area-inset-bottom); /* zusätzlich zu bottom-0, siehe NavBar.jsx */
+  /* left-0/right-0 sitzt direkt am Geräterand - im Querformat schneidet die
+     Notch/Dynamic Island sonst Icons/Labels der äußeren Tabs an. */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* Floating animation for click text particles */

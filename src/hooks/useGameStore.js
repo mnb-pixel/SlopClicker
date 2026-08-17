@@ -734,9 +734,22 @@ export function useGameStore() {
     const handlePageHide = () => saveGameRef.current();
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('pagehide', handlePageHide);
+    // iOS: siehe appState.js - document.visibilitychange feuert beim Backgrounding über
+    // Home-Button/App-Switcher nicht zuverlässig. Ohne dieses zusätzliche Signal blieb der
+    // gespeicherte timestamp beim Wiedereinstieg teils veraltet (letzter erfolgreicher
+    // Autosave statt tatsächlichem Verlassenszeitpunkt), wodurch die daraus berechnete
+    // Abwesenheitsdauer (offlineReport.elapsedSec, siehe Mount-Effect) falsch zu lang oder
+    // kurz ausfiel. Auf Web ein No-Op (subscribeNativeAppState feuert dort nie).
+    const unsubscribeNativeAppState = subscribeNativeAppState((isActive) => {
+      if (!isActive) {
+        saveGameRef.current();
+        wasHiddenRef.current = true;
+      }
+    });
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('pagehide', handlePageHide);
+      unsubscribeNativeAppState();
     };
   }, [applyLoadedState]);
 

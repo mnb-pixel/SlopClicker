@@ -11,8 +11,12 @@
          Sehbehinderung MÜSSEN reinzoomen können, auch in einem Spiel. touch-action:
          manipulation in index.css übernimmt den eigentlichen Zweck der alten Einstellung
          (kein 300ms-Tap-Delay / kein versehentlicher Doppeltipp-Zoom beim schnellen
-         Klicken), ohne Pinch-Zoom mit zu blockieren. -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+         Klicken), ohne Pinch-Zoom mit zu blockieren.
+         viewport-fit=cover: ohne dieses Flag liefert WebKit für ALLE env(safe-area-inset-*)
+         in index.css konstant 0 zurück (auch mit ios.contentInset:'never' in
+         capacitor.config.ts) - Header/Tab-Leiste/Werbe-Anker rutschen dann unter die
+         Notch/Dynamic Island bzw. den Home-Indicator statt sie zu respektieren. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="Token Furnace – Baue dein KI-Startup zur Milliardenbewertung auf, ganz ohne Produkt. Satirischer Idle Clicker über den AI-Hype." />
 
     <!-- Statischer Titel für Crawler und Social-Bots, die kein JavaScript ausführen: die
