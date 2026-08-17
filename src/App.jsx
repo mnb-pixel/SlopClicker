@@ -41,6 +41,8 @@ export default function App() {
   // Ansicht (mobil wie Desktop) über die Einstellungen erreichbar bleiben.
   const [legalPage, setLegalPage] = useState(null);
 
+  const isNativePlatform = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
+
   // Natives AdMob-Banner (kein DOM-Element, siehe AdBanner.jsx) folgt adFree. Auf Web ist
   // showNativeBanner/hideNativeBanner ein No-Op.
   useEffect(() => {
@@ -299,15 +301,17 @@ export default function App() {
 
             {/* Dauerhaft sichtbarer Beschreibungstext, unabhängig vom aktiven Tab (kein
                 Modal, kein Pre-Hydration-Fallback) - siehe translations.js
-                aboutTitle/aboutText1/aboutText2 und das Desktop-Pendant in
-                DesktopView.jsx. */}
-            <div className="mx-3 mt-4 bg-slate-900/60 rounded-xl border border-slate-800 p-3 text-xs text-slate-400 leading-relaxed">
-              <h2 className="text-[10px] font-black uppercase tracking-wider text-cyan-400 mb-1.5">
-                {store.t('aboutTitle')}
-              </h2>
-              <p className="mb-1.5">{store.t('aboutText1')}</p>
-              <p>{store.t('aboutText2')}</p>
-            </div>
+                aboutTitle/aboutText und das Desktop-Pendant in DesktopView.jsx. Nur Web:
+                der Text existiert einzig für den AdSense-Site-Review (siehe AdBanner.jsx),
+                in der iOS-App (AdMob, App-Store-Review) ist er nur unnötiger Platz. */}
+            {!isNativePlatform && (
+              <div className="mx-3 mt-4 bg-slate-900/60 rounded-xl border border-slate-800 p-3 text-xs text-slate-400 leading-relaxed">
+                <h2 className="text-[10px] font-black uppercase tracking-wider text-cyan-400 mb-1.5">
+                  {store.t('aboutTitle')}
+                </h2>
+                <p>{store.t('aboutText')}</p>
+              </div>
+            )}
           </main>
 
           {/* Statischer Werbe-Slot, fix über der Tab-Leiste verankert. Vorher lag er im

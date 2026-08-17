@@ -149,14 +149,14 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
         AUSSERHALB des Grids oben: innerhalb des Grids überlappte die Box beim Scrollen die
         noch "sticky" linke/rechte Spalte, weil deren Zellenhöhe (gedeckelt per max-h) weit
         unter der Zeilenhöhe (bestimmt durch die viel längere mittlere Spalte) liegt - siehe
-        translations.js aboutTitle/aboutText1/aboutText2. */}
+        translations.js aboutTitle/aboutText. Rein für den AdSense-Site-Review gedacht (siehe
+        App.jsx) - DesktopView läuft ohnehin nur im Web-Layout, nie in der iOS-App. */}
     <div className="w-full max-w-3xl mx-auto p-4 pt-0">
       <div className="bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-800 p-4 text-sm text-slate-400 leading-relaxed">
         <h2 className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-2">
           {store.t('aboutTitle')}
         </h2>
-        <p className="mb-2">{store.t('aboutText1')}</p>
-        <p>{store.t('aboutText2')}</p>
+        <p>{store.t('aboutText')}</p>
       </div>
     </div>
     </>

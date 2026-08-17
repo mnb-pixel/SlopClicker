@@ -424,11 +424,10 @@ export const TRANSLATIONS = {
     infraShopTitle: 'KI-Infrastruktur & Upgrades Shop',
     agiCoreGeneratorTitle: 'AGI-Kern-Generator',
 
-    // Über-das-Spiel-Fußzeile (dauerhaft sichtbarer Beschreibungstext, kein Modal) -
-    // siehe App.jsx/DesktopView.jsx
+    // Über-das-Spiel-Fußzeile (dauerhaft sichtbarer Beschreibungstext, kein Modal, nur
+    // Web-Build - siehe App.jsx/DesktopView.jsx)
     aboutTitle: 'Über Token Furnace',
-    aboutText1: 'Token Furnace ist ein kostenloser, satirischer Idle-Clicker im Browser: Du baust dein eigenes KI-Startup auf, klickst dich zu einer Milliardenbewertung hoch und investierst in Buzzwords, GPU-Cluster und Greenwashing-Layoffs – ganz ohne echtes Produkt.',
-    aboutText2: 'Das Spiel läuft komplett im Browser, braucht keine Anmeldung und speichert deinen Fortschritt automatisch lokal auf deinem Gerät. Schalte Upgrades, Erfolge und Prestige-Mechaniken frei und beobachte, wie deine fiktive Firmenbewertung explodiert – bis die Blase platzt und die nächste Runde beginnt.',
+    aboutText: 'Token Furnace ist ein kostenloser, satirischer Idle-Clicker: Baue dein KI-Startup zur Milliardenbewertung auf und investiere in Buzzwords, GPU-Cluster und Greenwashing-Layoffs – ganz ohne echtes Produkt. Läuft komplett im Browser, ohne Anmeldung, Fortschritt wird automatisch lokal gespeichert.',
 
     // Log-/Toast-Nachrichten (useGameStore addLog)
     log_systemInit: 'System initialisiert. Willkommen in der AI-Slop-Bubble.',
@@ -904,10 +903,10 @@ export const TRANSLATIONS = {
     infraShopTitle: 'AI Infrastructure & Upgrades Shop',
     agiCoreGeneratorTitle: 'AGI Core Generator',
 
-    // Always-visible "about" footer text (no modal) - see App.jsx/DesktopView.jsx
+    // Always-visible "about" footer text (no modal, web build only) - see
+    // App.jsx/DesktopView.jsx
     aboutTitle: 'About Token Furnace',
-    aboutText1: 'Token Furnace is a free, satirical idle clicker: you build your own AI startup, tap your way to a billion-dollar valuation, and invest in buzzwords, GPU clusters, and greenwashed layoffs - all without an actual product.',
-    aboutText2: 'The game runs entirely in your browser, needs no account, and saves your progress locally on your device automatically. Unlock upgrades, achievements, and prestige mechanics, and watch your fictional valuation explode - until the bubble pops and the next round begins.',
+    aboutText: 'Token Furnace is a free, satirical idle clicker: build your AI startup to a billion-dollar valuation and invest in buzzwords, GPU clusters, and greenwashed layoffs - all without an actual product. Runs entirely in your browser, no account needed, progress saves locally.',
 
     // Log / Toast messages (useGameStore addLog)
     log_systemInit: 'System initialized. Welcome to the AI Slop Bubble.',
