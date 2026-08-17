@@ -7,6 +7,7 @@ import { MiscTab } from '../tabs/MiscTab';
 
 export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
   return (
+    <>
     <div className="w-full max-w-7xl mx-auto p-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
       {/* LEFT COLUMN: Main GPU Clicker, Heat Bar, Golden Memes, Owned Visual Items Grid (4 cols) */}
       <div className="md:col-span-4 flex flex-col gap-4 sticky top-20">
@@ -143,5 +144,21 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
         />
       </div>
     </div>
+
+    {/* Dauerhaft sichtbarer Beschreibungstext (kein Modal, kein Pre-Hydration-Fallback) -
+        AUSSERHALB des Grids oben: innerhalb des Grids überlappte die Box beim Scrollen die
+        noch "sticky" linke/rechte Spalte, weil deren Zellenhöhe (gedeckelt per max-h) weit
+        unter der Zeilenhöhe (bestimmt durch die viel längere mittlere Spalte) liegt - siehe
+        translations.js aboutTitle/aboutText1/aboutText2. */}
+    <div className="w-full max-w-3xl mx-auto p-4 pt-0">
+      <div className="bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-800 p-4 text-sm text-slate-400 leading-relaxed">
+        <h2 className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-2">
+          {store.t('aboutTitle')}
+        </h2>
+        <p className="mb-2">{store.t('aboutText1')}</p>
+        <p>{store.t('aboutText2')}</p>
+      </div>
+    </div>
+    </>
   );
 }

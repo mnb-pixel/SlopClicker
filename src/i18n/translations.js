@@ -424,6 +424,12 @@ export const TRANSLATIONS = {
     infraShopTitle: 'KI-Infrastruktur & Upgrades Shop',
     agiCoreGeneratorTitle: 'AGI-Kern-Generator',
 
+    // Über-das-Spiel-Fußzeile (dauerhaft sichtbarer Beschreibungstext, kein Modal) -
+    // siehe App.jsx/DesktopView.jsx
+    aboutTitle: 'Über Token Furnace',
+    aboutText1: 'Token Furnace ist ein kostenloser, satirischer Idle-Clicker im Browser: Du baust dein eigenes KI-Startup auf, klickst dich zu einer Milliardenbewertung hoch und investierst in Buzzwords, GPU-Cluster und Greenwashing-Layoffs – ganz ohne echtes Produkt.',
+    aboutText2: 'Das Spiel läuft komplett im Browser, braucht keine Anmeldung und speichert deinen Fortschritt automatisch lokal auf deinem Gerät. Schalte Upgrades, Erfolge und Prestige-Mechaniken frei und beobachte, wie deine fiktive Firmenbewertung explodiert – bis die Blase platzt und die nächste Runde beginnt.',
+
     // Log-/Toast-Nachrichten (useGameStore addLog)
     log_systemInit: 'System initialisiert. Willkommen in der AI-Slop-Bubble.',
     log_gpuCooled: 'GPU-Temperatur unter 50°C gefallen. AGI-Button freigeschaltet!',
@@ -897,6 +903,11 @@ export const TRANSLATIONS = {
     // Desktop View Headings
     infraShopTitle: 'AI Infrastructure & Upgrades Shop',
     agiCoreGeneratorTitle: 'AGI Core Generator',
+
+    // Always-visible "about" footer text (no modal) - see App.jsx/DesktopView.jsx
+    aboutTitle: 'About Token Furnace',
+    aboutText1: 'Token Furnace is a free, satirical idle clicker: you build your own AI startup, tap your way to a billion-dollar valuation, and invest in buzzwords, GPU clusters, and greenwashed layoffs - all without an actual product.',
+    aboutText2: 'The game runs entirely in your browser, needs no account, and saves your progress locally on your device automatically. Unlock upgrades, achievements, and prestige mechanics, and watch your fictional valuation explode - until the bubble pops and the next round begins.',
 
     // Log / Toast messages (useGameStore addLog)
     log_systemInit: 'System initialized. Welcome to the AI Slop Bubble.',

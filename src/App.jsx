@@ -11,7 +11,7 @@ import { MiscTab } from './components/tabs/MiscTab';
 import { GoldenMemeBanner } from './components/GoldenMemeBanner';
 import { AdRewardToast } from './components/AdRewardToast';
 import { ClickParticles } from './components/ClickParticles';
-import { AdBanner } from './components/AdBanner';
+import { AdBanner, ADS_ENABLED } from './components/AdBanner';
 import { OfflineEarningsModal } from './components/modals/OfflineEarningsModal';
 import { AfkReportModal } from './components/modals/AfkReportModal';
 import { ScheduledAdModal } from './components/modals/ScheduledAdModal';
@@ -185,7 +185,7 @@ export default function App() {
           {/* pb deckt Tab-Leiste (56px) + Werbe-Anker (~65px) ab, damit der letzte
               Listeneintrag nicht hinter der unteren Leiste verschwindet. Mit adFree entfällt
               der Werbe-Anker (siehe unten), daher reicht dann die kleinere Tab-Leisten-Höhe. */}
-          <main className={`flex-1 ${store.adFree ? 'pb-16' : 'pb-32'}`}>
+          <main className={`flex-1 ${store.adFree || !ADS_ENABLED ? 'pb-16' : 'pb-32'}`}>
             {store.activeTab === 1 && (
               <SlopTab
                 handleTapAGI={store.handleTapAGI}
@@ -296,6 +296,18 @@ export default function App() {
                 tf={store.tf}
               />
             )}
+
+            {/* Dauerhaft sichtbarer Beschreibungstext, unabhängig vom aktiven Tab (kein
+                Modal, kein Pre-Hydration-Fallback) - siehe translations.js
+                aboutTitle/aboutText1/aboutText2 und das Desktop-Pendant in
+                DesktopView.jsx. */}
+            <div className="mx-3 mt-4 bg-slate-900/60 rounded-xl border border-slate-800 p-3 text-xs text-slate-400 leading-relaxed">
+              <h2 className="text-[10px] font-black uppercase tracking-wider text-cyan-400 mb-1.5">
+                {store.t('aboutTitle')}
+              </h2>
+              <p className="mb-1.5">{store.t('aboutText1')}</p>
+              <p>{store.t('aboutText2')}</p>
+            </div>
           </main>
 
           {/* Statischer Werbe-Slot, fix über der Tab-Leiste verankert. Vorher lag er im
@@ -305,7 +317,7 @@ export default function App() {
               selbst nimmt Klicks entgegen, damit Fehltaps Richtung Tab-Leiste ins Leere gehen.
               Mit adFree rendert AdBanner selbst null - der Abstandsrahmen bliebe sonst als
               leere Lücke stehen, deshalb fällt er hier komplett weg. */}
-          {!store.adFree && (
+          {!store.adFree && ADS_ENABLED && (
             <div className="fixed ad-anchor-safe-bottom left-0 right-0 z-20 max-w-md mx-auto px-3 pt-1.5 pb-2 bg-slate-950/90 backdrop-blur-sm border-t border-slate-800/60 pointer-events-none">
               <div className="pointer-events-auto">
                 <AdBanner variant="leaderboard" label={store.t('adPlaceholderLabel')} adFree={store.adFree} />

@@ -15,7 +15,14 @@ const SIZES = {
   headerBanner: 'h-[60px] max-w-[468px]',
 };
 
+// Vorübergehend deaktiviert, bis der AdSense-Site-Review durch ist: eine leere, mit
+// "Werbung" beschriftete Fläche ohne echten Anzeigeninhalt sieht für einen Reviewer
+// selbst wie ein Screen ohne (Publisher-)Content aus. Zurück auf true, sobald das Konto
+// freigeschaltet ist und hier ein echtes <ins class="adsbygoogle"> rein soll.
+export const ADS_ENABLED = false;
+
 export function AdBanner({ variant = 'leaderboard', label = 'Werbung', adFree = false }) {
+  if (!ADS_ENABLED) return null;
   // Werbefrei-IAP: kein Platzhalter, kein Ad-SDK - die Fläche verschwindet komplett statt nur
   // leer/ausgegraut dazustehen (siehe docs/ios-app-konzept.md §2, Punkt 1).
   if (adFree) return null;

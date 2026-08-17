@@ -60,7 +60,31 @@
     <meta name="twitter:image" content="%VITE_SITE_URL%/singularity_prestige_meme.jpg" />
   </head>
   <body class="bg-slate-950 text-slate-100 overflow-x-hidden selection:bg-cyan-500 selection:text-black">
-    <div id="root"></div>
+    <!-- Statischer Fallback-Inhalt: Bis React mountet (createRoot().render() ersetzt den
+         Inhalt von #root komplett), ist dieses Div sonst leer - für jeden Crawler/Bot, der
+         kein oder nur eingeschränktes JavaScript ausführt (u.a. den AdSense-Site-Review),
+         sieht die Seite dann aus wie ein leerer "im Aufbau"-Screen ohne Publisher-Content.
+         Dieser Text ist echter, für Menschen wie Bots identischer Inhalt (kein Cloaking) -
+         er wird beim React-Mount automatisch überschrieben. -->
+    <div id="root">
+      <main style="max-width: 680px; margin: 0 auto; padding: 2rem 1.25rem;">
+        <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem;">
+          Token Furnace – Der AI-Bubble Idle Clicker
+        </h1>
+        <p style="margin-bottom: 0.75rem; line-height: 1.6;">
+          Token Furnace ist ein kostenloser, satirischer Idle-Clicker im Browser: Du baust
+          dein eigenes KI-Startup auf, klickst dich zu einer Milliardenbewertung hoch und
+          investierst in Buzzwords, GPU-Cluster und Greenwashing-Layoffs – ganz ohne
+          echtes Produkt. Das Spiel läuft komplett im Browser, braucht keine Anmeldung und
+          speichert deinen Fortschritt automatisch lokal auf deinem Gerät.
+        </p>
+        <p style="line-height: 1.6;">
+          Klicke dich durch Hype-Zyklen, schalte Upgrades und Erfolge frei und beobachte,
+          wie deine fiktive Firmenbewertung explodiert – bis die Blase platzt und die
+          nächste Runde beginnt.
+        </p>
+      </main>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
