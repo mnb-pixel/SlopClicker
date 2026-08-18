@@ -1,0 +1,80 @@
+<!doctype html>
+<!-- lang="de": die Oberfläche startet auf Deutsch (siehe useGameStore, Default 'de').
+     Beim Umschalten im Kopfzeilen-Menü wird das Attribut zur Laufzeit nachgezogen. -->
+<html lang="de" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>" />
+    <!-- Ohne maximum-scale/user-scalable=no: die vorige Fassung blockierte Pinch-Zoom
+         vollständig, das verletzt WCAG 2.1 Kriterium 1.4.4 (Resize Text) - Menschen mit
+         Sehbehinderung MÜSSEN reinzoomen können, auch in einem Spiel. touch-action:
+         manipulation in index.css übernimmt den eigentlichen Zweck der alten Einstellung
+         (kein 300ms-Tap-Delay / kein versehentlicher Doppeltipp-Zoom beim schnellen
+         Klicken), ohne Pinch-Zoom mit zu blockieren.
+         viewport-fit=cover: ohne dieses Flag liefert WebKit für ALLE env(safe-area-inset-*)
+         in index.css konstant 0 zurück (auch mit ios.contentInset:'never' in
+         capacitor.config.ts) - Header/Tab-Leiste/Werbe-Anker rutschen dann unter die
+         Notch/Dynamic Island bzw. den Home-Indicator statt sie zu respektieren. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Token Furnace – Baue dein KI-Startup zur Milliardenbewertung auf, ganz ohne Produkt. Satirischer Idle Clicker über den AI-Hype." />
+
+    <!-- Statischer Titel für Crawler und Social-Bots, die kein JavaScript ausführen: die
+         App überschreibt document.title nach dem Mount ohnehin mit dem Live-Spielstand
+         ("$1,2 Mio. - tokenkamin"), aber genau dieser Wert hier landet im Suchindex und
+         als Fallback in Link-Vorschauen - "$0 - tokenkamin" war dafür unbrauchbar. -->
+    <title>Token Furnace – Der AI-Bubble Idle Clicker</title>
+
+    
+
+    <!-- Social-Share-Vorschau (Open Graph / Twitter Card): das Pitch-Deck-Feature verschickt
+         aktiv window.location.href über navigator.share() (siehe PitchDeckModal.jsx) - ohne
+         diese Tags zeigt jeder geteilte Link keine Bildvorschau/Titel, was genau das virale
+         Feature entwertet. https://token-furnace.com wird von Vite aus der Env-Variable VITE_SITE_URL
+         interpoliert (siehe .env) - MUSS auf die echte Produktions-Domain gesetzt werden,
+         sonst zeigt die Vorschau eine Platzhalter-URL an.
+    -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Token Furnace" />
+    <meta property="og:title" content="Token Furnace – Der AI-Bubble Idle Clicker" />
+    <meta property="og:description" content="Baue dein KI-Startup zur Milliardenbewertung auf, ganz ohne Produkt. Satirischer Idle Clicker über den AI-Hype." />
+    <meta property="og:url" content="https://token-furnace.com/" />
+    <meta property="og:image" content="https://token-furnace.com/singularity_prestige_meme.jpg" />
+    <meta property="og:image:width" content="1376" />
+    <meta property="og:image:height" content="768" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Token Furnace – Der AI-Bubble Idle Clicker" />
+    <meta name="twitter:description" content="Baue dein KI-Startup zur Milliardenbewertung auf, ganz ohne Produkt. Satirischer Idle Clicker über den AI-Hype." />
+    <meta name="twitter:image" content="https://token-furnace.com/singularity_prestige_meme.jpg" />
+    <script type="module" crossorigin src="/assets/index-DF72hjbo.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/jsx-runtime-Ck_JZEHs.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Di5J203Y.css">
+  </head>
+  <body class="bg-slate-950 text-slate-100 overflow-x-hidden selection:bg-cyan-500 selection:text-black">
+    <!-- Statischer Fallback-Inhalt: Bis React mountet (createRoot().render() ersetzt den
+         Inhalt von #root komplett), ist dieses Div sonst leer - für jeden Crawler/Bot, der
+         kein oder nur eingeschränktes JavaScript ausführt (u.a. den AdSense-Site-Review),
+         sieht die Seite dann aus wie ein leerer "im Aufbau"-Screen ohne Publisher-Content.
+         Dieser Text ist echter, für Menschen wie Bots identischer Inhalt (kein Cloaking) -
+         er wird beim React-Mount automatisch überschrieben. -->
+    <div id="root">
+      <main style="max-width: 680px; margin: 0 auto; padding: 2rem 1.25rem;">
+        <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem;">
+          Token Furnace – Der AI-Bubble Idle Clicker
+        </h1>
+        <p style="margin-bottom: 0.75rem; line-height: 1.6;">
+          Token Furnace ist ein kostenloser, satirischer Idle-Clicker im Browser: Du baust
+          dein eigenes KI-Startup auf, klickst dich zu einer Milliardenbewertung hoch und
+          investierst in Buzzwords, GPU-Cluster und Greenwashing-Layoffs – ganz ohne
+          echtes Produkt. Das Spiel läuft komplett im Browser, braucht keine Anmeldung und
+          speichert deinen Fortschritt automatisch lokal auf deinem Gerät.
+        </p>
+        <p style="line-height: 1.6;">
+          Klicke dich durch Hype-Zyklen, schalte Upgrades und Erfolge frei und beobachte,
+          wie deine fiktive Firmenbewertung explodiert – bis die Blase platzt und die
+          nächste Runde beginnt.
+        </p>
+      </main>
+    </div>
+  </body>
+</html>
