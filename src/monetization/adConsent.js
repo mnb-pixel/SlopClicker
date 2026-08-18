@@ -31,18 +31,25 @@ function delay(ms) {
 // Kette, um das Formular modal zu präsentieren. ensureAdConsent() wird aber typischerweise
 // ganz am App-Start aufgerufen (App.jsx-Mount-Effect) - zu diesem sehr frühen Zeitpunkt kann
 // die Kette noch fehlen, auch wenn "WebView loaded" längst gefeuert hat (bestätigt per
-// Gerätekonsole: erster Versuch scheitert reproduzierbar mit "No ViewController", ein
-// einziger Retry nach kurzer Pause geht danach zuverlässig durch). Es gibt in Capacitor kein
-// "deviceready"-Äquivalent für "Root-View-Controller ist jetzt präsentierbereit" - eine kurze
-// Verzögerung vor dem Retry ist der pragmatische, von der Community verbreitete Workaround.
+// Gerätekonsole: "No ViewController" tritt reproduzierbar auf - ein einzelner Retry nach
+// 1,5s reichte in der Praxis NICHT immer aus, deshalb mehrere Versuche mit steigender Pause
+// statt nur einem). Es gibt in Capacitor kein "deviceready"-Äquivalent für "Root-View-
+// Controller ist jetzt präsentierbereit" - Retries mit Backoff sind der pragmatische Workaround.
+const CONSENT_FORM_RETRY_DELAYS_MS = [1500, 3000, 5000];
+
 async function showConsentFormWithRetry() {
-  try {
-    await withTimeout(AdMob.showConsentForm(), CONSENT_TIMEOUT_MS);
-  } catch (e) {
-    console.error('showConsentForm failed on first attempt, retrying shortly:', e);
-    await delay(1500);
-    await withTimeout(AdMob.showConsentForm(), CONSENT_TIMEOUT_MS);
+  for (let i = 0; i < CONSENT_FORM_RETRY_DELAYS_MS.length; i++) {
+    try {
+      await withTimeout(AdMob.showConsentForm(), CONSENT_TIMEOUT_MS);
+      return;
+    } catch (e) {
+      console.error(`showConsentForm failed (attempt ${i + 1}/${CONSENT_FORM_RETRY_DELAYS_MS.length + 1}):`, e);
+      await delay(CONSENT_FORM_RETRY_DELAYS_MS[i]);
+    }
   }
+  // Letzter Versuch ohne weiteren Retry danach - ein Scheitern hier läuft in den äußeren
+  // catch in ensureAdConsent() und blockiert Ads/Bonus trotzdem nicht dauerhaft.
+  await withTimeout(AdMob.showConsentForm(), CONSENT_TIMEOUT_MS);
 }
 
 let consentPromise = null;
