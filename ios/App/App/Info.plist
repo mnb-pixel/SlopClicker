@@ -23,6 +23,12 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<!-- Beantwortet die Export-Compliance-Frage aus App Store Connect fest mit "nein" statt
+	     bei jedem Upload erneut manuell zu fragen: die App nutzt keine eigene Verschlüsselung,
+	     nur Standard-HTTPS über System-Frameworks (WKWebView, StoreKit) - das fällt unter die
+	     Ausnahme für öffentlich verfügbare Standardverschlüsselung (Category 5 Part 2 EAR). -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
