@@ -29,6 +29,27 @@
 	     Ausnahme für öffentlich verfügbare Standardverschlüsselung (Category 5 Part 2 EAR). -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<!-- TODO vor Release: durch die echte AdMob-App-ID aus der AdMob-Konsole ersetzen (siehe
+	     ios-app-konzept.md §6). Aktuell Googles offizielle Test-App-ID - ohne eine gültige ID
+	     hier crasht die App beim Start mit SIGABRT (GADApplicationVerifyPublisherInitializedCorrectly),
+	     sobald das Mobile-Ads-SDK gelinkt ist, siehe nativeAdBridge.js. -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<!-- Googles eigene SKAdNetwork-ID für AdMob (Ad-Attribution ohne IDFA) - reicht für
+	     direktes AdMob ohne Mediation. Bei späterer Mediation um die jeweiligen Netzwerk-IDs
+	     ergänzen (Liste: https://developers.google.com/admob/ios/mediation). -->
+	<key>SKAdNetworkItems</key>
+	<array>
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>cstr6suwn9.skadnetwork</string>
+		</dict>
+	</array>
+	<!-- Pflicht-String für den ATT-Systemprompt (AppTrackingTransparency) - siehe
+	     requestTrackingIfNeeded in adConsent.js, gezeigt nach einem eigenen Erklärbildschirm
+	     und erst nach der ersten Spielinteraktion, nicht beim Kaltstart. -->
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This identifier is used to show you more relevant ads and to support the free version of the app.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

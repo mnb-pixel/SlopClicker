@@ -184,6 +184,9 @@ export const TRANSLATIONS = {
     adFreePurchasing: 'Kauf läuft...',
     adFreeRestoring: 'Wird wiederhergestellt...',
     adFreePendingLabel: 'Kauf wartet auf Freigabe...',
+    trackingExplainerTitle: 'Bessere Werbung, mehr Boni',
+    trackingExplainerDesc: 'Mit deiner Erlaubnis zeigen wir dir relevantere Werbung - das unterstützt die kostenlose Version der App. Du kannst das jederzeit in den iOS-Einstellungen ändern.',
+    trackingExplainerBtn: 'Weiter',
     bonusPowerClickTitle: 'Bonus Power Click',
     bonusPowerClickDesc: 'Gewährt sofort 1 zusätzliche Power-Click-Ladung (normalerweise alle 30 Min. verdient).',
     nitrogenCoolingTitle: 'Flüssigstickstoff-Kühlung',
@@ -198,6 +201,7 @@ export const TRANSLATIONS = {
     footerPrivacy: 'Spielstand bleibt auf deinem Gerät • AI-Bubble-sicher',
     legalImprint: 'Impressum',
     legalPrivacy: 'Datenschutz',
+    adPrivacySettings: 'Werbe-Einstellungen',
 
     // Header (ergänzend)
     saveLabel: 'Speichern',
@@ -669,6 +673,9 @@ export const TRANSLATIONS = {
     adFreePurchasing: 'Purchasing...',
     adFreeRestoring: 'Restoring...',
     adFreePendingLabel: 'Purchase awaiting approval...',
+    trackingExplainerTitle: 'Better ads, more bonuses',
+    trackingExplainerDesc: 'With your permission we can show you more relevant ads - it supports the free version of the app. You can change this anytime in iOS Settings.',
+    trackingExplainerBtn: 'Continue',
     bonusPowerClickTitle: 'Bonus Power Click',
     bonusPowerClickDesc: 'Grants 1 extra Power Click charge instantly (normally earned every 30 min).',
     nitrogenCoolingTitle: 'Liquid Nitrogen Cooling',
@@ -678,6 +685,7 @@ export const TRANSLATIONS = {
     footerPrivacy: 'Your Save Stays on This Device • AI Bubble Safe',
     legalImprint: 'Legal Notice',
     legalPrivacy: 'Privacy',
+    adPrivacySettings: 'Ad Privacy Settings',
 
     // Header (additional)
     saveLabel: 'Save',

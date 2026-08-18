@@ -15,6 +15,7 @@ import { AdBanner, ADS_ENABLED } from './components/AdBanner';
 import { OfflineEarningsModal } from './components/modals/OfflineEarningsModal';
 import { AfkReportModal } from './components/modals/AfkReportModal';
 import { ScheduledAdModal } from './components/modals/ScheduledAdModal';
+import { TrackingExplainerModal } from './components/modals/TrackingExplainerModal';
 import { showNativeBanner, hideNativeBanner } from './monetization/nativeBanner';
 import { UPGRADES_DATA } from './data/upgradesData';
 
@@ -176,6 +177,13 @@ export default function App() {
         t={store.t}
       />
 
+      {/* ATT-Erklärbildschirm vor dem System-Tracking-Prompt (Punkt 6) */}
+      <TrackingExplainerModal
+        open={store.trackingExplainer}
+        onConfirm={store.confirmTrackingExplainer}
+        t={store.t}
+      />
+
       {/* WEB DESKTOP ALL-IN-ONE VIEW (Everything on 1 Page in 3 Columns) */}
       {layoutMode === 'desktop' ? (
         <main className="flex-1 pb-10">
@@ -294,6 +302,7 @@ export default function App() {
                 purchaseState={store.purchaseState}
                 purchaseAdFree={store.purchaseAdFree}
                 restorePurchases={store.restorePurchases}
+                showAdPrivacyOptions={store.showAdPrivacyOptions}
                 onOpenLegal={setLegalPage}
                 t={store.t}
                 tf={store.tf}

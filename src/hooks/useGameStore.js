@@ -14,7 +14,7 @@ import { selectAdBridge } from '../monetization/AdBridge';
 import { selectPurchaseBridge, AD_FREE_PRODUCT_ID } from '../monetization/PurchaseBridge';
 import { nativeAdBridge } from '../monetization/nativeAdBridge';
 import { nativePurchaseBridge } from '../monetization/nativePurchaseBridge';
-import { ensureAdConsent, requestTrackingIfNeeded } from '../monetization/adConsent';
+import { ensureAdConsent, getTrackingStatus, requestTrackingAuthorization, showAdPrivacyOptions } from '../monetization/adConsent';
 import { getItem as getStorageItem, setItem as setStorageItem, removeItem as removeStorageItem } from '../platform/storage';
 import { subscribeNativeAppState } from '../platform/appState';
 import { tapFeedback } from '../platform/haptics';
@@ -316,6 +316,21 @@ export function useGameStore() {
   // purchaseAdFree/restorePurchases folgen weiter unten, direkt nach der addLog-Deklaration
   // (sie loggen das Kaufergebnis) - addLog existiert an dieser Stelle im Hook-Body noch nicht
   // (TDZ), deshalb hier nur die addLog-freien Teile.
+
+  // ATT-Erklärbildschirm (App Tracking Transparency): wird VOR dem eigentlichen System-Prompt
+  // gezeigt, ausgelöst über den attCheckedRef-Guard in handleTapAGI weiter unten - siehe
+  // docs/ios-app-konzept.md §6 ("nicht beim Kaltstart", "vorher ein eigener Erklärbildschirm,
+  // das hebt die Zustimmungsrate deutlich"). attCheckedRef verhindert, dass der (async)
+  // Status bei jedem Tap erneut nativ abgefragt wird, sobald einmal ein definitiver Stand
+  // feststeht (auch wenn der Prompt selbst noch aussteht, z.B. während der Nutzer den
+  // Erklärbildschirm noch sieht).
+  const [trackingExplainer, setTrackingExplainer] = useState(false);
+  const attCheckedRef = useRef(false);
+
+  const confirmTrackingExplainer = useCallback(() => {
+    setTrackingExplainer(false);
+    requestTrackingAuthorization().catch((e) => console.error('ATT request failed:', e));
+  }, []);
 
   // Tab-Aktivität: 'active' (Tab sichtbar & fokussiert) = 100% Rate, 'inactive' (Tab sichtbar,
   // aber Fenster/Browser nicht fokussiert) und 'hidden' (Tab im Hintergrund/minimiert) = 50%.
@@ -1288,11 +1303,20 @@ export function useGameStore() {
     }
 
     tapFeedback();
-    // ATT-Prompt an der ersten "sinnvollen Interaktion" statt beim Kaltstart (siehe
-    // docs/ios-app-konzept.md §6) - requestTrackingIfNeeded() ist intern idempotent, der
-    // Guard hier verhindert nur, dass adFree-Käufer:innen (kein Ad-SDK, keine Tracking-
-    // Notwendigkeit) den Prompt überhaupt zu sehen bekommen.
-    if (!adFree) requestTrackingIfNeeded();
+    // ATT-Erklärbildschirm an der ersten "sinnvollen Interaktion" statt beim Kaltstart (siehe
+    // docs/ios-app-konzept.md §6) - NICHT direkt der System-Prompt, siehe
+    // TrackingExplainerModal/confirmTrackingExplainer oben. attCheckedRef sorgt dafür, dass
+    // der native Status-Check nur einmal pro Sitzung läuft, unabhängig davon, wie oft
+    // getappt wird; adFree-Käufer:innen (kein Ad-SDK, keine Tracking-Notwendigkeit) bekommen
+    // den Check gar nicht erst zu Gesicht.
+    if (!adFree && !attCheckedRef.current) {
+      attCheckedRef.current = true;
+      getTrackingStatus()
+        .then((status) => {
+          if (status === 'notDetermined') setTrackingExplainer(true);
+        })
+        .catch((err) => console.error('ATT status check failed:', err));
+    }
 
     const earned = clickValue;
     setValuation((prev) => prev + earned);
@@ -1952,6 +1976,7 @@ export function useGameStore() {
     adState, requestBonus, isAdReady, getAdCooldownRemaining,
     adRewardToast, dismissAdRewardToast, grantAdPreview, scheduledAdPreview,
     adFree, adFreeProduct, purchaseState, purchaseAvailable: purchaseBridge.isAvailable, purchaseAdFree, restorePurchases,
+    trackingExplainer, confirmTrackingExplainer, showAdPrivacyOptions,
     offlineReport, claimOfflineEarnings, dismissOfflineEarnings,
     pageActivity, afkReport, dismissAfkReport, claimAfkBonus,
     pendingScheduledAd, watchScheduledAdNow, deferScheduledAd,

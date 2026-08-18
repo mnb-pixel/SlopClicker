@@ -108,6 +108,7 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
             purchaseState={store.purchaseState}
             purchaseAdFree={store.purchaseAdFree}
             restorePurchases={store.restorePurchases}
+            showAdPrivacyOptions={store.showAdPrivacyOptions}
             onOpenLegal={onOpenLegal}
             t={store.t}
             tf={store.tf}

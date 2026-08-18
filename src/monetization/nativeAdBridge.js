@@ -1,23 +1,31 @@
-// Native AdBridge implementation (iOS), used by useGameStore's requestBonus in place of
+// Native AdBridge implementation (iOS/AdMob), used by useGameStore's requestBonus in place of
 // webAdBridge when running natively and adFree is false (see selectAdBridge in AdBridge.js).
-//
-// @capacitor-community/admob wurde aus dem iOS-Build entfernt: Googles Mobile Ads SDK
-// verifiziert seine App-ID (GADApplicationIdentifier in Info.plist) automatisch beim
-// App-Start, unabhängig davon, ob irgendein Code AdMob.initialize() aufruft - allein das
-// Linken des Frameworks reicht, um beim Start mit SIGABRT abzustürzen
-// (GADApplicationVerifyPublisherInitializedCorrectly), solange dort nur der Platzhalter
-// SAMPLE_APP_ID steht. Ein JS-seitiger Guard kann das nicht abfangen, da der Crash vor jedem
-// JS-Code passiert. Bis eine echte (oder Googles offizielle Test-)AdMob-App-ID vorliegt, gibt
-// es hier deshalb keine native Werbung - present() liefert immer 'failed', wie bei jedem
-// anderen Ad-Fehler auch.
-export function ensureAdMobInitialized() {
-  return Promise.resolve();
-}
+// Rewarded-only - see docs/ios-app-konzept.md section 6.
+import { AdMob } from '@capacitor-community/admob';
+import { ensureAdConsent } from './adConsent';
+
+// TODO vor Release: durch die echte Rewarded-Ad-Unit-ID aus der AdMob-Konsole ersetzen (siehe
+// den GADApplicationIdentifier-TODO in Info.plist für die zugehörige App-ID). Aktuell Googles
+// offizielle iOS-Test-Ad-Unit-ID für Rewarded Ads - liefert garantiert eine Test-Anzeige,
+// unabhängig von echtem Füllstand/Targeting.
+const REWARDED_AD_UNIT_ID = 'ca-app-pub-3940256099942544/1712485313';
 
 export const nativeAdBridge = {
+  // onTick bleibt ungenutzt: ein natives Rewarded-Ad ist eine eigene Vollbild-UI außerhalb
+  // der WebView, kein in-JS-Countdown möglich (siehe AdBridge.js-Kommentar zum Interface).
   async present(_type, _onTick) {
-    // "Nie blockieren" (siehe useGameStore.requestBonus): 'failed' führt dort trotzdem zu
-    // einer Auszahlung, nur ohne den adsWatched-Stat-Zähler und mit einem Log-Hinweis.
-    return 'failed';
+    try {
+      await ensureAdConsent();
+      await AdMob.prepareRewardVideoAd({ adId: REWARDED_AD_UNIT_ID, isTesting: true });
+      // Laut Plugin-Doku löst showRewardVideoAd() auf, WENN die Belohnung verdient wurde -
+      // wird die Ad ohne Reward weggeklickt, kommt stattdessen ein Reject (siehe catch unten).
+      // Beide Fehlerfälle laufen hier auf 'failed' hinaus - requestBonus in useGameStore.js
+      // zahlt den Bonus laut Konzept trotzdem aus ("Ladefehler dürfen nie blocken").
+      await AdMob.showRewardVideoAd();
+      return 'rewarded';
+    } catch (e) {
+      console.error('Rewarded ad failed:', e);
+      return 'failed';
+    }
   },
 };
