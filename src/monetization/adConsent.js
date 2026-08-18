@@ -23,6 +23,28 @@ function withTimeout(promise, ms) {
 
 const CONSENT_TIMEOUT_MS = 10000;
 
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// showConsentForm() braucht eine bereits im Fenster verankerte native Root-View-Controller-
+// Kette, um das Formular modal zu präsentieren. ensureAdConsent() wird aber typischerweise
+// ganz am App-Start aufgerufen (App.jsx-Mount-Effect) - zu diesem sehr frühen Zeitpunkt kann
+// die Kette noch fehlen, auch wenn "WebView loaded" längst gefeuert hat (bestätigt per
+// Gerätekonsole: erster Versuch scheitert reproduzierbar mit "No ViewController", ein
+// einziger Retry nach kurzer Pause geht danach zuverlässig durch). Es gibt in Capacitor kein
+// "deviceready"-Äquivalent für "Root-View-Controller ist jetzt präsentierbereit" - eine kurze
+// Verzögerung vor dem Retry ist der pragmatische, von der Community verbreitete Workaround.
+async function showConsentFormWithRetry() {
+  try {
+    await withTimeout(AdMob.showConsentForm(), CONSENT_TIMEOUT_MS);
+  } catch (e) {
+    console.error('showConsentForm failed on first attempt, retrying shortly:', e);
+    await delay(1500);
+    await withTimeout(AdMob.showConsentForm(), CONSENT_TIMEOUT_MS);
+  }
+}
+
 let consentPromise = null;
 
 export function ensureAdConsent() {
@@ -31,7 +53,7 @@ export function ensureAdConsent() {
       try {
         const info = await withTimeout(AdMob.requestConsentInfo(), CONSENT_TIMEOUT_MS);
         if (info.isConsentFormAvailable && info.status === AdmobConsentStatus.REQUIRED) {
-          await withTimeout(AdMob.showConsentForm(), CONSENT_TIMEOUT_MS);
+          await showConsentFormWithRetry();
         }
       } catch (e) {
         // Kein Blocker: ohne verwertbare Consent-Antwort (z.B. Netzwerkfehler oder Timeout)
