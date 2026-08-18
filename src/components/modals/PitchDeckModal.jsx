@@ -113,26 +113,32 @@ export function PitchDeckModal({
     });
   };
 
+  // Convert the generated pngDataUrl to a File for native image sharing - blob.type kommt
+  // direkt aus der Daten-URL mit, kein Bedarf, den Mime-Type separat zu raten. Gibt null
+  // zurück, wenn kein Bild vorliegt oder die Plattform File-Sharing gar nicht unterstützt
+  // (canShare fehlt oder lehnt die Datei ab) - Aufrufer entscheiden dann selbst über den
+  // Fallback (Text-only Share bzw. Web-Intent-Link).
+  const buildShareFile = async () => {
+    if (!pngDataUrl || !navigator.canShare) return null;
+    const res = await fetch(pngDataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], `${snapshot.startupName}_pitchdeck.${imageExt}`, { type: blob.type });
+    return navigator.canShare({ files: [file] }) ? file : null;
+  };
+
   // Native Web Share API (File + Meme Text + Link for Instagram, TikTok, WhatsApp, iMessage)
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
-        if (pngDataUrl && navigator.canShare) {
-          // Convert dataURL to File for native image sharing - blob.type kommt
-          // direkt aus der Daten-URL mit, kein Bedarf, den Mime-Type separat zu raten.
-          const res = await fetch(pngDataUrl);
-          const blob = await res.blob();
-          const file = new File([blob], `${snapshot.startupName}_pitchdeck.${imageExt}`, { type: blob.type });
-
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              title: `${snapshot.startupName} - ${tr('pdGeneratorTitle')}`,
-              text: shareText,
-              url: shareUrl,
-              files: [file],
-            });
-            return;
-          }
+        const file = await buildShareFile();
+        if (file) {
+          await navigator.share({
+            title: `${snapshot.startupName} - ${tr('pdGeneratorTitle')}`,
+            text: shareText,
+            url: shareUrl,
+            files: [file],
+          });
+          return;
         }
 
         // Fallback native share without image file
@@ -162,7 +168,33 @@ export function PitchDeckModal({
     openShareWindow(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`);
   };
 
-  const handleShareWhatsApp = () => {
+  // Der api.whatsapp.com-Link hängt nur Text an, ein Bild lässt sich darüber grundsätzlich
+  // NICHT mitschicken (WhatsApp bietet dafür keinen URL-Parameter, weder web noch App-Scheme -
+  // gilt für jede Web-App, nicht nur für uns). Der einzige Weg, das generierte Bild in
+  // WhatsApp zu bekommen, ist über das native OS-Teilen-Blatt (navigator.share mit File) -
+  // dort taucht WhatsApp als eine Option unter mehreren auf, statt direkt zu öffnen. Deshalb
+  // hier: wenn Bild-Sharing verfügbar ist, das native Blatt nehmen (Bild + Text, WhatsApp
+  // ist einen Tap entfernt); sonst der bisherige direkte Text-Link als Fallback.
+  const handleShareWhatsApp = async () => {
+    if (navigator.share) {
+      const file = await buildShareFile().catch(() => null);
+      if (file) {
+        // Sobald das native Blatt tatsächlich aufgeht, hier NICHT mehr auf den Text-Link
+        // zurückfallen - sonst würde ein simples Wegtippen des Blatts (AbortError) den
+        // wa.me-Link hinterherschieben, obwohl die Person das Teilen gerade abgebrochen hat.
+        try {
+          await navigator.share({
+            title: `${snapshot.startupName} - ${tr('pdGeneratorTitle')}`,
+            text: shareText,
+            url: shareUrl,
+            files: [file],
+          });
+        } catch (e) {
+          console.log('Native share cancelled or failed:', e);
+        }
+        return;
+      }
+    }
     openShareWindow(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`);
   };
 
