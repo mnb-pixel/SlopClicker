@@ -337,8 +337,11 @@ export function useGameStore() {
   // 'hidden' wird zusätzlich NICHT live gutgeschrieben, siehe Tick-Loop weiter unten.
   const [pageActivity, setPageActivity] = useState('active');
   const [afkReport, setAfkReport] = useState(null); // { amount } | null - nach >=30min Abwesenheit bei offenem Tab, PENDING bis Ad/Verzicht
+  // Betrag wird bei Rückkehr aus hiddenSinceRef berechnet (siehe updateActivity unten),
+  // exakt wie beim Offline-Ertrag (OFFLINE_EFFICIENCY/OFFLINE_CAP_SECONDS) - kein separater
+  // Tick-für-Tick-Puffer mehr, der zuvor ungedeckelt zu einer 40%-Rate akkumulierte (5x mehr
+  // als der gedeckelte Offline-Pfad für dieselbe Abwesenheit, sobald man >4h wegblieb).
   const hiddenSinceRef = useRef(null);
-  const awayEarnedRef = useRef(0);
 
   // Bei "später" wird statt einer harten Zeitgrenze ein Button im Menü freigeschaltet.
   // Default-Werte gelten nur für einen brandneuen Save ohne vorherigen Stand - der Load-
@@ -817,22 +820,63 @@ export function useGameStore() {
       if (isHidden) {
         if (hiddenSinceRef.current === null) {
           hiddenSinceRef.current = Date.now();
-          awayEarnedRef.current = 0;
         }
         if (suppressedSinceRef.current === null) suppressedSinceRef.current = Date.now();
         setPageActivity('hidden');
       } else {
         if (hiddenSinceRef.current !== null) {
-          const awaySec = (Date.now() - hiddenSinceRef.current) / 1000;
-          const earnedWhileHidden = awayEarnedRef.current;
-          if (awaySec >= AFK_THRESHOLD_SECONDS && earnedWhileHidden >= 1) {
-            setAfkReport({ amount: earnedWhileHidden });
-          } else if (earnedWhileHidden > 0) {
-            setValuation((prev) => prev + earnedWhileHidden);
-            setTotalValuation((prev) => prev + earnedWhileHidden);
-            setSlopCount((prev) => prev + Math.max(1, Math.floor(earnedWhileHidden)));
+          const hiddenSince = hiddenSinceRef.current;
+          const awaySec = (Date.now() - hiddenSince) / 1000;
+
+          // Schutz gegen doppeltes Gutschreiben bei zwei gleichzeitig im Hintergrund
+          // gewesenen Tabs DESSELBEN Browsers (teilen sich localStorage): hat ein ANDERER
+          // Tab bereits NACH dem Moment, an dem dieser Tab hier hidden wurde, gespeichert,
+          // hat er (mindestens einen Teil) desselben Abwesenheitszeitraums schon behandelt -
+          // dann nur dessen neueren Stand übernehmen statt selbst nochmal gutzuschreiben.
+          // Schließt das Fenster nicht zu 100% (beide Tabs könnten exakt gleichzeitig
+          // zurückkehren, bevor einer speichert), verkleinert es aber von "beliebig lang"
+          // auf einen einzelnen Save-Tick - siehe saveGameRef.current() unten, das genau
+          // diesen Tick für einen etwaigen dritten Tab so früh wie möglich setzt.
+          // Schützt NICHT gegen zwei komplett getrennte Browser/Geräte mit demselben
+          // (z.B. per Export/Import kopierten) Spielstand - das bräuchte einen Server als
+          // gemeinsame Quelle der Wahrheit, den dieses Spiel bewusst nicht hat.
+          let alreadyHandledByOtherTab = false;
+          try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            const parsed = saved ? JSON.parse(saved) : null;
+            const data = parsed ? migrateSave(parsed) : null;
+            const savedTimestamp = data ? safeNumber(data.timestamp, null) : null;
+            if (savedTimestamp !== null && savedTimestamp > hiddenSince) {
+              alreadyHandledByOtherTab = true;
+              applyLoadedState(data);
+            }
+          } catch (e) {
+            console.error('Error checking for concurrent tab credit:', e);
           }
-          awayEarnedRef.current = 0;
+
+          if (!alreadyHandledByOtherTab) {
+            // Gedeckelt auf OFFLINE_CAP_SECONDS und mit derselben OFFLINE_EFFICIENCY wie
+            // der Offline-Ertrag berechnet (siehe Konstanten oben) - vorher akkumulierte
+            // der Tick-Loop hier ungedeckelt mit einer höheren Rate (40%), wodurch ein
+            // einfach im Hintergrund liegen gelassener Tab je nach Abwesenheitsdauer ein
+            // Vielfaches des "richtigen" (Browser wirklich geschlossenen) Offline-Ertrags
+            // einbrachte. Der Schwellenwert-Vergleich unten nutzt bewusst die UNGEDECKELTE
+            // awaySec, exakt wie beim Offline-Pfad (elapsedSec dort) - der Deckel wirkt
+            // nur auf den Betrag.
+            const cappedSec = Math.min(awaySec, OFFLINE_CAP_SECONDS);
+            const earnedWhileHidden = vpsRef.current * cappedSec * OFFLINE_EFFICIENCY;
+            if (awaySec >= AFK_THRESHOLD_SECONDS && earnedWhileHidden >= 1) {
+              setAfkReport({ amount: earnedWhileHidden });
+            } else if (earnedWhileHidden > 0) {
+              setValuation((prev) => prev + earnedWhileHidden);
+              setTotalValuation((prev) => prev + earnedWhileHidden);
+              setSlopCount((prev) => prev + Math.max(1, Math.floor(earnedWhileHidden)));
+            }
+            // Sofort speichern statt auf den nächsten 8s-Autosave-Tick zu warten: bumpt
+            // den persistierten Zeitstempel jetzt, damit ein zweiter, gleichzeitig hidden
+            // gewesener Tab den Check oben beim eigenen Zurückkehren schon greifen sieht.
+            saveGameRef.current();
+          }
           hiddenSinceRef.current = null;
         }
         const nowActive = document.hasFocus();
@@ -872,7 +916,7 @@ export function useGameStore() {
       clearInterval(poll);
       unsubscribeNativeAppState();
     };
-  }, []);
+  }, [applyLoadedState]);
 
   // Geplante Ad-Popups (Punkt 9): pollt gegen SCHEDULED_AD_MINUTES seit Sitzungsbeginn
   // (sessionStartRef - persistiert & vor Farming gehärtet, siehe SCHEDULED_AD_RESET_GAP_SEC
@@ -1093,11 +1137,15 @@ export function useGameStore() {
 
       // 1. Produktion + kontinuierliches Burn (Konzept Abschnitt 4: Burn frisst den Bestand)
       // Tab inaktiv (sichtbar, aber Fenster ohne Fokus): 50% Produktion, live gutgeschrieben.
-      // Tab hidden (im Hintergrund): 40% Produktion, NICHT live gutgeschrieben (siehe
-      // awayEarnedRef-Puffer unten) - eigene, niedrigere Rate, weil dieser Wert erst nach
-      // Rückkehr per AFK-Regel (< 30min automatisch, sonst nur per Ad) ausgezahlt wird.
+      // Tab hidden (im Hintergrund): KEINE Live-Produktion mehr hier - der Ertrag wird bei
+      // Rückkehr aus der tatsächlichen Abwesenheitsdauer berechnet (siehe updateActivity
+      // weiter oben, gedeckelt auf OFFLINE_CAP_SECONDS/OFFLINE_EFFICIENCY wie der
+      // Offline-Ertrag). Vorher akkumulierte dieser Tick-Loop hier ungedeckelt mit einer
+      // eigenen, höheren Rate (40%) - ein einfach im Hintergrund liegen gelassener Tab
+      // brachte dadurch je nach Abwesenheitsdauer ein Vielfaches des "richtigen" (Browser
+      // wirklich geschlossenen) Offline-Ertrags ein.
       const isHiddenTab = pageActivity === 'hidden';
-      const activityMult = isHiddenTab ? 0.4 : (pageActivity !== 'active' ? 0.5 : 1.0);
+      const activityMult = pageActivity === 'active' ? 1.0 : 0.5;
       setValuation((prevVal) => {
         // Burn läuft unverändert mit vollem Tempo weiter, auch im Hintergrund - das war
         // schon vor dieser Änderung so (siehe burnRate ohne activityMult) und bleibt so.
@@ -1106,18 +1154,11 @@ export function useGameStore() {
           setTotalBurned((prev) => prev + burnLoss);
         }
 
-        const earned = vps * deltaSec * activityMult;
-
-        // 'hidden' (Tab wirklich im Hintergrund, nicht nur unfokussiert): NICHT mehr live
-        // gutschreiben, nur im awayEarnedRef-Puffer sammeln. Ob daraus am Ende Wert wird,
-        // entscheidet sich erst bei Rückkehr in der updateActivity()-Effect weiter unten:
-        // < 30 min automatisch & ohne Hinweis, ab 30 min nur per Ad-Ansehen oder explizitem
-        // Verzicht (AfkReportModal) - kein "einfach ignorieren und trotzdem behalten" mehr.
         if (isHiddenTab) {
-          if (earned > 0) awayEarnedRef.current += earned;
           return Math.max(0, prevVal - burnLoss);
         }
 
+        const earned = vps * deltaSec * activityMult;
         if (earned > 0) {
           setTotalValuation((prev) => prev + earned);
           setSlopCount((prev) => prev + Math.max(1, Math.floor(earned)));
