@@ -4,10 +4,7 @@
 import { AdMob, BannerAdPosition, BannerAdSize } from '@capacitor-community/admob';
 import { ensureAdConsent } from './adConsent';
 
-// TODO vor Release: durch die echte Banner-Ad-Unit-ID aus der AdMob-Konsole ersetzen (siehe
-// den REWARDED_AD_UNIT_ID-TODO in nativeAdBridge.js). Aktuell Googles offizielle
-// iOS-Test-Ad-Unit-ID für adaptive Banner.
-const BANNER_AD_UNIT_ID = 'ca-app-pub-3940256099942544/2934735716';
+const BANNER_AD_UNIT_ID = 'ca-app-pub-6020764817262332/9360985238';
 
 // Bottom-Margin über der Tab-Leiste (56px, siehe App.jsx-Kommentar "Tab-Leiste (56px)") plus
 // etwas Sicherheitsabstand - der native Banner liegt sonst genau auf den Tab-Buttons.
@@ -23,7 +20,6 @@ export async function showNativeBanner() {
       adSize: BannerAdSize.ADAPTIVE_BANNER,
       position: BannerAdPosition.BOTTOM_CENTER,
       margin: BOTTOM_MARGIN,
-      isTesting: true,
     });
     bannerShown = true;
   } catch (e) {

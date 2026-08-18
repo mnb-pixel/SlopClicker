@@ -25,9 +25,7 @@ export function ensureAdConsent() {
         // Ads zurück, statt die App komplett ohne Werbung/Bonus hängen zu lassen.
         console.error('AdMob consent request failed:', e);
       }
-      // TODO vor Release: initializeForTesting entfernen, sobald die echten Ad-Unit-IDs
-      // (siehe nativeAdBridge.js/nativeBanner.js) statt Googles Test-IDs verwendet werden.
-      await AdMob.initialize({ initializeForTesting: true });
+      await AdMob.initialize();
     })();
   }
   return consentPromise;

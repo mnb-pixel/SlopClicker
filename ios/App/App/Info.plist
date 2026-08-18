@@ -34,7 +34,7 @@
 	     hier crasht die App beim Start mit SIGABRT (GADApplicationVerifyPublisherInitializedCorrectly),
 	     sobald das Mobile-Ads-SDK gelinkt ist, siehe nativeAdBridge.js. -->
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<string>ca-app-pub-6020764817262332~4822974421</string>
 	<!-- Googles eigene SKAdNetwork-ID für AdMob (Ad-Attribution ohne IDFA) - reicht für
 	     direktes AdMob ohne Mediation. Bei späterer Mediation um die jeweiligen Netzwerk-IDs
 	     ergänzen (Liste: https://developers.google.com/admob/ios/mediation). -->
