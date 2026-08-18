@@ -299,12 +299,12 @@ export default function App() {
               />
             )}
 
-            {/* Dauerhaft sichtbarer Beschreibungstext, unabhängig vom aktiven Tab (kein
-                Modal, kein Pre-Hydration-Fallback) - siehe translations.js
-                aboutTitle/aboutText und das Desktop-Pendant in DesktopView.jsx. Nur Web:
-                der Text existiert einzig für den AdSense-Site-Review (siehe AdBanner.jsx),
-                in der iOS-App (AdMob, App-Store-Review) ist er nur unnötiger Platz. */}
-            {!isNativePlatform && (
+            {/* Beschreibungstext nur auf dem Start-Tab (SlopTab, activeTab 1) statt auf allen
+                5 Tabs - siehe translations.js aboutTitle/aboutText und das Desktop-Pendant in
+                DesktopView.jsx. Nur Web: der Text existiert einzig für den AdSense-Site-Review
+                (siehe AdBanner.jsx), in der iOS-App (AdMob, App-Store-Review) ist er nur
+                unnötiger Platz. */}
+            {!isNativePlatform && store.activeTab === 1 && (
               <div className="mx-3 mt-4 bg-slate-900/60 rounded-xl border border-slate-800 p-3 text-xs text-slate-400 leading-relaxed">
                 <h2 className="text-[10px] font-black uppercase tracking-wider text-cyan-400 mb-1.5">
                   {store.t('aboutTitle')}

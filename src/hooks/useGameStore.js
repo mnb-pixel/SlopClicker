@@ -608,7 +608,7 @@ export function useGameStore() {
               if (elapsedSec >= AFK_THRESHOLD_SECONDS) {
                 // >= 30 Minuten: PENDING, nur per Ad claimbar (alles oder nichts) - siehe
                 // claimOfflineEarnings/dismissOfflineEarnings.
-                setOfflineReport({ amount, elapsedSec: cappedSec });
+                setOfflineReport({ amount, elapsedSec });
               } else {
                 // < 30 Minuten: sofort und ohne Rückfrage gutgeschrieben, kein Modal.
                 setValuation((prev) => prev + amount);
@@ -767,6 +767,10 @@ export function useGameStore() {
   // Vordergrund darüber nicht durchgängig zuverlässig. Auf Web bleibt der Ref immer false
   // (subscribeNativeAppState ist dort ein No-Op), ändert also nichts am bisherigen Verhalten.
   const nativeBackgroundRef = useRef(false);
+  // Deckt sowohl 'hidden' als auch 'inactive' ab (siehe isTabActive im Tick-Loop) - dient
+  // nur dazu, beim Rückkehren in den aktiven Zustand verpasste geplante-Ad-Schwellen
+  // einmalig und still zu überspringen, statt sie gleich reihenweise nachzuholen.
+  const suppressedSinceRef = useRef(null);
 
   useEffect(() => {
     const updateActivity = () => {
@@ -776,6 +780,7 @@ export function useGameStore() {
           hiddenSinceRef.current = Date.now();
           awayEarnedRef.current = 0;
         }
+        if (suppressedSinceRef.current === null) suppressedSinceRef.current = Date.now();
         setPageActivity('hidden');
       } else {
         if (hiddenSinceRef.current !== null) {
@@ -791,7 +796,23 @@ export function useGameStore() {
           awayEarnedRef.current = 0;
           hiddenSinceRef.current = null;
         }
-        setPageActivity(document.hasFocus() ? 'active' : 'inactive');
+        const nowActive = document.hasFocus();
+        if (nowActive && suppressedSinceRef.current !== null) {
+          // Rückkehr aus Hintergrund/Unfokussiert: verpasste geplante-Ad-Schwellen
+          // verfallen ersatzlos statt nachgeholt zu werden, sonst ploppen sie nach der
+          // Rückkehr im 5s-Poll-Takt reihenweise nacheinander auf (siehe Tick-Loop oben).
+          const elapsedMin = (Date.now() - sessionStartRef.current) / 60000;
+          while (
+            nextScheduledIndexRef.current < SCHEDULED_AD_MINUTES.length &&
+            elapsedMin >= SCHEDULED_AD_MINUTES[nextScheduledIndexRef.current]
+          ) {
+            nextScheduledIndexRef.current += 1;
+          }
+          suppressedSinceRef.current = null;
+        } else if (!nowActive && suppressedSinceRef.current === null) {
+          suppressedSinceRef.current = Date.now();
+        }
+        setPageActivity(nowActive ? 'active' : 'inactive');
       }
     };
     updateActivity();
@@ -822,6 +843,10 @@ export function useGameStore() {
   // gerade für Ruhe bezahlt hat (docs/ios-app-konzept.md §4.3).
   useEffect(() => {
     const poll = setInterval(() => {
+      // Nicht im Vordergrund: keine neuen geplanten Ad-Popups auslösen, siehe
+      // isTabActive-Kommentar im Tick-Loop oben - sonst würden mehrere verpasste
+      // Schwellen nach der Rückkehr in schneller Folge nachgeholt.
+      if (pageActivity !== 'active') return;
       const elapsedMin = (Date.now() - sessionStartRef.current) / 60000;
       const nextIdx = nextScheduledIndexRef.current;
       if (nextIdx < SCHEDULED_AD_MINUTES.length && elapsedMin >= SCHEDULED_AD_MINUTES[nextIdx]) {
@@ -834,7 +859,7 @@ export function useGameStore() {
       }
     }, 5000);
     return () => clearInterval(poll);
-  }, [adFree]);
+  }, [adFree, pageActivity]);
 
   // --- HYPE TIER & BURN RATE CALCULATIONS (Konzept Abschnitt 4) ---
   const hypeTier = useMemo(() => {
@@ -1105,17 +1130,24 @@ export function useGameStore() {
         setActiveEvent(null);
       }
 
+      // 6.-8.: Zufalls-Events (Golden Meme, Bubble Pop, Black Swan) spawnen NUR, während
+      // aktiv im Vordergrund gespielt wird. Läuft der Tab im Hintergrund oder ist das
+      // Fenster unfokussiert, würden sich mehrere Events/Ad-Angebote unbemerkt ansammeln
+      // und nach der Rückkehr alle auf einmal aufploppen - stattdessen soll währenddessen
+      // einfach nur die Produktion (Schritt 1 oben) weiterlaufen, ganz ohne Interaktion.
+      const isTabActive = pageActivity === 'active';
+
       // 6. Golden Meme (~alle 20 Min): spawnt NUR das Angebot. Der 10x-Boost wird
       // ausschließlich über die Rewarded Ad im Banner eingelöst (siehe requestBonus/'golden_claim'),
       // das Banner selbst hat keinerlei Effekt auf die Produktion.
-      if (!activeEvent && Math.random() < GOLDEN_CHANCE_PER_200MS * tickScale) {
+      if (isTabActive && !activeEvent && Math.random() < GOLDEN_CHANCE_PER_200MS * tickScale) {
         const id = GOLDEN_EVENT_IDS[Math.floor(Math.random() * GOLDEN_EVENT_IDS.length)];
         setActiveEvent({ id, kind: 'golden', startedAt: now, expiresAt: now + GOLDEN_OFFER_SEC * 1000 });
         addLog(`${t(`event_${id}_title`)} - ${t(`event_${id}_desc`)}`, 'warning');
       // 7. Bubble Pop (~alle 20 Min): purely a temporary rate hit for 30s - VPS production
       // cut and burn rate spiked. No instant stock loss ("rates only"). Wirkt anders als das
       // Golden Meme sofort und ungefragt - man kann sich nur per Ad davon freikaufen.
-      } else if (!activeEvent && Math.random() < BUBBLE_CHANCE_PER_200MS * tickScale) {
+      } else if (isTabActive && !activeEvent && Math.random() < BUBBLE_CHANCE_PER_200MS * tickScale) {
         const id = BUBBLE_EVENT_IDS[Math.floor(Math.random() * BUBBLE_EVENT_IDS.length)];
         // Banner läuft synchron mit dem Debuff (statt wie früher nach 4s zu verschwinden,
         // während der Effekt noch 26s weiterlief): so stimmt der Countdown und die
@@ -1130,26 +1162,28 @@ export function useGameStore() {
       // Engine-Typ (blackSwanNextEligible) + sehr niedrige Tick-Chance obendrauf, damit es
       // "ultra selten" bleibt. Zerstört bei Auslösung lossPct des aktuellen Bestands dieser
       // einen Engine - kein globaler Effekt.
-      BUILDINGS_DATA.forEach((b) => {
-        const owned = buildings[b.id] || 0;
-        if (owned <= 0) return;
+      if (isTabActive) {
+        BUILDINGS_DATA.forEach((b) => {
+          const owned = buildings[b.id] || 0;
+          if (owned <= 0) return;
 
-        const eligibleAt = blackSwanNextEligible[b.id];
-        if (eligibleAt === undefined) {
-          setBlackSwanNextEligible((prev) => ({ ...prev, [b.id]: now + BLACK_SWAN_COOLDOWN_MS }));
-          return;
-        }
-        if (now < eligibleAt) return;
+          const eligibleAt = blackSwanNextEligible[b.id];
+          if (eligibleAt === undefined) {
+            setBlackSwanNextEligible((prev) => ({ ...prev, [b.id]: now + BLACK_SWAN_COOLDOWN_MS }));
+            return;
+          }
+          if (now < eligibleAt) return;
 
-        if (Math.random() < BLACK_SWAN_CHANCE_PER_200MS * tickScale) {
-          const event = BLACK_SWAN_EVENTS_DATA.find((e) => e.buildingId === b.id);
-          if (!event) return;
-          const lost = Math.max(1, Math.floor(owned * event.lossPct));
-          setBuildings((prev) => ({ ...prev, [b.id]: Math.max(0, (prev[b.id] || 0) - lost) }));
-          setBlackSwanNextEligible((prev) => ({ ...prev, [b.id]: now + BLACK_SWAN_COOLDOWN_MS }));
-          addLog(`${t(`blackswan_${b.id}_title`)} - ${t(`building_${b.id}_name`)}: -${lost} (-${Math.round(event.lossPct * 100)}%). ${t(`blackswan_${b.id}_desc`)}`, 'danger');
-        }
-      });
+          if (Math.random() < BLACK_SWAN_CHANCE_PER_200MS * tickScale) {
+            const event = BLACK_SWAN_EVENTS_DATA.find((e) => e.buildingId === b.id);
+            if (!event) return;
+            const lost = Math.max(1, Math.floor(owned * event.lossPct));
+            setBuildings((prev) => ({ ...prev, [b.id]: Math.max(0, (prev[b.id] || 0) - lost) }));
+            setBlackSwanNextEligible((prev) => ({ ...prev, [b.id]: now + BLACK_SWAN_COOLDOWN_MS }));
+            addLog(`${t(`blackswan_${b.id}_title`)} - ${t(`building_${b.id}_name`)}: -${lost} (-${Math.round(event.lossPct * 100)}%). ${t(`blackswan_${b.id}_desc`)}`, 'danger');
+          }
+        });
+      }
 
       // 9. Achievements prüfen
       ACHIEVEMENTS_DATA.forEach((ach) => {
