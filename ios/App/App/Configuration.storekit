@@ -1,0 +1,85 @@
+{
+  "identifier" : "0790FDD5-DE0E-4073-827F-90420AB84F3B",
+  "nonConsumables" : [
+    {
+      "displayPrice" : "2.99",
+      "familyShareable" : true,
+      "internalID" : "73CC45DD-EE0B-4E7E-9C75-0DFF7C55220B",
+      "localizations" : [
+        {
+          "description" : "Removes all ads permanently.",
+          "displayName" : "Ad-Free",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "Entfernt alle Werbung dauerhaft.",
+          "displayName" : "Werbefrei",
+          "locale" : "de_DE"
+        }
+      ],
+      "productID" : "com.tokenfurnace.adfree",
+      "referenceName" : "Ad-Free",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "0",
+    "_developerTeamID" : "0",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 0,
+    "_locale" : "de_DE",
+    "_storefront" : "DEU",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

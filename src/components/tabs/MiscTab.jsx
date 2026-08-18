@@ -15,6 +15,7 @@ export function MiscTab({
   grantAdPreview = 0,
   scheduledAdPreview = 0,
   adFree = false,
+  adFreeProduct = null,
   purchaseAvailable = false,
   purchaseState = 'idle',
   purchaseAdFree,
@@ -100,6 +101,10 @@ export function MiscTab({
                   ? tr('adFreePurchasing')
                   : purchaseState === 'pending'
                   ? tr('adFreePendingLabel')
+                  // Lokalisierter Preis von StoreKit (adFreeProduct), sobald geladen - siehe
+                  // getProductInfo in useGameStore.js. Vorher/ohne (Web) der generische Text.
+                  : adFreeProduct?.displayPrice
+                  ? trf('adFreePurchaseBtnPrice', { price: adFreeProduct.displayPrice })
                   : tr('adFreePurchaseBtn')}
               </button>
               <button

@@ -18,6 +18,18 @@ export const nativePurchaseBridge = {
       return { adFree: false };
     }
   },
+  // Lokalisierter Preis direkt von StoreKit (Product.displayPrice) statt eines im JS
+  // hinterlegten Betrags - siehe getProductInfo in AdFreePurchasePlugin.swift.
+  async getProductInfo() {
+    try {
+      const result = await AdFreePurchase.getProductInfo();
+      if (!result.available) return null;
+      return { displayPrice: result.displayPrice, displayName: result.displayName };
+    } catch (e) {
+      console.error('getProductInfo failed:', e);
+      return null;
+    }
+  },
   // productId kommt aus PurchaseBridge.js (AD_FREE_PRODUCT_ID) rein zur Konsistenz mit dem
   // Interface - der native Plugin kennt die ID bereits selbst (siehe productId in
   // AdFreePurchasePlugin.swift, MUSS mit AD_FREE_PRODUCT_ID synchron gehalten werden).

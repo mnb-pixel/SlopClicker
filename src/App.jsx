@@ -289,6 +289,7 @@ export default function App() {
                 grantAdPreview={store.grantAdPreview}
                 scheduledAdPreview={store.scheduledAdPreview}
                 adFree={store.adFree}
+                adFreeProduct={store.adFreeProduct}
                 purchaseAvailable={store.purchaseAvailable}
                 purchaseState={store.purchaseState}
                 purchaseAdFree={store.purchaseAdFree}

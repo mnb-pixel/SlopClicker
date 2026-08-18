@@ -15,6 +15,7 @@ public class AdFreePurchasePlugin: CAPPlugin, CAPBridgedPlugin {
     public let jsName = "AdFreePurchase"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "getEntitlements", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getProductInfo", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "purchase", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "restore", returnType: CAPPluginReturnPromise)
     ]
@@ -57,6 +58,30 @@ public class AdFreePurchasePlugin: CAPPlugin, CAPBridgedPlugin {
         Task {
             let adFree = await self.hasAdFreeEntitlement()
             call.resolve(["adFree": adFree])
+        }
+    }
+
+    // Liefert den lokalisierten Preis direkt von StoreKit (statt eines fest im JS/Übersetzungs-
+    // text hinterlegten Betrags) - App Store Connect kennt Land/Währung/regionale Preisstufe,
+    // ein hartcodierter Preis wäre in jeder Region außer der zuletzt getesteten falsch.
+    @objc func getProductInfo(_ call: CAPPluginCall) {
+        Task {
+            do {
+                let products = try await Product.products(for: [self.productId])
+                guard let product = products.first else {
+                    call.resolve(["available": false])
+                    return
+                }
+                call.resolve([
+                    "available": true,
+                    "displayPrice": product.displayPrice,
+                    "displayName": product.displayName
+                ])
+            } catch {
+                // Netzwerkfehler o.ä.: kein Reject hier - der Aufrufer (MiscTab-Kaufkarte)
+                // zeigt bei available:false einfach den Button ohne Preis, kein Absturz.
+                call.resolve(["available": false])
+            }
         }
     }
 

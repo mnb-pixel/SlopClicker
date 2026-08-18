@@ -18,6 +18,9 @@ export const webPurchaseBridge = {
   async getEntitlements() {
     return { adFree: false };
   },
+  async getProductInfo() {
+    return null;
+  },
   async purchase() {
     return 'failed';
   },

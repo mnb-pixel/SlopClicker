@@ -21,6 +21,7 @@
 
 /* Begin PBXFileReference section */
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
+		335355EA75191E0C3C442A55 /* Configuration.storekit */ = {isa = PBXFileReference; includeInIndex = 1; name = Configuration.storekit; path = App/Configuration.storekit; sourceTree = "<group>"; };
 		39FC1176E8BED7B918C2494B /* AdFreePurchasePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdFreePurchasePlugin.swift; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -76,6 +77,7 @@
 				504EC3131FED79650016851F /* Info.plist */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
+				335355EA75191E0C3C442A55 /* Configuration.storekit */,
 			);
 			path = App;
 			sourceTree = "<group>";

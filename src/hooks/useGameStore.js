@@ -20,6 +20,12 @@ import { subscribeNativeAppState } from '../platform/appState';
 import { tapFeedback } from '../platform/haptics';
 
 const STORAGE_KEY = 'SLOP_CLICKER_GAME_SAVE_V1';
+// Separater Preferences-Key für den zuletzt bekannten Werbefrei-Kaufstatus (siehe
+// docs/ios-app-konzept.md §5, Schritt 1): NICHT Teil von STORAGE_KEY, damit weder ein
+// resetSave ihn löscht noch ein Save-Import/manipulierter Spielstand ihn vortäuscht. Dient
+// nur als Kaltstart-Cache, bis die tatsächliche StoreKit-Antwort da ist - die überschreibt
+// ihn danach immer.
+const ADFREE_CACHE_KEY = 'SLOP_CLICKER_ADFREE_CACHE_V1';
 
 // ---------------------------------------------------------------------------
 // Validierung beim Laden des Spielstands.
@@ -260,6 +266,7 @@ export function useGameStore() {
   // manipulierter localStorage-Eintrag darf den Kauf niemals löschen bzw. vortäuschen.
   // Siehe docs/ios-app-konzept.md Abschnitt 5.
   const [adFree, setAdFree] = useState(false);
+  const [adFreeProduct, setAdFreeProduct] = useState(null); // { displayPrice, displayName } | null
   const [purchaseState, setPurchaseState] = useState('idle'); // 'idle' | 'purchasing' | 'pending' | 'restoring' | 'failed'
   // Bridge-Auswahl selbst ist stabil für die Lebensdauer des Hooks (native Injection kommt
   // über selectPurchaseBridge/selectAdBridge, siehe dortige TODOs für die Native-Anbindung).
@@ -268,10 +275,18 @@ export function useGameStore() {
 
   useEffect(() => {
     let cancelled = false;
+    // Gecachten Kaufstatus sofort anwenden (siehe docs/ios-app-konzept.md §5, Schritt 1):
+    // Transaction.currentEntitlements braucht selbst auf dem Gerät einen Moment, in dem die
+    // App sonst kurz "nicht gekauft" zeigen würde. Wird unten von der echten StoreKit-Antwort
+    // immer überschrieben, dient nur als Kaltstart-Überbrückung.
+    getStorageItem(ADFREE_CACHE_KEY).then((cached) => {
+      if (!cancelled && cached === '1') setAdFree(true);
+    });
     purchaseBridge.getEntitlements().then((ent) => {
       if (cancelled) return;
       const purchased = !!ent.adFree;
       setAdFree(purchased);
+      setStorageItem(ADFREE_CACHE_KEY, purchased ? '1' : '0').catch(() => {});
       // Erst NACH der Entitlement-Prüfung initialisieren, nie vorher: sonst würde für
       // wiederkehrende Käufer:innen bei jedem Kaltstart kurz das Ad-SDK anlaufen, bevor der
       // (async) Kaufstatus überhaupt feststeht - genau das darf laut Konzept nicht passieren
@@ -280,10 +295,17 @@ export function useGameStore() {
         ensureAdConsent().catch((e) => console.error('Ad consent init failed:', e));
       }
     });
+    // Lokalisierter Preis für die Kaufkarte (MiscTab) - unabhängig vom Kaufstatus geladen,
+    // damit er sofort bereitsteht, falls doch mal "restore" statt "purchased" nötig ist.
+    purchaseBridge.getProductInfo().then((info) => {
+      if (!cancelled) setAdFreeProduct(info);
+    });
     // Deckt Ask-to-Buy-Freigaben und Family-Sharing-Transaktionen ab, die außerhalb eines
     // expliziten purchaseAdFree()-Aufrufs eintreffen (siehe docs/ios-app-konzept.md §5.3).
     const unsubscribe = purchaseBridge.onEntitlementChange((ent) => {
-      setAdFree(!!ent.adFree);
+      const purchased = !!ent.adFree;
+      setAdFree(purchased);
+      setStorageItem(ADFREE_CACHE_KEY, purchased ? '1' : '0').catch(() => {});
     });
     return () => {
       cancelled = true;
@@ -402,6 +424,7 @@ export function useGameStore() {
       const result = await purchaseBridge.purchase(AD_FREE_PRODUCT_ID);
       if (result === 'purchased') {
         setAdFree(true);
+        setStorageItem(ADFREE_CACHE_KEY, '1').catch(() => {});
         setPurchaseState('idle');
         addLog(tf('log_adFreePurchased'), 'achievement');
       } else if (result === 'pending') {
@@ -425,6 +448,7 @@ export function useGameStore() {
     try {
       const ent = await purchaseBridge.restore();
       setAdFree(!!ent.adFree);
+      setStorageItem(ADFREE_CACHE_KEY, ent.adFree ? '1' : '0').catch(() => {});
       setPurchaseState('idle');
       addLog(tf(ent.adFree ? 'log_adFreeRestored' : 'log_adFreeRestoreNone'), ent.adFree ? 'achievement' : 'info');
     } catch (e) {
@@ -1927,7 +1951,7 @@ export function useGameStore() {
     activeEvent, dismissEvent, bubbleGlitchUntil,
     adState, requestBonus, isAdReady, getAdCooldownRemaining,
     adRewardToast, dismissAdRewardToast, grantAdPreview, scheduledAdPreview,
-    adFree, purchaseState, purchaseAvailable: purchaseBridge.isAvailable, purchaseAdFree, restorePurchases,
+    adFree, adFreeProduct, purchaseState, purchaseAvailable: purchaseBridge.isAvailable, purchaseAdFree, restorePurchases,
     offlineReport, claimOfflineEarnings, dismissOfflineEarnings,
     pageActivity, afkReport, dismissAfkReport, claimAfkBonus,
     pendingScheduledAd, watchScheduledAdNow, deferScheduledAd,
