@@ -164,6 +164,15 @@ const OFFLINE_MIN_SECONDS = 60;
 const OFFLINE_CAP_SECONDS = 4 * 3600;
 const OFFLINE_EFFICIENCY = 0.2;
 
+// Web-only: von einem ab AFK_THRESHOLD_SECONDS PENDING gewordenen Offline-/AFK-Ertrag wird
+// dieser Anteil sofort und ohne Ad gutgeschrieben, der Rest bleibt wie gehabt nur per Ad
+// claimbar (siehe docs/ios-app-konzept.md §10, "Offene Entscheidung" 3: 0% ohne Ad war als
+// härteste Ad-Wand im Spiel eingestuft). NICHT auf iOS: dort läuft mit AdMob eine echte
+// Werbe-Monetarisierung, die den vollen Ad-Zwang rechtfertigt - im Web (ADS_ENABLED aktuell
+// ohnehin false, siehe AdBanner.jsx) gibt es das Gegenstück nicht, ein Fake-Countdown ohne
+// echte Anzeige als einzigen Weg an 100% zu kommen wäre unnötig hart.
+const AFK_FREE_SHARE_WEB = 0.1;
+
 // Singularity Ascension: Chips = sqrt(totalValuation / Divisor). War vorher 1e9 (der erste
 // Chip brauchte $1 Mrd. Lifetime-Valuation - bei den exponentiellen Gebäudekosten praktisch
 // unerreichbar, fühlte sich also wie "kaputt" an). Auf 1e7 gesenkt: erster Chip ab $10M.
@@ -197,6 +206,10 @@ const INITIAL_BUILDINGS = BUILDINGS_DATA.reduce((acc, b) => {
 }, {});
 
 export function useGameStore() {
+  // Für AFK_FREE_SHARE_WEB (siehe Konstante oben) - Wert ändert sich zur Laufzeit nie,
+  // deshalb reicht ein einfacher const statt useMemo.
+  const isNativePlatform = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
+
   const [lang, setLang] = useState('de'); // 'de' | 'en'
   const [startupName, setStartupName] = useState('tokenkamin');
   const [valuation, setValuation] = useState(0);
@@ -648,9 +661,25 @@ export function useGameStore() {
             const amount = savedVps * cappedSec * OFFLINE_EFFICIENCY;
             if (amount >= 1) {
               if (elapsedSec >= AFK_THRESHOLD_SECONDS) {
-                // >= 30 Minuten: PENDING, nur per Ad claimbar (alles oder nichts) - siehe
-                // claimOfflineEarnings/dismissOfflineEarnings.
-                setOfflineReport({ amount, elapsedSec });
+                // >= 30 Minuten: PENDING, Rest nur per Ad claimbar - siehe
+                // claimOfflineEarnings/dismissOfflineEarnings. Auf Web (kein natives Ad-SDK,
+                // siehe AFK_FREE_SHARE_WEB oben) wird ein Teil davon sofort ohne Ad
+                // gutgeschrieben, auf iOS bleibt es beim vollen "alles oder nichts".
+                if (isNativePlatform) {
+                  setOfflineReport({ amount, elapsedSec });
+                } else {
+                  const freeShare = amount * AFK_FREE_SHARE_WEB;
+                  const restShare = amount - freeShare;
+                  setValuation((prev) => prev + freeShare);
+                  setTotalValuation((prev) => prev + freeShare);
+                  setSlopCount((prev) => prev + Math.max(1, Math.floor(freeShare)));
+                  const freeMsg = ((TRANSLATIONS[resolvedLang] || TRANSLATIONS.en).log_afkFreeSharePartial || '')
+                    .replace('{amount}', Math.floor(freeShare).toLocaleString());
+                  addLog(freeMsg, 'success');
+                  if (restShare >= 1) {
+                    setOfflineReport({ amount: restShare, elapsedSec });
+                  }
+                }
               } else {
                 // < 30 Minuten: sofort und ohne Rückfrage gutgeschrieben, kein Modal.
                 setValuation((prev) => prev + amount);
@@ -683,7 +712,7 @@ export function useGameStore() {
     }
     addLog((TRANSLATIONS[resolvedLang] || TRANSLATIONS.en).log_systemInit, 'info');
     })();
-  }, [addLog, applyLoadedState]);
+  }, [addLog, applyLoadedState, isNativePlatform]);
 
   // Auto-save interval (every 8 seconds, matches concept's autosave cadence).
   // saveGame's identity changes on almost every tick (valuation, gpuTemp, etc. are all
@@ -866,7 +895,22 @@ export function useGameStore() {
             const cappedSec = Math.min(awaySec, OFFLINE_CAP_SECONDS);
             const earnedWhileHidden = vpsRef.current * cappedSec * OFFLINE_EFFICIENCY;
             if (awaySec >= AFK_THRESHOLD_SECONDS && earnedWhileHidden >= 1) {
-              setAfkReport({ amount: earnedWhileHidden });
+              // Auf Web (kein natives Ad-SDK) einen Teil sofort ohne Ad gutschreiben, Rest
+              // PENDING - siehe AFK_FREE_SHARE_WEB oben. Auf iOS bleibt es beim vollen
+              // "alles oder nichts" wie im Offline-Pfad.
+              if (isNativePlatform) {
+                setAfkReport({ amount: earnedWhileHidden });
+              } else {
+                const freeShare = earnedWhileHidden * AFK_FREE_SHARE_WEB;
+                const restShare = earnedWhileHidden - freeShare;
+                setValuation((prev) => prev + freeShare);
+                setTotalValuation((prev) => prev + freeShare);
+                setSlopCount((prev) => prev + Math.max(1, Math.floor(freeShare)));
+                addLog(tf('log_afkFreeSharePartial', { amount: Math.floor(freeShare).toLocaleString() }), 'success');
+                if (restShare >= 1) {
+                  setAfkReport({ amount: restShare });
+                }
+              }
             } else if (earnedWhileHidden > 0) {
               setValuation((prev) => prev + earnedWhileHidden);
               setTotalValuation((prev) => prev + earnedWhileHidden);
@@ -916,7 +960,7 @@ export function useGameStore() {
       clearInterval(poll);
       unsubscribeNativeAppState();
     };
-  }, [applyLoadedState]);
+  }, [applyLoadedState, addLog, tf, isNativePlatform]);
 
   // Geplante Ad-Popups (Punkt 9): pollt gegen SCHEDULED_AD_MINUTES seit Sitzungsbeginn
   // (sessionStartRef - persistiert & vor Farming gehärtet, siehe SCHEDULED_AD_RESET_GAP_SEC
