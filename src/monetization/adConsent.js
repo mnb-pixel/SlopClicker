@@ -9,23 +9,45 @@
 // erscheint statt bei jedem Aufruf erneut.
 import { AdMob, AdmobConsentStatus } from '@capacitor-community/admob';
 
+// Ohne diese Deckelung kann ein Plugin-Aufruf, der nie resolved/rejected (statt sauber
+// zu scheitern), consentPromise für den Rest der Sitzung in der Schwebe halten - und damit
+// jeden Rewarded-Ad-Button dauerhaft lahmlegen, siehe den `adState`-Guard in
+// requestBonus (useGameStore.js), der bei einem ewig hängenden Promise nie zurückgesetzt wird.
+function withTimeout(promise, ms) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`timed out after ${ms}ms`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+const CONSENT_TIMEOUT_MS = 10000;
+
 let consentPromise = null;
 
 export function ensureAdConsent() {
   if (!consentPromise) {
     consentPromise = (async () => {
       try {
-        const info = await AdMob.requestConsentInfo();
+        const info = await withTimeout(AdMob.requestConsentInfo(), CONSENT_TIMEOUT_MS);
         if (info.isConsentFormAvailable && info.status === AdmobConsentStatus.REQUIRED) {
-          await AdMob.showConsentForm();
+          await withTimeout(AdMob.showConsentForm(), CONSENT_TIMEOUT_MS);
         }
       } catch (e) {
-        // Kein Blocker: ohne verwertbare Consent-Antwort (z.B. Netzwerkfehler) trotzdem
-        // initialisieren - das SDK selbst fällt dann konservativ auf nicht-personalisierte
-        // Ads zurück, statt die App komplett ohne Werbung/Bonus hängen zu lassen.
+        // Kein Blocker: ohne verwertbare Consent-Antwort (z.B. Netzwerkfehler oder Timeout)
+        // trotzdem initialisieren - das SDK selbst fällt dann konservativ auf nicht-
+        // personalisierte Ads zurück, statt die App komplett ohne Werbung/Bonus hängen zu
+        // lassen.
         console.error('AdMob consent request failed:', e);
       }
-      await AdMob.initialize();
+      try {
+        await withTimeout(AdMob.initialize(), CONSENT_TIMEOUT_MS);
+      } catch (e) {
+        // Auch das SDK-Init darf ensureAdConsent() nie dauerhaft blockieren - present()/
+        // showBanner() scheitern dann eben ihrerseits klar mit einem eigenen Fehler, statt
+        // dass jeder künftige Aufruf in dieser Sitzung auf demselben toten Promise wartet.
+        console.error('AdMob initialize failed or timed out:', e);
+      }
     })();
   }
   return consentPromise;
