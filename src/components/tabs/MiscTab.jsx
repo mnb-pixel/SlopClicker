@@ -179,7 +179,7 @@ export function MiscTab({
               </div>
               {renderAdCta('nitrogen') || (
                 <span className="bg-cyan-500/20 text-cyan-300 text-[10px] font-black px-2 py-1 rounded border border-cyan-500/30 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors shrink-0">
-                  {adFree ? tr('claimBonusShort') : tr('watchAd3s')}
+                  {adFree ? tr('claimBonusShort') : tr('watchAdShort')}
                 </span>
               )}
             </button>
@@ -200,7 +200,7 @@ export function MiscTab({
               </div>
               {renderAdCta('grant') || (
                 <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black px-2 py-1 rounded border border-amber-500/30 group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors shrink-0">
-                  {adFree ? tr('claimBonusShort') : tr('watchAd3s')}
+                  {adFree ? tr('claimBonusShort') : tr('watchAdShort')}
                 </span>
               )}
             </button>
@@ -221,7 +221,7 @@ export function MiscTab({
               </div>
               {renderAdCta('power_click') || (
                 <span className="bg-fuchsia-500/20 text-fuchsia-300 text-[10px] font-black px-2 py-1 rounded border border-fuchsia-500/30 group-hover:bg-fuchsia-500 group-hover:text-slate-950 transition-colors shrink-0">
-                  {adFree ? tr('claimBonusShort') : tr('watchAd3s')}
+                  {adFree ? tr('claimBonusShort') : tr('watchAdShort')}
                 </span>
               )}
             </button>
