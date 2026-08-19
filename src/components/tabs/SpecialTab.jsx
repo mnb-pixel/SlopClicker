@@ -315,8 +315,10 @@ export function SpecialTab({
           <div>
             {/* Singularity Ascension Card */}
             <div className="bg-gradient-to-br from-purple-950 via-slate-900 to-indigo-950 p-4 rounded-2xl border-2 border-purple-500/40 shadow-2xl mb-6 relative overflow-hidden group">
+              {/* Relativer statt absoluter Pfad - siehe SlopTab.jsx (gpu_chip_meme.jpg) für
+                  die Begründung: bricht sonst unter --mode crazygames (Unterpfad-Hosting). */}
               <img
-                src="/singularity_prestige_meme.jpg"
+                src="./singularity_prestige_meme.jpg"
                 alt={tr('ascendTitle')}
                 className="absolute inset-0 w-full h-full object-cover opacity-25 group-hover:opacity-40 transition-opacity"
               />

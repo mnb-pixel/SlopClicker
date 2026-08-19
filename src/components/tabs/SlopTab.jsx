@@ -133,9 +133,13 @@ export function SlopTab({
                 : 'bg-gradient-to-br from-slate-900 via-cyan-950 to-slate-900 border-cyan-400 text-cyan-300 cyber-glow hover:border-cyan-300'
             }`}
           >
-            {/* GPU Chip Meme Background Graphic */}
+            {/* GPU Chip Meme Background Graphic. Relativer statt absoluter Pfad: bei
+                --mode crazygames läuft der Build unter einem Unterpfad (base: './', siehe
+                vite.config.js) statt an der Domain-Wurzel - ein führendes "/" hätte dort
+                auf die Wurzel von crazygames.com gezeigt und wäre 404 gelaufen (genau das
+                war der gemeldete "Grafik auf dem Button fehlt"-Bug). */}
             <img
-              src="/gpu_chip_meme.jpg"
+              src="./gpu_chip_meme.jpg"
               alt={tr('generateAgiLabel')}
               className="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity"
             />

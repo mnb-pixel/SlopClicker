@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Tv, Gift, Loader2, ThermometerSnowflake, Landmark, Zap, Trash2, ShieldCheck, RotateCcw, Download, Upload } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
+import { isCrazyGamesBuild } from '../../monetization/crazyGamesSdk';
 
 export function MiscTab({
   adState,
@@ -234,72 +235,77 @@ export function MiscTab({
           sichtbar. Zwei Flächen gleichzeitig wären eine zu viel. */}
 
       {/* Export/Import: lokale Sicherung bzw. Übertragung des Spielstands, unabhängig vom
-          automatischen localStorage-Autosave. */}
-      <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
-        <div className="flex flex-col gap-2">
-          <button
-            onClick={() => exportSave && exportSave()}
-            className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500 text-left transition-all flex items-center justify-between group"
-          >
-            <div>
-              <div className="font-extrabold text-xs text-cyan-300 flex items-center gap-1.5">
-                <Download className="w-4 h-4 text-cyan-400" />
-                {tr('exportSave')}
+          automatischen localStorage-Autosave. NICHT im CrazyGames-Build: unklar/ungetestet,
+          ob Datei-Download und der Datei-Auswahl-Dialog innerhalb von deren iframe-Sandbox
+          zuverlässig funktionieren - Spielstand-Sync läuft dort ohnehin primär über das
+          CrazyGames Data Module (siehe platform/storage.js). */}
+      {!isCrazyGamesBuild() && (
+        <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => exportSave && exportSave()}
+              className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500 text-left transition-all flex items-center justify-between group"
+            >
+              <div>
+                <div className="font-extrabold text-xs text-cyan-300 flex items-center gap-1.5">
+                  <Download className="w-4 h-4 text-cyan-400" />
+                  {tr('exportSave')}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-0.5">
+                  {tr('exportSaveDesc')}
+                </div>
               </div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
-                {tr('exportSaveDesc')}
-              </div>
-            </div>
-          </button>
+            </button>
 
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500 text-left transition-all flex items-center justify-between group"
-          >
-            <div>
-              <div className="font-extrabold text-xs text-cyan-300 flex items-center gap-1.5">
-                <Upload className="w-4 h-4 text-cyan-400" />
-                {tr('importSave')}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500 text-left transition-all flex items-center justify-between group"
+            >
+              <div>
+                <div className="font-extrabold text-xs text-cyan-300 flex items-center gap-1.5">
+                  <Upload className="w-4 h-4 text-cyan-400" />
+                  {tr('importSave')}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-0.5">
+                  {tr('importSaveDesc')}
+                </div>
               </div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
-                {tr('importSaveDesc')}
-              </div>
-            </div>
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json,application/json"
-            onChange={handleFileSelected}
-            className="hidden"
-          />
-        </div>
-
-        {pendingImport && (
-          <div className="bg-rose-950/80 p-3 rounded-xl border border-rose-500 flex flex-col gap-2">
-            <div className="text-xs font-extrabold text-rose-300">
-              {trf('importConfirm', { name: pendingImport.name })}
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  importSave && importSave(pendingImport.text);
-                  setPendingImport(null);
-                }}
-                className="flex-1 py-1.5 bg-rose-600 text-white rounded font-bold text-xs"
-              >
-                {tr('yesImport')}
-              </button>
-              <button
-                onClick={() => setPendingImport(null)}
-                className="flex-1 py-1.5 bg-slate-800 text-slate-300 rounded font-bold text-xs"
-              >
-                {tr('cancel')}
-              </button>
-            </div>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              onChange={handleFileSelected}
+              className="hidden"
+            />
           </div>
-        )}
-      </div>
+
+          {pendingImport && (
+            <div className="bg-rose-950/80 p-3 rounded-xl border border-rose-500 flex flex-col gap-2">
+              <div className="text-xs font-extrabold text-rose-300">
+                {trf('importConfirm', { name: pendingImport.name })}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    importSave && importSave(pendingImport.text);
+                    setPendingImport(null);
+                  }}
+                  className="flex-1 py-1.5 bg-rose-600 text-white rounded font-bold text-xs"
+                >
+                  {tr('yesImport')}
+                </button>
+                <button
+                  onClick={() => setPendingImport(null)}
+                  className="flex-1 py-1.5 bg-slate-800 text-slate-300 rounded font-bold text-xs"
+                >
+                  {tr('cancel')}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Wipe Save Data (Sprache & Audio sind bereits in der Kopfzeile verfügbar) */}
       <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
@@ -336,9 +342,14 @@ export function MiscTab({
         )}
       </div>
 
-      {/* Footer inkl. Pflichtlinks. Impressum und Datenschutzerklärung müssen von jeder
-          Ansicht aus erreichbar sein - der Einstellungen-Tab wird auch in der Desktop-
-          Ansicht gerendert, damit gilt das für beide Layouts. */}
+      {/* Footer inkl. Pflichtlinks. Impressum muss von jeder Ansicht aus erreichbar sein -
+          der Einstellungen-Tab wird auch in der Desktop-Ansicht gerendert, damit gilt das
+          für beide Layouts. Datenschutzerklärung NICHT im CrazyGames-Build: der Text ist
+          für die token-furnace.com-Bereitstellung geschrieben (nennt Cloudflare-Hosting,
+          Google AdSense/Ads/Cookies) - nichts davon läuft im CrazyGames-Build, dort übernimmt
+          CrazyGames' eigene Datenschutzerklärung Ads/Spielstand (Data Module). Den Text
+          trotzdem zu zeigen wäre sachlich falsch. Impressum bleibt: reine, plattform-
+          unabhängige Anbieterkennzeichnung. */}
       <footer className="text-center text-[11px] text-slate-500 my-2 space-y-2">
         <div className="flex items-center justify-center gap-3">
           <button
@@ -347,13 +358,17 @@ export function MiscTab({
           >
             {tr('legalImprint')}
           </button>
-          <span className="text-slate-700">•</span>
-          <button
-            onClick={() => onOpenLegal && onOpenLegal('datenschutz')}
-            className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
-          >
-            {tr('legalPrivacy')}
-          </button>
+          {!isCrazyGamesBuild() && (
+            <>
+              <span className="text-slate-700">•</span>
+              <button
+                onClick={() => onOpenLegal && onOpenLegal('datenschutz')}
+                className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
+              >
+                {tr('legalPrivacy')}
+              </button>
+            </>
+          )}
           {/* Nur nativ und nur solange Werbung läuft (adFree: kein Ad-SDK mehr initialisiert,
               siehe adConsent.js) - Pendant zum Web-Cookie-Link, öffnet das UMP-Formular erneut. */}
           {purchaseAvailable && !adFree && (
