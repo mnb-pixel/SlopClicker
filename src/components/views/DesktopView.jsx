@@ -4,6 +4,7 @@ import { StoreTab } from '../tabs/StoreTab';
 import { SpecialTab } from '../tabs/SpecialTab';
 import { StatsTab } from '../tabs/StatsTab';
 import { MiscTab } from '../tabs/MiscTab';
+import { isCrazyGamesBuild } from '../../monetization/crazyGamesSdk';
 
 export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
   return (
@@ -42,8 +43,36 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
             Header ist dauerhaft und vollständig sichtbar. */}
       </div>
 
-      {/* CENTER COLUMN: Special Ascension, Stats, Logs, Achievements, Misc (4 cols) */}
+      {/* CENTER COLUMN: Rewards/Misc zuoberst (meistgenutzte Aktion - Belohnungs-Werbung
+          claimen), darunter Special Ascension, dann Stats/Logs/Achievements (4 cols) */}
       <div className="md:col-span-4 flex flex-col gap-4">
+        {/* Ads, Pitch Deck & Misc Settings (enthält den Belohnungs-Werbung-Bereich) */}
+        <div className="bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-2 shadow-xl">
+          <MiscTab
+            adState={store.adState}
+            requestBonus={store.requestBonus}
+            isAdReady={store.isAdReady}
+            getAdCooldownRemaining={store.getAdCooldownRemaining}
+            resetSave={store.resetSave}
+            exportSave={store.exportSave}
+            importSave={store.importSave}
+            scheduledAdUnlocked={store.scheduledAdUnlocked}
+            claimUnlockedScheduledAd={store.claimUnlockedScheduledAd}
+            grantAdPreview={store.grantAdPreview}
+            scheduledAdPreview={store.scheduledAdPreview}
+            adFree={store.adFree}
+            adFreeProduct={store.adFreeProduct}
+            purchaseAvailable={store.purchaseAvailable}
+            purchaseState={store.purchaseState}
+            purchaseAdFree={store.purchaseAdFree}
+            restorePurchases={store.restorePurchases}
+            showAdPrivacyOptions={store.showAdPrivacyOptions}
+            onOpenLegal={onOpenLegal}
+            t={store.t}
+            tf={store.tf}
+          />
+        </div>
+
         {/* Special Ascension */}
         <div className="bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-2 shadow-xl">
           <SpecialTab
@@ -87,33 +116,6 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
             t={store.t}
           />
         </div>
-
-        {/* Ads, Pitch Deck & Misc Settings */}
-        <div className="bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-2 shadow-xl">
-          <MiscTab
-            adState={store.adState}
-            requestBonus={store.requestBonus}
-            isAdReady={store.isAdReady}
-            getAdCooldownRemaining={store.getAdCooldownRemaining}
-            resetSave={store.resetSave}
-            exportSave={store.exportSave}
-            importSave={store.importSave}
-            scheduledAdUnlocked={store.scheduledAdUnlocked}
-            claimUnlockedScheduledAd={store.claimUnlockedScheduledAd}
-            grantAdPreview={store.grantAdPreview}
-            scheduledAdPreview={store.scheduledAdPreview}
-            adFree={store.adFree}
-            adFreeProduct={store.adFreeProduct}
-            purchaseAvailable={store.purchaseAvailable}
-            purchaseState={store.purchaseState}
-            purchaseAdFree={store.purchaseAdFree}
-            restorePurchases={store.restorePurchases}
-            showAdPrivacyOptions={store.showAdPrivacyOptions}
-            onOpenLegal={onOpenLegal}
-            t={store.t}
-            tf={store.tf}
-          />
-        </div>
       </div>
 
       {/* RIGHT COLUMN: Store (Buildings & Upgrades) (4 cols) */}
@@ -152,15 +154,44 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
         noch "sticky" linke/rechte Spalte, weil deren Zellenhöhe (gedeckelt per max-h) weit
         unter der Zeilenhöhe (bestimmt durch die viel längere mittlere Spalte) liegt - siehe
         translations.js aboutTitle/aboutText. Rein für den AdSense-Site-Review gedacht (siehe
-        App.jsx) - DesktopView läuft ohnehin nur im Web-Layout, nie in der iOS-App. */}
-    <div className="w-full max-w-3xl mx-auto p-4 pt-0">
-      <div className="bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-800 p-4 text-sm text-slate-400 leading-relaxed">
-        <h2 className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-2">
-          {store.t('aboutTitle')}
-        </h2>
-        <p>{store.t('aboutText')}</p>
+        App.jsx) - DesktopView läuft ohnehin nur im Web-Layout, nie in der iOS-App. NICHT im
+        CrazyGames-Build: der Block existiert einzig, damit Googles AdSense-Crawler auf
+        token-furnace.com echten Content sieht - auf CrazyGames' eigener Spieleseite ist er
+        nur unnötiger Ballast unter dem eigentlichen Spiel. */}
+    {!isCrazyGamesBuild() && (
+      <div className="w-full max-w-3xl mx-auto p-4 pt-0">
+        <div className="bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-800 p-4 text-sm text-slate-400 leading-relaxed flex flex-col gap-4">
+          <div>
+            <h2 className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-2">
+              {store.t('aboutTitle')}
+            </h2>
+            <p>{store.t('aboutText')}</p>
+          </div>
+          <div>
+            <h2 className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-2">
+              {store.t('howToPlayTitle')}
+            </h2>
+            <p className="mb-2">{store.t('htpP1')}</p>
+            <p className="mb-2">{store.t('htpP2')}</p>
+            <p className="mb-2">{store.t('htpP3')}</p>
+            <p>{store.t('htpP4')}</p>
+          </div>
+          <div>
+            <h2 className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-2">
+              {store.t('faqTitle')}
+            </h2>
+            <dl className="flex flex-col gap-2">
+              {[1, 2, 3, 4].map((n) => (
+                <div key={n}>
+                  <dt className="font-bold text-slate-300">{store.t(`faqQ${n}`)}</dt>
+                  <dd>{store.t(`faqA${n}`)}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
       </div>
-    </div>
+    )}
     </>
   );
 }

@@ -34,10 +34,27 @@
          NICHT im nativen Build: AdSense ist für Webseiten lizenziert und darf nicht in einer
          App-WebView ausgeliefert werden - dort läuft AdMob (src/monetization/nativeAdBridge.js).
          Vor allem würde es sonst auch für Werbefrei-Käufer:innen laden und damit genau das
-         Versprechen brechen, das der IAP verkauft. Entfernt für --mode native, s. vite.config.js. -->
+         Versprechen brechen, das der IAP verkauft.
+         Auch NICHT im CrazyGames-Build: dort ist ein zweites, eigenes Ad-Netzwerk gegen deren
+         Richtlinien - Monetarisierung läuft dort exklusiv über den Block unten
+         (src/monetization/crazyGamesAdBridge.js). Entfernt für --mode native UND --mode
+         crazygames, s. vite.config.js. -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6020764817262332"
      crossorigin="anonymous"></script>
     <!-- web-only:end -->
+
+    <!-- crazygames-only:start -->
+    <!-- CrazyGames SDK v3: bewusst als blockierendes klassisches <script> (kein async/defer,
+         kein type="module") VOR dem App-Bundle unten - so garantiert die Skript-Reihenfolge,
+         dass window.CrazyGames.SDK schon existiert, wenn main.jsx läuft (deferred module
+         scripts laufen immer erst nach allen blockierenden Scripts, unabhängig von der
+         Position im Dokument). Siehe src/monetization/crazyGamesSdk.js für Init/Lifecycle
+         und crazyGamesAdBridge.js für die Rewarded-Ad-Anbindung. Nur enthalten für
+         --mode crazygames, s. vite.config.js - in den anderen Builds bliebe
+         window.CrazyGames sonst undefiniert und jeder Aufruf müsste das separat abfangen.
+         Docs: https://docs.crazygames.com/sdk/html5-v2/intro/ -->
+    <script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
+    <!-- crazygames-only:end -->
 
     <!-- Social-Share-Vorschau (Open Graph / Twitter Card): das Pitch-Deck-Feature verschickt
          aktiv window.location.href über navigator.share() (siehe PitchDeckModal.jsx) - ohne
@@ -78,10 +95,55 @@
           echtes Produkt. Das Spiel läuft komplett im Browser, braucht keine Anmeldung und
           speichert deinen Fortschritt automatisch lokal auf deinem Gerät.
         </p>
-        <p style="line-height: 1.6;">
+        <p style="margin-bottom: 1.5rem; line-height: 1.6;">
           Klicke dich durch Hype-Zyklen, schalte Upgrades und Erfolge frei und beobachte,
           wie deine fiktive Firmenbewertung explodiert – bis die Blase platzt und die
           nächste Runde beginnt.
+        </p>
+
+        <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">So funktioniert's</h2>
+        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
+          Klicke auf den AGI-Kern-Button, um manuell Unternehmenswert zu generieren, oder
+          baue automatisierte Engines, die rund um die Uhr passiv Wert erzeugen – von
+          einfachen Assistenten bis zu gigantischen Rechenzentren.
+        </p>
+        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
+          Kaufe Effizienz-Upgrades und sammle Buzzword-Karten, um deinen Output zu
+          vervielfachen. Achte dabei auf die Burn Rate: Je höher dein Hype, desto mehr
+          Investoren – aber auch höhere laufende Kosten.
+        </p>
+        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
+          Ab einer gewissen Bewertung kannst du einen strategischen Pivot vollziehen: Du
+          behältst deine Infrastruktur, sammelst Credibility und rotierst in die nächste
+          Hype-Epoche. Bei ausreichend hoher Bewertung schaltet sich die Singularity
+          Ascension frei – ein finaler Reset für permanente Prestige-Boni.
+        </p>
+        <p style="margin-bottom: 1.5rem; line-height: 1.6;">
+          Übertreib es nicht mit dem manuellen Klicken: Zu schnelles Klicken überhitzt die
+          GPU und sperrt den Button vorübergehend.
+        </p>
+
+        <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Häufige Fragen</h2>
+        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
+          <strong>Ist Token Furnace kostenlos?</strong><br />
+          Ja, das komplette Spiel ist kostenlos spielbar. Eine optionale Werbefrei-Option
+          entfernt lediglich Anzeigen.
+        </p>
+        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
+          <strong>Muss ich mich registrieren?</strong><br />
+          Nein. Es gibt kein Konto und keine Anmeldung – dein Fortschritt wird automatisch
+          lokal in deinem Browser gespeichert.
+        </p>
+        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
+          <strong>Läuft das Spiel auch offline weiter?</strong><br />
+          Deine Infrastruktur produziert auch weiter, während der Tab geschlossen ist –
+          beim nächsten Öffnen bekommst du einen Bericht über den Offline-Ertrag.
+        </p>
+        <p style="line-height: 1.6;">
+          <strong>Worum geht es in dem Spiel?</strong><br />
+          Token Furnace ist eine Satire auf den KI-Hype: Du baust ein fiktives KI-Startup
+          ganz ohne echtes Produkt auf, ausschließlich getrieben von Buzzwords,
+          Bewertungswachstum und Investoren-Vertrauen.
         </p>
       </main>
     </div>

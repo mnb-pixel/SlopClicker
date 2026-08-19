@@ -15,6 +15,7 @@ export function PitchDeckModal({
   startupName = 'tokenkamin',
   hasAiDomainBonus = false,
   valuation = 0,
+  totalValuation = 0,
   vps = 0,
   slopCount = 0,
   overheatCount = 0,
@@ -48,7 +49,7 @@ export function PitchDeckModal({
       BUZZWORDS_DATA.reduce((acc, bw) => (boughtBuzzwords.includes(bw.id) ? acc + bw.bonus : acc), 0) * 100
     );
     setSnapshot({
-      startupName, hasAiDomainBonus, valuation, vps, slopCount, overheatCount,
+      startupName, hasAiDomainBonus, valuation, totalValuation, vps, slopCount, overheatCount,
       prestigeLevel, hypeTier, buildings,
       badgeCount, badgeTotal: BADGE_TOTAL, cardCount, cardTotal: CARD_TOTAL, cardBonusPct,
     });
@@ -75,6 +76,7 @@ export function PitchDeckModal({
 
   const shareText = `🚀 ${tr('pdShareTitlePrefix')} ${snapshot.startupName.toUpperCase()} 🚀\n` +
     `📈 ${tr('pdShareValuation')} ${formatCurrency(snapshot.valuation)}\n` +
+    `🏆 ${tr('pdLifetimeValuation')} ${formatCurrency(snapshot.totalValuation)}\n` +
     `💰 ${tr('pdShareRevenue')}\n` +
     `⚡ ${tr('pdSharePassiveInflow')} +${formatCurrency(snapshot.vps)}/s\n` +
     `🔥 ${tr('pdShareStatus')} ${snapshot.overheatCount} ${tr('pdGpusMelted')}\n` +
@@ -172,11 +174,17 @@ export function PitchDeckModal({
   // NICHT mitschicken (WhatsApp bietet dafür keinen URL-Parameter, weder web noch App-Scheme -
   // gilt für jede Web-App, nicht nur für uns). Der einzige Weg, das generierte Bild in
   // WhatsApp zu bekommen, ist über das native OS-Teilen-Blatt (navigator.share mit File) -
-  // dort taucht WhatsApp als eine Option unter mehreren auf, statt direkt zu öffnen. Deshalb
-  // hier: wenn Bild-Sharing verfügbar ist, das native Blatt nehmen (Bild + Text, WhatsApp
-  // ist einen Tap entfernt); sonst der bisherige direkte Text-Link als Fallback.
+  // dort taucht WhatsApp NUR auf MOBILGERÄTEN als registriertes Share-Target auf. Auf dem
+  // Desktop (macOS/Windows-Freigabe-Menü) ist WhatsApp so gut wie nie als Ziel eingetragen -
+  // wurde der Button dort trotzdem über navigator.share geroutet, ging ein generisches
+  // Systemmenü OHNE WhatsApp-Option auf und der Klick auf "WHATSAPP" landete faktisch
+  // nirgendwo (das war der gemeldete Bug: "WhatsApp weg"). Deshalb: auf Mobilgeräten weiter
+  // das native Blatt mit Bild versuchen, auf dem Desktop direkt und zuverlässig den
+  // Text-Link öffnen - derselbe Mobil-Check wie in App.jsx detectLayoutMode().
+  const isMobileDevice = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+
   const handleShareWhatsApp = async () => {
-    if (navigator.share) {
+    if (isMobileDevice && navigator.share) {
       const file = await buildShareFile().catch(() => null);
       if (file) {
         // Sobald das native Blatt tatsächlich aufgeht, hier NICHT mehr auf den Text-Link

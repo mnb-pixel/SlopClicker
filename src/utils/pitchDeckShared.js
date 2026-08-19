@@ -140,6 +140,23 @@ export function getTopEngines(buildings = {}, t) {
     .reverse();
 }
 
+// Gesamtumfang über ALLE besessenen Gebäude-Typen, nicht nur die Top 3 aus getTopEngines()
+// oben - ohne das wirkt die geteilte Karte bei einem Late-Game-Imperium mit 10+ Gebäude-
+// Typen kleiner, als es tatsächlich ist (nur 3 Zeilen sichtbar). Wird als Zusatzzeile über
+// der Top-3-Liste angezeigt (siehe drawEngines/drawEngineChart).
+export function getEngineTotals(buildings = {}) {
+  let typesOwned = 0;
+  let totalUnits = 0;
+  for (const b of BUILDINGS_DATA) {
+    const count = buildings[b.id] || 0;
+    if (count > 0) {
+      typesOwned += 1;
+      totalUnits += count;
+    }
+  }
+  return { typesOwned, totalUnits };
+}
+
 export function getPitchDeckHeight(detailed) {
   return PITCH_DECK_BASE_HEIGHT + (detailed ? DETAILED_EXTRA_HEIGHT : 0);
 }

@@ -14,7 +14,7 @@ import { drawConsultingDeck } from './pitchDeckConsulting';
 import {
   PITCH_DECK_WIDTH, SANS, MONO, SERIF,
   fillRound, strokeRound, line, linear, setTracking, fitFont, ellipsize, drawPill,
-  getTopEngines, getPitchDeckHeight,
+  getTopEngines, getEngineTotals, getPitchDeckHeight,
 } from './pitchDeckShared';
 
 export { PITCH_DECK_WIDTH, getTopEngines, getPitchDeckHeight };
@@ -123,11 +123,15 @@ function drawTitle(ctx, tr, startupName, hasAiDomainBonus) {
   }
 }
 
-function drawHeroValuation(ctx, tr, valuation, vps) {
+function drawHeroValuation(ctx, tr, valuation, totalValuation, vps) {
   const x = 90;
   const y = 430;
   const w = 900;
-  const h = 320;
+  // +25 gegenüber vorher: Platz für die Lifetime-Valuation-Zeile unter dem Cashflow-Pill -
+  // ohne diese Zeile zeigte die Karte nur die AKTUELLE Bewertung, die z.B. direkt nach einer
+  // Singularity Ascension (Reset) winzig aussieht, obwohl über die gesamte Spielzeit schon
+  // viel mehr erwirtschaftet wurde.
+  const h = 345;
 
   fillRound(ctx, x, y, w, h, 40, linear(ctx, x, y, x + w, y + h, [
     [0, 'rgba(13, 22, 45, 0.92)'],
@@ -158,6 +162,10 @@ function drawHeroValuation(ctx, tr, valuation, vps) {
     border: 'rgba(34, 211, 238, 0.45)',
     height: 60,
   });
+
+  ctx.font = `700 22px ${MONO}`;
+  ctx.fillStyle = C.slate;
+  ctx.fillText(`${tr('pdLifetimeValuation')} ${formatCurrency(totalValuation)}`, 540, y + h - 22);
 }
 
 function drawTierBar(ctx, tr, hypeTier) {
@@ -228,7 +236,7 @@ function drawStatGrid(ctx, items) {
   });
 }
 
-function drawEngines(ctx, tr, engines) {
+function drawEngines(ctx, tr, engines, totals) {
   const x = 90;
   const y = 1265;
   const w = 900;
@@ -250,6 +258,20 @@ function drawEngines(ctx, tr, engines) {
     ctx.fillStyle = C.slate;
     ctx.fillText(ellipsize(ctx, tr('pdManualTappingMode'), 800), 540, y + 190);
     return;
+  }
+
+  // Nur die 3 teuersten Engine-Typen werden im Detail aufgelistet (Platzgründe) - ohne
+  // diese Zeile wirkt ein Late-Game-Imperium mit z.B. 12 gekauften Typen kleiner, als es
+  // ist. Zeigt den TATSÄCHLICHEN Gesamtumfang über alle Typen, auch die nicht gelisteten.
+  if (totals && totals.typesOwned > 0) {
+    ctx.font = `700 23px ${MONO}`;
+    ctx.fillStyle = C.slate;
+    ctx.fillText(
+      ellipsize(ctx, tr('pdEngineTypesTotal')
+        .replace('{types}', String(totals.typesOwned))
+        .replace('{units}', formatNumber(totals.totalUnits)), 800),
+      540, y + 105
+    );
   }
 
   engines.slice(0, 3).forEach((eng, i) => {
@@ -388,7 +410,7 @@ function drawNeonDeck(ctx, o) {
   drawFrame(ctx, H);
   drawHeader(ctx, tr);
   drawTitle(ctx, tr, o.startupName, o.hasAiDomainBonus);
-  drawHeroValuation(ctx, tr, o.valuation, o.vps);
+  drawHeroValuation(ctx, tr, o.valuation, o.totalValuation, o.vps);
   drawTierBar(ctx, tr, o.hypeTier);
   drawStatGrid(ctx, [
     { label: tr('pdAnnualRevenue'), value: tr('pdPureHype'), color: C.rose },
@@ -396,7 +418,7 @@ function drawNeonDeck(ctx, o) {
     { label: tr('pdMeltedGpuCores'), value: `${o.overheatCount} ${tr('pdOverheatsLabel')}`, color: C.orange },
     { label: tr('pdPrestigeLevelStat'), value: `${o.prestigeLevel} ${tr('pdAscensionsLabel')}`, color: C.cyan },
   ]);
-  drawEngines(ctx, tr, o.engines);
+  drawEngines(ctx, tr, o.engines, o.engineTotals);
   if (detailed) {
     drawCollection(ctx, tr, {
       badgeCount: o.badgeCount, badgeTotal: o.badgeTotal,
@@ -417,6 +439,7 @@ export function drawPitchDeck(canvas, opts = {}) {
     startupName = 'startup',
     hasAiDomainBonus = false,
     valuation = 0,
+    totalValuation = 0,
     vps = 0,
     slopCount = 0,
     overheatCount = 0,
@@ -446,9 +469,10 @@ export function drawPitchDeck(canvas, opts = {}) {
   ctx.textAlign = 'center';
 
   const shared = {
-    tr, lang, H, detailed, startupName, hasAiDomainBonus, valuation, vps, slopCount,
+    tr, lang, H, detailed, startupName, hasAiDomainBonus, valuation, totalValuation, vps, slopCount,
     overheatCount, prestigeLevel, hypeTier,
     engines: getTopEngines(buildings, t),
+    engineTotals: getEngineTotals(buildings),
     badgeCount, badgeTotal, cardCount, cardTotal, cardBonusPct,
   };
 

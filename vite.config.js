@@ -2,26 +2,38 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-// Entfernt die reinen Web-Skripte (Google AdSense) aus index.html, wenn für die native App
-// gebaut wird - `npm run build:ios` setzt dafür --mode native. Gesteuert über
-// <!-- web-only:start/end -->-Marker im HTML, damit hier keine URL-Regex gepflegt werden muss,
-// die beim nächsten Snippet-Update still danebengreift.
-//
-// Warum das nötig ist: AdSense ist für Webseiten lizenziert und in einer App-WebView nicht
-// zulässig - es würde sonst auch für Werbefrei-Käufer:innen laden, also genau das brechen,
-// was der IAP verspricht.
-// Siehe docs/ios-app-konzept.md §6.
-function stripWebOnlyTags(isNative) {
+// Entfernt Plattform-spezifische Marker-Blöcke aus index.html je nach Build-Ziel. Zwei
+// Blöcke, zwei unabhängige Bedingungen:
+// - web-only (Google AdSense): raus für --mode native (App-WebView, AdSense nicht
+//   lizenziert, würde auch Werbefrei-Käufer:innen treffen - siehe docs/ios-app-konzept.md §6)
+//   UND für --mode crazygames (dort läuft Monetarisierung exklusiv über deren eigenes
+//   Ad-SDK, siehe src/monetization/crazyGamesAdBridge.js - ein zweites Netzwerk auf derselben
+//   Seite ist gegen die CrazyGames-Richtlinien).
+// - crazygames-only (CrazyGames SDK Script): nur FÜR --mode crazygames drin, in den anderen
+//   beiden Builds unnötiger Ballast, der dort ohnehin nie initialisieren würde.
+// Marker-Kommentare statt URL-Regex, damit hier nichts beim nächsten Snippet-Update
+// stillschweigend danebengreift.
+function stripMarkedTags(tagName, shouldStrip) {
   return {
-    name: 'strip-web-only-tags',
+    name: `strip-${tagName}-tags`,
     transformIndexHtml(html) {
-      if (!isNative) return html;
-      return html.replace(/<!-- web-only:start -->[\s\S]*?<!-- web-only:end -->/g, '');
+      if (!shouldStrip) return html;
+      const re = new RegExp(`<!-- ${tagName}:start -->[\\s\\S]*?<!-- ${tagName}:end -->`, 'g');
+      return html.replace(re, '');
     },
   };
 }
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), tailwindcss(), stripWebOnlyTags(mode === 'native')],
+  // CrazyGames hostet Spiele unter einem Unterpfad (z.B. crazygames.com/game/<slug>/), nicht
+  // an der Domain-Wurzel - absolute Asset-Pfade ("/assets/...") würden dort ins Leere zeigen,
+  // relative Pfade funktionieren unabhängig vom tatsächlichen Hosting-Pfad.
+  base: mode === 'crazygames' ? './' : '/',
+  plugins: [
+    react(),
+    tailwindcss(),
+    stripMarkedTags('web-only', mode === 'native' || mode === 'crazygames'),
+    stripMarkedTags('crazygames-only', mode !== 'crazygames'),
+  ],
 }))

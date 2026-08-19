@@ -43,10 +43,14 @@ export const noAdBridge = {
 // Picks the bridge to use. adFree always wins (never initializes an ad SDK for a paying
 // customer). Native detection is done via the global Capacitor injects at runtime - no
 // static import of @capacitor/core here, so this file works before Capacitor is even
-// installed in the project and during plain `npm run dev`.
-export function selectAdBridge({ adFree, nativeAdBridge } = {}) {
+// installed in the project and during plain `npm run dev`. CrazyGames detection works the
+// same way, via window.CrazyGames.SDK - only present when index.html actually loaded the
+// SDK script, which only happens in the --mode crazygames build (see vite.config.js).
+export function selectAdBridge({ adFree, nativeAdBridge, crazyGamesAdBridge } = {}) {
   if (adFree) return noAdBridge;
   const isNative = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
   if (isNative && nativeAdBridge) return nativeAdBridge;
+  const isCrazyGames = typeof window !== 'undefined' && !!window.CrazyGames?.SDK;
+  if (isCrazyGames && crazyGamesAdBridge) return crazyGamesAdBridge;
   return webAdBridge;
 }

@@ -162,6 +162,7 @@ function drawMetricsTable(ctx, tr, o, startY) {
 
   const rows = [
     [tr('cdRowValuation'), formatCurrency(o.valuation)],
+    [tr('cdRowLifetimeValuation'), formatCurrency(o.totalValuation)],
     [tr('cdRowCashflow'), `+${formatCurrency(o.vps)}`],
     [tr('cdRowRevenue'), tr('pdPureHype')],
     [tr('cdRowTier'), `${o.hypeTier} / 10`],
@@ -197,7 +198,7 @@ function drawMetricsTable(ctx, tr, o, startY) {
   return tableTop + rows.length * rowH;
 }
 
-function drawEngineChart(ctx, tr, engines, startY) {
+function drawEngineChart(ctx, tr, engines, totals, startY) {
   const labelY = startY + 60;
   const chartTop = drawExhibitLabel(ctx, tr('cdExhibit2'), labelY) + 24;
 
@@ -209,13 +210,30 @@ function drawEngineChart(ctx, tr, engines, startY) {
     return chartTop + 60;
   }
 
+  // Nur die 3 teuersten Engine-Typen bekommen einen Balken (Platzgründe) - diese Zeile
+  // zeigt den tatsächlichen Gesamtumfang über alle Typen, siehe pitchDeckCanvas.js
+  // drawEngines() für dieselbe Ergänzung im Neon-Stil.
+  let totalsLineH = 0;
+  if (totals && totals.typesOwned > 0) {
+    ctx.textAlign = 'left';
+    ctx.font = `italic 400 22px ${SANS}`;
+    ctx.fillStyle = K.gray;
+    ctx.fillText(
+      ellipsize(ctx, tr('pdEngineTypesTotal')
+        .replace('{types}', String(totals.typesOwned))
+        .replace('{units}', formatNumber(totals.totalUnits)), W - 20),
+      L + 20, chartTop
+    );
+    totalsLineH = 40;
+  }
+
   const barX = L + 340;
   const barMaxW = 430;
   const rowH = 62;
   const maxCount = Math.max(...engines.map((e) => e.count), 1);
 
   engines.slice(0, 3).forEach((eng, i) => {
-    const y = chartTop + i * rowH + 20;
+    const y = chartTop + totalsLineH + i * rowH + 20;
 
     ctx.textAlign = 'left';
     ctx.font = `600 24px ${SANS}`;
@@ -235,7 +253,7 @@ function drawEngineChart(ctx, tr, engines, startY) {
     ctx.fillText(`${eng.count}×`, R, y);
   });
 
-  return chartTop + Math.min(engines.length, 3) * rowH + 20;
+  return chartTop + totalsLineH + Math.min(engines.length, 3) * rowH + 20;
 }
 
 function drawPortfolioExhibit(ctx, tr, o, startY) {
@@ -357,7 +375,7 @@ export function drawConsultingDeck(ctx, o) {
 
   let cursor = drawExecutiveSummary(ctx, tr, o);
   cursor = drawMetricsTable(ctx, tr, o, cursor);
-  cursor = drawEngineChart(ctx, tr, o.engines, cursor);
+  cursor = drawEngineChart(ctx, tr, o.engines, o.engineTotals, cursor);
   if (detailed) cursor = drawPortfolioExhibit(ctx, tr, o, cursor);
 
   drawPullQuote(ctx, tr, cursor, H - 280);
