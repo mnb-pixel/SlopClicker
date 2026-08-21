@@ -5,6 +5,7 @@ import { SpecialTab } from '../tabs/SpecialTab';
 import { StatsTab } from '../tabs/StatsTab';
 import { MiscTab } from '../tabs/MiscTab';
 import { SeoContent } from '../SeoContent';
+import { LegalFooter } from '../LegalFooter';
 import { isCrazyGamesBuild } from '../../monetization/crazyGamesSdk';
 
 export function DesktopView({ store, onOpenLegal }) {
@@ -67,8 +68,6 @@ export function DesktopView({ store, onOpenLegal }) {
             purchaseState={store.purchaseState}
             purchaseAdFree={store.purchaseAdFree}
             restorePurchases={store.restorePurchases}
-            showAdPrivacyOptions={store.showAdPrivacyOptions}
-            onOpenLegal={onOpenLegal}
             t={store.t}
             tf={store.tf}
           />
@@ -166,6 +165,16 @@ export function DesktopView({ store, onOpenLegal }) {
         </div>
       </div>
     )}
+
+    {/* Pflichtlinks einmal für die gesamte Ein-Seiten-Ansicht, statt nur im Einstellungen-
+        Panel versteckt - siehe LegalFooter.jsx. */}
+    <LegalFooter
+      onOpenLegal={onOpenLegal}
+      purchaseAvailable={store.purchaseAvailable}
+      adFree={store.adFree}
+      showAdPrivacyOptions={store.showAdPrivacyOptions}
+      t={store.t}
+    />
     </>
   );
 }

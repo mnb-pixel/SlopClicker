@@ -14,6 +14,7 @@ import { AdRewardToast } from './components/AdRewardToast';
 import { ClickParticles } from './components/ClickParticles';
 import { AdBanner, ADS_ENABLED } from './components/AdBanner';
 import { SeoContent } from './components/SeoContent';
+import { LegalFooter } from './components/LegalFooter';
 import { OfflineEarningsModal } from './components/modals/OfflineEarningsModal';
 import { AfkReportModal } from './components/modals/AfkReportModal';
 import { ScheduledAdModal } from './components/modals/ScheduledAdModal';
@@ -321,8 +322,6 @@ export default function App() {
                 purchaseState={store.purchaseState}
                 purchaseAdFree={store.purchaseAdFree}
                 restorePurchases={store.restorePurchases}
-                showAdPrivacyOptions={store.showAdPrivacyOptions}
-                onOpenLegal={setLegalPage}
                 t={store.t}
                 tf={store.tf}
               />
@@ -346,6 +345,18 @@ export default function App() {
                 {store.activeTab === 4 && <SeoContent t={store.t} lang={store.lang} compact section="stats" />}
               </div>
             )}
+
+            {/* Pflichtlinks auf JEDEM Tab statt nur im Einstellungen-Tab versteckt - siehe
+                LegalFooter.jsx. Unconditional (nicht an activeTab gekoppelt), damit das
+                Impressum von jeder Ansicht aus per Scroll erreichbar ist, nicht erst nach
+                einem Tab-Wechsel. */}
+            <LegalFooter
+              onOpenLegal={setLegalPage}
+              purchaseAvailable={store.purchaseAvailable}
+              adFree={store.adFree}
+              showAdPrivacyOptions={store.showAdPrivacyOptions}
+              t={store.t}
+            />
           </main>
 
           {/* Statischer Werbe-Slot, fix über der Tab-Leiste verankert. Vorher lag er im
