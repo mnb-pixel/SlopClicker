@@ -101,6 +101,20 @@
           nächste Runde beginnt.
         </p>
 
+        <!-- web-only:start -->
+        <!-- Echte <a href>-Links zu den Tab-Routen (siehe src/routes.js) - für einen
+             Crawler, der KEIN JavaScript ausführt, ist das der einzige Weg, diese Seiten
+             überhaupt zu entdecken (ein onClick-Handler ohne echten href wäre unsichtbar).
+             NICHT im CrazyGames-/nativen Build: dort existieren diese Routen gar nicht
+             (siehe useRoutes in App.jsx) - absolute Pfade würden dort ins Leere zeigen. -->
+        <nav style="margin-bottom: 1.5rem; line-height: 1.8;">
+          <a href="/shop">Shop</a> ·
+          <a href="/special">Special</a> ·
+          <a href="/statistik">Statistik</a> ·
+          <a href="/einstellungen">Einstellungen</a>
+        </nav>
+        <!-- web-only:end -->
+
         <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">So funktioniert's</h2>
         <p style="margin-bottom: 0.5rem; line-height: 1.6;">
           Klicke auf den AGI-Kern-Button, um manuell Unternehmenswert zu generieren, oder

@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
@@ -28,7 +29,15 @@ function mount() {
   createRoot(document.getElementById('root')).render(
     <StrictMode>
       <ErrorBoundary>
-        <App />
+        {/* Immer aktiv, auch in CrazyGames/nativ - reine Client-Navigation über die
+            History API, keine echte Seitennavigation. App.jsx entscheidet selbst (per
+            useRoutes-Flag, siehe dort), ob NavBar echte URLs nutzt oder wie bisher rein
+            über React-State schaltet - hier ist der Provider nur immer vorhanden, damit
+            useLocation() in App.jsx unabhängig vom Build-Modus als Hook aufgerufen
+            werden darf (Rules of Hooks: kann nicht bedingt aufgerufen werden). */}
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
       </ErrorBoundary>
     </StrictMode>,
   )

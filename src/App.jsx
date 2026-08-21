@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useGameStore } from './hooks/useGameStore';
 import { Header } from './components/Header';
 import { NavBar } from './components/NavBar';
@@ -20,6 +21,7 @@ import { TrackingExplainerModal } from './components/modals/TrackingExplainerMod
 import { showNativeBanner, hideNativeBanner } from './monetization/nativeBanner';
 import { isCrazyGamesBuild } from './monetization/crazyGamesSdk';
 import { UPGRADES_DATA } from './data/upgradesData';
+import { ROUTE_TABS } from './routes';
 
 // Lazy geladen statt statisch importiert: alle drei sind reine Klick-zum-Öffnen-Modals,
 // die die meisten Sessions nie aufrufen. PitchDeckModal allein zieht canvas-confetti plus
@@ -45,6 +47,21 @@ export default function App() {
   const [legalPage, setLegalPage] = useState(null);
 
   const isNativePlatform = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
+  // Echte Tab-Routen nur im reinen Web-Build (siehe routes.js) - CrazyGames hostet unter
+  // einem fremden, zur Buildzeit unbekannten Unterpfad (absolute Pfade wie "/shop" würden
+  // dort auf die CrazyGames-Domain-Wurzel zeigen statt ins Spiel), die iOS-App braucht
+  // ohnehin keine URLs. BrowserRouter selbst ist in main.jsx trotzdem immer aktiv (siehe
+  // dort) - hier wird nur entschieden, ob NavBar echte <Link>s rendert und ob die Route
+  // den activeTab-State treibt.
+  const useRoutes = !isNativePlatform && !isCrazyGamesBuild();
+  const location = useLocation();
+  useEffect(() => {
+    if (!useRoutes) return;
+    const tabFromRoute = ROUTE_TABS[location.pathname];
+    if (tabFromRoute && tabFromRoute !== store.activeTab) {
+      store.setActiveTab(tabFromRoute);
+    }
+  }, [location.pathname]);
 
   // Natives AdMob-Banner (kein DOM-Element, siehe AdBanner.jsx) folgt adFree. Auf Web ist
   // showNativeBanner/hideNativeBanner ein No-Op.
@@ -311,15 +328,22 @@ export default function App() {
               />
             )}
 
-            {/* Beschreibungstext nur auf dem Start-Tab (SlopTab, activeTab 1) statt auf allen
-                5 Tabs - siehe SeoContent.jsx und das Desktop-Pendant in DesktopView.jsx.
-                Nur Web UND nicht CrazyGames: der Text existiert einzig für den
-                AdSense-Site-Review (siehe AdBanner.jsx) - in der iOS-App (AdMob,
-                App-Store-Review) und auf CrazyGames' eigener Spieleseite ist er nur
+            {/* Pro Tab EIGENER, thematisch passender Beschreibungstext statt ein einziger
+                Block nur auf dem Start-Tab - siehe SeoContent.jsx (section-Prop) und
+                routes.js. Grund: Google hat token-furnace.com wiederholt mit "low value
+                content" abgelehnt, obwohl auf "/" bereits echter Text stand - eine Domain
+                mit nur EINER crawlbaren URL wirkt trotzdem wie eine Dünnschicht-Seite. Mit
+                useRoutes bekommt jeder Tab jetzt eine eigene URL (routes.js) UND eigenen,
+                zur Route passenden Content, statt denselben Block fünffach zu wiederholen.
+                Nur Web UND nicht CrazyGames/nativ (== useRoutes): in der iOS-App (AdMob,
+                App-Store-Review) und auf CrazyGames' eigener Spieleseite ist der Text nur
                 unnötiger Platz unter dem eigentlichen Spiel. */}
-            {!isNativePlatform && !isCrazyGamesBuild() && store.activeTab === 1 && (
+            {useRoutes && (
               <div className="mx-3 mt-4 bg-slate-900/60 rounded-xl border border-slate-800 p-3 text-xs text-slate-400 leading-relaxed">
-                <SeoContent t={store.t} lang={store.lang} compact />
+                {store.activeTab === 1 && <SeoContent t={store.t} lang={store.lang} compact section="home" />}
+                {store.activeTab === 2 && <SeoContent t={store.t} lang={store.lang} compact section="shop" />}
+                {store.activeTab === 3 && <SeoContent t={store.t} lang={store.lang} compact section="special" />}
+                {store.activeTab === 4 && <SeoContent t={store.t} lang={store.lang} compact section="stats" />}
               </div>
             )}
           </main>
@@ -344,6 +368,7 @@ export default function App() {
             activeTab={store.activeTab}
             setActiveTab={store.setActiveTab}
             affordableUpgradesCount={affordableUpgradesCount}
+            useRoutes={useRoutes}
             t={store.t}
           />
         </div>

@@ -8,11 +8,17 @@
   // separaten Worker an statt den bestehenden zu aktualisieren.
   "name": "tokenfurnace",
   "compatibility_date": "2026-08-14",
-  // Reine statische SPA ohne eigenen Server-Code oder URL-basiertes Routing (kein
-  // react-router im Einsatz, Tabs sind reiner React-State) - "assets" statt "main" reicht,
-  // kein Worker-Script nötig. public/_headers (Security-Header) landet unverändert in
-  // dist/ und wird von Cloudflare automatisch wie gewohnt ausgewertet.
+  // Statische SPA, kein eigener Server-Code - "assets" statt "main" reicht, kein
+  // Worker-Script nötig. public/_headers (Security-Header) landet unverändert in dist/
+  // und wird von Cloudflare automatisch wie gewohnt ausgewertet.
   "assets": {
-    "directory": "./dist"
+    "directory": "./dist",
+    // Seit dem react-router-Umbau (siehe src/routes.js) hat der Web-Build echte Tab-URLs
+    // (/shop, /special, /statistik, /einstellungen). Ohne dieses Feld liefert Cloudflare
+    // für einen direkten Aufruf/Reload dieser Pfade einen harten 404 statt der SPA - genau
+    // die URLs, die für den AdSense-Site-Review als eigenständige Seiten erreichbar sein
+    // sollen. "single-page-application" lässt JEDEN nicht gefundenen Pfad stattdessen mit
+    // index.html (Status 200) antworten, React Router übernimmt danach client-seitig.
+    "not_found_handling": "single-page-application"
   }
 }
