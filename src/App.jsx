@@ -22,7 +22,7 @@ import { TrackingExplainerModal } from './components/modals/TrackingExplainerMod
 import { showNativeBanner, hideNativeBanner } from './monetization/nativeBanner';
 import { isCrazyGamesBuild } from './monetization/crazyGamesSdk';
 import { UPGRADES_DATA } from './data/upgradesData';
-import { ROUTE_TABS } from './routes';
+import { ROUTE_TABS, ROUTE_LEGAL_PAGES } from './routes';
 
 // Lazy geladen statt statisch importiert: alle drei sind reine Klick-zum-Öffnen-Overlays,
 // die die meisten Sessions nie aufrufen. ShareScreen allein zieht canvas-confetti plus
@@ -61,6 +61,13 @@ export default function App() {
     const tabFromRoute = ROUTE_TABS[location.pathname];
     if (tabFromRoute && tabFromRoute !== store.activeTab) {
       store.setActiveTab(tabFromRoute);
+    }
+    // Direkter Aufruf von /impressum bzw. /datenschutz (z.B. der extern in App Store
+    // Connect hinterlegte "Privacy Policy URL"-Link) muss das Rechtstext-Overlay auch OHNE
+    // vorherigen Klick in der App zeigen - siehe routes.js.
+    const legalFromRoute = ROUTE_LEGAL_PAGES[location.pathname];
+    if (legalFromRoute) {
+      setLegalPage(legalFromRoute);
     }
   }, [location.pathname]);
 
