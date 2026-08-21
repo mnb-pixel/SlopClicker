@@ -1,3 +1,5 @@
+import { rm } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -24,6 +26,29 @@ function stripMarkedTags(tagName, shouldStrip) {
   };
 }
 
+// public/ads.txt und public/_headers landen unverändert in JEDEM Build-Output, weil Vite
+// public/ komplett kopiert - unabhängig vom transformIndexHtml-Marker-Mechanismus oben, der
+// nur index.html selbst betrifft. ads.txt ist eine von Google erkannte AdSense-Publisher-
+// Verifizierungsdatei, _headers nennt in seiner Content-Security-Policy explizit
+// pagead2.googlesyndication.com (AdSense) - beide sind reine AdSense-/Cloudflare-Artefakte,
+// die im CrazyGames-Build (fremd gehostet, eigenes Ad-SDK, siehe crazyGamesAdBridge.js) und
+// im nativen Build (App-WebView, siehe docs/ios-app-konzept.md §6) nichts verloren haben,
+// selbst wenn sie dort inert wären. Post-Build statt Marker-Strip, weil es echte Dateien
+// im Output sind, kein HTML-Fragment.
+function stripAdSenseOnlyFiles(shouldStrip) {
+  return {
+    name: 'strip-adsense-only-files',
+    apply: 'build',
+    async writeBundle(options) {
+      if (!shouldStrip) return;
+      const dir = options.dir || 'dist';
+      await Promise.all(
+        ['ads.txt', '_headers'].map((file) => rm(resolve(dir, file), { force: true }))
+      );
+    },
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
   // CrazyGames hostet Spiele unter einem Unterpfad (z.B. crazygames.com/game/<slug>/), nicht
@@ -35,5 +60,6 @@ export default defineConfig(({ mode }) => ({
     tailwindcss(),
     stripMarkedTags('web-only', mode === 'native' || mode === 'crazygames'),
     stripMarkedTags('crazygames-only', mode !== 'crazygames'),
+    stripAdSenseOnlyFiles(mode === 'native' || mode === 'crazygames'),
   ],
 }))
