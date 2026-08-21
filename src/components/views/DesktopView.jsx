@@ -4,6 +4,7 @@ import { StoreTab } from '../tabs/StoreTab';
 import { SpecialTab } from '../tabs/SpecialTab';
 import { StatsTab } from '../tabs/StatsTab';
 import { MiscTab } from '../tabs/MiscTab';
+import { SeoContent } from '../SeoContent';
 import { isCrazyGamesBuild } from '../../monetization/crazyGamesSdk';
 
 export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
@@ -152,43 +153,16 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
     {/* Dauerhaft sichtbarer Beschreibungstext (kein Modal, kein Pre-Hydration-Fallback) -
         AUSSERHALB des Grids oben: innerhalb des Grids überlappte die Box beim Scrollen die
         noch "sticky" linke/rechte Spalte, weil deren Zellenhöhe (gedeckelt per max-h) weit
-        unter der Zeilenhöhe (bestimmt durch die viel längere mittlere Spalte) liegt - siehe
-        translations.js aboutTitle/aboutText. Rein für den AdSense-Site-Review gedacht (siehe
-        App.jsx) - DesktopView läuft ohnehin nur im Web-Layout, nie in der iOS-App. NICHT im
-        CrazyGames-Build: der Block existiert einzig, damit Googles AdSense-Crawler auf
-        token-furnace.com echten Content sieht - auf CrazyGames' eigener Spieleseite ist er
-        nur unnötiger Ballast unter dem eigentlichen Spiel. */}
+        unter der Zeilenhöhe (bestimmt durch die viel längere mittlere Spalte) liegt. Rein
+        für den AdSense-Site-Review gedacht (siehe SeoContent.jsx, AdBanner.jsx) - DesktopView
+        läuft ohnehin nur im Web-Layout, nie in der iOS-App. NICHT im CrazyGames-Build: der
+        Block existiert einzig, damit Googles AdSense-Crawler auf token-furnace.com echten
+        Content sieht - auf CrazyGames' eigener Spieleseite ist er nur unnötiger Ballast
+        unter dem eigentlichen Spiel. */}
     {!isCrazyGamesBuild() && (
       <div className="w-full max-w-3xl mx-auto p-4 pt-0">
-        <div className="bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-800 p-4 text-sm text-slate-400 leading-relaxed flex flex-col gap-4">
-          <div>
-            <h2 className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-2">
-              {store.t('aboutTitle')}
-            </h2>
-            <p>{store.t('aboutText')}</p>
-          </div>
-          <div>
-            <h2 className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-2">
-              {store.t('howToPlayTitle')}
-            </h2>
-            <p className="mb-2">{store.t('htpP1')}</p>
-            <p className="mb-2">{store.t('htpP2')}</p>
-            <p className="mb-2">{store.t('htpP3')}</p>
-            <p>{store.t('htpP4')}</p>
-          </div>
-          <div>
-            <h2 className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-2">
-              {store.t('faqTitle')}
-            </h2>
-            <dl className="flex flex-col gap-2">
-              {[1, 2, 3, 4].map((n) => (
-                <div key={n}>
-                  <dt className="font-bold text-slate-300">{store.t(`faqQ${n}`)}</dt>
-                  <dd>{store.t(`faqA${n}`)}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
+        <div className="bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-800 p-4 text-sm text-slate-400 leading-relaxed">
+          <SeoContent t={store.t} lang={store.lang} />
         </div>
       </div>
     )}

@@ -12,6 +12,7 @@ import { GoldenMemeBanner } from './components/GoldenMemeBanner';
 import { AdRewardToast } from './components/AdRewardToast';
 import { ClickParticles } from './components/ClickParticles';
 import { AdBanner, ADS_ENABLED } from './components/AdBanner';
+import { SeoContent } from './components/SeoContent';
 import { OfflineEarningsModal } from './components/modals/OfflineEarningsModal';
 import { AfkReportModal } from './components/modals/AfkReportModal';
 import { ScheduledAdModal } from './components/modals/ScheduledAdModal';
@@ -311,41 +312,14 @@ export default function App() {
             )}
 
             {/* Beschreibungstext nur auf dem Start-Tab (SlopTab, activeTab 1) statt auf allen
-                5 Tabs - siehe translations.js aboutTitle/aboutText und das Desktop-Pendant in
-                DesktopView.jsx. Nur Web UND nicht CrazyGames: der Text existiert einzig für
-                den AdSense-Site-Review (siehe AdBanner.jsx) - in der iOS-App (AdMob,
+                5 Tabs - siehe SeoContent.jsx und das Desktop-Pendant in DesktopView.jsx.
+                Nur Web UND nicht CrazyGames: der Text existiert einzig für den
+                AdSense-Site-Review (siehe AdBanner.jsx) - in der iOS-App (AdMob,
                 App-Store-Review) und auf CrazyGames' eigener Spieleseite ist er nur
                 unnötiger Platz unter dem eigentlichen Spiel. */}
             {!isNativePlatform && !isCrazyGamesBuild() && store.activeTab === 1 && (
-              <div className="mx-3 mt-4 bg-slate-900/60 rounded-xl border border-slate-800 p-3 text-xs text-slate-400 leading-relaxed flex flex-col gap-3">
-                <div>
-                  <h2 className="text-[10px] font-black uppercase tracking-wider text-cyan-400 mb-1.5">
-                    {store.t('aboutTitle')}
-                  </h2>
-                  <p>{store.t('aboutText')}</p>
-                </div>
-                <div>
-                  <h2 className="text-[10px] font-black uppercase tracking-wider text-cyan-400 mb-1.5">
-                    {store.t('howToPlayTitle')}
-                  </h2>
-                  <p className="mb-1.5">{store.t('htpP1')}</p>
-                  <p className="mb-1.5">{store.t('htpP2')}</p>
-                  <p className="mb-1.5">{store.t('htpP3')}</p>
-                  <p>{store.t('htpP4')}</p>
-                </div>
-                <div>
-                  <h2 className="text-[10px] font-black uppercase tracking-wider text-cyan-400 mb-1.5">
-                    {store.t('faqTitle')}
-                  </h2>
-                  <dl className="flex flex-col gap-1.5">
-                    {[1, 2, 3, 4].map((n) => (
-                      <div key={n}>
-                        <dt className="font-bold text-slate-300">{store.t(`faqQ${n}`)}</dt>
-                        <dd>{store.t(`faqA${n}`)}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </div>
+              <div className="mx-3 mt-4 bg-slate-900/60 rounded-xl border border-slate-800 p-3 text-xs text-slate-400 leading-relaxed">
+                <SeoContent t={store.t} lang={store.lang} compact />
               </div>
             )}
           </main>
