@@ -4,6 +4,7 @@ import { getIcon } from '../../utils/iconMap';
 import { HEAVENLY_UPGRADES_DATA } from '../../data/heavenlyUpgradesData';
 import { IDEALIST_PATH, CYNIC_PATH, EPOCHS, CREDIBILITY_LEVEL_COST_BASE } from '../../data/credibilityTreeData';
 import { formatCurrency, formatNumber } from '../../utils/formatters';
+import singularityPrestigeMeme from '../../assets/singularity_prestige_meme.jpg';
 
 export function SpecialTab({
   prestigeLevel,
@@ -315,10 +316,17 @@ export function SpecialTab({
           <div>
             {/* Singularity Ascension Card */}
             <div className="bg-gradient-to-br from-purple-950 via-slate-900 to-indigo-950 p-4 rounded-2xl border-2 border-purple-500/40 shadow-2xl mb-6 relative overflow-hidden group">
-              {/* Relativer statt absoluter Pfad - siehe SlopTab.jsx (gpu_chip_meme.jpg) für
-                  die Begründung: bricht sonst unter --mode crazygames (Unterpfad-Hosting). */}
+              {/* Als ES-Modul importiert statt public/-Roh-Pfad - siehe SlopTab.jsx
+                  (gpuChipMeme-Import) für die ausführliche Begründung: ein roher "./..."-
+                  Pfad bricht unter --mode crazygames abhängig davon, ob die Spielseite mit
+                  oder ohne abschließenden Slash ausgeliefert wird. Bewusst eine EIGENE Kopie
+                  in src/assets/ statt derselben Datei aus public/ zu importieren: die Datei
+                  in public/singularity_prestige_meme.jpg bleibt zusätzlich bestehen, weil
+                  sie unverändert als absolute URL im og:image-Meta-Tag (index.html) für
+                  Social-Share-Vorschauen gebraucht wird - das funktioniert nur über einen
+                  stabilen, öffentlichen Pfad, kein JS-Import mit gehashtem Dateinamen. */}
               <img
-                src="./singularity_prestige_meme.jpg"
+                src={singularityPrestigeMeme}
                 alt={tr('ascendTitle')}
                 className="absolute inset-0 w-full h-full object-cover opacity-25 group-hover:opacity-40 transition-opacity"
               />

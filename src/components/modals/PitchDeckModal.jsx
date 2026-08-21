@@ -5,6 +5,7 @@ import { formatCurrency } from '../../utils/formatters';
 import { drawPitchDeck } from '../../utils/pitchDeckCanvas';
 import { ACHIEVEMENTS_DATA } from '../../data/achievementsData';
 import { BUZZWORDS_DATA } from '../../data/buzzwordsData';
+import { isCrazyGamesBuild } from '../../monetization/crazyGamesSdk';
 
 const BADGE_TOTAL = ACHIEVEMENTS_DATA.length;
 const CARD_TOTAL = BUZZWORDS_DATA.length;
@@ -28,6 +29,14 @@ export function PitchDeckModal({
   t,
 }) {
   const tr = t || ((k) => k);
+  // CrazyGames: Spiel läuft in einem fremden iFrame/Sandbox - window.open() zu X/WhatsApp/
+  // LinkedIn kann dort geblockt werden oder verlässt aus Nutzersicht "die CrazyGames-Seite",
+  // beides gegen deren Richtlinien für eingebettete Spiele. Native Web Share API (navigator.
+  // share) ist im iFrame ebenso unzuverlässig (je nach Permissions-Policy der einbettenden
+  // Seite deaktiviert). Einzig verlässliche, komplett lokale Option bleibt der PNG-Download
+  // (reiner <a download>-Link, siehe handleDownloadPng) - deshalb dort NUR den Download
+  // anbieten statt der vollen Multi-Channel-Leiste.
+  const isCrazyGames = isCrazyGamesBuild();
   const [copied, setCopied] = useState(false);
   const [isGeneratingPng, setIsGeneratingPng] = useState(true);
   const [pngDataUrl, setPngDataUrl] = useState(null);
@@ -312,62 +321,76 @@ export function PitchDeckModal({
 
         {/* Multi-Channel Share Actions */}
         <div className="mt-3 pt-3 border-t border-slate-800 flex flex-col gap-2 shrink-0">
-          {/* Main Action Bar: Native Web Share & Download PNG */}
-          <div className="grid grid-cols-2 gap-2">
-            {typeof navigator !== 'undefined' && 'share' in navigator ? (
-              <button
-                onClick={handleNativeShare}
-                className="py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 via-fuchsia-500 to-cyan-400 text-slate-950 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-fuchsia-500/20"
-              >
-                <Share2 className="w-4 h-4 text-slate-950" />
-                <span>{tr('pdDirectShare')}</span>
-              </button>
-            ) : (
-              <button
-                onClick={handleCopy}
-                className="py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider bg-cyan-500 text-slate-950 hover:bg-cyan-400 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20"
-              >
-                {copied ? <Check className="w-4 h-4 text-slate-950" /> : <Copy className="w-4 h-4" />}
-                <span>{copied ? tr('pdCopied') : tr('pdCopyMeme')}</span>
-              </button>
-            )}
-
+          {isCrazyGames ? (
+            /* CrazyGames: nur lokaler Download, siehe isCrazyGames-Kommentar oben. */
             <button
               onClick={handleDownloadPng}
               disabled={isGeneratingPng || !pngDataUrl}
-              className="py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider bg-slate-800 text-cyan-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5 border border-cyan-500/40 shadow-md disabled:opacity-50"
+              className="py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 via-fuchsia-500 to-cyan-400 text-slate-950 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-fuchsia-500/20 disabled:opacity-50"
             >
-              <Download className="w-4 h-4 text-cyan-400" />
+              <Download className="w-4 h-4 text-slate-950" />
               <span>{tr('pdSavePng')}</span>
             </button>
-          </div>
+          ) : (
+            <>
+              {/* Main Action Bar: Native Web Share & Download PNG */}
+              <div className="grid grid-cols-2 gap-2">
+                {typeof navigator !== 'undefined' && 'share' in navigator ? (
+                  <button
+                    onClick={handleNativeShare}
+                    className="py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 via-fuchsia-500 to-cyan-400 text-slate-950 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-fuchsia-500/20"
+                  >
+                    <Share2 className="w-4 h-4 text-slate-950" />
+                    <span>{tr('pdDirectShare')}</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleCopy}
+                    className="py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider bg-cyan-500 text-slate-950 hover:bg-cyan-400 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20"
+                  >
+                    {copied ? <Check className="w-4 h-4 text-slate-950" /> : <Copy className="w-4 h-4" />}
+                    <span>{copied ? tr('pdCopied') : tr('pdCopyMeme')}</span>
+                  </button>
+                )}
 
-          {/* Social Media Shortcut Icons */}
-          <div className="grid grid-cols-3 gap-1.5 pt-1">
-            <button
-              onClick={handleShareX}
-              className="py-2 rounded-lg bg-slate-950 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-600 text-[10px] font-bold transition-all flex items-center justify-center gap-1"
-            >
-              <Send className="w-3.5 h-3.5 text-cyan-400" />
-              <span>X ({tr('pdTweetLabel')})</span>
-            </button>
+                <button
+                  onClick={handleDownloadPng}
+                  disabled={isGeneratingPng || !pngDataUrl}
+                  className="py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider bg-slate-800 text-cyan-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5 border border-cyan-500/40 shadow-md disabled:opacity-50"
+                >
+                  <Download className="w-4 h-4 text-cyan-400" />
+                  <span>{tr('pdSavePng')}</span>
+                </button>
+              </div>
 
-            <button
-              onClick={handleShareWhatsApp}
-              className="py-2 rounded-lg bg-slate-950 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-600 text-[10px] font-bold transition-all flex items-center justify-center gap-1"
-            >
-              <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
-              <span>WHATSAPP</span>
-            </button>
+              {/* Social Media Shortcut Icons */}
+              <div className="grid grid-cols-3 gap-1.5 pt-1">
+                <button
+                  onClick={handleShareX}
+                  className="py-2 rounded-lg bg-slate-950 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-600 text-[10px] font-bold transition-all flex items-center justify-center gap-1"
+                >
+                  <Send className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>X ({tr('pdTweetLabel')})</span>
+                </button>
 
-            <button
-              onClick={handleShareLinkedIn}
-              className="py-2 rounded-lg bg-slate-950 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-600 text-[10px] font-bold transition-all flex items-center justify-center gap-1"
-            >
-              <Globe className="w-3.5 h-3.5 text-blue-400" />
-              <span>LINKEDIN</span>
-            </button>
-          </div>
+                <button
+                  onClick={handleShareWhatsApp}
+                  className="py-2 rounded-lg bg-slate-950 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-600 text-[10px] font-bold transition-all flex items-center justify-center gap-1"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>WHATSAPP</span>
+                </button>
+
+                <button
+                  onClick={handleShareLinkedIn}
+                  className="py-2 rounded-lg bg-slate-950 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-600 text-[10px] font-bold transition-all flex items-center justify-center gap-1"
+                >
+                  <Globe className="w-3.5 h-3.5 text-blue-400" />
+                  <span>LINKEDIN</span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
