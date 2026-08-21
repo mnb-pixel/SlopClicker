@@ -24,7 +24,7 @@ export const Header = forwardRef(function Header({
   hypeTier,
   burnRate,
   onOpenManual,
-  onOpenPitchDeck,
+  onOpenShare,
   lang = 'de',
   setLang,
   logs,
@@ -166,7 +166,7 @@ export const Header = forwardRef(function Header({
 
             {/* Top Bar Prominent Virality SHARE Button - immer sichtbar */}
             <button
-              onClick={onOpenPitchDeck}
+              onClick={onOpenShare}
               title={tr('sharePitchDeckTitle')}
               className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-400 via-fuchsia-500 to-cyan-400 text-slate-950 hover:brightness-110 active:scale-95 shadow-md shadow-fuchsia-500/20 transition-all border border-amber-300/60"
             >

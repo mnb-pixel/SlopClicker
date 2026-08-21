@@ -222,7 +222,6 @@ export function useGameStore() {
   const [isOverheated, setIsOverheated] = useState(false);
   const [coolingRate, setCoolingRate] = useState(4.0); // °C per second
 
-  const [powerClicks, setPowerClicks] = useState(0);
   const [powerClickActive, setPowerClickActive] = useState(false);
   const [powerClickSurgeTimer, setPowerClickSurgeTimer] = useState(0);
 
@@ -504,7 +503,6 @@ export function useGameStore() {
       gpuTemp,
       isOverheated,
       coolingRate,
-      powerClicks,
       prestigeLevel,
       heavenlyChips,
       themeMode,
@@ -552,7 +550,7 @@ export function useGameStore() {
     });
   }, [
     lang, startupName, valuation, totalValuation, totalBurned, slopCount, gpuTemp, isOverheated,
-    coolingRate, powerClicks, prestigeLevel, heavenlyChips, themeMode, boughtBuzzwords,
+    coolingRate, prestigeLevel, heavenlyChips, themeMode, boughtBuzzwords,
     boughtGreenwashingLayoffs, epoch, idealistLevel, cynicLevel, credibility, pivotCount,
     valuationAtLastPivot, buildings, blackSwanNextEligible,
     boughtUpgrades, unlockedUpgrades, boughtHeavenlyUpgrades, unlockedAchievements, stats,
@@ -580,7 +578,6 @@ export function useGameStore() {
     setGpuTemp(safeNumber(data.gpuTemp, 0, { min: 0 }));
     setIsOverheated(safeBool(data.isOverheated));
     setCoolingRate(safeNumber(data.coolingRate, 4.0, { min: 0 }));
-    setPowerClicks(safeNumber(data.powerClicks, 0, { min: 0 }));
     setPrestigeLevel(safeNumber(data.prestigeLevel, 0, { min: 0 }));
     setHeavenlyChips(safeNumber(data.heavenlyChips, 0, { min: 0 }));
     // 'cyberpunk' als Gegenwert, nicht 'modern_slop': der Initial-State und
@@ -1527,18 +1524,6 @@ export function useGameStore() {
     setActiveEvent(null);
   }, []);
 
-  // Toggle Power Click
-  const togglePowerClick = useCallback(() => {
-    if (powerClicks <= 0) {
-      addLog(tf('log_noPowerClicks'), 'info');
-      return;
-    }
-    setPowerClicks((prev) => prev - 1);
-    setPowerClickActive(true);
-    setPowerClickSurgeTimer(20);
-    addLog(tf('log_powerClickActivated'), 'success');
-  }, [powerClicks, addLog, tf]);
-
   // Ist dieser Ad-Placement-Typ gerade nutzbar (kein aktiver Cooldown)?
   const isAdReady = useCallback((type) => Date.now() >= (adCooldowns[type] || 0), [adCooldowns]);
 
@@ -1570,7 +1555,13 @@ export function useGameStore() {
       addLog(msg, 'success');
       flashAdReward(msg);
     } else if (type === 'power_click') {
-      setPowerClicks((prev) => prev + 1);
+      // Vorher: gewährte nur eine "Ladung" (powerClicks), die per togglePowerClick() erst
+      // manuell aktiviert werden musste - dafür gab es aber nirgends einen Button in der UI,
+      // die Ladung verpuffte also wirkungslos. Jetzt wie jeder andere Ad-Bonus: sofort
+      // wirksam, direkt 2x Tap-Value für 30s (derselbe Surge-Mechanismus wie zuvor per
+      // togglePowerClick, siehe powerClickActive/powerClickSurgeTimer im Tick-Loop).
+      setPowerClickActive(true);
+      setPowerClickSurgeTimer(30);
       const msg = tf('log_bonusPowerClick');
       addLog(msg, 'success');
       flashAdReward(msg);
@@ -1988,7 +1979,6 @@ export function useGameStore() {
     // Kühlrate, die Power-Clicks und den Pivot-Referenzwert - und schrieb sie beim
     // nächsten Autosave (8s später) direkt wieder in den localStorage zurück.
     setCoolingRate(4.0);
-    setPowerClicks(0);
     setValuationAtLastPivot(0);
     setScheduledAdUnlocked(false);
     setAdCooldowns({});
@@ -2053,7 +2043,7 @@ export function useGameStore() {
     startupName, setStartupName, hasAiDomainBonus,
     valuation, totalValuation, totalBurned, slopCount,
     gpuTemp, isOverheated, coolingRate,
-    powerClicks, powerClickActive, powerClickSurgeTimer, togglePowerClick,
+    powerClickActive, powerClickSurgeTimer,
     prestigeLevel, heavenlyChips, ascend, pendingHeavenlyChips, buyHeavenlyUpgrade, boughtHeavenlyUpgrades,
     buildings, buyBuilding, buyMode, setBuyMode,
     boughtUpgrades, unlockedUpgrades, buyUpgrade, buyAllUpgrades,

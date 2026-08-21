@@ -7,7 +7,7 @@ import { MiscTab } from '../tabs/MiscTab';
 import { SeoContent } from '../SeoContent';
 import { isCrazyGamesBuild } from '../../monetization/crazyGamesSdk';
 
-export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
+export function DesktopView({ store, onOpenLegal }) {
   return (
     <>
     <div className="w-full max-w-7xl mx-auto p-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
