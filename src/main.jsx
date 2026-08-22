@@ -4,6 +4,8 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
+import { LegalStandalonePage } from './components/LegalStandalonePage.jsx'
+import { LEGAL_ROUTES } from './routes'
 import {
   isCrazyGamesBuild,
   initCrazyGamesSdk,
@@ -25,19 +27,35 @@ if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.()) {
 // eigenen Ladebildschirm. In den anderen Builds ist das ein No-Op (siehe crazyGamesSdk.js).
 reportLoadingStart()
 
+// Nur im reinen Web-Build relevant (kein Capacitor, kein CrazyGames-Subpath) - siehe
+// useRoutes-Flag in App.jsx, dieselbe Bedingung. /impressum bzw. /datenschutz sollen als
+// eigene, crawlbare Seiten OHNE das Spiel drumherum erreichbar sein (u.a. externes Ziel
+// des Datenschutz-Links aus der iOS-App) - vorher landete ein direkter Aufruf mangels
+// eigener Route auf der vollen Spiel-Seite und der Rechtstext war nur über einen
+// zusätzlichen Klick im Modal erreichbar (gemeldeter Bug).
+const isNativePlatform = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.()
+const legalPage =
+  typeof window !== 'undefined' && !isNativePlatform && !isCrazyGamesBuild()
+    ? LEGAL_ROUTES[window.location.pathname]
+    : undefined
+
 function mount() {
   createRoot(document.getElementById('root')).render(
     <StrictMode>
       <ErrorBoundary>
-        {/* Immer aktiv, auch in CrazyGames/nativ - reine Client-Navigation über die
-            History API, keine echte Seitennavigation. App.jsx entscheidet selbst (per
-            useRoutes-Flag, siehe dort), ob NavBar echte URLs nutzt oder wie bisher rein
-            über React-State schaltet - hier ist der Provider nur immer vorhanden, damit
-            useLocation() in App.jsx unabhängig vom Build-Modus als Hook aufgerufen
-            werden darf (Rules of Hooks: kann nicht bedingt aufgerufen werden). */}
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        {legalPage ? (
+          <LegalStandalonePage page={legalPage} />
+        ) : (
+          /* Immer aktiv, auch in CrazyGames/nativ - reine Client-Navigation über die
+              History API, keine echte Seitennavigation. App.jsx entscheidet selbst (per
+              useRoutes-Flag, siehe dort), ob NavBar echte URLs nutzt oder wie bisher rein
+              über React-State schaltet - hier ist der Provider nur immer vorhanden, damit
+              useLocation() in App.jsx unabhängig vom Build-Modus als Hook aufgerufen
+              werden darf (Rules of Hooks: kann nicht bedingt aufgerufen werden). */
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        )}
       </ErrorBoundary>
     </StrictMode>,
   )

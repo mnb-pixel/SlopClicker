@@ -19,3 +19,11 @@ export const TAB_ROUTES = {
 export const ROUTE_TABS = Object.fromEntries(
   Object.entries(TAB_ROUTES).map(([tab, path]) => [path, Number(tab)])
 );
+
+// Eigene, volle Seiten statt Tabs (siehe main.jsx: LegalStandalonePage wird dafür ANSTELLE
+// von App gemountet). Pfad -> 'impressum' | 'datenschutz', analog zum page-Prop von
+// LegalModal.jsx/LegalContent.jsx.
+export const LEGAL_ROUTES = {
+  '/impressum': 'impressum',
+  '/datenschutz': 'datenschutz',
+};
