@@ -37,7 +37,11 @@ export const Header = forwardRef(function Header({
 }, ref) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(startupName);
-  const [buttonsCollapsed, setButtonsCollapsed] = useState(false);
+  // Default true (eingeklappt): mit dem WERBEFREI-Button dazu passen Sprache+Handbuch+
+  // Werbefrei+Teilen nicht mehr alle nebeneinander in den Startzustand - der Name-Bereich
+  // wurde dadurch auf 0px gequetscht und war unsichtbar (gemeldetes "Name verdeckt").
+  // Eingeklappt bleiben nur Collapse-Toggle + Werbefrei + Teilen sichtbar, das passt.
+  const [buttonsCollapsed, setButtonsCollapsed] = useState(true);
 
   const handleSaveName = (e) => {
     e.preventDefault();
