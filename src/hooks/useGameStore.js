@@ -1565,8 +1565,14 @@ export function useGameStore() {
 
   // Reward-Vorschauwerte, die schon VOR dem Ansehen im Popup/Button genannt werden -
   // dieselbe Formel wird unten bei der tatsächlichen Gutschrift verwendet.
-  const grantAdPreview = useMemo(() => Math.max(500, vps * 100), [vps]);
-  const scheduledAdPreview = useMemo(() => Math.max(250, vps * 60), [vps]);
+  // War 100x/60x VPS: ein Lump-Sum-Bonus, der an der AKTUELLEN (bereits durch alle Upgrades
+  // hochskalierten) VPS hängt und sofort in mehr Infrastruktur reinvestiert werden kann,
+  // erzeugt genau die Art Rückkopplungsschleife (mehr VPS -> größerer Bonus -> mehr
+  // Gebäude -> noch mehr VPS), die als "Button-Bonus viel zu stark, skaliert das Spiel
+  // kaputt" gemeldet wurde. Auf 20x/12x gekürzt (5x kleiner) - bleibt spürbar lohnend, ohne
+  // der dominante Wachstumsmotor zu sein. Floors proportional mitgekürzt.
+  const grantAdPreview = useMemo(() => Math.max(100, vps * 20), [vps]);
+  const scheduledAdPreview = useMemo(() => Math.max(50, vps * 12), [vps]);
 
   // Zahlt die eigentliche Belohnung für einen Placement-Typ aus. Geteilt zwischen dem
   // Ad-Pfad (nach erfolgreicher Rewarded Ad) und dem Werbefrei-Direktclaim-Pfad in

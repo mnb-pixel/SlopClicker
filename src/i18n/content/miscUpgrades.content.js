@@ -67,48 +67,48 @@ export const MISC_UPGRADES_CONTENT = {
     de: {
       name: 'Seed-Angel-Berater',
       quote: 'Schreibt frühe Term Sheets in natürlicher Sprache.',
-      description: '+10% zusätzliches globales VPS für jeden freigeschalteten Erfolg!',
+      description: '+2% zusätzliches globales VPS für jeden freigeschalteten Erfolg!',
     },
     en: {
       name: 'Seed Angel Advisor',
       quote: 'Writes early term sheets in natural language.',
-      description: '+10% extra global VPS for every unlocked achievement!',
+      description: '+2% extra global VPS for every unlocked achievement!',
     },
   },
   syndicate_2: {
     de: {
       name: 'Series-A-Board-Direktor',
       quote: 'Nimmt per Hologramm an Quartals-Board-Meetings teil.',
-      description: '+20% zusätzliches globales VPS für jeden freigeschalteten Erfolg!',
+      description: '+4% zusätzliches globales VPS für jeden freigeschalteten Erfolg!',
     },
     en: {
       name: 'Series-A Board Director',
       quote: 'Attends quarterly board meetings via holograms.',
-      description: '+20% extra global VPS for every unlocked achievement!',
+      description: '+4% extra global VPS for every unlocked achievement!',
     },
   },
   syndicate_3: {
     de: {
       name: 'Growth-VC-Syndicate-Partner',
       quote: 'Nutzt institutionellen Hype, um Term-Sheet-Angebote zu verdoppeln.',
-      description: '+30% zusätzliches globales VPS für jeden freigeschalteten Erfolg!',
+      description: '+6% zusätzliches globales VPS für jeden freigeschalteten Erfolg!',
     },
     en: {
       name: 'Growth VC Syndicate Partner',
       quote: 'Leverages institutional hype to double term sheet offers.',
-      description: '+30% extra global VPS for every unlocked achievement!',
+      description: '+6% extra global VPS for every unlocked achievement!',
     },
   },
   syndicate_4: {
     de: {
       name: 'Autonomes AGI-Beirats-Board',
       quote: 'Ein KI-Board, das seine eigenen Aktienoptionen genehmigt.',
-      description: '+50% zusätzliches globales VPS für jeden freigeschalteten Erfolg!',
+      description: '+10% zusätzliches globales VPS für jeden freigeschalteten Erfolg!',
     },
     en: {
       name: 'Autonomous AGI Advisory Board',
       quote: 'An AI board that approves its own stock option grants.',
-      description: '+50% extra global VPS for every unlocked achievement!',
+      description: '+10% extra global VPS for every unlocked achievement!',
     },
   },
   thermal_1: {
