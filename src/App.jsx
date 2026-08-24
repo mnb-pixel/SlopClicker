@@ -13,6 +13,7 @@ import { AdRewardToast } from './components/AdRewardToast';
 import { ClickParticles } from './components/ClickParticles';
 import { AdBanner, ADS_ENABLED } from './components/AdBanner';
 import { SeoContent } from './components/SeoContent';
+import { LegalFooter } from './components/LegalFooter';
 import { OfflineEarningsModal } from './components/modals/OfflineEarningsModal';
 import { AfkReportModal } from './components/modals/AfkReportModal';
 import { ScheduledAdModal } from './components/modals/ScheduledAdModal';
@@ -20,15 +21,15 @@ import { TrackingExplainerModal } from './components/modals/TrackingExplainerMod
 import { showNativeBanner, hideNativeBanner } from './monetization/nativeBanner';
 import { isCrazyGamesBuild } from './monetization/crazyGamesSdk';
 import { UPGRADES_DATA } from './data/upgradesData';
-import { ROUTE_TABS } from './routes';
+import { ROUTE_TABS, ROUTE_LEGAL_PAGES } from './routes';
 
-// Lazy geladen statt statisch importiert: alle drei sind reine Klick-zum-Öffnen-Modals,
-// die die meisten Sessions nie aufrufen. PitchDeckModal allein zieht canvas-confetti plus
+// Lazy geladen statt statisch importiert: alle drei sind reine Klick-zum-Öffnen-Overlays,
+// die die meisten Sessions nie aufrufen. ShareScreen allein zieht canvas-confetti plus
 // ~1000 Zeilen Canvas-Zeichenlogik (pitchDeckCanvas/Consulting/Shared.js) mit - das lud
 // bisher jede Sitzung ungefragt mit, auch wenn "Teilen" nie geklickt wird. Named statt
 // Default-Export -> .then()-Mapping ist der Standard-Weg, React.lazy() das zu erlauben.
-const PitchDeckModal = lazy(() =>
-  import('./components/modals/PitchDeckModal').then((m) => ({ default: m.PitchDeckModal }))
+const ShareScreen = lazy(() =>
+  import('./components/screens/ShareScreen').then((m) => ({ default: m.ShareScreen }))
 );
 const ManualModal = lazy(() =>
   import('./components/modals/ManualModal').then((m) => ({ default: m.ManualModal }))
@@ -39,7 +40,7 @@ const LegalModal = lazy(() =>
 
 export default function App() {
   const store = useGameStore();
-  const [isPitchDeckOpen, setIsPitchDeckOpen] = useState(false);
+  const [isShareScreenOpen, setIsShareScreenOpen] = useState(false);
   const [isManualOpen, setIsManualOpen] = useState(false);
   // null | 'impressum' | 'datenschutz' - Rechtstexte als Modal, damit sie aus jeder
   // Ansicht (mobil wie Desktop) über die Einstellungen erreichbar bleiben.
@@ -59,6 +60,13 @@ export default function App() {
     const tabFromRoute = ROUTE_TABS[location.pathname];
     if (tabFromRoute && tabFromRoute !== store.activeTab) {
       store.setActiveTab(tabFromRoute);
+    }
+    // Direkter Aufruf von /impressum bzw. /datenschutz (z.B. der extern in App Store
+    // Connect hinterlegte "Privacy Policy URL"-Link) muss das Rechtstext-Overlay auch OHNE
+    // vorherigen Klick in der App zeigen - siehe routes.js.
+    const legalFromRoute = ROUTE_LEGAL_PAGES[location.pathname];
+    if (legalFromRoute) {
+      setLegalPage(legalFromRoute);
     }
   }, [location.pathname]);
 
@@ -135,7 +143,7 @@ export default function App() {
         hypeTier={store.hypeTier}
         burnRate={store.burnRate}
         onOpenManual={() => setIsManualOpen(true)}
-        onOpenPitchDeck={() => setIsPitchDeckOpen(true)}
+        onOpenShare={() => setIsShareScreenOpen(true)}
         lang={store.lang}
         setLang={store.setLang}
         logs={store.logs}
@@ -205,7 +213,7 @@ export default function App() {
       {/* WEB DESKTOP ALL-IN-ONE VIEW (Everything on 1 Page in 3 Columns) */}
       {layoutMode === 'desktop' ? (
         <main className="flex-1 pb-10">
-          <DesktopView store={store} setIsPitchDeckOpen={setIsPitchDeckOpen} onOpenLegal={setLegalPage} useRoutes={useRoutes} />
+          <DesktopView store={store} onOpenLegal={setLegalPage} useRoutes={useRoutes} />
         </main>
       ) : (
         /* MOBILE 5-TAB VIEW */
@@ -293,9 +301,6 @@ export default function App() {
                 purchaseState={store.purchaseState}
                 purchaseAdFree={store.purchaseAdFree}
                 restorePurchases={store.restorePurchases}
-                showAdPrivacyOptions={store.showAdPrivacyOptions}
-                onOpenLegal={setLegalPage}
-                useRoutes={useRoutes}
                 t={store.t}
                 tf={store.tf}
               />
@@ -321,6 +326,19 @@ export default function App() {
                 {store.activeTab === 3 && <SeoContent t={store.t} lang={store.lang} compact section="stats" />}
               </div>
             )}
+
+            {/* Pflichtlinks auf JEDEM Tab statt nur im Einstellungen-Tab versteckt - siehe
+                LegalFooter.jsx. Unconditional (nicht an activeTab gekoppelt), damit das
+                Impressum von jeder Ansicht aus per Scroll erreichbar ist, nicht erst nach
+                einem Tab-Wechsel. */}
+            <LegalFooter
+              onOpenLegal={setLegalPage}
+              purchaseAvailable={store.purchaseAvailable}
+              adFree={store.adFree}
+              showAdPrivacyOptions={store.showAdPrivacyOptions}
+              useRoutes={useRoutes}
+              t={store.t}
+            />
           </main>
 
           {/* Statischer Werbe-Slot, fix über der Tab-Leiste verankert. Vorher lag er im
@@ -356,10 +374,10 @@ export default function App() {
         {/* Impressum / Datenschutzerklärung */}
         <LegalModal page={legalPage} onClose={() => setLegalPage(null)} lang={store.lang} />
 
-        {/* VC Pitch Deck Export Modal */}
-        <PitchDeckModal
-          isOpen={isPitchDeckOpen}
-          onClose={() => setIsPitchDeckOpen(false)}
+        {/* VC Pitch Deck Share Screen */}
+        <ShareScreen
+          isOpen={isShareScreenOpen}
+          onClose={() => setIsShareScreenOpen(false)}
           startupName={store.startupName}
           hasAiDomainBonus={store.hasAiDomainBonus}
           valuation={store.valuation}
@@ -372,6 +390,7 @@ export default function App() {
           buildings={store.buildings}
           unlockedAchievements={store.unlockedAchievements}
           boughtBuzzwords={store.boughtBuzzwords}
+          adFree={store.adFree}
           lang={store.lang}
           t={store.t}
         />

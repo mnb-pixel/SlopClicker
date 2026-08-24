@@ -4,9 +4,10 @@ import { StoreTab } from '../tabs/StoreTab';
 import { StatsTab } from '../tabs/StatsTab';
 import { MiscTab } from '../tabs/MiscTab';
 import { SeoContent } from '../SeoContent';
+import { LegalFooter } from '../LegalFooter';
 import { isCrazyGamesBuild } from '../../monetization/crazyGamesSdk';
 
-export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal, useRoutes = false }) {
+export function DesktopView({ store, onOpenLegal, useRoutes = false }) {
   return (
     <>
     <div className="w-full max-w-7xl mx-auto p-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
@@ -66,9 +67,6 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal, useRoutes 
             purchaseState={store.purchaseState}
             purchaseAdFree={store.purchaseAdFree}
             restorePurchases={store.restorePurchases}
-            showAdPrivacyOptions={store.showAdPrivacyOptions}
-            onOpenLegal={onOpenLegal}
-            useRoutes={useRoutes}
             t={store.t}
             tf={store.tf}
           />
@@ -138,6 +136,17 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal, useRoutes 
         </div>
       </div>
     )}
+
+    {/* Pflichtlinks einmal für die gesamte Ein-Seiten-Ansicht, statt nur im Einstellungen-
+        Panel versteckt - siehe LegalFooter.jsx. */}
+    <LegalFooter
+      onOpenLegal={onOpenLegal}
+      purchaseAvailable={store.purchaseAvailable}
+      adFree={store.adFree}
+      showAdPrivacyOptions={store.showAdPrivacyOptions}
+      useRoutes={useRoutes}
+      t={store.t}
+    />
     </>
   );
 }

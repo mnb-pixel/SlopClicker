@@ -21,3 +21,16 @@ export const TAB_ROUTES = {
 export const ROUTE_TABS = Object.fromEntries(
   Object.entries(TAB_ROUTES).map(([tab, path]) => [path, Number(tab)])
 );
+
+// Impressum ist kein Tab, sondern ein Overlay (LegalModal, siehe App.jsx legalPage-State) -
+// braucht aber trotzdem eine echte, direkt aufrufbare URL für externe Links. /datenschutz
+// ist NICHT hier drin: das ist eine komplett eigenständige Seite (main.jsx/
+// DatenschutzPage.jsx, siehe App Store Connect "Privacy Policy URL"), kein App-internes
+// Overlay - LegalFooter.jsx verlinkt dorthin per echtem <a href>, nicht per Client-Routing.
+export const LEGAL_ROUTES = {
+  impressum: '/impressum',
+};
+
+export const ROUTE_LEGAL_PAGES = Object.fromEntries(
+  Object.entries(LEGAL_ROUTES).map(([page, path]) => [path, page])
+);
