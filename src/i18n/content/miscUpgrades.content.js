@@ -7,60 +7,60 @@ export const MISC_UPGRADES_CONTENT = {
     de: {
       name: 'Ergonomische Cyber-Maus',
       quote: 'Reduziert RSI beim Spammen der AGI-Generierung.',
-      description: 'Taps bringen +5 zusätzliche Valuation (5x Basis-Klick!).',
+      description: 'Taps bringen +1,25 zusätzliche Valuation.',
     },
     en: {
       name: 'Ergonomic Cyber Mouse',
       quote: 'Reduces RSI while spamming AGI generation.',
-      description: 'Taps earn +5 extra Valuation (5x base click!).',
+      description: 'Taps earn +1.25 extra Valuation.',
     },
   },
   click_2: {
     de: {
       name: 'Übertaktete Mechanische Switches',
       quote: 'Klickgeräusch schreckt Regulierungsbehörden ab.',
-      description: 'Taps bringen +10% deines gesamten VPS pro Klick!',
+      description: 'Taps bringen +2,5% deines gesamten VPS pro Klick!',
     },
     en: {
       name: 'Overclocked Mechanical Switches',
       quote: 'Click noise scares away regulators.',
-      description: 'Taps earn +10% of your total VPS on every click!',
+      description: 'Taps earn +2.5% of your total VPS on every click!',
     },
   },
   click_3: {
     de: {
       name: 'Neural-Link-Finger-Implantat',
       quote: 'Direkte Gehirn-zu-GPU-Klick-Schnittstelle.',
-      description: 'Taps bringen +25% deines gesamten VPS pro Klick!',
+      description: 'Taps bringen +6,25% deines gesamten VPS pro Klick!',
     },
     en: {
       name: 'Neural Link Finger Implant',
       quote: 'Direct brain-to-GPU click interface.',
-      description: 'Taps earn +25% of your total VPS on every click!',
+      description: 'Taps earn +6.25% of your total VPS on every click!',
     },
   },
   click_4: {
     de: {
       name: 'Quanten-Haptik-Motor',
       quote: 'Fühlt sich an, als würde man die AGI selbst berühren.',
-      description: 'Taps bringen +50% deines gesamten VPS pro Klick!',
+      description: 'Taps bringen +12,5% deines gesamten VPS pro Klick!',
     },
     en: {
       name: 'Quantum Haptic Motor',
       quote: 'Feels like touching AGI itself.',
-      description: 'Taps earn +50% of your total VPS on every click!',
+      description: 'Taps earn +12.5% of your total VPS on every click!',
     },
   },
   click_5: {
     de: {
       name: 'Unterlichtgeschwindigkeits-Tap-Strahl',
       quote: 'Tap registriert, bevor dein Gehirn ein Neuron feuert.',
-      description: 'Taps bringen +100% deines gesamten VPS pro Klick!',
+      description: 'Taps bringen +25% deines gesamten VPS pro Klick!',
     },
     en: {
       name: 'Sub-Lightspeed Tap Beam',
       quote: 'Tap registered before your brain fires a neuron.',
-      description: 'Taps earn +100% of your total VPS on every click!',
+      description: 'Taps earn +25% of your total VPS on every click!',
     },
   },
   syndicate_1: {
