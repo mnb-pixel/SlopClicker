@@ -23,6 +23,7 @@ export function MiscTab({
   restorePurchases,
   showAdPrivacyOptions,
   onOpenLegal,
+  useRoutes = false,
   t,
   tf,
 }) {
@@ -361,12 +362,27 @@ export function MiscTab({
           {!isCrazyGamesBuild() && (
             <>
               <span className="text-slate-700">•</span>
-              <button
-                onClick={() => onOpenLegal && onOpenLegal('datenschutz')}
-                className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
-              >
-                {tr('legalPrivacy')}
-              </button>
+              {/* Echter <a href> statt <Link>/Button-Modal, wenn echte URLs aktiv sind
+                  (useRoutes, siehe routes.js/App.jsx): /datenschutz ist eine komplett
+                  eigenständige Seite (main.jsx/DatenschutzPage.jsx), kein App-interner Tab
+                  oder Modal-State - ein voller Seitenaufruf ist hier also korrekt, kein
+                  Client-Routing. Nativ/CrazyGames (useRoutes=false) haben keinen echten Server
+                  dahinter, der diesen Pfad beantwortet - dort bleibt das alte Modal. */}
+              {useRoutes ? (
+                <a
+                  href="/datenschutz"
+                  className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
+                >
+                  {tr('legalPrivacy')}
+                </a>
+              ) : (
+                <button
+                  onClick={() => onOpenLegal && onOpenLegal('datenschutz')}
+                  className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
+                >
+                  {tr('legalPrivacy')}
+                </button>
+              )}
             </>
           )}
           {/* Nur nativ und nur solange Werbung läuft (adFree: kein Ad-SDK mehr initialisiert,

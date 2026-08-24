@@ -206,7 +206,7 @@ export default function App() {
       {/* WEB DESKTOP ALL-IN-ONE VIEW (Everything on 1 Page in 3 Columns) */}
       {layoutMode === 'desktop' ? (
         <main className="flex-1 pb-10">
-          <DesktopView store={store} setIsPitchDeckOpen={setIsPitchDeckOpen} onOpenLegal={setLegalPage} />
+          <DesktopView store={store} setIsPitchDeckOpen={setIsPitchDeckOpen} onOpenLegal={setLegalPage} useRoutes={useRoutes} />
         </main>
       ) : (
         /* MOBILE 5-TAB VIEW */
@@ -323,6 +323,7 @@ export default function App() {
                 restorePurchases={store.restorePurchases}
                 showAdPrivacyOptions={store.showAdPrivacyOptions}
                 onOpenLegal={setLegalPage}
+                useRoutes={useRoutes}
                 t={store.t}
                 tf={store.tf}
               />
