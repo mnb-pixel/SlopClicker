@@ -1156,7 +1156,7 @@ export function useGameStore() {
 
   // --- TAP-WERT (Konzept: max(1, Gesamt-TPS x 0.05), zzgl. Token-Furnace Click-Upgrades) ---
   const clickValue = useMemo(() => {
-    let baseClick = Math.max(1, vps * 0.05);
+    let baseClick = vps * 0.05;
 
     boughtUpgrades.forEach((upId) => {
       const up = UPGRADES_DATA.find((u) => u.id === upId);
@@ -1183,7 +1183,9 @@ export function useGameStore() {
     // oben (die über den vps-Anteil hier bereits durchschlägt) nochmal separat geviertelt -
     // gemeldet als eigenständig zu stark gegenüber der passiven Produktion.
     const CLICK_REBALANCE_FACTOR = 0.25;
-    return baseClick * powerClickTapMult * CLICK_REBALANCE_FACTOR;
+    // Floor erst NACH dem Rebalance-Faktor anwenden, sonst startet der Tap-Button bei
+    // 1 x 0.25 = 0,25 $ statt bei den vorgesehenen 1 $ pro Tap (gemeldet).
+    return Math.max(1, baseClick * powerClickTapMult * CLICK_REBALANCE_FACTOR);
   }, [boughtUpgrades, boughtHeavenlyUpgrades, vps, powerClickActive]);
 
   // --- MAIN TICK ENGINE LOOP (alle 100ms; Wahrscheinlichkeiten sind Tick-Dauer-unabhängig skaliert) ---
