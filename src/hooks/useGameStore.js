@@ -157,15 +157,16 @@ const AD_COOLDOWN_SEC = {
 const AFK_THRESHOLD_SECONDS = 1800; // 30 Minuten
 
 // Offline-Ertrag (Browser komplett geschlossen, nicht nur Tab im Hintergrund - dafür siehe
-// pageActivity 'hidden' oben): ab 1 Minute Abwesenheit berechnet, gedeckelt auf 4h, zu 60%
-// der zuletzt bekannten VPS. War vorher 20% (80% Abzug) - gemeldet als deutlich zu hart
-// (spürbar mehr als ein blosses "Halbieren", das selbst schon als Obergrenze fürs
-// Akzeptable galt). Unter AFK_THRESHOLD_SECONDS wird der Betrag automatisch und ohne
-// Rückfrage gutgeschrieben; ab der Schwelle ist er PENDING und nur per Ad claimbar (alles
-// oder nichts) - exakt dieselbe Regel wie beim Tab-im-Hintergrund-Fall unten.
+// pageActivity 'hidden' oben): ab 1 Minute Abwesenheit berechnet, gedeckelt auf 4h, zu 10%
+// der zuletzt bekannten VPS. War 20% - "um 50% reduzieren" war als "nochmal 50% NIEDRIGER
+// als der bisherige Wert" gemeint, nicht als Zielwert von 50% (0.2 * 0.5 = 0.1, nicht 0.6 -
+// die vorherige Änderung ging in die falsche Richtung). Unter AFK_THRESHOLD_SECONDS wird
+// der Betrag automatisch und ohne Rückfrage gutgeschrieben; ab der Schwelle ist er PENDING
+// und nur per Ad claimbar (alles oder nichts) - exakt dieselbe Regel wie beim
+// Tab-im-Hintergrund-Fall unten.
 const OFFLINE_MIN_SECONDS = 60;
 const OFFLINE_CAP_SECONDS = 4 * 3600;
-const OFFLINE_EFFICIENCY = 0.6;
+const OFFLINE_EFFICIENCY = 0.1;
 
 // Web-only: von einem ab AFK_THRESHOLD_SECONDS PENDING gewordenen Offline-/AFK-Ertrag wird
 // dieser Anteil sofort und ohne Ad gutgeschrieben, der Rest bleibt wie gehabt nur per Ad
