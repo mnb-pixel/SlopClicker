@@ -88,8 +88,21 @@ export const Header = forwardRef(function Header({
         {/* Financial Newswire Ticker: live game events mixed with satirical filler headlines */}
         <NewsTicker logs={logs} lang={lang} hypeTier={hypeTier} burnRate={burnRate} isSecTheme={isSecTheme} t={t} />
 
-        {/* Top Row: Startup Name, Theme Switcher & View Mode */}
-        <div className="flex items-center justify-between gap-2 flex-wrap">
+        {/* Top Row: Startup Name, Theme Switcher & View Mode.
+            flex-nowrap statt flex-wrap: bei flex-wrap kippte diese Zeile je nach Länge des
+            Startup-Namens bzw. je nachdem ob der AI-Domain-Bonus-Badge gerade sichtbar war
+            zwischen ein- und zweizeilig um - sichtbar als "Springen" des Bereichs oben
+            (gemeldeter Bug). Stattdessen bekommt der Name-Bereich min-w-0+truncate und
+            schrumpft bei Platzmangel, die Buttons rechts bleiben mit shrink-0 stabil in
+            fester Breite - die Zeile bleibt so immer genau eine Zeile hoch.
+            overflow-hidden auf dem Name-Wrapper ist Pflicht, sobald min-w-0 im Spiel ist.
+            Der AI-Domain-Badge steht bewusst in einer EIGENEN Zeile unter dem Namen statt
+            daneben: als Geschwister in derselben Zeile war er (shrink-0, feste Breite)
+            immer im Vorteil gegenüber dem Namen (flex-shrink:1) und hat ihn bei kurzen
+            Namen mit ".ai"-Endung auf einen unlesbaren Rest gequetscht (gemeldeter Bug -
+            derselbe Namens-Squeeze wie beim WERBEFREI-Button, nur diesmal durch den Badge
+            statt durch Buttons rechts). In der eigenen Zeile konkurriert er mit nichts. */}
+        <div className="flex items-center justify-between gap-2 flex-nowrap">
           {isEditingName ? (
             <form onSubmit={handleSaveName} className="flex items-center gap-1">
               <input
@@ -108,7 +121,7 @@ export const Header = forwardRef(function Header({
               </button>
             </form>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
               <button
                 onClick={() => setIsEditingName(true)}
                 className="flex items-center gap-1.5 hover:opacity-80 transition-opacity group"
@@ -124,9 +137,9 @@ export const Header = forwardRef(function Header({
               </button>
 
               {hasAiDomainBonus && (
-                <span className="bg-amber-400/20 text-amber-300 border border-amber-400/60 font-mono text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md shadow-amber-500/20 animate-pulse">
-                  <Sparkles className="w-3 h-3 text-amber-300" />
-                  <span>{tr('aiHypeBonusLabel')}</span>
+                <span className="mt-0.5 self-start max-w-full bg-amber-400/20 text-amber-300 border border-amber-400/60 font-mono text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md shadow-amber-500/20 animate-pulse whitespace-nowrap">
+                  <Sparkles className="w-3 h-3 text-amber-300 shrink-0" />
+                  <span className="truncate">{tr('aiHypeBonusLabel')}</span>
                 </span>
               )}
             </div>

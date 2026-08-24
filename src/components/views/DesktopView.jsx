@@ -1,7 +1,6 @@
 import React from 'react';
 import { SlopTab } from '../tabs/SlopTab';
 import { StoreTab } from '../tabs/StoreTab';
-import { SpecialTab } from '../tabs/SpecialTab';
 import { StatsTab } from '../tabs/StatsTab';
 import { MiscTab } from '../tabs/MiscTab';
 import { SeoContent } from '../SeoContent';
@@ -45,7 +44,7 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal, useRoutes 
       </div>
 
       {/* CENTER COLUMN: Rewards/Misc zuoberst (meistgenutzte Aktion - Belohnungs-Werbung
-          claimen), darunter Special Ascension, dann Stats/Logs/Achievements (4 cols) */}
+          claimen), darunter Stats/Logs/Achievements (4 cols) */}
       <div className="md:col-span-4 flex flex-col gap-4">
         {/* Ads, Pitch Deck & Misc Settings (enthält den Belohnungs-Werbung-Bereich) */}
         <div className="bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-2 shadow-xl">
@@ -72,34 +71,6 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal, useRoutes 
             useRoutes={useRoutes}
             t={store.t}
             tf={store.tf}
-          />
-        </div>
-
-        {/* Special Ascension */}
-        <div className="bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-2 shadow-xl">
-          <SpecialTab
-            prestigeLevel={store.prestigeLevel}
-            heavenlyChips={store.heavenlyChips}
-            ascend={store.ascend}
-            pendingHeavenlyChips={store.pendingHeavenlyChips}
-            boughtHeavenlyUpgrades={store.boughtHeavenlyUpgrades}
-            buyHeavenlyUpgrade={store.buyHeavenlyUpgrade}
-            epoch={store.epoch}
-            credibility={store.credibility}
-            idealistLevel={store.idealistLevel}
-            buyIdealistLevel={store.buyIdealistLevel}
-            cynicLevel={store.cynicLevel}
-            buyCynicLevel={store.buyCynicLevel}
-            pivot={store.pivot}
-            pivotCredGain={store.pivotCredGain}
-            adState={store.adState}
-            requestBonus={store.requestBonus}
-            isAdReady={store.isAdReady}
-            getAdCooldownRemaining={store.getAdCooldownRemaining}
-            pendingAscendBoost={store.pendingAscendBoost}
-            pendingPivotBoost={store.pendingPivotBoost}
-            adFree={store.adFree}
-            t={store.t}
           />
         </div>
 

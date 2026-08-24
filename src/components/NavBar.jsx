@@ -1,20 +1,19 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Cpu, ShoppingBag, Sparkles, BarChart2, Settings } from 'lucide-react';
+import { Cpu, ShoppingBag, BarChart2, Settings } from 'lucide-react';
 import { TAB_ROUTES } from '../routes';
 
 export function NavBar({ activeTab, setActiveTab, affordableUpgradesCount, useRoutes = false, t }) {
   const tabs = [
     { id: 1, label: t ? t('tabSlop') : 'Slop', icon: Cpu },
     { id: 2, label: t ? t('tabStore') : 'Store', icon: ShoppingBag, badge: affordableUpgradesCount },
-    { id: 3, label: t ? t('tabSpecial') : 'Special', icon: Sparkles },
-    { id: 4, label: t ? t('tabStats') : 'Stats', icon: BarChart2 },
-    { id: 5, label: t ? t('tabMisc') : 'Settings', icon: Settings },
+    { id: 3, label: t ? t('tabStats') : 'Stats', icon: BarChart2 },
+    { id: 4, label: t ? t('tabMisc') : 'Settings', icon: Settings },
   ];
 
   return (
     <nav className="bg-slate-900/95 backdrop-blur-lg border-t border-cyan-500/20 fixed bottom-0 left-0 right-0 z-30 max-w-md mx-auto shadow-2xl navbar-safe-bottom">
-      <div className="grid grid-cols-5 h-14">
+      <div className="grid grid-cols-4 h-14">
         {tabs.map((t) => {
           const Icon = t.icon;
           const isActive = activeTab === t.id;

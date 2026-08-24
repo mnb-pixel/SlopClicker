@@ -20,7 +20,6 @@ export const TRANSLATIONS = {
     // Tabs
     tabSlop: 'Slop Core',
     tabStore: 'Shop',
-    tabSpecial: 'Special',
     tabStats: 'Statistik',
     tabMisc: 'Einstellungen',
 
@@ -56,28 +55,6 @@ export const TRANSLATIONS = {
     lockedBuzzword: '??? Verborgene Buzzword-Karte',
     lockedBuzzwordDesc: 'Erfordert höhere Bewertung.',
     collected: 'GESAMMELT',
-
-    // Special Tab
-    pivotTitle: 'Pivot Strategy & Epochen-Rotation',
-    pivotDesc: 'Pivotiere dein Startup in die nächste Hype-Ära und sammle Credibility. Engines, Upgrades & Valuation bleiben erhalten!',
-    credBalance: 'Credibility Guthaben:',
-    pivotGain: 'Pivot Gewinn:',
-    executePivot: 'Pivot Ausführen (+',
-
-    pathPivot: '🔄 Pivot',
-    pathIdealist: '😇 Idealist',
-    pathCynic: '😈 Zyniker',
-    pathAscension: '🌌 Singularität',
-    idealistTitle: 'Idealisten Credibility-Pfad',
-    idealistDesc: 'Schaltet ethische Strukturen frei, die deine Token Burn Rate dauerhaft senken!',
-    cynicTitle: 'Zyniker Credibility-Pfad',
-    cynicDesc: 'Aggressives Hype-Wachstum! Steigert VPS, erhöht aber die Burn Rate!',
-    ascendTitle: 'Singularity Ascension',
-    prestigeLevelText: 'Prestige Level:',
-    heavenlyChipsText: 'Heavenly Chips:',
-    executeAscend: 'Singularity Reset Ausführen (+',
-    ascendWarning: '⚠️ UNWIDERRUFLICH: Löscht ALLE Engines, Store-Upgrades & deine komplette Valuation (zurück auf $0)! Nur Prestige Level, Heavenly Chips & Heavenly Upgrades bleiben erhalten.',
-    ascendConfirm: '⚠️ SINGULARITY ASCENSION\n\nDas setzt deine Valuation auf $0 zurück und entfernt ALLE Engines/Gebäude sowie alle gekauften Store-Upgrades unwiderruflich!\n\nNur Prestige Level, Heavenly Chips und Heavenly Upgrades bleiben erhalten.\n\nDu erhältst dafür +{chips} Heavenly Chips.\n\nBist du sicher?',
 
     // Stats Tab
     statsTitle: 'Startup Bilanz & Audit Logs',
@@ -143,8 +120,6 @@ export const TRANSLATIONS = {
     event_llm_hallucination_desc: 'Modelle halluzinieren kreativen Slop! 5x Click-Wert für 15s!',
 
     // Ads & Rewards (geteilt über mehrere Modals/Tabs)
-    adBonusActive: '+20% Ad-Bonus aktiv für nächste Ausführung',
-    adBonusCooldown: 'Ad-Bonus in {min}min wieder verfügbar',
     adPlaceholderLabel: 'Werbung',
     adPlaying: 'Ad läuft...',
     adPlayingRemaining: 'Ad läuft... ({sec}s verbleibend)',
@@ -260,17 +235,6 @@ export const TRANSLATIONS = {
     layoffEffect1: '⚡ Engine VPS Output +20%',
     layoffEffect2: '⚡ Engine VPS Output +15%',
     buildingUpgradeEffectDesc: '{building} produziert +{pct}% mehr Valuation!',
-
-    // Special Tab (ergänzend)
-    burnDeltaLabel: 'Burn Delta',
-    burnLabel: 'Burn',
-    ascendExecuteSuffix: ' Chips)',
-    pivotExecuteSuffix: ' Credibility & Epoche wechseln)',
-    unlockedBadge: 'FREIGESCHALTET',
-    credUnit: 'Cred',
-    permanentVpsLabel: 'Permanenter VPS',
-    onAscensionLabel: 'bei Ascension',
-    chipsUnit: 'Chips',
 
     // Stats Tab (ergänzend)
     kpiStatsTab: 'KPI-Statistik',
@@ -528,7 +492,6 @@ export const TRANSLATIONS = {
     // Tabs
     tabSlop: 'Slop Core',
     tabStore: 'Store',
-    tabSpecial: 'Special',
     tabStats: 'Stats',
     tabMisc: 'Settings',
 
@@ -564,28 +527,6 @@ export const TRANSLATIONS = {
     lockedBuzzword: '??? Hidden Buzzword Card',
     lockedBuzzwordDesc: 'Requires higher valuation to reveal.',
     collected: 'COLLECTED',
-
-    // Special Tab
-    pivotTitle: 'Pivot Strategy & Epoch Rotation',
-    pivotDesc: 'Pivot your startup into the next hype era and earn Credibility. Engines, Upgrades & Valuation stay intact!',
-    credBalance: 'Credibility Balance:',
-    pivotGain: 'Pivot Gain:',
-    executePivot: 'Execute Pivot (+',
-
-    pathPivot: '🔄 Pivot',
-    pathIdealist: '😇 Idealist',
-    pathCynic: '😈 Cynic',
-    pathAscension: '🌌 Singularity',
-    idealistTitle: 'Idealist Credibility Path',
-    idealistDesc: 'Unlocks ethical practices that permanently lower your Token Burn Rate!',
-    cynicTitle: 'Cynic Credibility Path',
-    cynicDesc: 'Aggressive hype growth! Skyrockets VPS but increases Burn Rate risk!',
-    ascendTitle: 'Singularity Ascension',
-    prestigeLevelText: 'Prestige Level:',
-    heavenlyChipsText: 'Heavenly Chips:',
-    executeAscend: 'Execute Singularity Reset (+',
-    ascendWarning: '⚠️ IRREVERSIBLE: Deletes ALL Engines, Store Upgrades & your entire Valuation (back to $0)! Only Prestige Level, Heavenly Chips & Heavenly Upgrades are kept.',
-    ascendConfirm: '⚠️ SINGULARITY ASCENSION\n\nThis resets your Valuation to $0 and irreversibly removes ALL Engines/Buildings and every purchased Store Upgrade!\n\nOnly Prestige Level, Heavenly Chips and Heavenly Upgrades are kept.\n\nYou will earn +{chips} Heavenly Chips for this.\n\nAre you sure?',
 
     // Stats Tab
     statsTitle: 'Startup Balance Sheet & Audit Logs',
@@ -651,8 +592,6 @@ export const TRANSLATIONS = {
     event_llm_hallucination_desc: 'Models producing ultra-creative slop! Click Value multiplied 5x for 15s!',
 
     // Ads & Rewards (shared across several modals/tabs)
-    adBonusActive: '+20% Ad Bonus active for next execution',
-    adBonusCooldown: 'Ad bonus available again in {min}min',
     adPlaceholderLabel: 'Advertisement',
     adPlaying: 'Ad playing...',
     adPlayingRemaining: 'Ad Playing... ({sec}s remaining)',
@@ -761,17 +700,6 @@ export const TRANSLATIONS = {
     layoffEffect1: '⚡ Engine VPS Output +20%',
     layoffEffect2: '⚡ Engine VPS Output +15%',
     buildingUpgradeEffectDesc: '{building} produce +{pct}% more Valuation!',
-
-    // Special Tab (additional)
-    burnDeltaLabel: 'Burn Delta',
-    burnLabel: 'Burn',
-    ascendExecuteSuffix: ' Chips)',
-    pivotExecuteSuffix: ' Credibility & Rotate Epoch)',
-    unlockedBadge: 'UNLOCKED',
-    credUnit: 'Cred',
-    permanentVpsLabel: 'Permanent VPS',
-    onAscensionLabel: 'on Ascension',
-    chipsUnit: 'Chips',
 
     // Stats Tab (additional)
     kpiStatsTab: 'KPI Stats',

@@ -157,13 +157,15 @@ const AD_COOLDOWN_SEC = {
 const AFK_THRESHOLD_SECONDS = 1800; // 30 Minuten
 
 // Offline-Ertrag (Browser komplett geschlossen, nicht nur Tab im Hintergrund - dafür siehe
-// pageActivity 'hidden' oben): ab 1 Minute Abwesenheit berechnet, gedeckelt auf 4h, zu 20%
-// der zuletzt bekannten VPS. Unter AFK_THRESHOLD_SECONDS wird der Betrag automatisch und
-// ohne Rückfrage gutgeschrieben; ab der Schwelle ist er PENDING und nur per Ad claimbar
-// (alles oder nichts) - exakt dieselbe Regel wie beim Tab-im-Hintergrund-Fall unten.
+// pageActivity 'hidden' oben): ab 1 Minute Abwesenheit berechnet, gedeckelt auf 4h, zu 60%
+// der zuletzt bekannten VPS. War vorher 20% (80% Abzug) - gemeldet als deutlich zu hart
+// (spürbar mehr als ein blosses "Halbieren", das selbst schon als Obergrenze fürs
+// Akzeptable galt). Unter AFK_THRESHOLD_SECONDS wird der Betrag automatisch und ohne
+// Rückfrage gutgeschrieben; ab der Schwelle ist er PENDING und nur per Ad claimbar (alles
+// oder nichts) - exakt dieselbe Regel wie beim Tab-im-Hintergrund-Fall unten.
 const OFFLINE_MIN_SECONDS = 60;
 const OFFLINE_CAP_SECONDS = 4 * 3600;
-const OFFLINE_EFFICIENCY = 0.2;
+const OFFLINE_EFFICIENCY = 0.6;
 
 // Web-only: von einem ab AFK_THRESHOLD_SECONDS PENDING gewordenen Offline-/AFK-Ertrag wird
 // dieser Anteil sofort und ohne Ad gutgeschrieben, der Rest bleibt wie gehabt nur per Ad
@@ -269,9 +271,12 @@ export function useGameStore() {
 
   // Kurzes Bestätigungs-Toast nach abgeschlossener Rewarded Ad ("Bonus jetzt erhalten!") -
   // ergänzt den Log-Eintrag um eine unübersehbare, selbst-verschwindende Rückmeldung.
-  const [adRewardToast, setAdRewardToast] = useState(null); // { id, message } | null
-  const flashAdReward = useCallback((message) => {
-    setAdRewardToast({ id: Date.now() + Math.random(), message });
+  // variant 'success' (Default) oder 'failed' (siehe AdRewardToast.jsx) - auch der
+  // Fehlschlag-Fall in requestBonus unten braucht mehr als nur die leicht übersehene
+  // Ticker-Zeile (gemeldet als "kein Bonus, aber auch keine Info").
+  const [adRewardToast, setAdRewardToast] = useState(null); // { id, message, variant } | null
+  const flashAdReward = useCallback((message, variant = 'success') => {
+    setAdRewardToast({ id: Date.now() + Math.random(), message, variant });
   }, []);
   const dismissAdRewardToast = useCallback(() => setAdRewardToast(null), []);
 
@@ -1129,7 +1134,13 @@ export function useGameStore() {
     // Bubble Pop: -35% VPS for 30s (bubblePopTimer)
     const bubbleMult = bubblePopTimer > 0 ? 0.65 : 1.0;
 
-    return totalCps * globalMult * syndicateBoost * pathMult * prestigeBonus * powerSurgeMult * aiDomainMult * goldenMult * bubbleMult;
+    // Balance-Pass: alle VPS-steigernden Faktoren oben (Gebäude-Basisertrag, Gebäude-
+    // Upgrades, Greenwashing/Layoffs, Global-Upgrades, Board-Syndicate, Credibility-Pfade,
+    // Buzzwords, Prestige) sind bereits multiplikativ verknüpft - ein einzelner Faktor hier
+    // am Ende halbiert sie alle gleichermaßen nochmal, statt jede Konstante einzeln (und
+    // fehleranfällig) nachzuziehen. Gemeldet als "immer noch zu schnell/zu hoch".
+    const VPS_REBALANCE_FACTOR = 0.5;
+    return totalCps * globalMult * syndicateBoost * pathMult * prestigeBonus * powerSurgeMult * aiDomainMult * goldenMult * bubbleMult * VPS_REBALANCE_FACTOR;
   }, [buildings, boughtUpgrades, boughtGreenwashingLayoffs, boughtHeavenlyUpgrades, unlockedAchievements, buzzwordBonus, idealistLevel, cynicLevel, prestigeLevel, powerClickActive, powerClickSurgeTimer, goldenBoostTimer, bubblePopTimer, startupName]);
 
   // vps = gross production rate (Konzept: Gesamt-TPS, vor Burn Rate - Burn frisst den Bestand, nicht den Fluss)
@@ -1167,7 +1178,11 @@ export function useGameStore() {
       else if (boughtHeavenlyUpgrades.includes('demon_1')) powerClickTapMult = 3;
     }
 
-    return baseClick * powerClickTapMult;
+    // Balance-Pass: AGI-Button (Tap-Wert) zusätzlich zur VPS_REBALANCE_FACTOR-Halbierung
+    // oben (die über den vps-Anteil hier bereits durchschlägt) nochmal separat geviertelt -
+    // gemeldet als eigenständig zu stark gegenüber der passiven Produktion.
+    const CLICK_REBALANCE_FACTOR = 0.25;
+    return baseClick * powerClickTapMult * CLICK_REBALANCE_FACTOR;
   }, [boughtUpgrades, boughtHeavenlyUpgrades, vps, powerClickActive]);
 
   // --- MAIN TICK ENGINE LOOP (alle 100ms; Wahrscheinlichkeiten sind Tick-Dauer-unabhängig skaliert) ---
@@ -1630,8 +1645,12 @@ export function useGameStore() {
 
       if (!rewarded && !wasAdFree && !GRANT_ON_AD_FAILURE.has(type)) {
         // Kein Cooldown setzen: der Fehlversuch war nicht die Schuld der Spielenden, ein
-        // sofortiger zweiter Versuch muss möglich bleiben.
-        addLog(tf('log_adFailedRetry'), 'info');
+        // sofortiger zweiter Versuch muss möglich bleiben. Zusätzlich zum Log-Eintrag ein
+        // Toast (wie bei einer erfolgreichen Ad) - sonst verschwindet der Fehlschlag
+        // unbemerkt im scrollenden Ticker und man weiss nicht, warum der Bonus ausblieb.
+        const msg = tf('log_adFailedRetry');
+        addLog(msg, 'info');
+        flashAdReward(msg, 'failed');
         if (onFailed) onFailed();
         return;
       }
@@ -1669,7 +1688,7 @@ export function useGameStore() {
         console.error('Ad bridge threw:', e);
         finish(false, false);
       });
-  }, [addLog, adState, adCooldowns, adFree, adBridge, grantReward, tf]);
+  }, [addLog, adState, adCooldowns, adFree, adBridge, grantReward, flashAdReward, tf]);
 
   // Offline-Ertrag (>= 30min Abwesenheit, siehe Mount-Effect oben) per Ad claimen - exakt
   // dieselbe alles-oder-nichts-Logik wie beim AFK-Report unten, kein Verdopplungs-Bonus
@@ -1750,8 +1769,9 @@ export function useGameStore() {
     }, () => setScheduledAdUnlocked(true));
   }, [scheduledAdPreview, addLog, requestBonus, flashAdReward, tf]);
 
-  // Chips, die eine Ascension JETZT bringen würde (ohne Ad-Boost) - von SpecialTab fürs
-  // Anzeigen/Deaktivieren des Buttons genutzt, damit die Formel nur an einer Stelle steht.
+  // Chips, die eine Ascension JETZT bringen würde (ohne Ad-Boost) - hält die Formel an
+  // einer Stelle, falls sie wieder irgendwo angezeigt wird (Special-Tab aktuell entfernt,
+  // siehe App.jsx/DesktopView.jsx/NavBar.jsx).
   const pendingHeavenlyChips = useMemo(() => {
     return Math.floor(Math.sqrt(Math.max(0, totalValuation) / ASCEND_CHIP_DIVISOR));
   }, [totalValuation]);

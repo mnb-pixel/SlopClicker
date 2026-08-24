@@ -6,7 +6,6 @@ import { NavBar } from './components/NavBar';
 import { DesktopView } from './components/views/DesktopView';
 import { SlopTab } from './components/tabs/SlopTab';
 import { StoreTab } from './components/tabs/StoreTab';
-import { SpecialTab } from './components/tabs/SpecialTab';
 import { StatsTab } from './components/tabs/StatsTab';
 import { MiscTab } from './components/tabs/MiscTab';
 import { GoldenMemeBanner } from './components/GoldenMemeBanner';
@@ -261,33 +260,6 @@ export default function App() {
             )}
 
             {store.activeTab === 3 && (
-              <SpecialTab
-                prestigeLevel={store.prestigeLevel}
-                heavenlyChips={store.heavenlyChips}
-                ascend={store.ascend}
-                pendingHeavenlyChips={store.pendingHeavenlyChips}
-                boughtHeavenlyUpgrades={store.boughtHeavenlyUpgrades}
-                buyHeavenlyUpgrade={store.buyHeavenlyUpgrade}
-                epoch={store.epoch}
-                credibility={store.credibility}
-                idealistLevel={store.idealistLevel}
-                buyIdealistLevel={store.buyIdealistLevel}
-                cynicLevel={store.cynicLevel}
-                buyCynicLevel={store.buyCynicLevel}
-                pivot={store.pivot}
-                pivotCredGain={store.pivotCredGain}
-                adState={store.adState}
-                requestBonus={store.requestBonus}
-                isAdReady={store.isAdReady}
-                getAdCooldownRemaining={store.getAdCooldownRemaining}
-                pendingAscendBoost={store.pendingAscendBoost}
-                pendingPivotBoost={store.pendingPivotBoost}
-                adFree={store.adFree}
-                t={store.t}
-              />
-            )}
-
-            {store.activeTab === 4 && (
               <StatsTab
                 stats={store.stats}
                 valuation={store.valuation}
@@ -302,7 +274,7 @@ export default function App() {
               />
             )}
 
-            {store.activeTab === 5 && (
+            {store.activeTab === 4 && (
               <MiscTab
                 adState={store.adState}
                 requestBonus={store.requestBonus}
@@ -336,6 +308,9 @@ export default function App() {
                 mit nur EINER crawlbaren URL wirkt trotzdem wie eine Dünnschicht-Seite. Mit
                 useRoutes bekommt jeder Tab jetzt eine eigene URL (routes.js) UND eigenen,
                 zur Route passenden Content, statt denselben Block fünffach zu wiederholen.
+                Special-Tab (früher Tab 3) ist entfernt (siehe App.jsx/NavBar.jsx/routes.js)
+                - Stats rückt auf Tab 3, Settings/Misc (Tab 4) hatte nie einen eigenen
+                SeoContent-Abschnitt.
                 Nur Web UND nicht CrazyGames/nativ (== useRoutes): in der iOS-App (AdMob,
                 App-Store-Review) und auf CrazyGames' eigener Spieleseite ist der Text nur
                 unnötiger Platz unter dem eigentlichen Spiel. */}
@@ -343,8 +318,7 @@ export default function App() {
               <div className="mx-3 mt-4 bg-slate-900/60 rounded-xl border border-slate-800 p-3 text-xs text-slate-400 leading-relaxed">
                 {store.activeTab === 1 && <SeoContent t={store.t} lang={store.lang} compact section="home" />}
                 {store.activeTab === 2 && <SeoContent t={store.t} lang={store.lang} compact section="shop" />}
-                {store.activeTab === 3 && <SeoContent t={store.t} lang={store.lang} compact section="special" />}
-                {store.activeTab === 4 && <SeoContent t={store.t} lang={store.lang} compact section="stats" />}
+                {store.activeTab === 3 && <SeoContent t={store.t} lang={store.lang} compact section="stats" />}
               </div>
             )}
           </main>

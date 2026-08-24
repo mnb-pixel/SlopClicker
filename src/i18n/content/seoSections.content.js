@@ -1,4 +1,4 @@
-// Kurze, themenspezifische Einleitungstexte für die Shop-/Special-/Stats-Tabs (siehe
+// Kurze, themenspezifische Einleitungstexte für die Shop-/Stats-Tabs (siehe
 // SeoContent.jsx). Ergänzt MANUAL_CONTENT (manual.content.js) um Abschnitte, die dort
 // fehlen (Stats gibt es im Investoren-Prospekt nicht) bzw. bündelt, was auf der jeweiligen
 // Tab-Route inhaltlich hingehört - kein neu erfundener Fülltext, sondern eine an der
@@ -11,9 +11,6 @@ export const SEO_SECTIONS_CONTENT = {
     shopEx1: '„Zweiter Monitor" (Prompt-Praktikant, Stufe 5): Jetzt mit 2 Chatbot-Tabs gleichzeitig sichtbar.',
     shopEx2: '„Praktikanten-Zahl übersteigt Festangestellte" (Prompt-Praktikant, Stufe 400): Niemand hat das geplant, aber es funktioniert irgendwie.',
     shopEx3: '„Recyceltes Pitch Deck – Fünfzig Slides Hype": Mindestens ein Pitch-Deck-Generator im Besitz.',
-
-    specialTitle: 'Pivot, Prestige & Singularity Ascension',
-    specialIntro: 'Der Special-Tab bündelt die drei Meta-Systeme jenseits des normalen Ausbaus: den Pivot zwischen Hype-Epochen, den Credibility-Baum mit Idealisten- und Zyniker-Pfad, und die finale Singularity Ascension mit permanenten Heavenly-Chip-Upgrades.',
 
     statsTitle: 'Statistik & Erfolge',
     statsIntro: 'Der Statistik-Tab zeichnet manuelle Klicks, Gesamtbewertung, Überhitzungen und Spielzeit auf und schaltet dafür über 80 einzelne Erfolge frei - von ersten Gehversuchen bis zu absurden Meilensteinen weit im Endgame. Jeder Erfolg hat einen eigenen, satirischen Kommentar statt nur eines Hakens.',
@@ -29,9 +26,6 @@ export const SEO_SECTIONS_CONTENT = {
     shopEx1: '"Second Monitor" (Prompt Intern, tier 5): Now with 2 chatbot tabs visible at once.',
     shopEx2: '"Intern Headcount Exceeds Full-Timers" (Prompt Intern, tier 400): Nobody planned it, but it somehow works.',
     shopEx3: '"Recycled Pitch Deck – Fifty Slides of Hype": Own at least one Pitch Deck Generator.',
-
-    specialTitle: 'Pivot, Prestige & Singularity Ascension',
-    specialIntro: 'The Special tab bundles the three meta-systems beyond regular building: the Pivot between hype eras, the Credibility tree with its Idealist and Cynic paths, and the final Singularity Ascension with permanent Heavenly Chip upgrades.',
 
     statsTitle: 'Stats & Achievements',
     statsIntro: 'The Stats tab tracks manual clicks, total valuation, overheats, and playtime, and unlocks over 80 individual achievements along the way - from first baby steps to absurd late-game milestones. Every achievement gets its own satirical flavor line instead of just a checkmark.',

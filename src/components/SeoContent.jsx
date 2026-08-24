@@ -31,18 +31,18 @@ function SubHeading({ children }) {
 // den AdSense-Site-Review gedacht (siehe AdBanner.jsx). "section" ordnet echten, bereits
 // vorhandenen Content (MANUAL_CONTENT, SEO_SECTIONS_CONTENT) der jeweils passenden
 // Tab-Route zu, statt denselben Block überall zu wiederholen - jede Route bekommt damit
-// eigenständigen, thematisch passenden Text statt fünffach duplizierten Fülltext:
-// 'home'    -> About/HowToPlay/FAQ + Manual §1 (Skalierung), §2 (Burn Rate), §6 (Thermik)
+// eigenständigen, thematisch passenden Text statt duplizierten Fülltext:
+// 'home'    -> About/HowToPlay/FAQ + Manual §1 (Skalierung), §2 (Burn Rate), §4 (Thermik)
 // 'shop'    -> Manual §3 (Infrastruktur & Strategie-Portfolio) + Ausbaustufen-Beispiele
-// 'special' -> Manual §4 (Pivot) + §5 (Singularity Ascension)
 // 'stats'   -> Erfolge-System + Beispiele
 // 'all'     -> kompletter Text (Desktop-Ansicht ohne eigene Tab-Routen, siehe DesktopView.jsx)
+// 'special' entfernt (Special-Tab/Pivot/Singularity Ascension komplett aus der UI
+// gestrichen, siehe App.jsx/NavBar.jsx/routes.js/manual.content.js).
 export function SeoContent({ t, lang, compact = false, section = 'all' }) {
   const m = MANUAL_CONTENT[lang] || MANUAL_CONTENT.en;
   const s = SEO_SECTIONS_CONTENT[lang] || SEO_SECTIONS_CONTENT.en;
   const showHome = section === 'all' || section === 'home';
   const showShop = section === 'all' || section === 'shop';
-  const showSpecial = section === 'all' || section === 'special';
   const showStats = section === 'all' || section === 'stats';
 
   return (
@@ -88,10 +88,10 @@ export function SeoContent({ t, lang, compact = false, section = 'all' }) {
                 <p>{renderRich(m.s2Body2)}</p>
               </div>
               <div>
-                <SubHeading>{m.s6Title}</SubHeading>
+                <SubHeading>{m.s4Title}</SubHeading>
                 <ul className="list-disc list-inside space-y-1">
-                  <li>{renderRich(m.s6Li1)}</li>
-                  <li>{renderRich(m.s6Li2)}</li>
+                  <li>{renderRich(m.s4Li1)}</li>
+                  <li>{renderRich(m.s4Li2)}</li>
                 </ul>
               </div>
             </div>
@@ -119,28 +119,6 @@ export function SeoContent({ t, lang, compact = false, section = 'all' }) {
               <li>{s.shopEx2}</li>
               <li>{s.shopEx3}</li>
             </ul>
-          </div>
-        </div>
-      )}
-
-      {showSpecial && (
-        <div>
-          <Heading compact={compact}>{s.specialTitle}</Heading>
-          <p className="mb-2">{s.specialIntro}</p>
-          <div className="flex flex-col gap-3">
-            <div>
-              <SubHeading>{m.s4Title}</SubHeading>
-              <p className="mb-1">{renderRich(m.s4Body1)}</p>
-              <ul className="list-disc list-inside space-y-1">
-                <li>{renderRich(m.s4Li1)}</li>
-                <li>{renderRich(m.s4Li2)}</li>
-              </ul>
-            </div>
-            <div>
-              <SubHeading>{m.s5Title}</SubHeading>
-              <p className="mb-1">{renderRich(m.s5Body1)}</p>
-              <p>{renderRich(m.s5Body2)}</p>
-            </div>
           </div>
         </div>
       )}
