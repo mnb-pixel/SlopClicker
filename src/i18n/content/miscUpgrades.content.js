@@ -19,48 +19,48 @@ export const MISC_UPGRADES_CONTENT = {
     de: {
       name: 'Übertaktete Mechanische Switches',
       quote: 'Klickgeräusch schreckt Regulierungsbehörden ab.',
-      description: 'Taps bringen +2,5% deines gesamten VPS pro Klick!',
+      description: 'Taps bringen +10% mehr Valuation als bisher pro Klick!',
     },
     en: {
       name: 'Overclocked Mechanical Switches',
       quote: 'Click noise scares away regulators.',
-      description: 'Taps earn +2.5% of your total VPS on every click!',
+      description: 'Taps earn +10% more Valuation than before, per click!',
     },
   },
   click_3: {
     de: {
       name: 'Neural-Link-Finger-Implantat',
       quote: 'Direkte Gehirn-zu-GPU-Klick-Schnittstelle.',
-      description: 'Taps bringen +6,25% deines gesamten VPS pro Klick!',
+      description: 'Taps bringen +25% mehr Valuation als bisher pro Klick!',
     },
     en: {
       name: 'Neural Link Finger Implant',
       quote: 'Direct brain-to-GPU click interface.',
-      description: 'Taps earn +6.25% of your total VPS on every click!',
+      description: 'Taps earn +25% more Valuation than before, per click!',
     },
   },
   click_4: {
     de: {
       name: 'Quanten-Haptik-Motor',
       quote: 'Fühlt sich an, als würde man die AGI selbst berühren.',
-      description: 'Taps bringen +12,5% deines gesamten VPS pro Klick!',
+      description: 'Taps bringen +50% mehr Valuation als bisher pro Klick!',
     },
     en: {
       name: 'Quantum Haptic Motor',
       quote: 'Feels like touching AGI itself.',
-      description: 'Taps earn +12.5% of your total VPS on every click!',
+      description: 'Taps earn +50% more Valuation than before, per click!',
     },
   },
   click_5: {
     de: {
       name: 'Unterlichtgeschwindigkeits-Tap-Strahl',
       quote: 'Tap registriert, bevor dein Gehirn ein Neuron feuert.',
-      description: 'Taps bringen +25% deines gesamten VPS pro Klick!',
+      description: 'Taps bringen +100% mehr Valuation als bisher pro Klick!',
     },
     en: {
       name: 'Sub-Lightspeed Tap Beam',
       quote: 'Tap registered before your brain fires a neuron.',
-      description: 'Taps earn +25% of your total VPS on every click!',
+      description: 'Taps earn +100% more Valuation than before, per click!',
     },
   },
   syndicate_1: {

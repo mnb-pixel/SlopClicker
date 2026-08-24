@@ -1161,10 +1161,14 @@ export function useGameStore() {
         baseClick += up.effect.value;
       }
     });
+    // Boostet den bisherigen Tap-Wert selbst multiplikativ (nicht mehr einen Bruchteil der
+    // VPS) - Tap-Ertrag skaliert damit auch ohne/mit wenig Gebäuden, statt an die passive
+    // Produktion gekoppelt zu sein (gemeldet). Reihenfolge ist egal: Multiplikation ist
+    // kommutativ, das Endergebnis ist unabhängig von der Kaufreihenfolge.
     boughtUpgrades.forEach((upId) => {
       const up = UPGRADES_DATA.find((u) => u.id === upId);
-      if (up && up.type === 'click' && up.effect.type === 'vpsClickPct') {
-        baseClick += vps * up.effect.value;
+      if (up && up.type === 'click' && up.effect.type === 'tapValuePct') {
+        baseClick += baseClick * up.effect.value;
       }
     });
 
