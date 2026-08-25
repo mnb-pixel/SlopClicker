@@ -1,12 +1,13 @@
 import React from 'react';
 import { SlopTab } from '../tabs/SlopTab';
 import { StoreTab } from '../tabs/StoreTab';
-import { SpecialTab } from '../tabs/SpecialTab';
 import { StatsTab } from '../tabs/StatsTab';
 import { MiscTab } from '../tabs/MiscTab';
+import { SeoContent } from '../SeoContent';
+import { LegalFooter } from '../LegalFooter';
 import { isCrazyGamesBuild } from '../../monetization/crazyGamesSdk';
 
-export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
+export function DesktopView({ store, onOpenLegal, useRoutes = false }) {
   return (
     <>
     <div className="w-full max-w-7xl mx-auto p-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
@@ -44,7 +45,7 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
       </div>
 
       {/* CENTER COLUMN: Rewards/Misc zuoberst (meistgenutzte Aktion - Belohnungs-Werbung
-          claimen), darunter Special Ascension, dann Stats/Logs/Achievements (4 cols) */}
+          claimen), darunter Stats/Logs/Achievements (4 cols) */}
       <div className="md:col-span-4 flex flex-col gap-4">
         {/* Ads, Pitch Deck & Misc Settings (enthält den Belohnungs-Werbung-Bereich) */}
         <div className="bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-2 shadow-xl">
@@ -66,38 +67,8 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
             purchaseState={store.purchaseState}
             purchaseAdFree={store.purchaseAdFree}
             restorePurchases={store.restorePurchases}
-            showAdPrivacyOptions={store.showAdPrivacyOptions}
-            onOpenLegal={onOpenLegal}
             t={store.t}
             tf={store.tf}
-          />
-        </div>
-
-        {/* Special Ascension */}
-        <div className="bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-2 shadow-xl">
-          <SpecialTab
-            prestigeLevel={store.prestigeLevel}
-            heavenlyChips={store.heavenlyChips}
-            ascend={store.ascend}
-            pendingHeavenlyChips={store.pendingHeavenlyChips}
-            boughtHeavenlyUpgrades={store.boughtHeavenlyUpgrades}
-            buyHeavenlyUpgrade={store.buyHeavenlyUpgrade}
-            epoch={store.epoch}
-            credibility={store.credibility}
-            idealistLevel={store.idealistLevel}
-            buyIdealistLevel={store.buyIdealistLevel}
-            cynicLevel={store.cynicLevel}
-            buyCynicLevel={store.buyCynicLevel}
-            pivot={store.pivot}
-            pivotCredGain={store.pivotCredGain}
-            adState={store.adState}
-            requestBonus={store.requestBonus}
-            isAdReady={store.isAdReady}
-            getAdCooldownRemaining={store.getAdCooldownRemaining}
-            pendingAscendBoost={store.pendingAscendBoost}
-            pendingPivotBoost={store.pendingPivotBoost}
-            adFree={store.adFree}
-            t={store.t}
           />
         </div>
 
@@ -152,46 +123,30 @@ export function DesktopView({ store, setIsPitchDeckOpen, onOpenLegal }) {
     {/* Dauerhaft sichtbarer Beschreibungstext (kein Modal, kein Pre-Hydration-Fallback) -
         AUSSERHALB des Grids oben: innerhalb des Grids überlappte die Box beim Scrollen die
         noch "sticky" linke/rechte Spalte, weil deren Zellenhöhe (gedeckelt per max-h) weit
-        unter der Zeilenhöhe (bestimmt durch die viel längere mittlere Spalte) liegt - siehe
-        translations.js aboutTitle/aboutText. Rein für den AdSense-Site-Review gedacht (siehe
-        App.jsx) - DesktopView läuft ohnehin nur im Web-Layout, nie in der iOS-App. NICHT im
-        CrazyGames-Build: der Block existiert einzig, damit Googles AdSense-Crawler auf
-        token-furnace.com echten Content sieht - auf CrazyGames' eigener Spieleseite ist er
-        nur unnötiger Ballast unter dem eigentlichen Spiel. */}
+        unter der Zeilenhöhe (bestimmt durch die viel längere mittlere Spalte) liegt. Rein
+        für den AdSense-Site-Review gedacht (siehe SeoContent.jsx, AdBanner.jsx) - DesktopView
+        läuft ohnehin nur im Web-Layout, nie in der iOS-App. NICHT im CrazyGames-Build: der
+        Block existiert einzig, damit Googles AdSense-Crawler auf token-furnace.com echten
+        Content sieht - auf CrazyGames' eigener Spieleseite ist er nur unnötiger Ballast
+        unter dem eigentlichen Spiel. */}
     {!isCrazyGamesBuild() && (
       <div className="w-full max-w-3xl mx-auto p-4 pt-0">
-        <div className="bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-800 p-4 text-sm text-slate-400 leading-relaxed flex flex-col gap-4">
-          <div>
-            <h2 className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-2">
-              {store.t('aboutTitle')}
-            </h2>
-            <p>{store.t('aboutText')}</p>
-          </div>
-          <div>
-            <h2 className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-2">
-              {store.t('howToPlayTitle')}
-            </h2>
-            <p className="mb-2">{store.t('htpP1')}</p>
-            <p className="mb-2">{store.t('htpP2')}</p>
-            <p className="mb-2">{store.t('htpP3')}</p>
-            <p>{store.t('htpP4')}</p>
-          </div>
-          <div>
-            <h2 className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-2">
-              {store.t('faqTitle')}
-            </h2>
-            <dl className="flex flex-col gap-2">
-              {[1, 2, 3, 4].map((n) => (
-                <div key={n}>
-                  <dt className="font-bold text-slate-300">{store.t(`faqQ${n}`)}</dt>
-                  <dd>{store.t(`faqA${n}`)}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
+        <div className="bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-800 p-4 text-sm text-slate-400 leading-relaxed">
+          <SeoContent t={store.t} lang={store.lang} />
         </div>
       </div>
     )}
+
+    {/* Pflichtlinks einmal für die gesamte Ein-Seiten-Ansicht, statt nur im Einstellungen-
+        Panel versteckt - siehe LegalFooter.jsx. */}
+    <LegalFooter
+      onOpenLegal={onOpenLegal}
+      purchaseAvailable={store.purchaseAvailable}
+      adFree={store.adFree}
+      showAdPrivacyOptions={store.showAdPrivacyOptions}
+      useRoutes={useRoutes}
+      t={store.t}
+    />
     </>
   );
 }

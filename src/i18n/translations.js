@@ -20,7 +20,6 @@ export const TRANSLATIONS = {
     // Tabs
     tabSlop: 'Slop Core',
     tabStore: 'Shop',
-    tabSpecial: 'Special',
     tabStats: 'Statistik',
     tabMisc: 'Einstellungen',
 
@@ -56,28 +55,6 @@ export const TRANSLATIONS = {
     lockedBuzzword: '??? Verborgene Buzzword-Karte',
     lockedBuzzwordDesc: 'Erfordert höhere Bewertung.',
     collected: 'GESAMMELT',
-
-    // Special Tab
-    pivotTitle: 'Pivot Strategy & Epochen-Rotation',
-    pivotDesc: 'Pivotiere dein Startup in die nächste Hype-Ära und sammle Credibility. Engines, Upgrades & Valuation bleiben erhalten!',
-    credBalance: 'Credibility Guthaben:',
-    pivotGain: 'Pivot Gewinn:',
-    executePivot: 'Pivot Ausführen (+',
-
-    pathPivot: '🔄 Pivot',
-    pathIdealist: '😇 Idealist',
-    pathCynic: '😈 Zyniker',
-    pathAscension: '🌌 Singularität',
-    idealistTitle: 'Idealisten Credibility-Pfad',
-    idealistDesc: 'Schaltet ethische Strukturen frei, die deine Token Burn Rate dauerhaft senken!',
-    cynicTitle: 'Zyniker Credibility-Pfad',
-    cynicDesc: 'Aggressives Hype-Wachstum! Steigert VPS, erhöht aber die Burn Rate!',
-    ascendTitle: 'Singularity Ascension',
-    prestigeLevelText: 'Prestige Level:',
-    heavenlyChipsText: 'Heavenly Chips:',
-    executeAscend: 'Singularity Reset Ausführen (+',
-    ascendWarning: '⚠️ UNWIDERRUFLICH: Löscht ALLE Engines, Store-Upgrades & deine komplette Valuation (zurück auf $0)! Nur Prestige Level, Heavenly Chips & Heavenly Upgrades bleiben erhalten.',
-    ascendConfirm: '⚠️ SINGULARITY ASCENSION\n\nDas setzt deine Valuation auf $0 zurück und entfernt ALLE Engines/Gebäude sowie alle gekauften Store-Upgrades unwiderruflich!\n\nNur Prestige Level, Heavenly Chips und Heavenly Upgrades bleiben erhalten.\n\nDu erhältst dafür +{chips} Heavenly Chips.\n\nBist du sicher?',
 
     // Stats Tab
     statsTitle: 'Startup Bilanz & Audit Logs',
@@ -143,8 +120,6 @@ export const TRANSLATIONS = {
     event_llm_hallucination_desc: 'Modelle halluzinieren kreativen Slop! 5x Click-Wert für 15s!',
 
     // Ads & Rewards (geteilt über mehrere Modals/Tabs)
-    adBonusActive: '+20% Ad-Bonus aktiv für nächste Ausführung',
-    adBonusCooldown: 'Ad-Bonus in {min}min wieder verfügbar',
     adPlaceholderLabel: 'Werbung',
     adPlaying: 'Ad läuft...',
     adPlayingRemaining: 'Ad läuft... ({sec}s verbleibend)',
@@ -186,8 +161,8 @@ export const TRANSLATIONS = {
     trackingExplainerTitle: 'Bessere Werbung, mehr Boni',
     trackingExplainerDesc: 'Mit deiner Erlaubnis zeigen wir dir relevantere Werbung - das unterstützt die kostenlose Version der App. Du kannst das jederzeit in den iOS-Einstellungen ändern.',
     trackingExplainerBtn: 'Weiter',
-    bonusPowerClickTitle: 'Bonus Power Click',
-    bonusPowerClickDesc: 'Gewährt sofort 1 zusätzliche Power-Click-Ladung (normalerweise alle 30 Min. verdient).',
+    bonusPowerClickTitle: 'Power Click Boost',
+    bonusPowerClickDesc: 'Gewährt sofort 2x Tap-Value für 30 Sekunden.',
     nitrogenCoolingTitle: 'Flüssigstickstoff-Kühlung',
     nitrogenCoolingDesc: 'Kühlt die GPU sofort auf 0°C + gewährt 2x Click Power für 30s.',
     govGrantTitle: 'Staatliches KI-Förderprogramm',
@@ -260,17 +235,6 @@ export const TRANSLATIONS = {
     layoffEffect1: '⚡ Engine VPS Output +20%',
     layoffEffect2: '⚡ Engine VPS Output +15%',
     buildingUpgradeEffectDesc: '{building} produziert +{pct}% mehr Valuation!',
-
-    // Special Tab (ergänzend)
-    burnDeltaLabel: 'Burn Delta',
-    burnLabel: 'Burn',
-    ascendExecuteSuffix: ' Chips)',
-    pivotExecuteSuffix: ' Credibility & Epoche wechseln)',
-    unlockedBadge: 'FREIGESCHALTET',
-    credUnit: 'Cred',
-    permanentVpsLabel: 'Permanenter VPS',
-    onAscensionLabel: 'bei Ascension',
-    chipsUnit: 'Chips',
 
     // Stats Tab (ergänzend)
     kpiStatsTab: 'KPI-Statistik',
@@ -406,7 +370,6 @@ export const TRANSLATIONS = {
     pdShareFooter: 'Baue dein AI-Bubble-Imperium auf Token Furnace!',
     pdGeneratorTitle: 'VC Pitch Deck Generator',
     pdFormatSubtitle: 'Mobile Story & Social Card (9:16 Format)',
-    pdDetailedToggleLabel: 'Detaillierte Version (inkl. Badges & Buzzword-Karten)',
     pdVcApprovedStamp: 'VC GENEHMIGT',
     pdInvestorProspectus: 'INVESTOREN-PROSPEKT',
     pdAiHypeDomainShort: '.AI HYPE-DOMAIN (+10% VPS)',
@@ -460,8 +423,6 @@ export const TRANSLATIONS = {
     log_purchasedUpgrade: 'Upgrade "{name}" gekauft',
     log_noUpgradesToBuy: 'Keine Upgrades verfügbar zum Kaufen.',
     log_buyAllExecuted: '"ALLES KAUFEN" ausgeführt! {count} Upgrades für ${cost} gekauft!',
-    log_noPowerClicks: 'Noch keine Power Clicks angesammelt! Verdiene 1 alle 30 Minuten.',
-    log_powerClickActivated: '⚡ POWER CLICK AKTIVIERT! Nächste Taps verursachen doppelten Schaden + temporären VPS-Surge!',
     log_adOnCooldown: '⏳ Diese Ad ist noch im Cooldown!',
     log_watchingAd: '▶️ Schaue Werbeanzeige...',
     log_adFailedRetry: '📡 Werbung konnte nicht geladen werden - kein Cooldown, einfach nochmal versuchen.',
@@ -473,7 +434,7 @@ export const TRANSLATIONS = {
     log_adFreeRestoreNone: 'Kein vorheriger Werbefrei-Kauf gefunden.',
     log_bonusNitrogen: '🧊 Bonus erhalten: Nitrogen Cooling! GPU auf 0°C + 2x Click Power!',
     log_bonusGrant: '💰 Bonus erhalten: Government AI Grant +${amount}!',
-    log_bonusPowerClick: '⚡ Bonus erhalten: +1 Power Click!',
+    log_bonusPowerClick: '⚡ Bonus erhalten: 2x Tap-Value für 30 Sekunden!',
     log_bonusAscendBoost: '🚀 Bonus erhalten: Nächste Singularity Ascension gewährt +20% Heavenly Chips!',
     log_bonusPivotBoost: '🚀 Bonus erhalten: Nächster Pivot gewährt +20% Credibility!',
     log_bonusGoldenClaim: '✨ Meme gesichert: {mult}x TPS für {sec} Sekunden!',
@@ -528,7 +489,6 @@ export const TRANSLATIONS = {
     // Tabs
     tabSlop: 'Slop Core',
     tabStore: 'Store',
-    tabSpecial: 'Special',
     tabStats: 'Stats',
     tabMisc: 'Settings',
 
@@ -564,28 +524,6 @@ export const TRANSLATIONS = {
     lockedBuzzword: '??? Hidden Buzzword Card',
     lockedBuzzwordDesc: 'Requires higher valuation to reveal.',
     collected: 'COLLECTED',
-
-    // Special Tab
-    pivotTitle: 'Pivot Strategy & Epoch Rotation',
-    pivotDesc: 'Pivot your startup into the next hype era and earn Credibility. Engines, Upgrades & Valuation stay intact!',
-    credBalance: 'Credibility Balance:',
-    pivotGain: 'Pivot Gain:',
-    executePivot: 'Execute Pivot (+',
-
-    pathPivot: '🔄 Pivot',
-    pathIdealist: '😇 Idealist',
-    pathCynic: '😈 Cynic',
-    pathAscension: '🌌 Singularity',
-    idealistTitle: 'Idealist Credibility Path',
-    idealistDesc: 'Unlocks ethical practices that permanently lower your Token Burn Rate!',
-    cynicTitle: 'Cynic Credibility Path',
-    cynicDesc: 'Aggressive hype growth! Skyrockets VPS but increases Burn Rate risk!',
-    ascendTitle: 'Singularity Ascension',
-    prestigeLevelText: 'Prestige Level:',
-    heavenlyChipsText: 'Heavenly Chips:',
-    executeAscend: 'Execute Singularity Reset (+',
-    ascendWarning: '⚠️ IRREVERSIBLE: Deletes ALL Engines, Store Upgrades & your entire Valuation (back to $0)! Only Prestige Level, Heavenly Chips & Heavenly Upgrades are kept.',
-    ascendConfirm: '⚠️ SINGULARITY ASCENSION\n\nThis resets your Valuation to $0 and irreversibly removes ALL Engines/Buildings and every purchased Store Upgrade!\n\nOnly Prestige Level, Heavenly Chips and Heavenly Upgrades are kept.\n\nYou will earn +{chips} Heavenly Chips for this.\n\nAre you sure?',
 
     // Stats Tab
     statsTitle: 'Startup Balance Sheet & Audit Logs',
@@ -651,8 +589,6 @@ export const TRANSLATIONS = {
     event_llm_hallucination_desc: 'Models producing ultra-creative slop! Click Value multiplied 5x for 15s!',
 
     // Ads & Rewards (shared across several modals/tabs)
-    adBonusActive: '+20% Ad Bonus active for next execution',
-    adBonusCooldown: 'Ad bonus available again in {min}min',
     adPlaceholderLabel: 'Advertisement',
     adPlaying: 'Ad playing...',
     adPlayingRemaining: 'Ad Playing... ({sec}s remaining)',
@@ -692,8 +628,8 @@ export const TRANSLATIONS = {
     trackingExplainerTitle: 'Better ads, more bonuses',
     trackingExplainerDesc: 'With your permission we can show you more relevant ads - it supports the free version of the app. You can change this anytime in iOS Settings.',
     trackingExplainerBtn: 'Continue',
-    bonusPowerClickTitle: 'Bonus Power Click',
-    bonusPowerClickDesc: 'Grants 1 extra Power Click charge instantly (normally earned every 30 min).',
+    bonusPowerClickTitle: 'Power Click Boost',
+    bonusPowerClickDesc: 'Instantly grants 2x tap value for 30 seconds.',
     nitrogenCoolingTitle: 'Liquid Nitrogen Cooling',
     nitrogenCoolingDesc: 'Instantly cools GPU to 0°C + grants 2x Click Power for 30s.',
     govGrantTitle: 'Government AI Grant',
@@ -761,17 +697,6 @@ export const TRANSLATIONS = {
     layoffEffect1: '⚡ Engine VPS Output +20%',
     layoffEffect2: '⚡ Engine VPS Output +15%',
     buildingUpgradeEffectDesc: '{building} produce +{pct}% more Valuation!',
-
-    // Special Tab (additional)
-    burnDeltaLabel: 'Burn Delta',
-    burnLabel: 'Burn',
-    ascendExecuteSuffix: ' Chips)',
-    pivotExecuteSuffix: ' Credibility & Rotate Epoch)',
-    unlockedBadge: 'UNLOCKED',
-    credUnit: 'Cred',
-    permanentVpsLabel: 'Permanent VPS',
-    onAscensionLabel: 'on Ascension',
-    chipsUnit: 'Chips',
 
     // Stats Tab (additional)
     kpiStatsTab: 'KPI Stats',
@@ -907,7 +832,6 @@ export const TRANSLATIONS = {
     pdShareFooter: 'Build your AI bubble empire on Token Furnace!',
     pdGeneratorTitle: 'VC Pitch Deck Generator',
     pdFormatSubtitle: 'Mobile Story & Social Card (9:16 Format)',
-    pdDetailedToggleLabel: 'Detailed Version (incl. Badges & Buzzword Cards)',
     pdVcApprovedStamp: 'VC APPROVED',
     pdInvestorProspectus: 'INVESTOR PROSPECTUS',
     pdAiHypeDomainShort: '.AI HYPE DOMAIN (+10% VPS)',
@@ -961,8 +885,6 @@ export const TRANSLATIONS = {
     log_purchasedUpgrade: 'Purchased upgrade "{name}"',
     log_noUpgradesToBuy: 'No upgrades available to buy.',
     log_buyAllExecuted: '"BUY ALL" executed! Purchased {count} upgrades for ${cost}!',
-    log_noPowerClicks: 'No Power Clicks accumulated yet! Earn 1 every 30 minutes.',
-    log_powerClickActivated: '⚡ POWER CLICK ACTIVATED! Next taps deal double damage + temporary VPS surge!',
     log_adOnCooldown: '⏳ This ad is still on cooldown!',
     log_watchingAd: '▶️ Watching Rewarded Ad...',
     log_adFailedRetry: '📡 Ad failed to load - no cooldown, just try again.',
@@ -974,7 +896,7 @@ export const TRANSLATIONS = {
     log_adFreeRestoreNone: 'No previous ad-free purchase found.',
     log_bonusNitrogen: '🧊 Bonus received: Nitrogen Cooling! GPU at 0°C + 2x Click Power!',
     log_bonusGrant: '💰 Bonus received: Government AI Grant +${amount}!',
-    log_bonusPowerClick: '⚡ Bonus received: +1 Power Click!',
+    log_bonusPowerClick: '⚡ Bonus received: 2x tap value for 30 seconds!',
     log_bonusAscendBoost: '🚀 Bonus received: Next Singularity Ascension grants +20% Heavenly Chips!',
     log_bonusPivotBoost: '🚀 Bonus received: Next Pivot grants +20% Credibility!',
     log_bonusGoldenClaim: '✨ Meme claimed: {mult}x TPS for {sec} seconds!',

@@ -1,17 +1,19 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useGameStore } from './hooks/useGameStore';
 import { Header } from './components/Header';
 import { NavBar } from './components/NavBar';
 import { DesktopView } from './components/views/DesktopView';
 import { SlopTab } from './components/tabs/SlopTab';
 import { StoreTab } from './components/tabs/StoreTab';
-import { SpecialTab } from './components/tabs/SpecialTab';
 import { StatsTab } from './components/tabs/StatsTab';
 import { MiscTab } from './components/tabs/MiscTab';
 import { GoldenMemeBanner } from './components/GoldenMemeBanner';
 import { AdRewardToast } from './components/AdRewardToast';
 import { ClickParticles } from './components/ClickParticles';
 import { AdBanner, ADS_ENABLED } from './components/AdBanner';
+import { SeoContent } from './components/SeoContent';
+import { LegalFooter } from './components/LegalFooter';
 import { OfflineEarningsModal } from './components/modals/OfflineEarningsModal';
 import { AfkReportModal } from './components/modals/AfkReportModal';
 import { ScheduledAdModal } from './components/modals/ScheduledAdModal';
@@ -19,14 +21,15 @@ import { TrackingExplainerModal } from './components/modals/TrackingExplainerMod
 import { showNativeBanner, hideNativeBanner } from './monetization/nativeBanner';
 import { isCrazyGamesBuild } from './monetization/crazyGamesSdk';
 import { UPGRADES_DATA } from './data/upgradesData';
+import { ROUTE_TABS, ROUTE_LEGAL_PAGES } from './routes';
 
-// Lazy geladen statt statisch importiert: alle drei sind reine Klick-zum-Öffnen-Modals,
-// die die meisten Sessions nie aufrufen. PitchDeckModal allein zieht canvas-confetti plus
+// Lazy geladen statt statisch importiert: alle drei sind reine Klick-zum-Öffnen-Overlays,
+// die die meisten Sessions nie aufrufen. ShareScreen allein zieht canvas-confetti plus
 // ~1000 Zeilen Canvas-Zeichenlogik (pitchDeckCanvas/Consulting/Shared.js) mit - das lud
 // bisher jede Sitzung ungefragt mit, auch wenn "Teilen" nie geklickt wird. Named statt
 // Default-Export -> .then()-Mapping ist der Standard-Weg, React.lazy() das zu erlauben.
-const PitchDeckModal = lazy(() =>
-  import('./components/modals/PitchDeckModal').then((m) => ({ default: m.PitchDeckModal }))
+const ShareScreen = lazy(() =>
+  import('./components/screens/ShareScreen').then((m) => ({ default: m.ShareScreen }))
 );
 const ManualModal = lazy(() =>
   import('./components/modals/ManualModal').then((m) => ({ default: m.ManualModal }))
@@ -37,13 +40,35 @@ const LegalModal = lazy(() =>
 
 export default function App() {
   const store = useGameStore();
-  const [isPitchDeckOpen, setIsPitchDeckOpen] = useState(false);
+  const [isShareScreenOpen, setIsShareScreenOpen] = useState(false);
   const [isManualOpen, setIsManualOpen] = useState(false);
   // null | 'impressum' | 'datenschutz' - Rechtstexte als Modal, damit sie aus jeder
   // Ansicht (mobil wie Desktop) über die Einstellungen erreichbar bleiben.
   const [legalPage, setLegalPage] = useState(null);
 
   const isNativePlatform = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
+  // Echte Tab-Routen nur im reinen Web-Build (siehe routes.js) - CrazyGames hostet unter
+  // einem fremden, zur Buildzeit unbekannten Unterpfad (absolute Pfade wie "/shop" würden
+  // dort auf die CrazyGames-Domain-Wurzel zeigen statt ins Spiel), die iOS-App braucht
+  // ohnehin keine URLs. BrowserRouter selbst ist in main.jsx trotzdem immer aktiv (siehe
+  // dort) - hier wird nur entschieden, ob NavBar echte <Link>s rendert und ob die Route
+  // den activeTab-State treibt.
+  const useRoutes = !isNativePlatform && !isCrazyGamesBuild();
+  const location = useLocation();
+  useEffect(() => {
+    if (!useRoutes) return;
+    const tabFromRoute = ROUTE_TABS[location.pathname];
+    if (tabFromRoute && tabFromRoute !== store.activeTab) {
+      store.setActiveTab(tabFromRoute);
+    }
+    // Direkter Aufruf von /impressum bzw. /datenschutz (z.B. der extern in App Store
+    // Connect hinterlegte "Privacy Policy URL"-Link) muss das Rechtstext-Overlay auch OHNE
+    // vorherigen Klick in der App zeigen - siehe routes.js.
+    const legalFromRoute = ROUTE_LEGAL_PAGES[location.pathname];
+    if (legalFromRoute) {
+      setLegalPage(legalFromRoute);
+    }
+  }, [location.pathname]);
 
   // Natives AdMob-Banner (kein DOM-Element, siehe AdBanner.jsx) folgt adFree. Auf Web ist
   // showNativeBanner/hideNativeBanner ein No-Op.
@@ -118,7 +143,7 @@ export default function App() {
         hypeTier={store.hypeTier}
         burnRate={store.burnRate}
         onOpenManual={() => setIsManualOpen(true)}
-        onOpenPitchDeck={() => setIsPitchDeckOpen(true)}
+        onOpenShare={() => setIsShareScreenOpen(true)}
         lang={store.lang}
         setLang={store.setLang}
         logs={store.logs}
@@ -188,7 +213,7 @@ export default function App() {
       {/* WEB DESKTOP ALL-IN-ONE VIEW (Everything on 1 Page in 3 Columns) */}
       {layoutMode === 'desktop' ? (
         <main className="flex-1 pb-10">
-          <DesktopView store={store} setIsPitchDeckOpen={setIsPitchDeckOpen} onOpenLegal={setLegalPage} />
+          <DesktopView store={store} onOpenLegal={setLegalPage} useRoutes={useRoutes} />
         </main>
       ) : (
         /* MOBILE 5-TAB VIEW */
@@ -243,33 +268,6 @@ export default function App() {
             )}
 
             {store.activeTab === 3 && (
-              <SpecialTab
-                prestigeLevel={store.prestigeLevel}
-                heavenlyChips={store.heavenlyChips}
-                ascend={store.ascend}
-                pendingHeavenlyChips={store.pendingHeavenlyChips}
-                boughtHeavenlyUpgrades={store.boughtHeavenlyUpgrades}
-                buyHeavenlyUpgrade={store.buyHeavenlyUpgrade}
-                epoch={store.epoch}
-                credibility={store.credibility}
-                idealistLevel={store.idealistLevel}
-                buyIdealistLevel={store.buyIdealistLevel}
-                cynicLevel={store.cynicLevel}
-                buyCynicLevel={store.buyCynicLevel}
-                pivot={store.pivot}
-                pivotCredGain={store.pivotCredGain}
-                adState={store.adState}
-                requestBonus={store.requestBonus}
-                isAdReady={store.isAdReady}
-                getAdCooldownRemaining={store.getAdCooldownRemaining}
-                pendingAscendBoost={store.pendingAscendBoost}
-                pendingPivotBoost={store.pendingPivotBoost}
-                adFree={store.adFree}
-                t={store.t}
-              />
-            )}
-
-            {store.activeTab === 4 && (
               <StatsTab
                 stats={store.stats}
                 valuation={store.valuation}
@@ -284,7 +282,7 @@ export default function App() {
               />
             )}
 
-            {store.activeTab === 5 && (
+            {store.activeTab === 4 && (
               <MiscTab
                 adState={store.adState}
                 requestBonus={store.requestBonus}
@@ -303,51 +301,44 @@ export default function App() {
                 purchaseState={store.purchaseState}
                 purchaseAdFree={store.purchaseAdFree}
                 restorePurchases={store.restorePurchases}
-                showAdPrivacyOptions={store.showAdPrivacyOptions}
-                onOpenLegal={setLegalPage}
                 t={store.t}
                 tf={store.tf}
               />
             )}
 
-            {/* Beschreibungstext nur auf dem Start-Tab (SlopTab, activeTab 1) statt auf allen
-                5 Tabs - siehe translations.js aboutTitle/aboutText und das Desktop-Pendant in
-                DesktopView.jsx. Nur Web UND nicht CrazyGames: der Text existiert einzig für
-                den AdSense-Site-Review (siehe AdBanner.jsx) - in der iOS-App (AdMob,
-                App-Store-Review) und auf CrazyGames' eigener Spieleseite ist er nur
+            {/* Pro Tab EIGENER, thematisch passender Beschreibungstext statt ein einziger
+                Block nur auf dem Start-Tab - siehe SeoContent.jsx (section-Prop) und
+                routes.js. Grund: Google hat token-furnace.com wiederholt mit "low value
+                content" abgelehnt, obwohl auf "/" bereits echter Text stand - eine Domain
+                mit nur EINER crawlbaren URL wirkt trotzdem wie eine Dünnschicht-Seite. Mit
+                useRoutes bekommt jeder Tab jetzt eine eigene URL (routes.js) UND eigenen,
+                zur Route passenden Content, statt denselben Block fünffach zu wiederholen.
+                Special-Tab (früher Tab 3) ist entfernt (siehe App.jsx/NavBar.jsx/routes.js)
+                - Stats rückt auf Tab 3, Settings/Misc (Tab 4) hatte nie einen eigenen
+                SeoContent-Abschnitt.
+                Nur Web UND nicht CrazyGames/nativ (== useRoutes): in der iOS-App (AdMob,
+                App-Store-Review) und auf CrazyGames' eigener Spieleseite ist der Text nur
                 unnötiger Platz unter dem eigentlichen Spiel. */}
-            {!isNativePlatform && !isCrazyGamesBuild() && store.activeTab === 1 && (
-              <div className="mx-3 mt-4 bg-slate-900/60 rounded-xl border border-slate-800 p-3 text-xs text-slate-400 leading-relaxed flex flex-col gap-3">
-                <div>
-                  <h2 className="text-[10px] font-black uppercase tracking-wider text-cyan-400 mb-1.5">
-                    {store.t('aboutTitle')}
-                  </h2>
-                  <p>{store.t('aboutText')}</p>
-                </div>
-                <div>
-                  <h2 className="text-[10px] font-black uppercase tracking-wider text-cyan-400 mb-1.5">
-                    {store.t('howToPlayTitle')}
-                  </h2>
-                  <p className="mb-1.5">{store.t('htpP1')}</p>
-                  <p className="mb-1.5">{store.t('htpP2')}</p>
-                  <p className="mb-1.5">{store.t('htpP3')}</p>
-                  <p>{store.t('htpP4')}</p>
-                </div>
-                <div>
-                  <h2 className="text-[10px] font-black uppercase tracking-wider text-cyan-400 mb-1.5">
-                    {store.t('faqTitle')}
-                  </h2>
-                  <dl className="flex flex-col gap-1.5">
-                    {[1, 2, 3, 4].map((n) => (
-                      <div key={n}>
-                        <dt className="font-bold text-slate-300">{store.t(`faqQ${n}`)}</dt>
-                        <dd>{store.t(`faqA${n}`)}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </div>
+            {useRoutes && (
+              <div className="mx-3 mt-4 bg-slate-900/60 rounded-xl border border-slate-800 p-3 text-xs text-slate-400 leading-relaxed">
+                {store.activeTab === 1 && <SeoContent t={store.t} lang={store.lang} compact section="home" />}
+                {store.activeTab === 2 && <SeoContent t={store.t} lang={store.lang} compact section="shop" />}
+                {store.activeTab === 3 && <SeoContent t={store.t} lang={store.lang} compact section="stats" />}
               </div>
             )}
+
+            {/* Pflichtlinks auf JEDEM Tab statt nur im Einstellungen-Tab versteckt - siehe
+                LegalFooter.jsx. Unconditional (nicht an activeTab gekoppelt), damit das
+                Impressum von jeder Ansicht aus per Scroll erreichbar ist, nicht erst nach
+                einem Tab-Wechsel. */}
+            <LegalFooter
+              onOpenLegal={setLegalPage}
+              purchaseAvailable={store.purchaseAvailable}
+              adFree={store.adFree}
+              showAdPrivacyOptions={store.showAdPrivacyOptions}
+              useRoutes={useRoutes}
+              t={store.t}
+            />
           </main>
 
           {/* Statischer Werbe-Slot, fix über der Tab-Leiste verankert. Vorher lag er im
@@ -370,6 +361,7 @@ export default function App() {
             activeTab={store.activeTab}
             setActiveTab={store.setActiveTab}
             affordableUpgradesCount={affordableUpgradesCount}
+            useRoutes={useRoutes}
             t={store.t}
           />
         </div>
@@ -382,10 +374,10 @@ export default function App() {
         {/* Impressum / Datenschutzerklärung */}
         <LegalModal page={legalPage} onClose={() => setLegalPage(null)} lang={store.lang} />
 
-        {/* VC Pitch Deck Export Modal */}
-        <PitchDeckModal
-          isOpen={isPitchDeckOpen}
-          onClose={() => setIsPitchDeckOpen(false)}
+        {/* VC Pitch Deck Share Screen */}
+        <ShareScreen
+          isOpen={isShareScreenOpen}
+          onClose={() => setIsShareScreenOpen(false)}
           startupName={store.startupName}
           hasAiDomainBonus={store.hasAiDomainBonus}
           valuation={store.valuation}
@@ -398,6 +390,7 @@ export default function App() {
           buildings={store.buildings}
           unlockedAchievements={store.unlockedAchievements}
           boughtBuzzwords={store.boughtBuzzwords}
+          adFree={store.adFree}
           lang={store.lang}
           t={store.t}
         />

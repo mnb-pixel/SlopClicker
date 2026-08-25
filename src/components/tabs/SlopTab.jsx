@@ -2,6 +2,7 @@ import React from 'react';
 import { Zap, Flame, ShieldAlert, Sparkles, Tv, Gift, ThermometerSnowflake } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 import { BuildingVisualGrid } from '../BuildingVisualGrid';
+import gpuChipMeme from '../../assets/gpu_chip_meme.jpg';
 
 export function SlopTab({
   handleTapAGI,
@@ -133,13 +134,20 @@ export function SlopTab({
                 : 'bg-gradient-to-br from-slate-900 via-cyan-950 to-slate-900 border-cyan-400 text-cyan-300 cyber-glow hover:border-cyan-300'
             }`}
           >
-            {/* GPU Chip Meme Background Graphic. Relativer statt absoluter Pfad: bei
-                --mode crazygames läuft der Build unter einem Unterpfad (base: './', siehe
-                vite.config.js) statt an der Domain-Wurzel - ein führendes "/" hätte dort
-                auf die Wurzel von crazygames.com gezeigt und wäre 404 gelaufen (genau das
-                war der gemeldete "Grafik auf dem Button fehlt"-Bug). */}
+            {/* GPU Chip Meme Background Graphic. Als ES-Modul importiert statt als
+                public/-Roh-Pfad (siehe src/assets/): eine Zeichenkette wie "./foo.jpg" oder
+                "/foo.jpg" wird vom Browser relativ zur AKTUELLEN SEITEN-URL aufgelöst - bei
+                --mode crazygames (base: './', siehe vite.config.js) hängt das Ergebnis
+                davon ab, ob CrazyGames die Spielseite MIT oder OHNE abschließenden Slash
+                ausliefert, und war genau deshalb weiterhin kaputt, obwohl "/gpu_chip_meme.jpg"
+                bereits auf "./gpu_chip_meme.jpg" umgestellt war (der gemeldete "Grafik auf
+                dem Button fehlt"-Bug bestand nach diesem ersten Fix-Versuch fort). Ein
+                Import lässt Vite die Datei stattdessen mit gehashtem Namen NEBEN den JS-
+                Chunk legen und den Pfad relativ zu DESSEN URL (import.meta.url) aufbauen -
+                das ist unabhängig von der Seiten-URL und funktioniert immer, egal ob mit
+                oder ohne Slash am Ende ausgeliefert wird. */}
             <img
-              src="./gpu_chip_meme.jpg"
+              src={gpuChipMeme}
               alt={tr('generateAgiLabel')}
               className="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity"
             />

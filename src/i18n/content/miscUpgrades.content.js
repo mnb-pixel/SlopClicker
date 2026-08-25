@@ -7,108 +7,108 @@ export const MISC_UPGRADES_CONTENT = {
     de: {
       name: 'Ergonomische Cyber-Maus',
       quote: 'Reduziert RSI beim Spammen der AGI-Generierung.',
-      description: 'Taps bringen +5 zusätzliche Valuation (5x Basis-Klick!).',
+      description: 'Taps bringen +1,25 zusätzliche Valuation.',
     },
     en: {
       name: 'Ergonomic Cyber Mouse',
       quote: 'Reduces RSI while spamming AGI generation.',
-      description: 'Taps earn +5 extra Valuation (5x base click!).',
+      description: 'Taps earn +1.25 extra Valuation.',
     },
   },
   click_2: {
     de: {
       name: 'Übertaktete Mechanische Switches',
       quote: 'Klickgeräusch schreckt Regulierungsbehörden ab.',
-      description: 'Taps bringen +10% deines gesamten VPS pro Klick!',
+      description: 'Taps bringen +10% mehr Valuation als bisher pro Klick!',
     },
     en: {
       name: 'Overclocked Mechanical Switches',
       quote: 'Click noise scares away regulators.',
-      description: 'Taps earn +10% of your total VPS on every click!',
+      description: 'Taps earn +10% more Valuation than before, per click!',
     },
   },
   click_3: {
     de: {
       name: 'Neural-Link-Finger-Implantat',
       quote: 'Direkte Gehirn-zu-GPU-Klick-Schnittstelle.',
-      description: 'Taps bringen +25% deines gesamten VPS pro Klick!',
+      description: 'Taps bringen +25% mehr Valuation als bisher pro Klick!',
     },
     en: {
       name: 'Neural Link Finger Implant',
       quote: 'Direct brain-to-GPU click interface.',
-      description: 'Taps earn +25% of your total VPS on every click!',
+      description: 'Taps earn +25% more Valuation than before, per click!',
     },
   },
   click_4: {
     de: {
       name: 'Quanten-Haptik-Motor',
       quote: 'Fühlt sich an, als würde man die AGI selbst berühren.',
-      description: 'Taps bringen +50% deines gesamten VPS pro Klick!',
+      description: 'Taps bringen +50% mehr Valuation als bisher pro Klick!',
     },
     en: {
       name: 'Quantum Haptic Motor',
       quote: 'Feels like touching AGI itself.',
-      description: 'Taps earn +50% of your total VPS on every click!',
+      description: 'Taps earn +50% more Valuation than before, per click!',
     },
   },
   click_5: {
     de: {
       name: 'Unterlichtgeschwindigkeits-Tap-Strahl',
       quote: 'Tap registriert, bevor dein Gehirn ein Neuron feuert.',
-      description: 'Taps bringen +100% deines gesamten VPS pro Klick!',
+      description: 'Taps bringen +100% mehr Valuation als bisher pro Klick!',
     },
     en: {
       name: 'Sub-Lightspeed Tap Beam',
       quote: 'Tap registered before your brain fires a neuron.',
-      description: 'Taps earn +100% of your total VPS on every click!',
+      description: 'Taps earn +100% more Valuation than before, per click!',
     },
   },
   syndicate_1: {
     de: {
       name: 'Seed-Angel-Berater',
       quote: 'Schreibt frühe Term Sheets in natürlicher Sprache.',
-      description: '+10% zusätzliches globales VPS für jeden freigeschalteten Erfolg!',
+      description: '+0,4% zusätzliches globales VPS für jeden freigeschalteten Erfolg!',
     },
     en: {
       name: 'Seed Angel Advisor',
       quote: 'Writes early term sheets in natural language.',
-      description: '+10% extra global VPS for every unlocked achievement!',
+      description: '+0.4% extra global VPS for every unlocked achievement!',
     },
   },
   syndicate_2: {
     de: {
       name: 'Series-A-Board-Direktor',
       quote: 'Nimmt per Hologramm an Quartals-Board-Meetings teil.',
-      description: '+20% zusätzliches globales VPS für jeden freigeschalteten Erfolg!',
+      description: '+0,8% zusätzliches globales VPS für jeden freigeschalteten Erfolg!',
     },
     en: {
       name: 'Series-A Board Director',
       quote: 'Attends quarterly board meetings via holograms.',
-      description: '+20% extra global VPS for every unlocked achievement!',
+      description: '+0.8% extra global VPS for every unlocked achievement!',
     },
   },
   syndicate_3: {
     de: {
       name: 'Growth-VC-Syndicate-Partner',
       quote: 'Nutzt institutionellen Hype, um Term-Sheet-Angebote zu verdoppeln.',
-      description: '+30% zusätzliches globales VPS für jeden freigeschalteten Erfolg!',
+      description: '+1,2% zusätzliches globales VPS für jeden freigeschalteten Erfolg!',
     },
     en: {
       name: 'Growth VC Syndicate Partner',
       quote: 'Leverages institutional hype to double term sheet offers.',
-      description: '+30% extra global VPS for every unlocked achievement!',
+      description: '+1.2% extra global VPS for every unlocked achievement!',
     },
   },
   syndicate_4: {
     de: {
       name: 'Autonomes AGI-Beirats-Board',
       quote: 'Ein KI-Board, das seine eigenen Aktienoptionen genehmigt.',
-      description: '+50% zusätzliches globales VPS für jeden freigeschalteten Erfolg!',
+      description: '+2% zusätzliches globales VPS für jeden freigeschalteten Erfolg!',
     },
     en: {
       name: 'Autonomous AGI Advisory Board',
       quote: 'An AI board that approves its own stock option grants.',
-      description: '+50% extra global VPS for every unlocked achievement!',
+      description: '+2% extra global VPS for every unlocked achievement!',
     },
   },
   thermal_1: {

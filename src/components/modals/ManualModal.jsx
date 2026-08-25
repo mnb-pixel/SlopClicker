@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, X, Sparkles, RotateCw, Flame, ShieldAlert, Cpu, Zap } from 'lucide-react';
+import { BookOpen, X, Sparkles, Flame, ShieldAlert, Cpu } from 'lucide-react';
 import { MANUAL_CONTENT } from '../../i18n/content/manual.content';
 
 // Wandelt **fett markierten** Text in <strong>-Segmente um, damit die Übersetzungs-Strings
@@ -75,34 +75,13 @@ export function ManualModal({ isOpen, onClose, lang = 'de' }) {
           </section>
 
           {/* Section 4 */}
-          <section className="bg-[#14202C]/60 p-4 rounded-xl border border-[#8A6A1F]/30">
-            <h3 className="font-serif font-extrabold text-sm text-[#8A6A1F] uppercase mb-2 flex items-center gap-1.5">
-              <RotateCw className="w-4 h-4" /> {m.s4Title}
-            </h3>
-            <p className="mb-2">{renderRich(m.s4Body1)}</p>
-            <ul className="list-disc list-inside space-y-1 text-slate-300 mb-2">
-              <li>{renderRich(m.s4Li1)}</li>
-              <li>{renderRich(m.s4Li2)}</li>
-            </ul>
-          </section>
-
-          {/* Section 5 */}
-          <section className="bg-[#14202C]/60 p-4 rounded-xl border border-purple-500/30">
-            <h3 className="font-serif font-extrabold text-sm text-purple-300 uppercase mb-2 flex items-center gap-1.5">
-              <Zap className="w-4 h-4 text-purple-400" /> {m.s5Title}
-            </h3>
-            <p className="mb-2">{renderRich(m.s5Body1)}</p>
-            <p className="text-slate-300">{renderRich(m.s5Body2)}</p>
-          </section>
-
-          {/* Section 6 */}
           <section className="bg-[#14202C]/60 p-4 rounded-xl border border-amber-500/30">
             <h3 className="font-serif font-extrabold text-sm text-amber-300 uppercase mb-2 flex items-center gap-1.5">
-              <ShieldAlert className="w-4 h-4 text-amber-400" /> {m.s6Title}
+              <ShieldAlert className="w-4 h-4 text-amber-400" /> {m.s4Title}
             </h3>
             <ul className="list-disc list-inside space-y-1 text-slate-300">
-              <li>{renderRich(m.s6Li1)}</li>
-              <li>{renderRich(m.s6Li2)}</li>
+              <li>{renderRich(m.s4Li1)}</li>
+              <li>{renderRich(m.s4Li2)}</li>
             </ul>
           </section>
         </div>

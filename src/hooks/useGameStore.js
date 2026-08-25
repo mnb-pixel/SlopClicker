@@ -157,13 +157,16 @@ const AD_COOLDOWN_SEC = {
 const AFK_THRESHOLD_SECONDS = 1800; // 30 Minuten
 
 // Offline-Ertrag (Browser komplett geschlossen, nicht nur Tab im Hintergrund - dafür siehe
-// pageActivity 'hidden' oben): ab 1 Minute Abwesenheit berechnet, gedeckelt auf 4h, zu 20%
-// der zuletzt bekannten VPS. Unter AFK_THRESHOLD_SECONDS wird der Betrag automatisch und
-// ohne Rückfrage gutgeschrieben; ab der Schwelle ist er PENDING und nur per Ad claimbar
-// (alles oder nichts) - exakt dieselbe Regel wie beim Tab-im-Hintergrund-Fall unten.
+// pageActivity 'hidden' oben): ab 1 Minute Abwesenheit berechnet, gedeckelt auf 4h, zu 10%
+// der zuletzt bekannten VPS. War 20% - "um 50% reduzieren" war als "nochmal 50% NIEDRIGER
+// als der bisherige Wert" gemeint, nicht als Zielwert von 50% (0.2 * 0.5 = 0.1, nicht 0.6 -
+// die vorherige Änderung ging in die falsche Richtung). Unter AFK_THRESHOLD_SECONDS wird
+// der Betrag automatisch und ohne Rückfrage gutgeschrieben; ab der Schwelle ist er PENDING
+// und nur per Ad claimbar (alles oder nichts) - exakt dieselbe Regel wie beim
+// Tab-im-Hintergrund-Fall unten.
 const OFFLINE_MIN_SECONDS = 60;
 const OFFLINE_CAP_SECONDS = 4 * 3600;
-const OFFLINE_EFFICIENCY = 0.2;
+const OFFLINE_EFFICIENCY = 0.1;
 
 // Web-only: von einem ab AFK_THRESHOLD_SECONDS PENDING gewordenen Offline-/AFK-Ertrag wird
 // dieser Anteil sofort und ohne Ad gutgeschrieben, der Rest bleibt wie gehabt nur per Ad
@@ -222,7 +225,6 @@ export function useGameStore() {
   const [isOverheated, setIsOverheated] = useState(false);
   const [coolingRate, setCoolingRate] = useState(4.0); // °C per second
 
-  const [powerClicks, setPowerClicks] = useState(0);
   const [powerClickActive, setPowerClickActive] = useState(false);
   const [powerClickSurgeTimer, setPowerClickSurgeTimer] = useState(0);
 
@@ -269,9 +271,12 @@ export function useGameStore() {
 
   // Kurzes Bestätigungs-Toast nach abgeschlossener Rewarded Ad ("Bonus jetzt erhalten!") -
   // ergänzt den Log-Eintrag um eine unübersehbare, selbst-verschwindende Rückmeldung.
-  const [adRewardToast, setAdRewardToast] = useState(null); // { id, message } | null
-  const flashAdReward = useCallback((message) => {
-    setAdRewardToast({ id: Date.now() + Math.random(), message });
+  // variant 'success' (Default) oder 'failed' (siehe AdRewardToast.jsx) - auch der
+  // Fehlschlag-Fall in requestBonus unten braucht mehr als nur die leicht übersehene
+  // Ticker-Zeile (gemeldet als "kein Bonus, aber auch keine Info").
+  const [adRewardToast, setAdRewardToast] = useState(null); // { id, message, variant } | null
+  const flashAdReward = useCallback((message, variant = 'success') => {
+    setAdRewardToast({ id: Date.now() + Math.random(), message, variant });
   }, []);
   const dismissAdRewardToast = useCallback(() => setAdRewardToast(null), []);
 
@@ -504,7 +509,6 @@ export function useGameStore() {
       gpuTemp,
       isOverheated,
       coolingRate,
-      powerClicks,
       prestigeLevel,
       heavenlyChips,
       themeMode,
@@ -552,7 +556,7 @@ export function useGameStore() {
     });
   }, [
     lang, startupName, valuation, totalValuation, totalBurned, slopCount, gpuTemp, isOverheated,
-    coolingRate, powerClicks, prestigeLevel, heavenlyChips, themeMode, boughtBuzzwords,
+    coolingRate, prestigeLevel, heavenlyChips, themeMode, boughtBuzzwords,
     boughtGreenwashingLayoffs, epoch, idealistLevel, cynicLevel, credibility, pivotCount,
     valuationAtLastPivot, buildings, blackSwanNextEligible,
     boughtUpgrades, unlockedUpgrades, boughtHeavenlyUpgrades, unlockedAchievements, stats,
@@ -580,7 +584,6 @@ export function useGameStore() {
     setGpuTemp(safeNumber(data.gpuTemp, 0, { min: 0 }));
     setIsOverheated(safeBool(data.isOverheated));
     setCoolingRate(safeNumber(data.coolingRate, 4.0, { min: 0 }));
-    setPowerClicks(safeNumber(data.powerClicks, 0, { min: 0 }));
     setPrestigeLevel(safeNumber(data.prestigeLevel, 0, { min: 0 }));
     setHeavenlyChips(safeNumber(data.heavenlyChips, 0, { min: 0 }));
     // 'cyberpunk' als Gegenwert, nicht 'modern_slop': der Initial-State und
@@ -1129,7 +1132,13 @@ export function useGameStore() {
     // Bubble Pop: -35% VPS for 30s (bubblePopTimer)
     const bubbleMult = bubblePopTimer > 0 ? 0.65 : 1.0;
 
-    return totalCps * globalMult * syndicateBoost * pathMult * prestigeBonus * powerSurgeMult * aiDomainMult * goldenMult * bubbleMult;
+    // Balance-Pass: alle VPS-steigernden Faktoren oben (Gebäude-Basisertrag, Gebäude-
+    // Upgrades, Greenwashing/Layoffs, Global-Upgrades, Board-Syndicate, Credibility-Pfade,
+    // Buzzwords, Prestige) sind bereits multiplikativ verknüpft - ein einzelner Faktor hier
+    // am Ende halbiert sie alle gleichermaßen nochmal, statt jede Konstante einzeln (und
+    // fehleranfällig) nachzuziehen. Gemeldet als "immer noch zu schnell/zu hoch".
+    const VPS_REBALANCE_FACTOR = 0.5;
+    return totalCps * globalMult * syndicateBoost * pathMult * prestigeBonus * powerSurgeMult * aiDomainMult * goldenMult * bubbleMult * VPS_REBALANCE_FACTOR;
   }, [buildings, boughtUpgrades, boughtGreenwashingLayoffs, boughtHeavenlyUpgrades, unlockedAchievements, buzzwordBonus, idealistLevel, cynicLevel, prestigeLevel, powerClickActive, powerClickSurgeTimer, goldenBoostTimer, bubblePopTimer, startupName]);
 
   // vps = gross production rate (Konzept: Gesamt-TPS, vor Burn Rate - Burn frisst den Bestand, nicht den Fluss)
@@ -1144,7 +1153,7 @@ export function useGameStore() {
 
   // --- TAP-WERT (Konzept: max(1, Gesamt-TPS x 0.05), zzgl. Token-Furnace Click-Upgrades) ---
   const clickValue = useMemo(() => {
-    let baseClick = Math.max(1, vps * 0.05);
+    let baseClick = vps * 0.05;
 
     boughtUpgrades.forEach((upId) => {
       const up = UPGRADES_DATA.find((u) => u.id === upId);
@@ -1152,10 +1161,14 @@ export function useGameStore() {
         baseClick += up.effect.value;
       }
     });
+    // Boostet den bisherigen Tap-Wert selbst multiplikativ (nicht mehr einen Bruchteil der
+    // VPS) - Tap-Ertrag skaliert damit auch ohne/mit wenig Gebäuden, statt an die passive
+    // Produktion gekoppelt zu sein (gemeldet). Reihenfolge ist egal: Multiplikation ist
+    // kommutativ, das Endergebnis ist unabhängig von der Kaufreihenfolge.
     boughtUpgrades.forEach((upId) => {
       const up = UPGRADES_DATA.find((u) => u.id === upId);
-      if (up && up.type === 'click' && up.effect.type === 'vpsClickPct') {
-        baseClick += vps * up.effect.value;
+      if (up && up.type === 'click' && up.effect.type === 'tapValuePct') {
+        baseClick += baseClick * up.effect.value;
       }
     });
 
@@ -1167,7 +1180,13 @@ export function useGameStore() {
       else if (boughtHeavenlyUpgrades.includes('demon_1')) powerClickTapMult = 3;
     }
 
-    return baseClick * powerClickTapMult;
+    // Balance-Pass: AGI-Button (Tap-Wert) zusätzlich zur VPS_REBALANCE_FACTOR-Halbierung
+    // oben (die über den vps-Anteil hier bereits durchschlägt) nochmal separat geviertelt -
+    // gemeldet als eigenständig zu stark gegenüber der passiven Produktion.
+    const CLICK_REBALANCE_FACTOR = 0.25;
+    // Floor erst NACH dem Rebalance-Faktor anwenden, sonst startet der Tap-Button bei
+    // 1 x 0.25 = 0,25 $ statt bei den vorgesehenen 1 $ pro Tap (gemeldet).
+    return Math.max(1, baseClick * powerClickTapMult * CLICK_REBALANCE_FACTOR);
   }, [boughtUpgrades, boughtHeavenlyUpgrades, vps, powerClickActive]);
 
   // --- MAIN TICK ENGINE LOOP (alle 100ms; Wahrscheinlichkeiten sind Tick-Dauer-unabhängig skaliert) ---
@@ -1527,18 +1546,6 @@ export function useGameStore() {
     setActiveEvent(null);
   }, []);
 
-  // Toggle Power Click
-  const togglePowerClick = useCallback(() => {
-    if (powerClicks <= 0) {
-      addLog(tf('log_noPowerClicks'), 'info');
-      return;
-    }
-    setPowerClicks((prev) => prev - 1);
-    setPowerClickActive(true);
-    setPowerClickSurgeTimer(20);
-    addLog(tf('log_powerClickActivated'), 'success');
-  }, [powerClicks, addLog, tf]);
-
   // Ist dieser Ad-Placement-Typ gerade nutzbar (kein aktiver Cooldown)?
   const isAdReady = useCallback((type) => Date.now() >= (adCooldowns[type] || 0), [adCooldowns]);
 
@@ -1549,8 +1556,14 @@ export function useGameStore() {
 
   // Reward-Vorschauwerte, die schon VOR dem Ansehen im Popup/Button genannt werden -
   // dieselbe Formel wird unten bei der tatsächlichen Gutschrift verwendet.
-  const grantAdPreview = useMemo(() => Math.max(500, vps * 100), [vps]);
-  const scheduledAdPreview = useMemo(() => Math.max(250, vps * 60), [vps]);
+  // War 100x/60x VPS: ein Lump-Sum-Bonus, der an der AKTUELLEN (bereits durch alle Upgrades
+  // hochskalierten) VPS hängt und sofort in mehr Infrastruktur reinvestiert werden kann,
+  // erzeugt genau die Art Rückkopplungsschleife (mehr VPS -> größerer Bonus -> mehr
+  // Gebäude -> noch mehr VPS), die als "Button-Bonus viel zu stark, skaliert das Spiel
+  // kaputt" gemeldet wurde. Auf 20x/12x gekürzt (5x kleiner) - bleibt spürbar lohnend, ohne
+  // der dominante Wachstumsmotor zu sein. Floors proportional mitgekürzt.
+  const grantAdPreview = useMemo(() => Math.max(100, vps * 20), [vps]);
+  const scheduledAdPreview = useMemo(() => Math.max(50, vps * 12), [vps]);
 
   // Zahlt die eigentliche Belohnung für einen Placement-Typ aus. Geteilt zwischen dem
   // Ad-Pfad (nach erfolgreicher Rewarded Ad) und dem Werbefrei-Direktclaim-Pfad in
@@ -1570,7 +1583,13 @@ export function useGameStore() {
       addLog(msg, 'success');
       flashAdReward(msg);
     } else if (type === 'power_click') {
-      setPowerClicks((prev) => prev + 1);
+      // Vorher: gewährte nur eine "Ladung" (powerClicks), die per togglePowerClick() erst
+      // manuell aktiviert werden musste - dafür gab es aber nirgends einen Button in der UI,
+      // die Ladung verpuffte also wirkungslos. Jetzt wie jeder andere Ad-Bonus: sofort
+      // wirksam, direkt 2x Tap-Value für 30s (derselbe Surge-Mechanismus wie zuvor per
+      // togglePowerClick, siehe powerClickActive/powerClickSurgeTimer im Tick-Loop).
+      setPowerClickActive(true);
+      setPowerClickSurgeTimer(30);
       const msg = tf('log_bonusPowerClick');
       addLog(msg, 'success');
       flashAdReward(msg);
@@ -1630,8 +1649,12 @@ export function useGameStore() {
 
       if (!rewarded && !wasAdFree && !GRANT_ON_AD_FAILURE.has(type)) {
         // Kein Cooldown setzen: der Fehlversuch war nicht die Schuld der Spielenden, ein
-        // sofortiger zweiter Versuch muss möglich bleiben.
-        addLog(tf('log_adFailedRetry'), 'info');
+        // sofortiger zweiter Versuch muss möglich bleiben. Zusätzlich zum Log-Eintrag ein
+        // Toast (wie bei einer erfolgreichen Ad) - sonst verschwindet der Fehlschlag
+        // unbemerkt im scrollenden Ticker und man weiss nicht, warum der Bonus ausblieb.
+        const msg = tf('log_adFailedRetry');
+        addLog(msg, 'info');
+        flashAdReward(msg, 'failed');
         if (onFailed) onFailed();
         return;
       }
@@ -1669,7 +1692,7 @@ export function useGameStore() {
         console.error('Ad bridge threw:', e);
         finish(false, false);
       });
-  }, [addLog, adState, adCooldowns, adFree, adBridge, grantReward, tf]);
+  }, [addLog, adState, adCooldowns, adFree, adBridge, grantReward, flashAdReward, tf]);
 
   // Offline-Ertrag (>= 30min Abwesenheit, siehe Mount-Effect oben) per Ad claimen - exakt
   // dieselbe alles-oder-nichts-Logik wie beim AFK-Report unten, kein Verdopplungs-Bonus
@@ -1750,8 +1773,9 @@ export function useGameStore() {
     }, () => setScheduledAdUnlocked(true));
   }, [scheduledAdPreview, addLog, requestBonus, flashAdReward, tf]);
 
-  // Chips, die eine Ascension JETZT bringen würde (ohne Ad-Boost) - von SpecialTab fürs
-  // Anzeigen/Deaktivieren des Buttons genutzt, damit die Formel nur an einer Stelle steht.
+  // Chips, die eine Ascension JETZT bringen würde (ohne Ad-Boost) - hält die Formel an
+  // einer Stelle, falls sie wieder irgendwo angezeigt wird (Special-Tab aktuell entfernt,
+  // siehe App.jsx/DesktopView.jsx/NavBar.jsx).
   const pendingHeavenlyChips = useMemo(() => {
     return Math.floor(Math.sqrt(Math.max(0, totalValuation) / ASCEND_CHIP_DIVISOR));
   }, [totalValuation]);
@@ -1988,7 +2012,6 @@ export function useGameStore() {
     // Kühlrate, die Power-Clicks und den Pivot-Referenzwert - und schrieb sie beim
     // nächsten Autosave (8s später) direkt wieder in den localStorage zurück.
     setCoolingRate(4.0);
-    setPowerClicks(0);
     setValuationAtLastPivot(0);
     setScheduledAdUnlocked(false);
     setAdCooldowns({});
@@ -2053,7 +2076,7 @@ export function useGameStore() {
     startupName, setStartupName, hasAiDomainBonus,
     valuation, totalValuation, totalBurned, slopCount,
     gpuTemp, isOverheated, coolingRate,
-    powerClicks, powerClickActive, powerClickSurgeTimer, togglePowerClick,
+    powerClickActive, powerClickSurgeTimer,
     prestigeLevel, heavenlyChips, ascend, pendingHeavenlyChips, buyHeavenlyUpgrade, boughtHeavenlyUpgrades,
     buildings, buyBuilding, buyMode, setBuyMode,
     boughtUpgrades, unlockedUpgrades, buyUpgrade, buyAllUpgrades,

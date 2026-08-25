@@ -28,7 +28,7 @@ const MISC_UPGRADES_DATA = [
     name: 'Ergonomic Cyber Mouse',
     cost: 100,
     quote: 'Reduces RSI while spamming AGI generation.',
-    description: 'Taps earn +5 extra Valuation (5x base click!).',
+    description: 'Taps earn +1.25 extra Valuation.',
     icon: 'Mouse',
     type: 'click',
     effect: { type: 'addClick', value: 5 },
@@ -39,10 +39,10 @@ const MISC_UPGRADES_DATA = [
     name: 'Overclocked Mechanical Switches',
     cost: 500,
     quote: 'Click noise scares away regulators.',
-    description: 'Taps earn +10% of your total VPS on every click!',
+    description: 'Taps earn +10% more Valuation than before, per click!',
     icon: 'Keyboard',
     type: 'click',
-    effect: { type: 'vpsClickPct', value: 0.10 },
+    effect: { type: 'tapValuePct', value: 0.10 },
     req: { totalValuation: 50 },
   },
   {
@@ -50,10 +50,10 @@ const MISC_UPGRADES_DATA = [
     name: 'Neural Link Finger Implant',
     cost: 10000,
     quote: 'Direct brain-to-GPU click interface.',
-    description: 'Taps earn +25% of your total VPS on every click!',
+    description: 'Taps earn +25% more Valuation than before, per click!',
     icon: 'Zap',
     type: 'click',
-    effect: { type: 'vpsClickPct', value: 0.25 },
+    effect: { type: 'tapValuePct', value: 0.25 },
     req: { totalValuation: 1000 },
   },
   {
@@ -61,10 +61,10 @@ const MISC_UPGRADES_DATA = [
     name: 'Quantum Haptic Motor',
     cost: 1000000,
     quote: 'Feels like touching AGI itself.',
-    description: 'Taps earn +50% of your total VPS on every click!',
+    description: 'Taps earn +50% more Valuation than before, per click!',
     icon: 'Activity',
     type: 'click',
-    effect: { type: 'vpsClickPct', value: 0.50 },
+    effect: { type: 'tapValuePct', value: 0.50 },
     req: { totalValuation: 100000 },
   },
   {
@@ -72,10 +72,10 @@ const MISC_UPGRADES_DATA = [
     name: 'Sub-Lightspeed Tap Beam',
     cost: 100000000,
     quote: 'Tap registered before your brain fires a neuron.',
-    description: 'Taps earn +100% of your total VPS on every click!',
+    description: 'Taps earn +100% more Valuation than before, per click!',
     icon: 'Crosshair',
     type: 'click',
-    effect: { type: 'vpsClickPct', value: 1.00 },
+    effect: { type: 'tapValuePct', value: 1.00 },
     req: { totalValuation: 10000000 },
   },
 
@@ -84,15 +84,22 @@ const MISC_UPGRADES_DATA = [
   // not just a valuation threshold, even though vc_firm (Tier 8, ~$941M) is far pricier
   // than syndicate_1/2's own cost. That's intentional: these are VC-firm perks now, not a
   // separate free-floating progression track.
+  //
+  // Faktoren zweimal um Faktor 5 gekürzt (ursprünglich 0.10/0.20/0.30/0.50, gestapelt bis
+  // zu +110% pro Erfolg -> 0.02/0.04/0.06/0.10 -> jetzt 0.004/0.008/0.012/0.02): linear mit
+  // der Erfolgsanzahl skalierend UND multiplikativ mit jeder anderen VPS-Quelle verknüpft
+  // (siehe grossVps in useGameStore.js) lief das über eine Spielsitzung mit wachsender
+  // Erfolgsliste in einen echten Runaway-Effekt - gemeldet als "ruiniert das ganze Spiel,
+  // man macht viel zu viel Gewinn", die erste 1/5-Kürzung reichte noch nicht.
   {
     id: 'syndicate_1',
     name: 'Seed Angel Advisor',
     cost: 5000,
     quote: 'Writes early term sheets in natural language.',
-    description: '+10% extra global VPS for every unlocked achievement!',
+    description: '+0.4% extra global VPS for every unlocked achievement!',
     icon: 'Briefcase',
     type: 'syndicate',
-    effect: { type: 'syndicate', factor: 0.10 },
+    effect: { type: 'syndicate', factor: 0.004 },
     req: { totalValuation: 1000, buildingId: 'vc_firm' },
   },
   {
@@ -100,10 +107,10 @@ const MISC_UPGRADES_DATA = [
     name: 'Series-A Board Director',
     cost: 500000,
     quote: 'Attends quarterly board meetings via holograms.',
-    description: '+20% extra global VPS for every unlocked achievement!',
+    description: '+0.8% extra global VPS for every unlocked achievement!',
     icon: 'Building2',
     type: 'syndicate',
-    effect: { type: 'syndicate', factor: 0.20 },
+    effect: { type: 'syndicate', factor: 0.008 },
     req: { totalValuation: 100000, buildingId: 'vc_firm' },
   },
   {
@@ -111,10 +118,10 @@ const MISC_UPGRADES_DATA = [
     name: 'Growth VC Syndicate Partner',
     cost: 50000000,
     quote: 'Leverages institutional hype to double term sheet offers.',
-    description: '+30% extra global VPS for every unlocked achievement!',
+    description: '+1.2% extra global VPS for every unlocked achievement!',
     icon: 'Award',
     type: 'syndicate',
-    effect: { type: 'syndicate', factor: 0.30 },
+    effect: { type: 'syndicate', factor: 0.012 },
     req: { totalValuation: 10000000, buildingId: 'vc_firm' },
   },
   {
@@ -122,10 +129,10 @@ const MISC_UPGRADES_DATA = [
     name: 'Autonomous AGI Advisory Board',
     cost: 5000000000,
     quote: 'An AI board that approves its own stock option grants.',
-    description: '+50% extra global VPS for every unlocked achievement!',
+    description: '+2% extra global VPS for every unlocked achievement!',
     icon: 'UserCheck',
     type: 'syndicate',
-    effect: { type: 'syndicate', factor: 0.50 },
+    effect: { type: 'syndicate', factor: 0.02 },
     req: { totalValuation: 1000000000, buildingId: 'vc_firm' },
   },
 

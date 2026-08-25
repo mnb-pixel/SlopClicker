@@ -101,6 +101,21 @@
           nächste Runde beginnt.
         </p>
 
+        <!-- web-only:start -->
+        <!-- Echte <a href>-Links zu den Tab-Routen (siehe src/routes.js) - für einen
+             Crawler, der KEIN JavaScript ausführt, ist das der einzige Weg, diese Seiten
+             überhaupt zu entdecken (ein onClick-Handler ohne echten href wäre unsichtbar).
+             NICHT im CrazyGames-/nativen Build: dort existieren diese Routen gar nicht
+             (siehe useRoutes in App.jsx) - absolute Pfade würden dort ins Leere zeigen. -->
+        <nav style="margin-bottom: 1.5rem; line-height: 1.8;">
+          <a href="/shop">Shop</a> ·
+          <a href="/special">Special</a> ·
+          <a href="/statistik">Statistik</a> ·
+          <a href="/einstellungen">Einstellungen</a> ·
+          <a href="/datenschutz">Datenschutz</a>
+        </nav>
+        <!-- web-only:end -->
+
         <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">So funktioniert's</h2>
         <p style="margin-bottom: 0.5rem; line-height: 1.6;">
           Klicke auf den AGI-Kern-Button, um manuell Unternehmenswert zu generieren, oder
@@ -139,11 +154,81 @@
           Deine Infrastruktur produziert auch weiter, während der Tab geschlossen ist –
           beim nächsten Öffnen bekommst du einen Bericht über den Offline-Ertrag.
         </p>
-        <p style="line-height: 1.6;">
+        <p style="margin-bottom: 1.5rem; line-height: 1.6;">
           <strong>Worum geht es in dem Spiel?</strong><br />
           Token Furnace ist eine Satire auf den KI-Hype: Du baust ein fiktives KI-Startup
           ganz ohne echtes Produkt auf, ausschließlich getrieben von Buzzwords,
           Bewertungswachstum und Investoren-Vertrauen.
+        </p>
+
+        <!-- Identischer Text zum "Vertraulichen Investoren-Prospekt" (ManualModal.jsx /
+             manual.content.js) - siehe SeoContent.jsx für die Live-Version nach dem
+             React-Mount. Hier zusätzlich statisch verdrahtet, damit auch ein Crawler ohne
+             JS-Ausführung diesen Content sieht, nicht erst nach dem Mount. -->
+        <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Vertraulicher Investoren-Prospekt</h2>
+        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem;">1. Startup-Skalierung & Token-Generierung</h3>
+        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
+          Als Gründer eines bahnbrechenden KI-Startups skalierst du deine Unternehmung von
+          bescheidenen Anfängen bis hin zu unerreichbaren Höhen. Durch manuelles Autorisieren
+          und den Bau automatisierter Systeme steigerst du deinen Unternehmenswert
+          kontinuierlich.
+        </p>
+        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
+          <strong>Passives Valuation-Wachstum (Netto-VPS)</strong>: Deine Infrastruktur
+          produziert rund um die Uhr neuen Unternehmenswert.
+          <strong>Exakte Bewertung</strong>: Verfolge in Echtzeit jeden einzelnen
+          erwirtschafteten Dollar.
+        </p>
+
+        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem;">2. Token Burn & Hype-Dynamik</h3>
+        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
+          Je weiter deine Unternehmung wächst, desto höher steigt deine Hype-Stufe. Ein
+          höherer Hype zieht mehr Investoren an, erhöht jedoch auch deine laufenden
+          Betriebskosten und die kontinuierliche <strong>Burn Rate</strong>! Deine
+          tatsächliche Netto-Generierung ergibt sich aus dem Gesamtertrag abzüglich der
+          Verbrennungsrate. Steuere dagegen mit gezielten Unternehmensmaßnahmen und
+          strategischen Entscheidungen.
+        </p>
+
+        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem;">3. Infrastruktur & Strategie-Portfolio</h3>
+        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
+          <strong>Engines</strong>: Erweitere deine Infrastruktur stufenweise von einfachen
+          Assistenten bis hin zu gigantischen Rechenzentren.
+          <strong>Effizienz-Upgrades</strong>: Optimiere deine Klick-Leistung und
+          vervielfache den Output deiner Systeme.
+          <strong>Corporate Actions</strong>: Nutze Greenwashing-Initiativen zur Reduzierung
+          der Burn Rate oder führe Massenentlassungen zur kurzfristigen Ertragssteigerung
+          durch. <strong>Buzzword Portfolio</strong>: Sammele wertvolle Buzzword-Karten
+          verschiedener Seltenheiten, um dein gesamtes Wachstum nachhaltig zu beflügeln.
+        </p>
+
+        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem;">4. Pivot-Strategie & Epochen-Rotation</h3>
+        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
+          Ab einem gewissen Zuwachs an Unternehmenswert kannst du einen strategischen
+          <strong>Pivot</strong> vollziehen. Engines, Upgrades und Valuation bleiben dabei
+          erhalten — ein Pivot belohnt dich mit wertvoller <strong>Credibility</strong> für
+          den Wertzuwachs seit deinem letzten Pivot und rotiert dein Startup in die nächste
+          Hype-Epoche. <strong>😇 Idealisten-Pfad</strong>: Investiere Credibility in
+          nachhaltige Strukturen, um deine Burn Rate dauerhaft zu drosseln.
+          <strong>😈 Zyniker-Pfad</strong>: Setze auf aggressives Hype-Wachstum, um deine
+          Erträge massiv zu steigern.
+        </p>
+
+        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem;">5. Singularity Ascension & Kosmischer Aufstieg</h3>
+        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
+          Erreicht dein Startup gigantische Bewertungshöhen, schaltet sich die
+          <strong>Singularity Ascension</strong> frei. Dieser finale Reset verleiht dir ein
+          höheres Prestige-Level und <strong>Heavenly Chips</strong>. Prestige-Level und
+          kosmische Upgrades gewähren dir permanente Vorteile, die über alle zukünftigen
+          Neuanfänge hinweg bestehen bleiben.
+        </p>
+
+        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem;">6. Hardware-Thermik & Marktereignisse</h3>
+        <p style="line-height: 1.6;">
+          <strong>GPU-Temperatur</strong>: Zu schnelles manuelles Autorisieren erhitzt deine
+          Prozessoren. Achte darauf, dass das System nicht überhitzt.
+          <strong>Markt-Ereignisse & Krisen</strong>: Nutze spontan auftauchende
+          Marktchancen oder wappne dich gegen unvorhergesehene Turbulenzen.
         </p>
       </main>
     </div>

@@ -1,8 +1,12 @@
 // Übersetzungen für das Investor-Handbuch (ManualModal). Fett markierte Begriffe werden
 // mit **doppelten Sternchen** notiert und von ManualModal.jsx per renderRich() in <strong>
-// umgewandelt. Spielmechanik-Eigennamen (Engines, Pivot, Credibility, Corporate Actions,
-// Heavenly Chips, Singularity Ascension, Buzzword Portfolio) bleiben bewusst in beiden
-// Sprachen gleich.
+// umgewandelt. Spielmechanik-Eigennamen (Engines, Corporate Actions, Buzzword Portfolio)
+// bleiben bewusst in beiden Sprachen gleich.
+//
+// Pivot/Epochen-Rotation und Singularity Ascension (frühere Sections 4+5) sind mit dem
+// Special-Tab entfernt (siehe App.jsx/DesktopView.jsx/NavBar.jsx) - "verwirrt nur ohne
+// Mehrwert". Die zugehörige Store-Logik (ascend, pivot, credibility etc.) bleibt bestehen,
+// nur ohne UI dafür, deshalb keine Handbuch-Erwähnung mehr.
 
 export const MANUAL_CONTENT = {
   de: {
@@ -19,16 +23,9 @@ export const MANUAL_CONTENT = {
     s3Li2: '**Effizienz-Upgrades**: Optimiere deine Klick-Leistung und vervielfache den Output deiner Systeme.',
     s3Li3: '**Corporate Actions**: Nutze Greenwashing-Initiativen zur Reduzierung der Burn Rate oder führe Massenentlassungen zur kurzfristigen Ertragssteigerung durch.',
     s3Li4: '**Buzzword Portfolio**: Sammele wertvolle Buzzword-Karten verschiedener Seltenheiten, um dein gesamtes Wachstum nachhaltig zu beflügeln.',
-    s4Title: '4. Pivot-Strategie & Epochen-Rotation',
-    s4Body1: 'Ab einem gewissen Zuwachs an Unternehmenswert kannst du einen strategischen **Pivot** vollziehen. Engines, Upgrades und Valuation bleiben dabei erhalten — ein Pivot belohnt dich mit wertvoller **Credibility** für den Wertzuwachs seit deinem letzten Pivot und rotiert dein Startup in die nächste Hype-Epoche.',
-    s4Li1: '**😇 Idealisten-Pfad**: Investiere Credibility in nachhaltige Strukturen, um deine Burn Rate dauerhaft zu drosseln.',
-    s4Li2: '**😈 Zyniker-Pfad**: Setze auf aggressives Hype-Wachstum, um deine Erträge massiv zu steigern.',
-    s5Title: '5. Singularity Ascension & Kosmischer Aufstieg',
-    s5Body1: 'Erreicht dein Startup gigantische Bewertungshöhen, schaltet sich die **Singularity Ascension** frei. Dieser finale Reset verleiht dir ein höheres Prestige-Level und **Heavenly Chips**.',
-    s5Body2: 'Prestige-Level und kosmische Upgrades gewähren dir permanente Vorteile, die über alle zukünftigen Neuanfänge hinweg bestehen bleiben.',
-    s6Title: '6. Hardware-Thermik & Marktereignisse',
-    s6Li1: '**GPU-Temperatur**: Zu schnelles manuelles Autorisieren erhitzt deine Prozessoren. Achte darauf, dass das System nicht überhitzt.',
-    s6Li2: '**Markt-Ereignisse & Krisen**: Nutze spontan auftauchende Marktchancen oder wappne dich gegen unvorhergesehene Turbulenzen.',
+    s4Title: '4. Hardware-Thermik & Marktereignisse',
+    s4Li1: '**GPU-Temperatur**: Zu schnelles manuelles Autorisieren erhitzt deine Prozessoren. Achte darauf, dass das System nicht überhitzt.',
+    s4Li2: '**Markt-Ereignisse & Krisen**: Nutze spontan auftauchende Marktchancen oder wappne dich gegen unvorhergesehene Turbulenzen.',
     closeButton: 'VERSTANDEN & PROSPEKT SCHLIESSEN',
   },
   en: {
@@ -45,16 +42,9 @@ export const MANUAL_CONTENT = {
     s3Li2: '**Efficiency Upgrades**: Optimize your click power and multiply the output of your systems.',
     s3Li3: '**Corporate Actions**: Use greenwashing initiatives to reduce the Burn Rate, or run mass layoffs for a short-term revenue boost.',
     s3Li4: '**Buzzword Portfolio**: Collect valuable buzzword cards of varying rarity to sustainably power your overall growth.',
-    s4Title: '4. Pivot Strategy & Epoch Rotation',
-    s4Body1: 'Once your company valuation reaches a certain growth threshold, you can perform a strategic **Pivot**. Engines, upgrades, and valuation are kept — a pivot rewards you with valuable **Credibility** for the value growth since your last pivot and rotates your startup into the next hype era.',
-    s4Li1: '**😇 Idealist Path**: Invest Credibility into sustainable structures to permanently throttle your Burn Rate.',
-    s4Li2: '**😈 Cynic Path**: Bet on aggressive hype growth to massively boost your earnings.',
-    s5Title: '5. Singularity Ascension & Cosmic Rise',
-    s5Body1: 'Once your startup reaches gigantic valuation heights, the **Singularity Ascension** unlocks. This final reset grants you a higher Prestige Level and **Heavenly Chips**.',
-    s5Body2: 'Prestige Level and cosmic upgrades grant you permanent benefits that persist across every future fresh start.',
-    s6Title: '6. Hardware Thermals & Market Events',
-    s6Li1: '**GPU Temperature**: Authorizing manually too fast heats up your processors. Make sure the system does not overheat.',
-    s6Li2: '**Market Events & Crises**: Seize spontaneous market opportunities or brace yourself against unforeseen turbulence.',
+    s4Title: '4. Hardware Thermals & Market Events',
+    s4Li1: '**GPU Temperature**: Authorizing manually too fast heats up your processors. Make sure the system does not overheat.',
+    s4Li2: '**Market Events & Crises**: Seize spontaneous market opportunities or brace yourself against unforeseen turbulence.',
     closeButton: 'UNDERSTOOD & CLOSE PROSPECTUS',
   },
 };
