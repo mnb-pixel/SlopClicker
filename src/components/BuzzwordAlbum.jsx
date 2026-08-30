@@ -364,7 +364,7 @@ export function BuzzwordAlbum({
 
             {/* STAGE 1: SHAKING PACK */}
             {openingState === 'SHAKING' && (
-              <div className="flex flex-col items-center my-6">
+              <div className="relative flex flex-col items-center my-6">
                 <div className="w-20 h-28 rounded-2xl bg-gradient-to-tr from-fuchsia-600 via-purple-600 to-amber-400 border-4 border-amber-300 shadow-2xl flex flex-col items-center justify-center text-slate-950 animate-pulse">
                   <Sparkles className="w-10 h-10 text-slate-950 animate-spin" />
                   <span className="font-black text-[10px] uppercase tracking-wider mt-2">{tr('openingLabel')}</span>
@@ -377,7 +377,7 @@ export function BuzzwordAlbum({
 
             {/* STAGE 2: REVEALED CARD */}
             {openingState === 'REVEALED' && (
-              <div className="flex flex-col items-center w-full animate-fadeIn">
+              <div className="relative flex flex-col items-center w-full animate-fadeIn">
                 <div className="text-xs font-mono font-black text-amber-400 uppercase tracking-widest mb-2 flex items-center gap-1">
                   <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
                   {tr('newCardDrawn')}
