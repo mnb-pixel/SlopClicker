@@ -138,37 +138,37 @@ export const MISC_UPGRADES_CONTENT = {
   hype_boost_1: {
     de: {
       name: 'Unterwürfiger Marketing-Pitch',
-      quote: 'Erhöht alle passiven Einnahmen um +50%.',
-      description: 'Globaler VPS-Output um +50% gesteigert!',
+      quote: 'Erhöht alle passiven Einnahmen um +10%.',
+      description: 'Globaler VPS-Output um +10% gesteigert!',
     },
     en: {
       name: 'Sycophantic Marketing Pitch',
-      quote: 'Increases all passive income by +50%.',
-      description: 'Global VPS output boosted by +50%!',
+      quote: 'Increases all passive income by +10%.',
+      description: 'Global VPS output boosted by +10%!',
     },
   },
   hype_boost_2: {
     de: {
       name: 'World-Tour-Keynote-Präsentation',
       quote: 'Gibt $50M für holographische Bühnenprojektionen aus.',
-      description: 'Globaler VPS-Output um +100% (2x) gesteigert!',
+      description: 'Globaler VPS-Output um +20% gesteigert!',
     },
     en: {
       name: 'World Tour Keynote Presentation',
       quote: 'Spends $50M on holographic stage projections.',
-      description: 'Global VPS output boosted by +100% (2x)!',
+      description: 'Global VPS output boosted by +20%!',
     },
   },
   hype_boost_3: {
     de: {
       name: 'Föderale KI-Subventions-Lücke',
       quote: 'Steuerzahler finanzieren deine Stromrechnung komplett.',
-      description: 'Globaler VPS-Output um +200% (3x) gesteigert!',
+      description: 'Globaler VPS-Output um +40% gesteigert!',
     },
     en: {
       name: 'Federal AI Subsidy Loophole',
       quote: 'Taxpayers fund your electricity bill entirely.',
-      description: 'Global VPS output boosted by +200% (3x)!',
+      description: 'Global VPS output boosted by +40%!',
     },
   },
 };
