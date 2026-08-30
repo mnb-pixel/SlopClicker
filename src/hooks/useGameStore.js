@@ -1132,13 +1132,12 @@ export function useGameStore() {
     // Bubble Pop: -35% VPS for 30s (bubblePopTimer)
     const bubbleMult = bubblePopTimer > 0 ? 0.65 : 1.0;
 
-    // Balance-Pass: alle VPS-steigernden Faktoren oben (Gebäude-Basisertrag, Gebäude-
-    // Upgrades, Greenwashing/Layoffs, Global-Upgrades, Board-Syndicate, Credibility-Pfade,
-    // Buzzwords, Prestige) sind bereits multiplikativ verknüpft - ein einzelner Faktor hier
-    // am Ende halbiert sie alle gleichermaßen nochmal, statt jede Konstante einzeln (und
-    // fehleranfällig) nachzuziehen. Gemeldet als "immer noch zu schnell/zu hoch".
-    const VPS_REBALANCE_FACTOR = 0.5;
-    return totalCps * globalMult * syndicateBoost * pathMult * prestigeBonus * powerSurgeMult * aiDomainMult * goldenMult * bubbleMult * VPS_REBALANCE_FACTOR;
+    // Balance-Pass ("immer noch zu schnell/zu hoch"): die Halbierung steckt seit der
+    // Gebäude-Anzeige-Korrektur direkt in BUILDINGS_DATA/baseCps (siehe buildingsData.js),
+    // damit die pro-Gebäude-Anzeige (StoreTab/BuildingVisualGrid, rechnet direkt mit
+    // baseCps) nicht mehr um Faktor 2 von dieser Gesamt-VPS abweicht. Hier deshalb kein
+    // separater Rebalance-Faktor mehr - totalCps kommt bereits halbiert an.
+    return totalCps * globalMult * syndicateBoost * pathMult * prestigeBonus * powerSurgeMult * aiDomainMult * goldenMult * bubbleMult;
   }, [buildings, boughtUpgrades, boughtGreenwashingLayoffs, boughtHeavenlyUpgrades, unlockedAchievements, buzzwordBonus, idealistLevel, cynicLevel, prestigeLevel, powerClickActive, powerClickSurgeTimer, goldenBoostTimer, bubblePopTimer, startupName]);
 
   // vps = gross production rate (Konzept: Gesamt-TPS, vor Burn Rate - Burn frisst den Bestand, nicht den Fluss)
@@ -1180,9 +1179,9 @@ export function useGameStore() {
       else if (boughtHeavenlyUpgrades.includes('demon_1')) powerClickTapMult = 3;
     }
 
-    // Balance-Pass: AGI-Button (Tap-Wert) zusätzlich zur VPS_REBALANCE_FACTOR-Halbierung
-    // oben (die über den vps-Anteil hier bereits durchschlägt) nochmal separat geviertelt -
-    // gemeldet als eigenständig zu stark gegenüber der passiven Produktion.
+    // Balance-Pass: AGI-Button (Tap-Wert) zusätzlich zur VPS-Halbierung oben (die über
+    // BUILDINGS_DATA/baseCps in den vps-Anteil hier bereits durchschlägt) nochmal separat
+    // geviertelt - gemeldet als eigenständig zu stark gegenüber der passiven Produktion.
     const CLICK_REBALANCE_FACTOR = 0.25;
     // Floor erst NACH dem Rebalance-Faktor anwenden, sonst startet der Tap-Button bei
     // 1 x 0.25 = 0,25 $ statt bei den vorgesehenen 1 $ pro Tap (gemeldet).

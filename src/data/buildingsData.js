@@ -25,12 +25,18 @@ const BUILDING_META = [
   { id: 'singularity', icon: 'Sparkles' },
 ];
 
+// VPS_REBALANCE_FACTOR (0.5) aus useGameStore.js/grossVps ist hier mit eingerechnet (0.1 -> 0.05):
+// der war als nachträglicher Balance-Pass ans Ende der ganzen Multiplikator-Kette gehängt worden
+// und ließ dadurch die pro-Gebäude-Anzeige (StoreTab/BuildingVisualGrid, die direkt mit baseCps
+// rechnet) doppelt so hoch wie die tatsächliche Gesamt-VPS erscheinen. Andere, spielstandabhängige
+// Multiplikatoren (Global-Upgrades, Syndicate-Boost, Credibility-Pfade, Prestige, Events) bleiben
+// bewusst außen vor - die lassen sich nicht in eine feste Basisrate einbacken.
 export const BUILDINGS_DATA = BUILDING_META.map((meta, idx) => {
   const tier = idx + 1;
   return {
     id: meta.id,
     icon: meta.icon,
     baseCost: 15 * Math.pow(13, tier - 1),
-    baseCps: 0.1 * Math.pow(11, tier - 1),
+    baseCps: 0.05 * Math.pow(11, tier - 1),
   };
 });
