@@ -230,10 +230,10 @@ export const TRANSLATIONS = {
     gwFallbackQuote: 'Offiziell als nachhaltige Initiative deklariert.',
     layoffFallbackQuote: 'Effizienzsteigerung durch KI-gestützte Restrukturierung.',
     gwEffect1: '🔥 Burn Rate -0.1%',
-    gwEffect2: '⚡ Engine VPS Output +10%',
+    gwEffect2: '⚡ +5% VPS (nur dieser Gebäudetyp)',
     gwEffect3: '✨ Kosmetischer ESG-Hype Boost',
-    layoffEffect1: '⚡ Engine VPS Output +20%',
-    layoffEffect2: '⚡ Engine VPS Output +15%',
+    layoffEffect1: '⚡ +10% VPS (nur dieser Gebäudetyp)',
+    layoffEffect2: '⚡ +7,5% VPS (nur dieser Gebäudetyp)',
     buildingUpgradeEffectDesc: '{building} produziert +{pct}% mehr Valuation!',
 
     // Stats Tab (ergänzend)
@@ -692,10 +692,10 @@ export const TRANSLATIONS = {
     gwFallbackQuote: 'Officially declared a sustainable initiative.',
     layoffFallbackQuote: 'Efficiency gains through AI-powered restructuring.',
     gwEffect1: '🔥 Burn Rate -0.1%',
-    gwEffect2: '⚡ Engine VPS Output +10%',
+    gwEffect2: '⚡ +5% VPS (this building type only)',
     gwEffect3: '✨ Cosmetic ESG Hype Boost',
-    layoffEffect1: '⚡ Engine VPS Output +20%',
-    layoffEffect2: '⚡ Engine VPS Output +15%',
+    layoffEffect1: '⚡ +10% VPS (this building type only)',
+    layoffEffect2: '⚡ +7.5% VPS (this building type only)',
     buildingUpgradeEffectDesc: '{building} produce +{pct}% more Valuation!',
 
     // Stats Tab (additional)

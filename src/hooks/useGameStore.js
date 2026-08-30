@@ -1065,13 +1065,15 @@ export function useGameStore() {
           }
         });
 
-        // Greenwashing II (+10%), Layoff I (+20%), Layoff II (+15%) - Konzept Abschnitt 4
+        // Greenwashing II (+5%), Layoff I (+10%), Layoff II (+7.5%) - Konzept Abschnitt 4,
+        // Werte halbiert (waren 10/20/15%) - gilt jeweils nur für dieses eine Gebäude (b.id),
+        // nicht global.
         boughtGreenwashingLayoffs.forEach((itemId) => {
           const gw = GREENWASHING_LAYOFFS_DATA.find((g) => g.id === itemId);
           if (gw && gw.buildingId === b.id) {
-            if (gw.type === 'greenwashing' && gw.tier === 2) buildingMult *= 1.10;
-            if (gw.type === 'layoff' && gw.tier === 1) buildingMult *= 1.20;
-            if (gw.type === 'layoff' && gw.tier === 2) buildingMult *= 1.15;
+            if (gw.type === 'greenwashing' && gw.tier === 2) buildingMult *= 1.05;
+            if (gw.type === 'layoff' && gw.tier === 1) buildingMult *= 1.10;
+            if (gw.type === 'layoff' && gw.tier === 2) buildingMult *= 1.075;
           }
         });
 
