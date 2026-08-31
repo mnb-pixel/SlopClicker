@@ -106,7 +106,6 @@ export function DesktopView({ store, onOpenLegal, useRoutes = false }) {
           buyAllUpgrades={store.buyAllUpgrades}
           totalValuation={store.totalValuation}
           boughtBuzzwords={store.boughtBuzzwords}
-          buyBuzzword={store.buyBuzzword}
           buyBoosterPack={store.buyBoosterPack}
           addCardToAlbum={store.addCardToAlbum}
           boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}

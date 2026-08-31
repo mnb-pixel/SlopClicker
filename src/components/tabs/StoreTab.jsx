@@ -19,7 +19,6 @@ export function StoreTab({
   buyAllUpgrades,
   totalValuation,
   boughtBuzzwords = [],
-  buyBuzzword,
   buyBoosterPack,
   addCardToAlbum,
   boughtGreenwashingLayoffs = [],
@@ -763,7 +762,6 @@ export function StoreTab({
         <BuzzwordAlbum
           valuation={valuation}
           boughtBuzzwords={boughtBuzzwords}
-          buyBuzzword={buyBuzzword}
           buyBoosterPack={buyBoosterPack}
           addCardToAlbum={addCardToAlbum}
           t={t}

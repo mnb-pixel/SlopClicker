@@ -129,6 +129,11 @@ const GOLDEN_BOOST_MULT = 10;
 // es auch bei vielen gleichzeitig besessenen Engine-Typen "ultra selten" bleibt (~2%/Tag
 // pro bereits eligibler Engine, also im Schnitt mehrere Wochen Abstand).
 const BLACK_SWAN_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+// Overheat: nach Erreichen von 100°C bleibt die GPU für diese Zeit ungekühlt liegen, bevor
+// die passive Kühlung (coolingRate) überhaupt einsetzt - macht die Sofort-Kühlung per
+// Nitrogen-Ad in dieser Zeit spürbar attraktiver, statt dass passives Abwarten reicht.
+const OVERHEAT_COOLDOWN_DELAY_SEC = 45;
 const BLACK_SWAN_CHANCE_PER_200MS = 0.00000005;
 
 // Monetarisierung: Rewarded-Ad-Cooldowns pro Placement (Sekunden), damit dieselbe
@@ -1193,6 +1198,12 @@ export function useGameStore() {
   // --- MAIN TICK ENGINE LOOP (alle 100ms; Wahrscheinlichkeiten sind Tick-Dauer-unabhängig skaliert) ---
   const lastTickRef = useRef(Date.now());
 
+  // Zeitpunkt des letzten Overheat-Triggers: die passive Kühlung setzt erst
+  // OVERHEAT_COOLDOWN_DELAY_SEC danach ein (siehe Schritt 2 unten) - das macht die
+  // Nitrogen-Rewarded-Ad (Sofort-Kühlung) in der Zwischenzeit deutlich attraktiver,
+  // statt dass Spielende einfach ein paar Sekunden passiv abwarten.
+  const overheatedAtRef = useRef(0);
+
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
@@ -1231,8 +1242,12 @@ export function useGameStore() {
         return Math.max(0, prevVal + earned - burnLoss);
       });
 
-      // 2. GPU Cooling (-coolingRate °C/s)
+      // 2. GPU Cooling (-coolingRate °C/s), aber erst OVERHEAT_COOLDOWN_DELAY_SEC nach dem
+      // Overheat-Trigger (siehe overheatedAtRef) - vorher bleibt die Temperatur bei 100°C stehen.
+      const overheatDelayActive = isOverheated
+        && now - overheatedAtRef.current < OVERHEAT_COOLDOWN_DELAY_SEC * 1000;
       setGpuTemp((prev) => {
+        if (overheatDelayActive) return prev;
         const next = Math.max(0, prev - coolingRate * deltaSec);
         if (isOverheated && next < 50) {
           setIsOverheated(false);
@@ -1433,6 +1448,7 @@ export function useGameStore() {
       const next = prev + 2.0;
       if (next >= 100.0) {
         setIsOverheated(true);
+        overheatedAtRef.current = Date.now();
         setStats((s) => ({ ...s, overheatCount: s.overheatCount + 1 }));
         addLog(tf('log_gpuOverheated'), 'danger');
         return 100.0;
@@ -1847,22 +1863,6 @@ export function useGameStore() {
     addLog(tf('log_pivotExecuted', { epoch: t(`epoch_${EPOCHS[nextEpoch].id}_name`), cred: pivotCredGain }) + (pendingPivotBoost ? ` ${tf('log_adBonusSuffix')}` : ''), 'achievement');
   }, [pivotCredGain, totalValuation, epoch, addLog, pendingPivotBoost, t, tf]);
 
-  // Buy Buzzword Card Directly
-  const buyBuzzword = useCallback((buzzId) => {
-    const bw = BUZZWORDS_DATA.find((item) => item.id === buzzId);
-    if (!bw || boughtBuzzwords.includes(buzzId)) return false;
-
-    if (valuation < bw.cost) {
-      addLog(tf('log_notEnoughForBuzzword', { name: bw.name }), 'danger');
-      return false;
-    }
-
-    setValuation((prev) => prev - bw.cost);
-    setBoughtBuzzwords((prev) => [...prev, buzzId]);
-    addLog(tf('log_buzzwordAdded', { name: bw.name, pct: Math.round(bw.bonus * 100) }), 'success');
-    return true;
-  }, [boughtBuzzwords, valuation, addLog, tf]);
-
   // Buy Trading Card Booster Pack. Cost is deducted AND the card is committed to
   // boughtBuzzwords in the same call, so autosave/unmount between purchase and the
   // reveal animation's confirm click can never charge the player without granting a card.
@@ -1876,8 +1876,8 @@ export function useGameStore() {
       return null;
     }
 
-    // Pack price increases with each collected card
-    const packCost = Math.floor(600 * Math.pow(1.20, boughtBuzzwords.length));
+    // Pack price doubles with each collected card
+    const packCost = getBoosterPackCost(boughtBuzzwords.length);
 
     if (valuation < packCost) {
       addLog(tf('log_notEnoughForBoosterPack', { cost: packCost.toLocaleString() }), 'danger');
@@ -2101,7 +2101,7 @@ export function useGameStore() {
     // Investor Ledger & Hype Features
     themeMode, toggleThemeMode,
     hypeTier, burnRate,
-    boughtBuzzwords, buyBuzzword, buyBoosterPack, addCardToAlbum,
+    boughtBuzzwords, buyBoosterPack, addCardToAlbum,
     boughtGreenwashingLayoffs, buyGreenwashingLayoff,
     epoch, idealistLevel, buyIdealistLevel, cynicLevel, buyCynicLevel, credibility, pivotCount, pivot, pivotCredGain,
   };

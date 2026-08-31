@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Layers, Sparkles, BookOpen, Zap, Search, Lock, CheckCircle2, X, PlusCircle } from 'lucide-react';
+import { Layers, Sparkles, BookOpen, Zap, Search, Lock, CheckCircle2, X } from 'lucide-react';
 import { getIcon } from '../utils/iconMap';
-import { BUZZWORDS_DATA } from '../data/buzzwordsData';
+import { BUZZWORDS_DATA, getBoosterPackCost } from '../data/buzzwordsData';
 import { formatCurrency } from '../utils/formatters';
 
 export function BuzzwordAlbum({
   valuation,
   boughtBuzzwords = [],
-  buyBuzzword,
   buyBoosterPack,
   addCardToAlbum,
   t,
@@ -29,8 +28,7 @@ export function BuzzwordAlbum({
     return <IconComp className={className} />;
   };
 
-  // Booster Pack Cost Formula: 600 * 1.20^cardsOwned
-  const packCost = Math.floor(600 * Math.pow(1.20, boughtBuzzwords.length));
+  const packCost = getBoosterPackCost(boughtBuzzwords.length);
   const canAffordPack = valuation >= packCost && boughtBuzzwords.length < BUZZWORDS_DATA.length;
 
   // Handler for Booster Pack Purchase & Reveal Animation
@@ -430,7 +428,6 @@ export function BuzzwordAlbum({
       {selectedCard && (() => {
         const bw = selectedCard;
         const isBought = boughtBuzzwords.includes(bw.id);
-        const canAffordDirect = valuation >= bw.cost && !isBought;
 
         return createPortal(
           <div
@@ -499,27 +496,6 @@ export function BuzzwordAlbum({
                   </span>
                 </div>
               </div>
-
-              {/* Direct Purchase Action in Inspect Modal */}
-              {!isBought && (
-                <button
-                  onClick={() => {
-                    if (buyBuzzword) {
-                      buyBuzzword(bw.id);
-                      setSelectedCard(null);
-                    }
-                  }}
-                  disabled={!canAffordDirect}
-                  className={`w-full py-2.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 shadow-lg ${
-                    canAffordDirect
-                      ? 'bg-fuchsia-500 text-slate-950 hover:bg-fuchsia-400 active:scale-95'
-                      : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-                  }`}
-                >
-                  <PlusCircle className="w-4 h-4" />
-                  <span>{tr('buyCardDirectLabel')} ({formatCurrency(bw.cost)})</span>
-                </button>
-              )}
             </div>
           </div>,
           document.body
