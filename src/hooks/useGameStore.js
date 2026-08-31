@@ -1589,6 +1589,10 @@ export function useGameStore() {
     if (type === 'nitrogen') {
       setGpuTemp(0);
       setIsOverheated(false);
+      // Wie beworben (nitrogenCoolingDesc/log_bonusNitrogen): nicht nur Sofort-Kühlung,
+      // sondern derselbe 2x-Click-Power-Surge wie beim eigenständigen power_click-Placement.
+      setPowerClickActive(true);
+      setPowerClickSurgeTimer(30);
       const msg = tf('log_bonusNitrogen');
       addLog(msg, 'success');
       flashAdReward(msg);
