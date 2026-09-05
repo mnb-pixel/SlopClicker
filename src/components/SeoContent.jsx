@@ -28,7 +28,7 @@ function SubHeading({ children }) {
 }
 
 // Dauerhaft sichtbarer Beschreibungstext (kein Modal, kein Pre-Hydration-Fallback) - für
-// den AdSense-Site-Review gedacht (siehe AdBanner.jsx). "section" ordnet echten, bereits
+// Suchmaschinen-Crawler und Site-Reviews gedacht. "section" ordnet echten, bereits
 // vorhandenen Content (MANUAL_CONTENT, SEO_SECTIONS_CONTENT) der jeweils passenden
 // Tab-Route zu, statt denselben Block überall zu wiederholen - jede Route bekommt damit
 // eigenständigen, thematisch passenden Text statt duplizierten Fülltext:

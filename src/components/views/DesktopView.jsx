@@ -5,6 +5,7 @@ import { StatsTab } from '../tabs/StatsTab';
 import { MiscTab } from '../tabs/MiscTab';
 import { SeoContent } from '../SeoContent';
 import { LegalFooter } from '../LegalFooter';
+import { NativeAdBanner } from '../NativeAdBanner';
 import { isCrazyGamesBuild } from '../../monetization/crazyGamesSdk';
 
 export function DesktopView({ store, onOpenLegal, useRoutes = false }) {
@@ -123,11 +124,10 @@ export function DesktopView({ store, onOpenLegal, useRoutes = false }) {
         AUSSERHALB des Grids oben: innerhalb des Grids überlappte die Box beim Scrollen die
         noch "sticky" linke/rechte Spalte, weil deren Zellenhöhe (gedeckelt per max-h) weit
         unter der Zeilenhöhe (bestimmt durch die viel längere mittlere Spalte) liegt. Rein
-        für den AdSense-Site-Review gedacht (siehe SeoContent.jsx, AdBanner.jsx) - DesktopView
-        läuft ohnehin nur im Web-Layout, nie in der iOS-App. NICHT im CrazyGames-Build: der
-        Block existiert einzig, damit Googles AdSense-Crawler auf token-furnace.com echten
-        Content sieht - auf CrazyGames' eigener Spieleseite ist er nur unnötiger Ballast
-        unter dem eigentlichen Spiel. */}
+        für Suchmaschinen-Crawler gedacht (siehe SeoContent.jsx) - DesktopView läuft ohnehin
+        nur im Web-Layout, nie in der iOS-App. NICHT im CrazyGames-Build: der Block existiert
+        einzig, damit Crawler auf token-furnace.com echten Content sehen - auf CrazyGames'
+        eigener Spieleseite ist er nur unnötiger Ballast unter dem eigentlichen Spiel. */}
     {!isCrazyGamesBuild() && (
       <div className="w-full max-w-3xl mx-auto p-4 pt-0">
         <div className="bg-slate-900/60 backdrop-blur-md rounded-2xl border border-slate-800 p-4 text-sm text-slate-400 leading-relaxed">
@@ -135,6 +135,12 @@ export function DesktopView({ store, onOpenLegal, useRoutes = false }) {
         </div>
       </div>
     )}
+
+    {/* Native-Banner-Slot, einmal für die gesamte Ein-Seiten-Ansicht (siehe App.jsx-Pendant
+        in der Mobile-View). */}
+    <div className="w-full max-w-3xl mx-auto p-4 pt-0">
+      <NativeAdBanner label={store.t('adPlaceholderLabel')} adFree={store.adFree} />
+    </div>
 
     {/* Pflichtlinks einmal für die gesamte Ein-Seiten-Ansicht, statt nur im Einstellungen-
         Panel versteckt - siehe LegalFooter.jsx. */}

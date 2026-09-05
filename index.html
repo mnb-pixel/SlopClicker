@@ -25,23 +25,11 @@
          als Fallback in Link-Vorschauen - "$0 - tokenkamin" war dafür unbrauchbar. -->
     <title>Token Furnace – Der AI-Bubble Idle Clicker</title>
 
-    <!-- web-only:start -->
-    <!-- Google AdSense: Inhaberschaftsbestätigung + späteres Ausliefern von Anzeigen.
-         Lädt nur die Bibliothek, fragt noch keine personalisierten Anzeigen an. Die
-         Einwilligungsverwaltung (Consent Mode / CMP) für die Cookie-/Werbe-Einwilligung
-         läuft direkt über Google (AdSense-Konto > Datenschutz & Zustimmung), nicht mehr
-         über einen separaten Drittanbieter wie zuvor.
-         NICHT im nativen Build: AdSense ist für Webseiten lizenziert und darf nicht in einer
-         App-WebView ausgeliefert werden - dort läuft AdMob (src/monetization/nativeAdBridge.js).
-         Vor allem würde es sonst auch für Werbefrei-Käufer:innen laden und damit genau das
-         Versprechen brechen, das der IAP verkauft.
-         Auch NICHT im CrazyGames-Build: dort ist ein zweites, eigenes Ad-Netzwerk gegen deren
-         Richtlinien - Monetarisierung läuft dort exklusiv über den Block unten
-         (src/monetization/crazyGamesAdBridge.js). Entfernt für --mode native UND --mode
-         crazygames, s. vite.config.js. -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6020764817262332"
-     crossorigin="anonymous"></script>
-    <!-- web-only:end -->
+    <!-- Adsterra (Banner-, Native-Banner- und Popunder-Anzeigen) braucht keine sitewide
+         Loader-Script wie zuvor AdSense - jede Einheit lädt ihr eigenes Snippet dynamisch
+         (siehe components/AdBanner.jsx, components/NativeAdBanner.jsx,
+         monetization/popunderAd.js), jeweils gated auf adFree/nativ/CrazyGames. Deshalb hier
+         kein <script>-Tag mehr nötig. -->
 
     <!-- crazygames-only:start -->
     <!-- CrazyGames SDK v3: bewusst als blockierendes klassisches <script> (kein async/defer,
@@ -79,8 +67,9 @@
   <body class="bg-slate-950 text-slate-100 overflow-x-hidden selection:bg-cyan-500 selection:text-black">
     <!-- Statischer Fallback-Inhalt: Bis React mountet (createRoot().render() ersetzt den
          Inhalt von #root komplett), ist dieses Div sonst leer - für jeden Crawler/Bot, der
-         kein oder nur eingeschränktes JavaScript ausführt (u.a. den AdSense-Site-Review),
-         sieht die Seite dann aus wie ein leerer "im Aufbau"-Screen ohne Publisher-Content.
+         kein oder nur eingeschränktes JavaScript ausführt (u.a. Suchmaschinen-Crawler und
+         Ad-Netzwerk-Site-Reviews), sieht die Seite dann aus wie ein leerer "im Aufbau"-Screen
+         ohne echten Content.
          Dieser Text ist echter, für Menschen wie Bots identischer Inhalt (kein Cloaking) -
          er wird beim React-Mount automatisch überschrieben. -->
     <div id="root">
