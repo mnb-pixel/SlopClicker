@@ -5,7 +5,6 @@ import { StatsTab } from '../tabs/StatsTab';
 import { MiscTab } from '../tabs/MiscTab';
 import { SeoContent } from '../SeoContent';
 import { LegalFooter } from '../LegalFooter';
-import { NativeAdBanner } from '../NativeAdBanner';
 import { isCrazyGamesBuild } from '../../monetization/crazyGamesSdk';
 
 export function DesktopView({ store, onOpenLegal, useRoutes = false }) {
@@ -135,12 +134,6 @@ export function DesktopView({ store, onOpenLegal, useRoutes = false }) {
         </div>
       </div>
     )}
-
-    {/* Native-Banner-Slot, einmal für die gesamte Ein-Seiten-Ansicht (siehe App.jsx-Pendant
-        in der Mobile-View). */}
-    <div className="w-full max-w-3xl mx-auto p-4 pt-0">
-      <NativeAdBanner label={store.t('adPlaceholderLabel')} adFree={store.adFree} />
-    </div>
 
     {/* Pflichtlinks einmal für die gesamte Ein-Seiten-Ansicht, statt nur im Einstellungen-
         Panel versteckt - siehe LegalFooter.jsx. */}
