@@ -71,9 +71,9 @@ export function LegalFooter({
           </>
         )}
         {/* Web-Pendant zum UMP-Link oben: öffnet Klaros Consent-Manager erneut (siehe
-            klaroConfig.js), damit die einmal getroffene Adsterra-Entscheidung nachträglich
-            geändert werden kann - nur im Web-Build, da Klaro dort (useRoutes) initialisiert
-            wird (siehe App.jsx). */}
+            klaroConfig.js), damit die einmal getroffene Werbe-Cookie-Entscheidung
+            nachträglich geändert werden kann - nur im Web-Build, da Klaro dort (useRoutes)
+            initialisiert wird (siehe App.jsx). */}
         {useRoutes && (
           <>
             <span className="text-slate-700">•</span>

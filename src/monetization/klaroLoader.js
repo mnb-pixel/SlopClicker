@@ -1,4 +1,4 @@
-// Lädt Klaro (Cookie-Consent für Adsterra) per dynamic import statt statisch - nur der
+// Lädt Klaro (Cookie-Consent für Werbung) per dynamic import statt statisch - nur der
 // Web-Build braucht es (siehe App.jsx/LegalFooter.jsx, beide gated auf useRoutes), ein
 // statischer Import würde die ~66kB (gzip) aber auch der nativen App und dem CrazyGames-
 // Build aufbürden, die dieselbe App.jsx/LegalFooter.jsx mitbauen, ohne sie je aufzurufen.
