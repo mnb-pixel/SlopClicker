@@ -1,5 +1,6 @@
 import React from 'react';
 import { isCrazyGamesBuild } from '../monetization/crazyGamesSdk';
+import { showKlaroManager } from '../monetization/klaroLoader';
 
 // Geteilte Fusszeile mit den Pflichtlinks (Impressum/Datenschutz). Wird auf JEDEM Tab
 // gerendert (Mobile: einmal ausserhalb der Pro-Tab-Bedingungen in App.jsx, Desktop: einmal
@@ -57,12 +58,27 @@ export function LegalFooter({
           </>
         )}
         {/* Nur nativ und nur solange Werbung läuft (adFree: kein Ad-SDK mehr initialisiert,
-            siehe adConsent.js) - Pendant zum Web-Cookie-Link, öffnet das UMP-Formular erneut. */}
+            siehe adConsent.js) - öffnet das UMP-Formular erneut. */}
         {purchaseAvailable && !adFree && (
           <>
             <span className="text-slate-700">•</span>
             <button
               onClick={() => showAdPrivacyOptions && showAdPrivacyOptions()}
+              className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
+            >
+              {tr('adPrivacySettings')}
+            </button>
+          </>
+        )}
+        {/* Web-Pendant zum UMP-Link oben: öffnet Klaros Consent-Manager erneut (siehe
+            klaroConfig.js), damit die einmal getroffene Adsterra-Entscheidung nachträglich
+            geändert werden kann - nur im Web-Build, da Klaro dort (useRoutes) initialisiert
+            wird (siehe App.jsx). */}
+        {useRoutes && (
+          <>
+            <span className="text-slate-700">•</span>
+            <button
+              onClick={() => showKlaroManager()}
               className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
             >
               {tr('adPrivacySettings')}

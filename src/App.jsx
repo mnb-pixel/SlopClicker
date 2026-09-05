@@ -12,6 +12,7 @@ import { GoldenMemeBanner } from './components/GoldenMemeBanner';
 import { AdRewardToast } from './components/AdRewardToast';
 import { ClickParticles } from './components/ClickParticles';
 import { AdBanner, ADS_ENABLED } from './components/AdBanner';
+import { NativeAdBanner } from './components/NativeAdBanner';
 import { SeoContent } from './components/SeoContent';
 import { LegalFooter } from './components/LegalFooter';
 import { OfflineEarningsModal } from './components/modals/OfflineEarningsModal';
@@ -19,7 +20,10 @@ import { AfkReportModal } from './components/modals/AfkReportModal';
 import { ScheduledAdModal } from './components/modals/ScheduledAdModal';
 import { TrackingExplainerModal } from './components/modals/TrackingExplainerModal';
 import { showNativeBanner, hideNativeBanner } from './monetization/nativeBanner';
+import { showPopunderAd, hidePopunderAd } from './monetization/popunderAd';
 import { isCrazyGamesBuild } from './monetization/crazyGamesSdk';
+import { initKlaro } from './monetization/klaroLoader';
+import { useAdsterraConsent } from './monetization/adConsentStore';
 import { UPGRADES_DATA } from './data/upgradesData';
 import { ROUTE_TABS, ROUTE_LEGAL_PAGES } from './routes';
 
@@ -79,6 +83,30 @@ export default function App() {
       showNativeBanner();
     }
   }, [store.adFree]);
+
+  // Klaro-Setup (Cookie-Einwilligung für Adsterra) einmalig, nur im Web-Build - CrazyGames
+  // und die native App zeigen den Banner gar nicht erst (siehe klaroConfig.js/AdBanner.jsx).
+  // Klaros eigener Consent-Hinweis rendert sich selbst als DOM-Overlay; der "adsterra"-
+  // Service-Callback (klaroConfig.js) meldet die Entscheidung an adConsentStore.js, von wo
+  // AdBanner/NativeAdBanner/der Popunder-Effect unten sie reaktiv auslesen.
+  useEffect(() => {
+    if (!useRoutes) return;
+    initKlaro();
+  }, [useRoutes]);
+
+  const adsterraConsent = useAdsterraConsent();
+
+  // Adsterra Popunder: nur Web, nicht CrazyGames (zweites Ad-Netzwerk gegen deren
+  // Richtlinien), nicht nativ (kein DOM/Script-Kontext in der AdMob-App-WebView) und nur
+  // mit erteilter Klaro-Einwilligung (adsterraConsent).
+  useEffect(() => {
+    const isNative = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
+    if (store.adFree || isNative || isCrazyGamesBuild() || !adsterraConsent) {
+      hidePopunderAd();
+    } else {
+      showPopunderAd();
+    }
+  }, [store.adFree, adsterraConsent]);
 
   // Live gemessene Header-Höhe (statt fest verdrahtetem px-Wert): der Header wechselt seine
   // Höhe je nach Zustand (SEC-Theme blendet eine zusätzliche Banner-Zeile ein, ein langer
@@ -326,6 +354,13 @@ export default function App() {
                 {store.activeTab === 3 && <SeoContent t={store.t} lang={store.lang} compact section="stats" />}
               </div>
             )}
+
+            {/* Native-Banner-Slot (4-Bilder-Format) unter dem Tab-Inhalt, vor den Pflichtlinks -
+                unconditional wie LegalFooter, damit er unabhängig vom aktiven Tab genau einmal
+                pro Scroll-Durchlauf erscheint statt fünffach dupliziert zu werden. */}
+            <div className="mx-3 mt-4">
+              <NativeAdBanner label={store.t('adPlaceholderLabel')} adFree={store.adFree} />
+            </div>
 
             {/* Pflichtlinks auf JEDEM Tab statt nur im Einstellungen-Tab versteckt - siehe
                 LegalFooter.jsx. Unconditional (nicht an activeTab gekoppelt), damit das
