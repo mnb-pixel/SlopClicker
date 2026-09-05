@@ -79,10 +79,6 @@ export const BUZZWORDS_DATA = Array.from({ length: 80 }, (_, i) => {
 
   const bonus = Math.round(0.004 * Math.pow(1.045, i) * 1000) / 1000;
 
-  // Cost formula: steep exponential (1.45^i) so later cards are a genuine late-game goal,
-  // not a footnote - direct-buy price is fixed per card by its position in the 80-card set.
-  const cost = Math.floor(600 * Math.pow(1.45, i));
-
   const cardNum = `#${String(i + 1).padStart(2, '0')}`;
   const icon = NOUN_ICONS[noun] || 'Sparkles';
   const quote = MODIFIER_QUOTES[modifier] || 'The pinnacle of AI marketing hype.';
@@ -96,15 +92,14 @@ export const BUZZWORDS_DATA = Array.from({ length: 80 }, (_, i) => {
     noun,
     rarity,
     bonus,
-    cost,
     icon,
     quote,
   };
 });
 
-// Booster Pack Cost Formula: 600 * 1.45^cardsOwned (shared by store logic and UI display).
-// Same steep curve as the per-card direct-buy price above, so packs don't become a cheaper
-// backdoor around the direct-buy cost as the collection fills up.
+// Booster Pack Cost Formula: 600 * 2^cardsOwned (shared by store logic and UI display).
+// Cards can only be obtained via booster packs (no direct per-card purchase), so this is
+// the sole price curve for the collection - doubles with each card already collected.
 export function getBoosterPackCost(cardsOwned) {
-  return Math.floor(600 * Math.pow(1.45, cardsOwned));
+  return Math.floor(600 * Math.pow(2, cardsOwned));
 }

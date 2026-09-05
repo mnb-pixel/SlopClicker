@@ -12,7 +12,7 @@ import { formatCurrency } from '../../utils/formatters';
 // Mit adFree entfällt der Verzichten-Pfad: es gibt keinen Grund, einen kostenlosen Bonus
 // abzulehnen, den man ohnehin nur mit einem Tap statt einem Video bekommt (siehe
 // docs/ios-app-konzept.md §4.2).
-export function OfflineEarningsModal({ offlineReport, adState, startAd, claimOfflineEarnings, dismissOfflineEarnings, adFree = false, t }) {
+export function OfflineEarningsModal({ offlineReport, adState, requestBonus, claimOfflineEarnings, dismissOfflineEarnings, adFree = false, t }) {
   if (!offlineReport) return null;
 
   const tr = t || ((k) => k);
@@ -53,7 +53,7 @@ export function OfflineEarningsModal({ offlineReport, adState, startAd, claimOff
         ) : (
           <div className="w-full flex flex-col gap-2">
             <button
-              onClick={() => (adFree ? claimOfflineEarnings() : startAd('offline_claim', claimOfflineEarnings))}
+              onClick={() => (adFree ? claimOfflineEarnings() : requestBonus('offline_claim', claimOfflineEarnings))}
               className="w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 to-fuchsia-500 text-slate-950 hover:brightness-110 active:scale-95 shadow-xl transition-all flex items-center justify-center gap-2"
             >
               {adFree ? <Gift className="w-4 h-4" /> : <Tv className="w-4 h-4" />}
