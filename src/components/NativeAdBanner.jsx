@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { isCrazyGamesBuild } from '../monetization/crazyGamesSdk';
 import { useAdsterraConsent } from '../monetization/adConsentStore';
+import { ADSTERRA_ENABLED } from '../monetization/adsterraToggle';
 
 // Adsterra "Native Banner" (4 Bilder in einer Reihe): anders als die atOptions-Slots in
 // AdBanner.jsx braucht dieses Format keine globale Options-Variable, sondern nur einen
@@ -15,8 +16,9 @@ export function NativeAdBanner({ label = 'Werbung', adFree = false }) {
 
   const isNative = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
   // Klaro-Einwilligung (siehe klaroConfig.js/adConsentStore.js): ohne "Adsterra"-Consent
-  // bleibt der Container leer statt das Skript ungefragt zu laden.
-  const skip = adFree || isNative || isCrazyGamesBuild() || !hasConsent;
+  // bleibt der Container leer statt das Skript ungefragt zu laden. ADSTERRA_ENABLED:
+  // Kill-Switch (siehe adsterraToggle.js), unabhängig vom Consent-Status.
+  const skip = !ADSTERRA_ENABLED || adFree || isNative || isCrazyGamesBuild() || !hasConsent;
 
   useEffect(() => {
     if (skip) return undefined;

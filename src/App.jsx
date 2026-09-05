@@ -24,6 +24,7 @@ import { showPopunderAd, hidePopunderAd } from './monetization/popunderAd';
 import { isCrazyGamesBuild } from './monetization/crazyGamesSdk';
 import { initKlaro } from './monetization/klaroLoader';
 import { useAdsterraConsent } from './monetization/adConsentStore';
+import { ADSTERRA_ENABLED } from './monetization/adsterraToggle';
 import { UPGRADES_DATA } from './data/upgradesData';
 import { ROUTE_TABS, ROUTE_LEGAL_PAGES } from './routes';
 
@@ -97,11 +98,12 @@ export default function App() {
   const adsterraConsent = useAdsterraConsent();
 
   // Adsterra Popunder: nur Web, nicht CrazyGames (zweites Ad-Netzwerk gegen deren
-  // Richtlinien), nicht nativ (kein DOM/Script-Kontext in der AdMob-App-WebView) und nur
-  // mit erteilter Klaro-Einwilligung (adsterraConsent).
+  // Richtlinien), nicht nativ (kein DOM/Script-Kontext in der AdMob-App-WebView), nur mit
+  // erteilter Klaro-Einwilligung (adsterraConsent) und nur solange der Kill-Switch
+  // ADSTERRA_ENABLED (adsterraToggle.js) an ist.
   useEffect(() => {
     const isNative = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
-    if (store.adFree || isNative || isCrazyGamesBuild() || !adsterraConsent) {
+    if (!ADSTERRA_ENABLED || store.adFree || isNative || isCrazyGamesBuild() || !adsterraConsent) {
       hidePopunderAd();
     } else {
       showPopunderAd();

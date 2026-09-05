@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { isCrazyGamesBuild } from '../monetization/crazyGamesSdk';
 import { useAdsterraConsent } from '../monetization/adConsentStore';
+import { ADSTERRA_ENABLED } from '../monetization/adsterraToggle';
 
 const AD_HOST = 'https://www.highrevenueformat.com';
 
@@ -22,7 +23,10 @@ const AD_UNITS = {
   rectangle: [{ key: '1d8e8e22bc28152b8abc107c60695968', width: 300, height: 250 }],
 };
 
-export const ADS_ENABLED = true;
+// ADS_ENABLED folgt dem Adsterra-Kill-Switch (siehe adsterraToggle.js) - App.jsx/Header.jsx
+// nutzen diesen Namen bereits für Layout-Entscheidungen (Abstandsrahmen etc.), deshalb hier
+// als Re-Export statt einer zweiten, unabhängigen Konstante.
+export const ADS_ENABLED = ADSTERRA_ENABLED;
 
 // Rendert eine Adsterra-Anzeigeneinheit in einem eigenen, leeren iframe statt direkt im
 // Hauptdokument. Grund: Adsterras invoke.js liest sein Options-Objekt aus der globalen
