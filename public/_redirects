@@ -1,0 +1,14 @@
+# Alte Tab-Pfade lagen an der Domain-Wurzel (siehe routes.js) - seit dem Landingpage-Umbau
+# (main.jsx/LandingPage.jsx) ist "/" keine Spiel-Route mehr, das Spiel liegt komplett unter
+# /play. 301 statt SPA-Fallback, damit bereits indexierte/verlinkte alte URLs sauber auf die
+# neuen /play-Pfade umziehen, statt clientseitig auf Tab 1 zurückzufallen (siehe main.jsx/
+# App.jsx-Catch-all, der bei einer nicht gematchten Route ohnehin greifen würde - dieser
+# Redirect ist die sauberere Variante für bereits von Google gecrawlte URLs).
+# /impressum bewusst NICHT hier drin: das ist keine Tab-Route, sondern ein von main.jsx
+# unverändert an der Domain-Wurzel behandeltes Rechtstext-Overlay (siehe routes.js
+# LEGAL_ROUTES) - das ist vom /play-Umzug gar nicht betroffen.
+# Von Cloudflare Workers Static Assets ausgewertet (siehe wrangler.jsonc, assets.directory),
+# genau wie _headers - dieselbe Syntax wie bei Cloudflare Pages.
+/shop           /play/shop           301
+/statistik      /play/statistik      301
+/einstellungen  /play/einstellungen  301
