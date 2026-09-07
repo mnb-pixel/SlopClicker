@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Play, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Play, ExternalLink, ShieldCheck, Apple } from 'lucide-react';
 import { TRANSLATIONS } from '../i18n/translations';
 import { SeoContent } from '../components/SeoContent';
 import { AdBanner } from '../components/AdBanner';
@@ -10,6 +10,11 @@ import { initKlaro, showKlaroManager } from '../monetization/klaroLoader';
 // statt der vollen i18n-Maschinerie, damit SeoContent (unten) dieselben, bereits
 // vorhandenen Übersetzungstexte wiederverwenden kann statt sie zu duplizieren.
 const t = (key) => TRANSLATIONS.de[key] ?? key;
+
+// iOS-App im App Store live seit September 2026 - eigener App-Name "Tokenkamin: AI Clicker"
+// (deutsche Übersetzung von "Token Furnace"), gleiches Spiel wie hier auf der Website.
+const APP_STORE_URL =
+  'https://apps.apple.com/ch/app/tokenkamin-ai-clicker/id6801915828?l=de-DE';
 
 // Landingpage unter "/" (siehe main.jsx/routes.js): eigenständige, textlastige Seite mit dem
 // eigentlichen Spiel als <iframe src="/play"> - NICHT mehr das Spiel selbst. Grund: Google
@@ -36,12 +41,31 @@ export function LandingPage() {
           <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl mx-auto">
             {t('aboutText')}
           </p>
-          <a
-            href="#play"
-            className="inline-flex items-center gap-2 self-center bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-sm px-5 py-2.5 rounded-xl transition-colors"
-          >
-            <Play className="w-4 h-4" /> Jetzt kostenlos spielen
-          </a>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <a
+              href="#play"
+              className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-sm px-5 py-2.5 rounded-xl transition-colors"
+            >
+              <Play className="w-4 h-4" /> Jetzt kostenlos spielen
+            </a>
+            <a
+              href={APP_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 bg-white hover:bg-slate-200 text-black font-bold text-sm px-4 py-2.5 rounded-xl transition-colors"
+            >
+              <Apple className="w-5 h-5" />
+              <span className="text-left leading-tight">
+                <span className="block text-[9px] font-normal uppercase tracking-wide">
+                  Jetzt laden im
+                </span>
+                <span className="block text-sm">App Store</span>
+              </span>
+            </a>
+          </div>
+          <p className="text-xs text-slate-400">
+            Als iOS-App: <strong className="text-slate-300">Tokenkamin: AI Clicker</strong>
+          </p>
         </header>
 
         <AdBanner variant="leaderboard" label={t('adPlaceholderLabel')} />
@@ -75,6 +99,15 @@ export function LandingPage() {
 
         <footer className="text-center text-[11px] text-slate-500 my-4 space-y-2">
           <div className="flex items-center justify-center gap-3 flex-wrap">
+            <a
+              href={APP_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
+            >
+              <Apple className="w-3 h-3" /> Tokenkamin im App Store
+            </a>
+            <span className="text-slate-700">•</span>
             <a
               href="/impressum"
               className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
