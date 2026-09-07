@@ -21,14 +21,17 @@
 
   # Testlauf fuer eine vollstaendige CSP, siehe Kommentar oben. Report-Only blockiert
   # NICHTS - Verstoesse landen nur in der DevTools-Konsole (Reiter "Issues"/"Console").
-  # Aktuell laedt der Code kein externes Ad-Netzwerk mehr (kurzes Adsterra-Zwischenspiel
-  # wieder verworfen, siehe AdBanner.jsx) - script-src/connect-src bewusst ohne
-  # Werbe-Domains, bis ein neuer Anbieter feststeht (dann hier wieder ergaenzen und erst
-  # eine Weile in der Konsole beobachten, bevor die Policy durchsetzend geschaltet wird).
+  # Anbieter steht jetzt fest (Google AdSense/Ad Placement API, siehe
+  # monetization/adsensePlacement.js) - script-src/frame-src/connect-src um die dafuer
+  # noetigen Google-Domains ergaenzt, VOR jedem echten client=ca-pub-... allerdings noch
+  # unbenutzt (siehe .env: VITE_ADSENSE_CLIENT_ID leer -> adsbygoogle.js wird gar nicht erst
+  # geladen). Erst eine Weile in der Konsole beobachten, sobald echte Anzeigen laufen, bevor
+  # die Policy durchsetzend (nicht mehr nur Report-Only) geschaltet wird - Google laedt
+  # Ad-Creatives/Messungen von wechselnden Sub-Domains nach, die Liste ist bewusst grosszuegig.
   # style-src 'unsafe-inline': die App nutzt durchgehend React-Inline-Styles (dynamische
   # Balken/Farben, z.B. GPU-Hitze-Anzeige in Header.jsx) - das laesst sich nur mit einem
   # groesseren Refactor auf CSS-Custom-Properties vermeiden, nicht mit einer Header-Zeile.
-  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://www.googletagservices.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; frame-src 'self' https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://tpc.googlesyndication.com; connect-src 'self' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://*.adtrafficquality.google; object-src 'none'; base-uri 'self'
 
   # Referrer nur als Origin an fremde Ziele (die Share-Links gehen an X/WhatsApp/LinkedIn),
   # innerhalb der eigenen Seite weiterhin voller Pfad.

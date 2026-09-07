@@ -25,10 +25,12 @@
          als Fallback in Link-Vorschauen - "$0 - tokenkamin" war dafür unbrauchbar. -->
     <title>Token Furnace – Der AI-Bubble Idle Clicker</title>
 
-    <!-- Kein Ad-Netzwerk-Loader-Script aktuell nötig: es ist kein Werbe-Anbieter aktiv
-         (siehe components/AdBanner.jsx, reiner Platzhalter nach kurzem, wieder verworfenem
-         Adsterra-Zwischenspiel). Klaro (monetization/klaroLoader.js) bleibt trotzdem
-         initialisiert, damit die Cookie-Consent-Basis für einen künftigen Anbieter steht. -->
+    <!-- Kein statisches AdSense-Script hier: adsbygoogle.js wird erst zur Laufzeit, nach
+         erteiltem Werbe-Cookie-Consent und nur wenn VITE_ADSENSE_CLIENT_ID gesetzt ist,
+         dynamisch nachgeladen (siehe monetization/adsensePlacement.js, genutzt von
+         AdBanner.jsx und adsenseAdBridge.js) - vor der AdSense-Freischaltung bleibt das
+         also ein No-Op. Klaro (monetization/klaroLoader.js) ist unabhängig davon schon
+         initialisiert, damit die Cookie-Consent-Basis steht. -->
 
     <!-- crazygames-only:start -->
     <!-- CrazyGames SDK v3: bewusst als blockierendes klassisches <script> (kein async/defer,
@@ -94,12 +96,14 @@
              Crawler, der KEIN JavaScript ausführt, ist das der einzige Weg, diese Seiten
              überhaupt zu entdecken (ein onClick-Handler ohne echten href wäre unsichtbar).
              NICHT im CrazyGames-/nativen Build: dort existieren diese Routen gar nicht
-             (siehe useRoutes in App.jsx) - absolute Pfade würden dort ins Leere zeigen. -->
+             (siehe useRoutes in App.jsx) - absolute Pfade würden dort ins Leere zeigen.
+             Pfade liegen seit dem Landingpage-Umbau (main.jsx/LandingPage.jsx) unter /play -
+             "/" selbst ist jetzt keine Spiel-Route mehr, sondern diese Content-Seite. -->
         <nav style="margin-bottom: 1.5rem; line-height: 1.8;">
-          <a href="/shop">Shop</a> ·
-          <a href="/special">Special</a> ·
-          <a href="/statistik">Statistik</a> ·
-          <a href="/einstellungen">Einstellungen</a> ·
+          <a href="/play"><strong>Spiel starten</strong></a> ·
+          <a href="/play/shop">Shop</a> ·
+          <a href="/play/statistik">Statistik</a> ·
+          <a href="/play/einstellungen">Einstellungen</a> ·
           <a href="/datenschutz">Datenschutz</a>
         </nav>
         <!-- web-only:end -->

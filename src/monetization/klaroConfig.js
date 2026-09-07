@@ -1,9 +1,15 @@
-// Klaro-Konfiguration für die Werbe-Cookie-Einwilligung. Aktuell ist kein Werbe-Anbieter
-// aktiv (siehe AdBanner.jsx - reiner Platzhalter nach dem kurzen, wieder verworfenen
-// Adsterra-Zwischenspiel), der Service-Name bleibt deshalb bewusst generisch ("advertising")
-// statt an einen bestimmten Anbieter gebunden - sobald ein neuer Anbieter feststeht, reicht
-// es, Name/Texte hier anzupassen und die neue Ad-Komponente an useAdConsent()
-// (adConsentStore.js) zu koppeln, statt die Klaro-Integration neu aufzusetzen.
+// Klaro-Konfiguration für die Werbe-Cookie-Einwilligung. Anbieter ist Google AdSense (Ad
+// Placement API für Rewarded Ads, klassische Display-Anzeigen im Banner - siehe
+// monetization/adsensePlacement.js/AdBanner.jsx), Google wird deshalb hier namentlich
+// genannt statt nur generisch "Werbung" zu sagen (Googles "EU User Consent Policy" verlangt
+// das explizit). adsbygoogle.js selbst lädt trotzdem erst NACH dieser Einwilligung UND nur
+// mit gesetzter VITE_ADSENSE_CLIENT_ID (siehe .env) - service.callback unten koppelt
+// weiterhin an useAdConsent() (adConsentStore.js), unverändert seit vor der AdSense-Wahl.
+//
+// WICHTIG: Google verlangt für Publisher mit EWR/UK-Traffic inzwischen i.d.R. einen bei
+// Google registrierten CMP (IAB TCF) - ob Klaro dafür ausreicht oder eine TCF-zertifizierte
+// Lösung nötig wird, VOR dem Go-Live mit echten Anzeigen in der aktuellen AdSense-
+// Publisher-Richtlinie ("EU-Nutzereinwilligungsrichtlinie") gegenprüfen.
 //
 // Klaro selbst ist Open Source (BSD-3, kein SaaS, keine Traffic-Grenze, siehe
 // github.com/kiprotect/klaro) und rendert seinen Consent-Hinweis/-Manager als eigenes
@@ -28,36 +34,36 @@ const klaroConfig = {
       consentModal: {
         title: 'Datenschutzeinstellungen',
         description:
-          'Token Furnace ist kostenlos und finanziert sich (falls aktiv) über Werbung. Hier kannst du entscheiden, ob Werbe-Cookies gesetzt werden dürfen.',
+          'Token Furnace ist kostenlos und finanziert sich über Werbung von Google AdSense. Hier kannst du entscheiden, ob Werbe-Cookies gesetzt werden dürfen.',
       },
       consentNotice: {
-        description: 'Wir verwenden ggf. Werbe-Cookies, um dieses kostenlose Spiel zu finanzieren.',
+        description: 'Wir verwenden Werbe-Cookies von Google AdSense, um dieses kostenlose Spiel zu finanzieren.',
         learnMore: 'Einstellungen',
       },
       purposes: {
         advertising: 'Werbung',
       },
       advertising: {
-        title: 'Werbung',
-        description: 'Werbe-Cookies zur Finanzierung des Spiels (aktuell kein Anbieter aktiv).',
+        title: 'Google AdSense',
+        description: 'Werbe-Cookies von Google AdSense zur Finanzierung des Spiels (Banner-Anzeigen und optionale Rewarded Ads für Bonus-Belohnungen).',
       },
     },
     en: {
       consentModal: {
         title: 'Privacy settings',
         description:
-          'Token Furnace is free and, if active, funded by ads. Here you can decide whether ad cookies may be set.',
+          'Token Furnace is free and funded by Google AdSense ads. Here you can decide whether ad cookies may be set.',
       },
       consentNotice: {
-        description: 'We may use ad cookies to fund this free game.',
+        description: 'We use Google AdSense ad cookies to fund this free game.',
         learnMore: 'Settings',
       },
       purposes: {
         advertising: 'Advertising',
       },
       advertising: {
-        title: 'Advertising',
-        description: 'Ad cookies that fund the game (no active provider right now).',
+        title: 'Google AdSense',
+        description: 'Google AdSense ad cookies that fund the game (banner ads and optional rewarded ads for bonus rewards).',
       },
     },
   },

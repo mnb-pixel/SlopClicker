@@ -46,11 +46,17 @@ export const noAdBridge = {
 // installed in the project and during plain `npm run dev`. CrazyGames detection works the
 // same way, via window.CrazyGames.SDK - only present when index.html actually loaded the
 // SDK script, which only happens in the --mode crazygames build (see vite.config.js).
-export function selectAdBridge({ adFree, nativeAdBridge, crazyGamesAdBridge } = {}) {
+//
+// adsenseAdBridge (Google Ad Placement API, see adsenseAdBridge.js/adsensePlacement.js) is
+// the plain-web default once a real AdSense client ID is configured (isConfigured() checks
+// the VITE_ADSENSE_CLIENT_ID env var) - until then isConfigured() is false and this falls
+// through to the existing webAdBridge fake-timer, so nothing changes pre-approval.
+export function selectAdBridge({ adFree, nativeAdBridge, crazyGamesAdBridge, adsenseAdBridge } = {}) {
   if (adFree) return noAdBridge;
   const isNative = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
   if (isNative && nativeAdBridge) return nativeAdBridge;
   const isCrazyGames = typeof window !== 'undefined' && !!window.CrazyGames?.SDK;
   if (isCrazyGames && crazyGamesAdBridge) return crazyGamesAdBridge;
+  if (adsenseAdBridge?.isConfigured?.()) return adsenseAdBridge;
   return webAdBridge;
 }

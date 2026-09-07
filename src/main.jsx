@@ -26,12 +26,31 @@ const root = createRoot(document.getElementById('root'))
 const isDatenschutzRoute =
   typeof window !== 'undefined' && window.location.pathname === '/datenschutz'
 
+// "/" ist die neue Landingpage (siehe routes.js): eigenständiger, textlastiger Content mit
+// dem Spiel als <iframe src="/play"> darauf - JEDER andere Pfad (allen voran /play/*) lädt
+// weiterhin das eigentliche Spiel per mountGame(). Nur im reinen Web-Build relevant: der
+// CrazyGames- und der native Build laden main.jsx zwar mit, rufen aber nie unter "/" auf
+// (CrazyGames hostet unter fremdem Unterpfad, die App hat kein Konzept von URLs) - dort
+// bliebe dieser Zweig also ohnehin tot, ändert am bisherigen Verhalten nichts.
+const isLandingRoute =
+  typeof window !== 'undefined' && window.location.pathname === '/'
+
 if (isDatenschutzRoute) {
   import('./pages/DatenschutzPage.jsx').then(({ DatenschutzPage }) => {
     root.render(
       <StrictMode>
         <ErrorBoundary>
           <DatenschutzPage />
+        </ErrorBoundary>
+      </StrictMode>,
+    )
+  })
+} else if (isLandingRoute) {
+  import('./pages/LandingPage.jsx').then(({ LandingPage }) => {
+    root.render(
+      <StrictMode>
+        <ErrorBoundary>
+          <LandingPage />
         </ErrorBoundary>
       </StrictMode>,
     )
