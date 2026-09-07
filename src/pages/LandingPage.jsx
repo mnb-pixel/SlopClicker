@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Play, ExternalLink, ShieldCheck, Apple } from 'lucide-react';
+import { Play, ExternalLink, ShieldCheck } from 'lucide-react';
 import { TRANSLATIONS } from '../i18n/translations';
 import { SeoContent } from '../components/SeoContent';
 import { AdBanner } from '../components/AdBanner';
@@ -15,6 +15,15 @@ const t = (key) => TRANSLATIONS.de[key] ?? key;
 // (deutsche Übersetzung von "Token Furnace"), gleiches Spiel wie hier auf der Website.
 const APP_STORE_URL =
   'https://apps.apple.com/ch/app/tokenkamin-ai-clicker/id6801915828?l=de-DE';
+
+// Offizielles "Download on the App Store"-Badge, live von Apples eigener Marketing-Tools-API
+// bezogen statt selbst nachgebaut - Apples Guidelines (developer.apple.com/app-store/
+// marketing/guidelines) verbieten explizit eigene Badge-Nachbauten ("Use only the badge
+// artwork provided ... Never create your own badge") und schreiben die schwarze Variante als
+// Standard vor. de-DE ist die deutsche Lokalisierung ("Laden im App Store" - "App Store"
+// selbst bleibt laut Guidelines in JEDER Sprache unübersetzt).
+const APP_STORE_BADGE_SRC =
+  'https://toolbox.marketingtools.apple.com/api/badges/download-on-the-app-store/black/de-de';
 
 // Landingpage unter "/" (siehe main.jsx/routes.js): eigenständige, textlastige Seite mit dem
 // eigentlichen Spiel als <iframe src="/play"> - NICHT mehr das Spiel selbst. Grund: Google
@@ -41,31 +50,28 @@ export function LandingPage() {
           <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl mx-auto">
             {t('aboutText')}
           </p>
-          <div className="flex items-center justify-center gap-3 flex-wrap">
+          <div className="flex items-center justify-center gap-4 flex-wrap">
             <a
               href="#play"
               className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-sm px-5 py-2.5 rounded-xl transition-colors"
             >
               <Play className="w-4 h-4" /> Jetzt kostenlos spielen
             </a>
-            <a
-              href={APP_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2.5 bg-white hover:bg-slate-200 text-black font-bold text-sm px-4 py-2.5 rounded-xl transition-colors"
-            >
-              <Apple className="w-5 h-5" />
-              <span className="text-left leading-tight">
-                <span className="block text-[9px] font-normal uppercase tracking-wide">
-                  Jetzt laden im
-                </span>
-                <span className="block text-sm">App Store</span>
-              </span>
+            {/* Offizielles Apple-Badge (siehe APP_STORE_BADGE_SRC oben) - bewusst nur als
+                <img>, kein Nachbau: Guidelines verbieten u.a. Kippen/Skalieren mit anderem
+                Seitenverhältnis, eigene Farben oder Kombination mit anderen Logos. Nur DIESES
+                eine Badge auf der ganzen Seite ("Use one App Store badge per layout") - der
+                Footer-Link weiter unten ist bewusst ein reiner Textlink ohne Badge/Icon. */}
+            <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
+              <img
+                src={APP_STORE_BADGE_SRC}
+                alt="Jetzt im App Store laden"
+                className="h-11 w-auto"
+                width={135}
+                height={40}
+              />
             </a>
           </div>
-          <p className="text-xs text-slate-400">
-            Als iOS-App: <strong className="text-slate-300">Tokenkamin: AI Clicker</strong>
-          </p>
         </header>
 
         <AdBanner variant="leaderboard" label={t('adPlaceholderLabel')} />
@@ -103,9 +109,9 @@ export function LandingPage() {
               href={APP_STORE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
+              className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
             >
-              <Apple className="w-3 h-3" /> Tokenkamin im App Store
+              Tokenkamin im App Store
             </a>
             <span className="text-slate-700">•</span>
             <a
