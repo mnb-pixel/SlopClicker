@@ -85,21 +85,23 @@ const MISC_UPGRADES_DATA = [
   // than syndicate_1/2's own cost. That's intentional: these are VC-firm perks now, not a
   // separate free-floating progression track.
   //
-  // Faktoren zweimal um Faktor 5 gekürzt (ursprünglich 0.10/0.20/0.30/0.50, gestapelt bis
-  // zu +110% pro Erfolg -> 0.02/0.04/0.06/0.10 -> jetzt 0.004/0.008/0.012/0.02): linear mit
-  // der Erfolgsanzahl skalierend UND multiplikativ mit jeder anderen VPS-Quelle verknüpft
-  // (siehe grossVps in useGameStore.js) lief das über eine Spielsitzung mit wachsender
-  // Erfolgsliste in einen echten Runaway-Effekt - gemeldet als "ruiniert das ganze Spiel,
-  // man macht viel zu viel Gewinn", die erste 1/5-Kürzung reichte noch nicht.
+  // Faktoren dreimal gekürzt (ursprünglich 0.10/0.20/0.30/0.50, gestapelt bis zu +110% pro
+  // Erfolg -> 1/5 -> 0.02/0.04/0.06/0.10 -> 1/5 -> 0.004/0.008/0.012/0.02 -> 1/4 ->
+  // 0.001/0.002/0.003/0.005): linear mit der Erfolgsanzahl skalierend UND multiplikativ mit
+  // jeder anderen VPS-Quelle verknüpft (siehe grossVps in useGameStore.js) lief das über eine
+  // Spielsitzung mit wachsender Erfolgsliste in einen echten Runaway-Effekt - gemeldet als
+  // "ruiniert das ganze Spiel, man macht viel zu viel Gewinn", die ersten beiden Kürzungen
+  // reichten noch nicht. Bei allen 80 Achievements (siehe achievementsData.js) ergibt das
+  // jetzt zusammen noch +88% statt vorher +352%.
   {
     id: 'syndicate_1',
     name: 'Seed Angel Advisor',
     cost: 5000,
     quote: 'Writes early term sheets in natural language.',
-    description: '+0.4% extra global VPS for every unlocked achievement!',
+    description: '+0.1% extra global VPS for every unlocked achievement!',
     icon: 'Briefcase',
     type: 'syndicate',
-    effect: { type: 'syndicate', factor: 0.004 },
+    effect: { type: 'syndicate', factor: 0.001 },
     req: { totalValuation: 1000, buildingId: 'vc_firm' },
   },
   {
@@ -107,10 +109,10 @@ const MISC_UPGRADES_DATA = [
     name: 'Series-A Board Director',
     cost: 500000,
     quote: 'Attends quarterly board meetings via holograms.',
-    description: '+0.8% extra global VPS for every unlocked achievement!',
+    description: '+0.2% extra global VPS for every unlocked achievement!',
     icon: 'Building2',
     type: 'syndicate',
-    effect: { type: 'syndicate', factor: 0.008 },
+    effect: { type: 'syndicate', factor: 0.002 },
     req: { totalValuation: 100000, buildingId: 'vc_firm' },
   },
   {
@@ -118,10 +120,10 @@ const MISC_UPGRADES_DATA = [
     name: 'Growth VC Syndicate Partner',
     cost: 50000000,
     quote: 'Leverages institutional hype to double term sheet offers.',
-    description: '+1.2% extra global VPS for every unlocked achievement!',
+    description: '+0.3% extra global VPS for every unlocked achievement!',
     icon: 'Award',
     type: 'syndicate',
-    effect: { type: 'syndicate', factor: 0.012 },
+    effect: { type: 'syndicate', factor: 0.003 },
     req: { totalValuation: 10000000, buildingId: 'vc_firm' },
   },
   {
@@ -129,10 +131,10 @@ const MISC_UPGRADES_DATA = [
     name: 'Autonomous AGI Advisory Board',
     cost: 5000000000,
     quote: 'An AI board that approves its own stock option grants.',
-    description: '+2% extra global VPS for every unlocked achievement!',
+    description: '+0.5% extra global VPS for every unlocked achievement!',
     icon: 'UserCheck',
     type: 'syndicate',
-    effect: { type: 'syndicate', factor: 0.02 },
+    effect: { type: 'syndicate', factor: 0.005 },
     req: { totalValuation: 1000000000, buildingId: 'vc_firm' },
   },
 
