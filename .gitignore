@@ -12,6 +12,11 @@ dist
 dist-crazygames
 dist-ssr
 *.local
+# Lokaler Zustand von `wrangler dev` (Cloudflare-Laufzeit zum Testen von dist/)
+.wrangler/
+
+# Unoptimierte Simulator-Originale (die Web-Versionen liegen in public/screenshots/)
+App Screenshots/
 
 # Editor directories and files
 .vscode/*
