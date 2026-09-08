@@ -44,10 +44,7 @@ export const FAQ = {
         },
         {
           q: 'Kann ich meinen Spielstand auf ein anderes Gerät übertragen?',
-          a: [
-            'Ja. Unter **Einstellungen → Spielstand exportieren** lädst du deinen Fortschritt als Datei herunter. Auf dem anderen Gerät wählst du **Spielstand importieren** und die Datei aus – der dortige Fortschritt wird dabei ersetzt.',
-            'Das funktioniert auch zwischen Web-Version und iOS-App, weil beide dasselbe Speicherformat verwenden.',
-          ],
+          a: 'Ja. Unter **Einstellungen → Spielstand exportieren** lädst du deinen Fortschritt als Datei herunter. Auf dem anderen Gerät wählst du **Spielstand importieren** und die Datei aus – der dortige Fortschritt wird dabei ersetzt.',
         },
         {
           q: 'Kann ich das Spiel zurücksetzen?',

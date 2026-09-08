@@ -15,7 +15,7 @@ export const IOS_APP = {
       '**Haptisches Feedback** beim Tippen auf den AGI-Kern, bei Käufen und beim Ziehen einer Karte.',
       '**Bonus-Videos** für die Flüssigstickstoff-Kühlung, den Power-Click-Boost, das Golden Meme, das Beenden einer Bubble und den Offline-Ertrag.',
       '**Werbefrei** als einmaliger Kauf: keine Banner, keine Videos – alle Boni bleiben und sind mit einem Tap abholbar.',
-      '**Spielstand-Export und -Import**, kompatibel mit der Web-Version: Du kannst am Rechner weiterspielen, wo du unterwegs aufgehört hast.',
+      '**Spielstand-Export und -Import**: Sichere deinen Fortschritt als Datei oder übertrage ihn auf ein anderes iPhone.',
       '**Offline-Ertrag:** Deine Engines produzieren weiter, während die App geschlossen ist – bis zu vier Stunden lang.',
     ],
   },
