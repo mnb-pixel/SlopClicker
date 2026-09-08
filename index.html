@@ -22,8 +22,15 @@
     <!-- Statischer Titel für Crawler und Social-Bots, die kein JavaScript ausführen: die
          App überschreibt document.title nach dem Mount ohnehin mit dem Live-Spielstand
          ("$1,2 Mio. - tokenkamin"), aber genau dieser Wert hier landet im Suchindex und
-         als Fallback in Link-Vorschauen - "$0 - tokenkamin" war dafür unbrauchbar. -->
+         als Fallback in Link-Vorschauen - "$0 - tokenkamin" war dafür unbrauchbar.
+         Titel, Description und OG-Tags werden für die Content-Seiten beim Build pro Seite
+         ersetzt (scripts/prerender.mjs) - hier stehen die Defaults für das Spiel (/play). -->
     <title>Token Furnace – Der AI-Bubble Idle Clicker</title>
+
+    <!-- AdSense-Site-Verifizierung per Meta-Tag: consent-frei und ohne Script, damit Google
+         die Seite auch dann dem Konto zuordnen kann, wenn adsbygoogle.js (unten) noch gar
+         nicht geladen wird. Gehört zum selben Publisher-Konto wie public/ads.txt. -->
+    <meta name="google-adsense-account" content="ca-pub-6020764817262332" />
 
     <!-- Kein statisches AdSense-Script hier: adsbygoogle.js wird erst zur Laufzeit, nach
          erteiltem Werbe-Cookie-Consent und nur wenn VITE_ADSENSE_CLIENT_ID gesetzt ist,
@@ -64,166 +71,16 @@
     <meta name="twitter:title" content="Token Furnace – Der AI-Bubble Idle Clicker" />
     <meta name="twitter:description" content="Baue dein KI-Startup zur Milliardenbewertung auf, ganz ohne Produkt. Satirischer Idle Clicker über den AI-Hype." />
     <meta name="twitter:image" content="%VITE_SITE_URL%/vc_report_share.png" />
+    <!-- Wird von scripts/prerender.mjs pro Content-Seite durch <link rel="canonical"> ersetzt. -->
+    <!--site-head-->
   </head>
   <body class="bg-slate-950 text-slate-100 overflow-x-hidden selection:bg-cyan-500 selection:text-black">
-    <!-- Statischer Fallback-Inhalt: Bis React mountet (createRoot().render() ersetzt den
-         Inhalt von #root komplett), ist dieses Div sonst leer - für jeden Crawler/Bot, der
-         kein oder nur eingeschränktes JavaScript ausführt (u.a. Suchmaschinen-Crawler und
-         Ad-Netzwerk-Site-Reviews), sieht die Seite dann aus wie ein leerer "im Aufbau"-Screen
-         ohne echten Content.
-         Dieser Text ist echter, für Menschen wie Bots identischer Inhalt (kein Cloaking) -
-         er wird beim React-Mount automatisch überschrieben. -->
-    <div id="root">
-      <main style="max-width: 680px; margin: 0 auto; padding: 2rem 1.25rem;">
-        <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem;">
-          Token Furnace – Der AI-Bubble Idle Clicker
-        </h1>
-        <p style="margin-bottom: 0.75rem; line-height: 1.6;">
-          Token Furnace ist ein kostenloser, satirischer Idle-Clicker im Browser: Du baust
-          dein eigenes KI-Startup auf, klickst dich zu einer Milliardenbewertung hoch und
-          investierst in Buzzwords, GPU-Cluster und Greenwashing-Layoffs – ganz ohne
-          echtes Produkt. Das Spiel läuft komplett im Browser, braucht keine Anmeldung und
-          speichert deinen Fortschritt automatisch lokal auf deinem Gerät.
-        </p>
-        <p style="margin-bottom: 1.5rem; line-height: 1.6;">
-          Klicke dich durch Hype-Zyklen, schalte Upgrades und Erfolge frei und beobachte,
-          wie deine fiktive Firmenbewertung explodiert – bis die Blase platzt und die
-          nächste Runde beginnt.
-        </p>
-
-        <!-- web-only:start -->
-        <!-- Echte <a href>-Links zu den Tab-Routen (siehe src/routes.js) - für einen
-             Crawler, der KEIN JavaScript ausführt, ist das der einzige Weg, diese Seiten
-             überhaupt zu entdecken (ein onClick-Handler ohne echten href wäre unsichtbar).
-             NICHT im CrazyGames-/nativen Build: dort existieren diese Routen gar nicht
-             (siehe useRoutes in App.jsx) - absolute Pfade würden dort ins Leere zeigen.
-             Pfade liegen seit dem Landingpage-Umbau (main.jsx/LandingPage.jsx) unter /play -
-             "/" selbst ist jetzt keine Spiel-Route mehr, sondern diese Content-Seite. -->
-        <nav style="margin-bottom: 1.5rem; line-height: 1.8;">
-          <a href="/play"><strong>Spiel starten</strong></a> ·
-          <a href="/play/shop">Shop</a> ·
-          <a href="/play/statistik">Statistik</a> ·
-          <a href="/play/einstellungen">Einstellungen</a> ·
-          <a href="/datenschutz">Datenschutz</a>
-        </nav>
-        <!-- web-only:end -->
-
-        <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">So funktioniert's</h2>
-        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
-          Klicke auf den AGI-Kern-Button, um manuell Unternehmenswert zu generieren, oder
-          baue automatisierte Engines, die rund um die Uhr passiv Wert erzeugen – von
-          einfachen Assistenten bis zu gigantischen Rechenzentren.
-        </p>
-        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
-          Kaufe Effizienz-Upgrades und sammle Buzzword-Karten, um deinen Output zu
-          vervielfachen. Achte dabei auf die Burn Rate: Je höher dein Hype, desto mehr
-          Investoren – aber auch höhere laufende Kosten.
-        </p>
-        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
-          Ab einer gewissen Bewertung kannst du einen strategischen Pivot vollziehen: Du
-          behältst deine Infrastruktur, sammelst Credibility und rotierst in die nächste
-          Hype-Epoche. Bei ausreichend hoher Bewertung schaltet sich die Singularity
-          Ascension frei – ein finaler Reset für permanente Prestige-Boni.
-        </p>
-        <p style="margin-bottom: 1.5rem; line-height: 1.6;">
-          Übertreib es nicht mit dem manuellen Klicken: Zu schnelles Klicken überhitzt die
-          GPU und sperrt den Button vorübergehend.
-        </p>
-
-        <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Häufige Fragen</h2>
-        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
-          <strong>Ist Token Furnace kostenlos?</strong><br />
-          Ja, das komplette Spiel ist kostenlos spielbar. Eine optionale Werbefrei-Option
-          entfernt lediglich Anzeigen.
-        </p>
-        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
-          <strong>Muss ich mich registrieren?</strong><br />
-          Nein. Es gibt kein Konto und keine Anmeldung – dein Fortschritt wird automatisch
-          lokal in deinem Browser gespeichert.
-        </p>
-        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
-          <strong>Läuft das Spiel auch offline weiter?</strong><br />
-          Deine Infrastruktur produziert auch weiter, während der Tab geschlossen ist –
-          beim nächsten Öffnen bekommst du einen Bericht über den Offline-Ertrag.
-        </p>
-        <p style="margin-bottom: 1.5rem; line-height: 1.6;">
-          <strong>Worum geht es in dem Spiel?</strong><br />
-          Token Furnace ist eine Satire auf den KI-Hype: Du baust ein fiktives KI-Startup
-          ganz ohne echtes Produkt auf, ausschließlich getrieben von Buzzwords,
-          Bewertungswachstum und Investoren-Vertrauen.
-        </p>
-
-        <!-- Identischer Text zum "Vertraulichen Investoren-Prospekt" (ManualModal.jsx /
-             manual.content.js) - siehe SeoContent.jsx für die Live-Version nach dem
-             React-Mount. Hier zusätzlich statisch verdrahtet, damit auch ein Crawler ohne
-             JS-Ausführung diesen Content sieht, nicht erst nach dem Mount. -->
-        <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Vertraulicher Investoren-Prospekt</h2>
-        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem;">1. Startup-Skalierung & Token-Generierung</h3>
-        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
-          Als Gründer eines bahnbrechenden KI-Startups skalierst du deine Unternehmung von
-          bescheidenen Anfängen bis hin zu unerreichbaren Höhen. Durch manuelles Autorisieren
-          und den Bau automatisierter Systeme steigerst du deinen Unternehmenswert
-          kontinuierlich.
-        </p>
-        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
-          <strong>Passives Valuation-Wachstum (Netto-VPS)</strong>: Deine Infrastruktur
-          produziert rund um die Uhr neuen Unternehmenswert.
-          <strong>Exakte Bewertung</strong>: Verfolge in Echtzeit jeden einzelnen
-          erwirtschafteten Dollar.
-        </p>
-
-        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem;">2. Token Burn & Hype-Dynamik</h3>
-        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
-          Je weiter deine Unternehmung wächst, desto höher steigt deine Hype-Stufe. Ein
-          höherer Hype zieht mehr Investoren an, erhöht jedoch auch deine laufenden
-          Betriebskosten und die kontinuierliche <strong>Burn Rate</strong>! Deine
-          tatsächliche Netto-Generierung ergibt sich aus dem Gesamtertrag abzüglich der
-          Verbrennungsrate. Steuere dagegen mit gezielten Unternehmensmaßnahmen und
-          strategischen Entscheidungen.
-        </p>
-
-        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem;">3. Infrastruktur & Strategie-Portfolio</h3>
-        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
-          <strong>Engines</strong>: Erweitere deine Infrastruktur stufenweise von einfachen
-          Assistenten bis hin zu gigantischen Rechenzentren.
-          <strong>Effizienz-Upgrades</strong>: Optimiere deine Klick-Leistung und
-          vervielfache den Output deiner Systeme.
-          <strong>Corporate Actions</strong>: Nutze Greenwashing-Initiativen zur Reduzierung
-          der Burn Rate oder führe Massenentlassungen zur kurzfristigen Ertragssteigerung
-          durch. <strong>Buzzword Portfolio</strong>: Sammele wertvolle Buzzword-Karten
-          verschiedener Seltenheiten, um dein gesamtes Wachstum nachhaltig zu beflügeln.
-        </p>
-
-        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem;">4. Pivot-Strategie & Epochen-Rotation</h3>
-        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
-          Ab einem gewissen Zuwachs an Unternehmenswert kannst du einen strategischen
-          <strong>Pivot</strong> vollziehen. Engines, Upgrades und Valuation bleiben dabei
-          erhalten — ein Pivot belohnt dich mit wertvoller <strong>Credibility</strong> für
-          den Wertzuwachs seit deinem letzten Pivot und rotiert dein Startup in die nächste
-          Hype-Epoche. <strong>😇 Idealisten-Pfad</strong>: Investiere Credibility in
-          nachhaltige Strukturen, um deine Burn Rate dauerhaft zu drosseln.
-          <strong>😈 Zyniker-Pfad</strong>: Setze auf aggressives Hype-Wachstum, um deine
-          Erträge massiv zu steigern.
-        </p>
-
-        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem;">5. Singularity Ascension & Kosmischer Aufstieg</h3>
-        <p style="margin-bottom: 0.5rem; line-height: 1.6;">
-          Erreicht dein Startup gigantische Bewertungshöhen, schaltet sich die
-          <strong>Singularity Ascension</strong> frei. Dieser finale Reset verleiht dir ein
-          höheres Prestige-Level und <strong>Heavenly Chips</strong>. Prestige-Level und
-          kosmische Upgrades gewähren dir permanente Vorteile, die über alle zukünftigen
-          Neuanfänge hinweg bestehen bleiben.
-        </p>
-
-        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem;">6. Hardware-Thermik & Marktereignisse</h3>
-        <p style="line-height: 1.6;">
-          <strong>GPU-Temperatur</strong>: Zu schnelles manuelles Autorisieren erhitzt deine
-          Prozessoren. Achte darauf, dass das System nicht überhitzt.
-          <strong>Markt-Ereignisse & Krisen</strong>: Nutze spontan auftauchende
-          Marktchancen oder wappne dich gegen unvorhergesehene Turbulenzen.
-        </p>
-      </main>
-    </div>
+    <!-- Web-Build: scripts/prerender.mjs ersetzt den Marker durch das fertig gerenderte HTML
+         der jeweiligen Content-Seite (src/site/), main.jsx hydratisiert dann nur noch. So
+         sieht auch ein Crawler/Review ohne JavaScript den kompletten Seiteninhalt - aus
+         derselben Quelle wie die Live-Seite, kein separat gepflegter Fallback-Text mehr.
+         Für das Spiel (/play, CrazyGames, nativ) bleibt der Container leer, bis React mountet. -->
+    <div id="root"><!--site-html--></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

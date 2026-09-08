@@ -12,14 +12,13 @@
 // NavBar.jsx/DesktopView.jsx) - eventuell noch existierende Backlinks auf /special landen
 // über den Catch-all in main.jsx/App.jsx (nicht gematchte Pfade -> Tab 1) auf der Startseite.
 //
-// Alle Tab-Pfade liegen unter /play (siehe main.jsx, LandingPage.jsx): "/" ist jetzt eine
-// eigenständige, content-starke Landingpage (kein Spiel-Zustand, kein Tab), das eigentliche
-// Spiel zieht komplett auf /play um und wird von der Landingpage per <iframe> eingebettet.
-// Grund: der AdSense-Review bemängelte "low value content" weiterhin, obwohl "/" schon
-// echten Text zeigte - ein Reviewer sieht auf "/" aber zuerst das Spiel selbst, nicht die
-// Fließtext-Inhalte darunter. Mit dieser Trennung ist "/" eine normale, textlastige Seite
-// (Anleitung, FAQ, Investoren-Prospekt) mit dem Spiel als EINEM Element darauf, nicht als
-// einzigem Inhalt - ein bei HTML5-Game-Portalen übliches und AdSense-konformes Muster.
+// Alle Tab-Pfade liegen unter /play (siehe main.jsx, src/site/siteRoutes.js): "/" und die
+// Unterseiten (/anleitung, /faq, ...) sind eine eigenständige, statisch vorgerenderte
+// Content-Website über das Spiel (kein Spiel-Zustand, kein Tab), das eigentliche Spiel lebt
+// komplett unter /play und ist von dort nur verlinkt. Grund: der AdSense-Review bemängelte
+// "low value content", solange "/" in erster Linie das Spiel-UI zeigte - mit dieser Trennung
+// ist "/" eine normale, textlastige Website (Anleitung, Strategie, FAQ, Glossar) mit dem Spiel
+// als verlinktem Ziel, ein bei HTML5-Game-Portalen übliches und AdSense-konformes Muster.
 // Alte Bookmarks/Backlinks auf die bisherigen bloßen Pfade (/shop etc.) werden per
 // public/_redirects auf die neuen /play-Pfade umgeleitet; landen sie trotzdem im SPA (z.B.
 // weil _redirects nicht greift), fallen sie wie /special auf den Catch-all (Tab 1) zurück.

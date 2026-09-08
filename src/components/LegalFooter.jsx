@@ -40,12 +40,12 @@ export function LegalFooter({
                 voller Seitenaufruf ist hier also korrekt, kein Client-Routing. Nativ/
                 CrazyGames (useRoutes=false) haben keinen echten Server dahinter, der diesen
                 Pfad beantwortet - dort bleibt das alte Modal.
-                target="_top": seit dem Landingpage-Umbau (main.jsx/LandingPage.jsx) läuft
-                dieses Spiel-UI meist selbst in einem <iframe src="/play"> auf "/" - ohne
-                target="_top" würde der Klick nur den Iframe umnavigieren, die Datenschutz-
-                seite erschiene gequetscht im Iframe-Rahmen statt als eigene, volle Browser-
-                Seite. Läuft das Spiel-UI ausnahmsweise nicht eingebettet (direkter Aufruf
-                von /play), ist "_top" identisch mit dem aktuellen Fenster - unschädlich. */}
+                target="_top": Absicherung für den Fall, dass das Spiel-UI irgendwo
+                eingebettet läuft (zwischenzeitlich war es als <iframe src="/play"> auf der
+                Startseite eingebunden) - ohne target="_top" würde der Klick nur den Iframe
+                umnavigieren, die Datenschutzseite erschiene gequetscht im Iframe-Rahmen
+                statt als eigene, volle Browser-Seite. Nicht eingebettet (Normalfall, /play
+                direkt) ist "_top" identisch mit dem aktuellen Fenster - unschädlich. */}
             {useRoutes ? (
               <a
                 href="/datenschutz"

@@ -52,12 +52,6 @@ export default defineConfig(({ mode }) => ({
     react(),
     tailwindcss(),
     stripMarkedTags('crazygames-only', mode !== 'crazygames'),
-    // Vorbestehende Lücke, beim /play-Umbau (routes.js/LandingPage.jsx) aufgefallen: der
-    // "web-only"-Marker um den <nav>-Block in index.html (echte <a href>s zu den Tab-Routen
-    // für JS-lose Crawler) hatte trotz gegenteiligem Kommentar dort noch NIE einen
-    // passenden stripMarkedTags-Aufruf - der Block blieb bislang in JEDEM Build erhalten,
-    // auch nativ/CrazyGames, wo diese Pfade gar nicht existieren.
-    stripMarkedTags('web-only', mode === 'native' || mode === 'crazygames'),
     stripWebOnlyHeadersFile(mode === 'native' || mode === 'crazygames'),
   ],
 }))

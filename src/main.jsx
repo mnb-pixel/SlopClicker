@@ -1,7 +1,8 @@
 import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { createRoot, hydrateRoot } from 'react-dom/client'
 import './index.css'
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
+import { findSiteRoute } from './site/siteRoutes.js'
 import {
   isCrazyGamesBuild,
   initCrazyGamesSdk,
@@ -11,49 +12,41 @@ import {
   reportGameplayStop,
 } from './monetization/crazyGamesSdk'
 
-const root = createRoot(document.getElementById('root'))
+const rootEl = document.getElementById('root')
 
-// /datenschutz ist eine eigenständige Seite (DatenschutzPage.jsx), kein Teil des
-// Spiel-SPA-Zustands - siehe MiscTab.jsx/DesktopView.jsx, die dorthin bewusst mit einem
-// echten <a href> statt einem <Link> verlinken (voller Seitenaufruf, kein Client-Routing).
-// App.jsx (useGameStore + alle Tabs) und react-router-dom werden hier bewusst NUR per
-// dynamischem import() geladen (statt oben statisch), damit Vite beide Zweige in
-// getrennte Chunks aufteilt: ein Aufruf/Reload von /datenschutz lädt dadurch wirklich
-// nur den kleinen DatenschutzPage-Chunk, nie das komplette Spiel-Bundle. crazyGamesSdk
-// bleibt bewusst ein normaler statischer Import oben - das Modul zieht kein Spielcode mit
-// (nur SDK-Glue, siehe dort) und reportLoadingStart() muss weiterhin so früh wie möglich
-// feuern (siehe Kommentar dort).
-const isDatenschutzRoute =
-  typeof window !== 'undefined' && window.location.pathname === '/datenschutz'
+// Zwei Welten in einem Bundle: die Content-Website (src/site/, "/" und die Unterseiten aus
+// siteRoutes.js) und das Spiel (App.jsx unter /play/*). Beide werden bewusst NUR per
+// dynamischem import() geladen, damit Vite sie in getrennte Chunks aufteilt - ein Aufruf
+// von /anleitung lädt nie das Spiel-Bundle, /play nie die Content-Seiten.
+//
+// Web-Build: die Content-Seiten liegen als vorgerendertes HTML in dist/ (scripts/
+// prerender.mjs), hier wird nur noch hydratisiert. Dev-Server: #root ist leer -> normal
+// rendern. Nativer Build und CrazyGames gehen IMMER direkt ins Spiel: der Capacitor-WebView
+// lädt das Bundle unter dem Pfad "/" - ohne diesen Guard bekäme die iOS-App die Startseite
+// der Website statt des Spiels. crazyGamesSdk bleibt statischer Import:
+// reportLoadingStart() muss so früh wie möglich feuern (siehe dort), das Modul zieht keinen
+// Spielcode mit.
+const isNativePlatform = !!window.Capacitor?.isNativePlatform?.()
+const siteRoute = isNativePlatform || isCrazyGamesBuild() ? null : findSiteRoute(window.location.pathname)
 
-// "/" ist die neue Landingpage (siehe routes.js): eigenständiger, textlastiger Content mit
-// dem Spiel als <iframe src="/play"> darauf - JEDER andere Pfad (allen voran /play/*) lädt
-// weiterhin das eigentliche Spiel per mountGame(). Nur im reinen Web-Build relevant: der
-// CrazyGames- und der native Build laden main.jsx zwar mit, rufen aber nie unter "/" auf
-// (CrazyGames hostet unter fremdem Unterpfad, die App hat kein Konzept von URLs) - dort
-// bliebe dieser Zweig also ohnehin tot, ändert am bisherigen Verhalten nichts.
-const isLandingRoute =
-  typeof window !== 'undefined' && window.location.pathname === '/'
-
-if (isDatenschutzRoute) {
-  import('./pages/DatenschutzPage.jsx').then(({ DatenschutzPage }) => {
-    root.render(
+if (siteRoute) {
+  siteRoute.load().then((Page) => {
+    const tree = (
       <StrictMode>
         <ErrorBoundary>
-          <DatenschutzPage />
+          <Page />
         </ErrorBoundary>
-      </StrictMode>,
+      </StrictMode>
     )
-  })
-} else if (isLandingRoute) {
-  import('./pages/LandingPage.jsx').then(({ LandingPage }) => {
-    root.render(
-      <StrictMode>
-        <ErrorBoundary>
-          <LandingPage />
-        </ErrorBoundary>
-      </StrictMode>,
-    )
+    // firstElementChild statt hasChildNodes(): ohne Prerender (Dev-Server, oder ein Build
+    // nur per `vite build` statt `npm run build`) enthält #root nur den Marker-Kommentar aus
+    // index.html - der zählt als Kindknoten, ist aber nichts, worauf sich hydratisieren ließe.
+    if (rootEl.firstElementChild) {
+      hydrateRoot(rootEl, tree)
+    } else {
+      createRoot(rootEl).render(tree)
+    }
+    document.title = siteRoute.title
   })
 } else {
   mountGame()
@@ -66,15 +59,21 @@ function mountGame() {
       // Touch-Verhalten eines Clickers (kein Doppeltap-Zoom, keine Auswahl-Lupe, kein Bounce)
       // wird bewusst NUR in der App erzwungen - die Web-Version soll sich unverändert wie eine
       // normale Webseite verhalten (Pull-to-refresh, Zoom).
-      if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.()) {
+      if (isNativePlatform) {
         document.documentElement.classList.add('native-app')
       }
+
+      // Das SPA-Fallback-HTML für /play/* ist im Web-Build eine vorgerenderte Content-Seite
+      // (siehe prerender.mjs): deren Canonical-Link gilt fürs Spiel nicht, und der
+      // vorgerenderte Inhalt weicht dem Spiel.
+      document.querySelector('link[rel="canonical"]')?.remove()
+      rootEl.replaceChildren()
 
       // Muss VOR dem ersten Render feuern - CrazyGames zeigt bis reportLoadingStop() seinen
       // eigenen Ladebildschirm. In den anderen Builds ist das ein No-Op (siehe crazyGamesSdk.js).
       reportLoadingStart()
 
-      root.render(
+      createRoot(rootEl).render(
         <StrictMode>
           <ErrorBoundary>
             {/* Immer aktiv, auch in CrazyGames/nativ - reine Client-Navigation über die

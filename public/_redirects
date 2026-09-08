@@ -12,3 +12,13 @@
 /shop           /play/shop           301
 /statistik      /play/statistik      301
 /einstellungen  /play/einstellungen  301
+
+# Spiel-Deep-Links (/play/shop usw.): statt des SPA-Fallbacks (dist/index.html = die
+# vorgerenderte Startseite, siehe scripts/prerender.mjs) die leere Spiel-Hülle dist/play.html
+# ausliefern (Status 200 = Rewrite, keine Weiterleitung - die URL bleibt erhalten, damit
+# react-router in App.jsx den Tab aus dem Pfad lesen kann). Ziel bewusst "/play" statt
+# "/play.html": Cloudflare normalisiert .html-Pfade (html_handling "auto-trailing-slash")
+# per 307 auf die Variante ohne Endung - als Rewrite-Ziel würde /play.html dadurch zu einer
+# echten Weiterleitung auf /play, und der Unterpfad (/shop) ginge verloren. /play selbst
+# braucht keine Regel: play.html wird direkt unter /play ausgeliefert.
+/play/*         /play                200

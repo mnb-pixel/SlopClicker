@@ -363,3 +363,45 @@
   opacity: 0.85;
 }
 
+/* Content-Website (src/site/, Startseite/Anleitung/FAQ ...): Fließtext, der aus reinen
+   Text-Modulen (src/site/content/) gerendert wird - Absatz-/Listen-Abstände hier statt
+   Utility-Klassen an jedem einzelnen <p>. Liegt bewusst in DIESER Datei (von main.jsx
+   importiert, landet damit im Haupt-Stylesheet, das im vorgerenderten HTML verlinkt ist):
+   ein eigenes, aus SiteLayout.jsx importiertes CSS würde Vite als Lazy-Chunk-Stylesheet
+   erst per JavaScript nachladen - das statische HTML wäre bis dahin unformatiert. */
+.site-prose {
+  color: var(--color-slate-300);
+  line-height: 1.7;
+}
+.site-prose p {
+  margin: 0 0 0.9rem;
+}
+.site-prose ul,
+.site-prose ol {
+  margin: 0.25rem 0 1rem;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.site-prose ul {
+  list-style: disc;
+}
+.site-prose ol {
+  list-style: decimal;
+}
+.site-prose li::marker {
+  color: var(--color-cyan-400);
+}
+.site-link {
+  color: var(--color-cyan-300);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgb(34 211 238 / 0.4);
+  transition: color 150ms, text-decoration-color 150ms;
+}
+.site-link:hover {
+  color: var(--color-cyan-200);
+  text-decoration-color: currentColor;
+}
+
