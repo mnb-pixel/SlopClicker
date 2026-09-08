@@ -12,7 +12,6 @@ import { GoldenMemeBanner } from './components/GoldenMemeBanner';
 import { AdRewardToast } from './components/AdRewardToast';
 import { ClickParticles } from './components/ClickParticles';
 import { AdBanner, ADS_ENABLED } from './components/AdBanner';
-import { SeoContent } from './components/SeoContent';
 import { LegalFooter } from './components/LegalFooter';
 import { OfflineEarningsModal } from './components/modals/OfflineEarningsModal';
 import { AfkReportModal } from './components/modals/AfkReportModal';
@@ -313,27 +312,6 @@ export default function App() {
                 t={store.t}
                 tf={store.tf}
               />
-            )}
-
-            {/* Pro Tab EIGENER, thematisch passender Beschreibungstext statt ein einziger
-                Block nur auf dem Start-Tab - siehe SeoContent.jsx (section-Prop) und
-                routes.js. Grund: Google hat token-furnace.com wiederholt mit "low value
-                content" abgelehnt, obwohl auf "/" bereits echter Text stand - eine Domain
-                mit nur EINER crawlbaren URL wirkt trotzdem wie eine Dünnschicht-Seite. Mit
-                useRoutes bekommt jeder Tab jetzt eine eigene URL (routes.js) UND eigenen,
-                zur Route passenden Content, statt denselben Block fünffach zu wiederholen.
-                Special-Tab (früher Tab 3) ist entfernt (siehe App.jsx/NavBar.jsx/routes.js)
-                - Stats rückt auf Tab 3, Settings/Misc (Tab 4) hatte nie einen eigenen
-                SeoContent-Abschnitt.
-                Nur Web UND nicht CrazyGames/nativ (== useRoutes): in der iOS-App (AdMob,
-                App-Store-Review) und auf CrazyGames' eigener Spieleseite ist der Text nur
-                unnötiger Platz unter dem eigentlichen Spiel. */}
-            {useRoutes && (
-              <div className="mx-3 mt-4 bg-slate-900/60 rounded-xl border border-slate-800 p-3 text-xs text-slate-400 leading-relaxed">
-                {store.activeTab === 1 && <SeoContent t={store.t} lang={store.lang} compact section="home" />}
-                {store.activeTab === 2 && <SeoContent t={store.t} lang={store.lang} compact section="shop" />}
-                {store.activeTab === 3 && <SeoContent t={store.t} lang={store.lang} compact section="stats" />}
-              </div>
             )}
 
             {/* Pflichtlinks auf JEDEM Tab statt nur im Einstellungen-Tab versteckt - siehe

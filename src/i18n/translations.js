@@ -393,25 +393,6 @@ export const TRANSLATIONS = {
     infraShopTitle: 'KI-Infrastruktur & Upgrades Shop',
     agiCoreGeneratorTitle: 'AGI-Kern-Generator',
 
-    // Über-das-Spiel-Fußzeile (dauerhaft sichtbarer Beschreibungstext, kein Modal, nur
-    // Web-Build - siehe App.jsx/DesktopView.jsx)
-    aboutTitle: 'Über Token Furnace',
-    aboutText: 'Token Furnace ist ein kostenloser, satirischer Idle-Clicker: Baue dein KI-Startup zur Milliardenbewertung auf und investiere in Buzzwords, GPU-Cluster und Greenwashing-Layoffs – ganz ohne echtes Produkt. Läuft komplett im Browser, ohne Anmeldung, Fortschritt wird automatisch lokal gespeichert.',
-    howToPlayTitle: 'So funktioniert’s',
-    htpP1: 'Klicke auf den AGI-Kern-Button, um manuell Unternehmenswert zu generieren, oder baue automatisierte Engines, die rund um die Uhr passiv Wert erzeugen – von einfachen Assistenten bis zu gigantischen Rechenzentren.',
-    htpP2: 'Kaufe Effizienz-Upgrades und sammle Buzzword-Karten, um deinen Output zu vervielfachen. Achte dabei auf die Burn Rate: Je höher dein Hype, desto mehr Investoren – aber auch höhere laufende Kosten.',
-    htpP3: 'Ab einer gewissen Bewertung kannst du einen strategischen Pivot vollziehen: Du behältst deine Infrastruktur, sammelst Credibility und rotierst in die nächste Hype-Epoche. Bei ausreichend hoher Bewertung schaltet sich die Singularity Ascension frei – ein finaler Reset für permanente Prestige-Boni.',
-    htpP4: 'Übertreib es nicht mit dem manuellen Klicken: Zu schnelles Klicken überhitzt die GPU und sperrt den Button vorübergehend.',
-    faqTitle: 'Häufige Fragen',
-    faqQ1: 'Ist Token Furnace kostenlos?',
-    faqA1: 'Ja, das komplette Spiel ist kostenlos spielbar. Eine optionale Werbefrei-Option entfernt lediglich Anzeigen.',
-    faqQ2: 'Muss ich mich registrieren?',
-    faqA2: 'Nein. Es gibt kein Konto und keine Anmeldung – dein Fortschritt wird automatisch lokal in deinem Browser gespeichert.',
-    faqQ3: 'Läuft das Spiel auch offline weiter?',
-    faqA3: 'Deine Infrastruktur produziert auch weiter, während der Tab geschlossen ist – beim nächsten Öffnen bekommst du einen Bericht über den Offline-Ertrag.',
-    faqQ4: 'Worum geht es in dem Spiel?',
-    faqA4: 'Token Furnace ist eine Satire auf den KI-Hype: Du baust ein fiktives KI-Startup ganz ohne echtes Produkt auf, ausschließlich getrieben von Buzzwords, Bewertungswachstum und Investoren-Vertrauen.',
-
     // Log-/Toast-Nachrichten (useGameStore addLog)
     log_systemInit: 'System initialisiert. Willkommen in der AI-Slop-Bubble.',
     log_gpuCooled: 'GPU-Temperatur unter 50°C gefallen. AGI-Button freigeschaltet!',
@@ -851,25 +832,6 @@ export const TRANSLATIONS = {
     // Desktop View Headings
     infraShopTitle: 'AI Infrastructure & Upgrades Shop',
     agiCoreGeneratorTitle: 'AGI Core Generator',
-
-    // Always-visible "about" footer text (no modal, web build only) - see
-    // App.jsx/DesktopView.jsx
-    aboutTitle: 'About Token Furnace',
-    aboutText: 'Token Furnace is a free, satirical idle clicker: build your AI startup to a billion-dollar valuation and invest in buzzwords, GPU clusters, and greenwashed layoffs - all without an actual product. Runs entirely in your browser, no account needed, progress saves locally.',
-    howToPlayTitle: 'How to play',
-    htpP1: 'Click the AGI Core button to manually generate company valuation, or build automated engines that produce value passively around the clock - from simple assistants to gigantic data centers.',
-    htpP2: 'Buy efficiency upgrades and collect buzzword cards to multiply your output. Keep an eye on your burn rate: the higher your hype, the more investors you attract - but also the higher your ongoing costs.',
-    htpP3: 'Once your valuation reaches a certain threshold, you can perform a strategic pivot: you keep your infrastructure, earn credibility, and rotate into the next hype era. At a high enough valuation, Singularity Ascension unlocks - a final reset that grants permanent prestige bonuses.',
-    htpP4: 'Don’t overdo the manual clicking: clicking too fast overheats the GPU and temporarily locks the button.',
-    faqTitle: 'Frequently asked questions',
-    faqQ1: 'Is Token Furnace free?',
-    faqA1: 'Yes, the entire game is free to play. An optional ad-free purchase simply removes ads.',
-    faqQ2: 'Do I need to register?',
-    faqA2: 'No. There is no account and no sign-up - your progress saves automatically, locally in your browser.',
-    faqQ3: 'Does the game keep running offline?',
-    faqA3: 'Your infrastructure keeps producing while the tab is closed - the next time you open it, you get a report of your offline earnings.',
-    faqQ4: 'What is the game about?',
-    faqA4: 'Token Furnace is a satire of the AI hype: you build a fictional AI startup with no actual product, driven purely by buzzwords, valuation growth, and investor confidence.',
 
     // Log / Toast messages (useGameStore addLog)
     log_systemInit: 'System initialized. Welcome to the AI Slop Bubble.',
