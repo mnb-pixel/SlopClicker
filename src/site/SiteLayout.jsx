@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Flame, Menu, Play, ShieldCheck } from 'lucide-react';
+import { Menu, Play, ShieldCheck } from 'lucide-react';
 import { SITE_ROUTES } from './siteRoutes.js';
 import { APP_STORE_URL, PLAY_URL } from './ui.jsx';
 import { initKlaro, showKlaroManager } from '../monetization/klaroLoader';
@@ -43,7 +43,7 @@ export function SiteLayout({ path, wide = false, children }) {
       <header className="border-b border-slate-800/80 bg-slate-950/90 backdrop-blur sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
           <a href="/" className="flex items-center gap-2 font-black tracking-tight text-slate-100 shrink-0">
-            <Flame className="w-5 h-5 text-cyan-400" />
+            <img src="/icon/app-icon.webp" alt="" width={28} height={28} className="w-7 h-7 rounded-lg" />
             Token Furnace
           </a>
 
