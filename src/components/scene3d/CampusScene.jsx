@@ -9,7 +9,7 @@ import React, {
 } from 'react';
 import * as THREE from 'three';
 import { ZONES_DATA } from '../../data/zonesData';
-import { deriveZones, deriveFurnace, getSceneMood, DAMAGE_FLASH_MS } from '../../utils/sceneState';
+import { deriveZones, deriveFurnace, getSceneMood, getNewZoneIds, DAMAGE_FLASH_MS } from '../../utils/sceneState';
 import { ZoneBuyPanel } from './ZoneBuyPanel';
 import { getPalette3d } from './palette';
 import { buildIsland } from './buildIsland';
@@ -74,6 +74,10 @@ export const CampusScene = forwardRef(function CampusScene(
     () => deriveZones({ buildings, boughtUpgrades, boughtGreenwashingLayoffs, damagedBuildingId }),
     [buildings, boughtUpgrades, boughtGreenwashingLayoffs, damagedBuildingId]
   );
+  // NEU-Hinweis am Zonenschild: bewusst NICHT im zones-useMemo, das hängt an der
+  // Bewertung und würde sonst die ganze Zonen-Ableitung in jeden Tick ziehen.
+  const newZoneIds = useMemo(() => getNewZoneIds({ zones, valuation }), [zones, valuation]);
+
   const furnace = deriveFurnace({ vps, gpuTemp, isOverheated });
   const mood = getSceneMood({ isOverheated, activeEvent, powerClickActive });
   const theme = themeMode === 'sec_prospectus' ? 'blueprint' : 'day';
@@ -230,9 +234,14 @@ export const CampusScene = forwardRef(function CampusScene(
         }
         return;
       }
-      const zoneHit = raycaster.intersectObjects(zonesObj.hitMeshes, false);
-      if (zoneHit.length > 0) {
-        setSelectedZone(zoneHit[0].object.userData.zoneId);
+      // Nur freigeschaltete Zonen öffnen ein Kaufpanel: unsichtbare Platten liegen
+      // weiterhin im Raycast-Array, und der "???"-Platzhalter hat nichts zu verkaufen
+      // (siehe buildZones.js, userData.clickable).
+      const zoneHit = raycaster
+        .intersectObjects(zonesObj.hitMeshes, false)
+        .find((h) => h.object.visible && h.object.userData.clickable);
+      if (zoneHit) {
+        setSelectedZone(zoneHit.object.userData.zoneId);
       }
     };
     canvas.addEventListener('pointerdown', onPointerDown);
@@ -254,7 +263,12 @@ export const CampusScene = forwardRef(function CampusScene(
     const tick = (now) => {
       raf = requestAnimationFrame(tick);
       if (!running || !visible) return;
-      const dt = Math.min(0.05, (now - last) / 1000);
+      // Math.max(0, ...): der rAF-Zeitstempel ist der FRAMEBEGINN und kann älter sein
+      // als ein performance.now(), das danach in einem Observer-Callback (Sichtbarkeit,
+      // IntersectionObserver) in `last` geschrieben wurde. Ohne die Klammer wird dt in
+      // genau diesen Frames negativ, alle Phasen-Zähler laufen rückwärts unter null -
+      // und getPointAt() der Datenleitung wirft bei negativem u (siehe buildDataLine.js).
+      const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
       last = now;
       // Rein visueller Debug-Haken für Screenshots: window.__campusDebug = { heatStage,
       // heatPct, smokeTier, mood } überschreibt NUR die Anzeige, nie den Spielzustand.
@@ -341,10 +355,27 @@ export const CampusScene = forwardRef(function CampusScene(
     >
       <canvas ref={canvasRef} className="campus-scene__canvas" aria-label={tr('sceneAriaLabel')} role="img" />
 
-      {/* Zonen-Beschriftungen als HTML über der Canvas, Position per Projektion. */}
+      {/* Zonen-Beschriftungen als HTML über der Canvas, Position per Projektion.
+          Was noch nicht freigeschaltet ist, bekommt gar kein Schild - genau eine Zone
+          weiter steht das "???"-Schild als Platzhalter (dieselbe Regel wie im Shop,
+          siehe utils/buildingUnlock.js). */}
       {zones.map((z) => {
         const pos = labelPos[z.id];
-        if (!pos) return null;
+        if (!pos || (!z.revealed && !z.teaser)) return null;
+
+        if (z.teaser) {
+          return (
+            <span
+              key={z.id}
+              className="campus-label campus-label--teaser"
+              style={{ left: pos.x, top: pos.y }}
+              title={tr('lockedEngineTierDesc')}
+            >
+              <span className="campus-label__name">???</span>
+            </span>
+          );
+        }
+
         return (
           <button
             key={z.id}
@@ -355,6 +386,9 @@ export const CampusScene = forwardRef(function CampusScene(
           >
             <span className="campus-label__name">{tr(`zone_${z.id}_name`)}</span>
             {z.unlocked && <span className="campus-label__count">{z.population}</span>}
+            {/* "Hier ist gerade etwas Neues bezahlbar" - der einzige Weg, von der Insel
+                aus überhaupt mitzubekommen, dass eine Stufe aufgegangen ist. */}
+            {newZoneIds.has(z.id) && <span className="campus-label__new">{tr('sceneNewBadge')}</span>}
           </button>
         );
       })}

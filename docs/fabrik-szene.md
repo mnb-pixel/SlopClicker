@@ -28,6 +28,18 @@ bildschirm ersetzt. Hier ist sie vorerst NUR eine versteckte Testseite:
   nicht zeigen soll.
 * CSS liegt getrennt in `src/scene3d.css` und wird nur von `VoxelApp` geladen, damit
   es nicht in den Bundles der anderen Seiten landet.
+* **Progressive Freischaltung statt kompletter Insel.** Im CrazyGames-Repo liegen alle
+  fünf Zonen von Anfang an sichtbar da (gesperrte nur abgedunkelt). Hier gilt dieselbe
+  Regel wie im Shop (`src/utils/buildingUnlock.js`): eine Zone erscheint erst, wenn
+  mindestens eine ihrer Engines freigeschaltet ist, genau eine Zone weiter steht ein
+  `???`-Platzhalter ohne Namen und ohne Kaufpanel, alles Dahinter wird gar nicht
+  gezeichnet. Das Zonen-Kaufpanel listet ebenfalls nur freigeschaltete Engines plus
+  denselben Platzhalter - sonst wäre die Freischaltung über den Umweg Insel ausgehebelt.
+* **NEU-Hinweis auf dem Spielplan.** Weil die Insel jetzt Stufen verbirgt, braucht sie
+  eine Gegenmeldung: ein Zonenschild trägt ein pulsierendes `NEU`, sobald dort eine noch
+  nie gebaute Engine freigeschaltet UND bezahlbar ist (`getNewZoneIds` in
+  `src/utils/sceneState.js`). Der Preis gehört bewusst ins Kriterium - ohne ihn stünde
+  nach jedem Kauf sofort wieder ein NEU an der nächsten Stufe.
 
 ## Entscheidungen
 

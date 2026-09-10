@@ -1,5 +1,5 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { Lock, X } from 'lucide-react';
 import { BUILDINGS_DATA } from '../../data/buildingsData';
 import {
   formatCurrency,
@@ -16,6 +16,11 @@ const BUY_MODES = ['1', '10', '100', 'MAX'];
 // Bewusst KEINE eigene Kauflogik: Preise kommen aus denselben Helfern wie im Shop
 // (formatters.js) und gekauft wird über store.buyBuilding. Zwei Kaufwege, eine Wahrheit -
 // sonst driften Bulk-Preise und Rabatte zwischen Shop und Szene auseinander.
+//
+// Das gilt auch für die Sichtbarkeit: gelistet wird nur, was der Shop auch listen würde
+// (deriveZones markiert die Engines, Regel in utils/buildingUnlock.js) - freigeschaltete
+// Stufen plus höchstens der eine "???"-Platzhalter. Käme die Szene hier an höhere Stufen
+// heran, wäre die progressive Freischaltung über den Umweg Insel ausgehebelt.
 export function ZoneBuyPanel({
   zoneDef,
   zoneState,
@@ -28,6 +33,13 @@ export function ZoneBuyPanel({
   t,
 }) {
   const tr = t || ((k) => k);
+
+  // zoneState.buildings trägt die Sichtbarkeits-Flags aus deriveZones. Fehlt es (die
+  // Zone wurde noch nie abgeleitet), bleibt die Liste leer statt versehentlich alles zu
+  // zeigen.
+  const zoneEntries = (zoneState ? zoneState.buildings : []).filter(
+    (b) => b.unlocked || b.isTeaser
+  );
 
   const costFor = (baseCost, count) => {
     if (buyMode === '1') return getBuildingCost(baseCost, count);
@@ -73,9 +85,30 @@ export function ZoneBuyPanel({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        {zoneDef.buildings.map((entry) => {
+        {zoneEntries.map((entry) => {
           const meta = BUILDINGS_DATA.find((b) => b.id === entry.id);
           if (!meta) return null;
+
+          // Der Platzhalter verrät weder Namen noch Preis - wie die "???"-Kachel im Shop.
+          if (entry.isTeaser) {
+            return (
+              <div
+                key={entry.id}
+                className="flex items-center gap-2 p-2 rounded-xl border border-slate-800 bg-slate-950/70 opacity-60"
+              >
+                <Lock className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                <span className="min-w-0">
+                  <span className="block text-[11px] font-bold text-slate-400 truncate">
+                    {tr('lockedEngineTier')}
+                  </span>
+                  <span className="block text-[10px] text-slate-600 leading-tight">
+                    {tr('lockedEngineTierDesc')}
+                  </span>
+                </span>
+              </div>
+            );
+          }
+
           const count = buildings[entry.id] || 0;
           const cost = costFor(meta.baseCost, count);
           const canAfford = cost > 0 && valuation >= cost;
@@ -94,6 +127,9 @@ export function ZoneBuyPanel({
               <span className="min-w-0">
                 <span className="block text-[11px] font-bold text-slate-200 truncate">
                   {tr(`building_${entry.id}_name`)}
+                  {count === 0 && (
+                    <span className="ml-1.5 align-middle campus-panel__new">{tr('sceneNewBadge')}</span>
+                  )}
                 </span>
                 <span className="block text-[10px] font-mono text-slate-500">x{count}</span>
               </span>

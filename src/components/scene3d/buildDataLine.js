@@ -80,7 +80,12 @@ export function buildDataLine(palette, worldPoints, groupPosition, facingDir) {
       if (count > 0) {
         const speed = reduced ? 0 : 0.45 + tier * 0.06;
         for (let i = 0; i < count; i += 1) {
-          phase[i] = (phase[i] + dt * speed * (0.85 + hash01(i) * 0.3)) % 1;
+          // ((x % 1) + 1) % 1 statt x % 1: JS behält beim Restoperator das Vorzeichen
+          // des Dividenden, ein negatives u wirft in curve.getPointAt(). dt ist zwar seit
+          // CampusScene.jsx nie mehr negativ, aber die Kurve ist die einzige Stelle, an
+          // der ein Ausrutscher hier nicht nur schlecht aussieht, sondern die ganze
+          // Render-Loop abbricht.
+          phase[i] = ((phase[i] + dt * speed * (0.85 + hash01(i) * 0.3)) % 1 + 1) % 1;
           const pt = curve.getPointAt(phase[i]);
           dummy.position.set(pt.x + Math.cos(lane[i]) * 0.1, pt.y + Math.sin(lane[i]) * 0.1, pt.z + Math.sin(lane[i] * 0.7) * 0.1);
           dummy.rotation.set(t * 3 + i, t * 2, 0);

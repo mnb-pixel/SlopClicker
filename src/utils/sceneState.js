@@ -11,6 +11,7 @@ import { BUILDINGS_DATA } from '../data/buildingsData';
 import { UPGRADES_DATA } from '../data/upgradesData';
 import { GREENWASHING_LAYOFFS_DATA } from '../data/greenwashingLayoffsData';
 import { ZONES_DATA, ZONE_TIER_THRESHOLDS, ZONE_BY_BUILDING } from '../data/zonesData';
+import { getBuildingVisibility } from './buildingUnlock';
 
 const UPGRADES_BY_ID = Object.fromEntries(UPGRADES_DATA.map((u) => [u.id, u]));
 const GREENWASHING_BY_ID = Object.fromEntries(GREENWASHING_LAYOFFS_DATA.map((g) => [g.id, g]));
@@ -107,12 +108,17 @@ export function deriveZones({
 } = {}) {
   const mods = buildBuildingModifiers(boughtUpgrades, boughtGreenwashingLayoffs);
   const damagedZoneId = damagedBuildingId ? ZONE_BY_BUILDING[damagedBuildingId] : null;
+  // Dieselbe progressive Sichtbarkeit wie im Shop (siehe utils/buildingUnlock.js): eine
+  // Zone taucht auf der Insel erst auf, wenn mindestens eine ihrer Engines freigeschaltet
+  // ist. Genau eine Zone weiter steht der Platzhalter, alles dahinter bleibt unsichtbar.
+  const { unlockedIds, teaserId } = getBuildingVisibility(buildings);
 
   return ZONES_DATA.map((zone) => {
     const zoneBuildings = zone.buildings.map((entry) => {
       const meta = BUILDING_META_BY_ID[entry.id];
       const mod = mods[entry.id] || EMPTY_MOD;
       const count = buildings[entry.id] || 0;
+      const unlocked = unlockedIds.has(entry.id);
 
       return {
         id: entry.id,
@@ -127,10 +133,19 @@ export function deriveZones({
         laidOff: mod.laidOff,
         vps: count * (meta ? meta.baseCps : 0) * mod.mult,
         damaged: entry.id === damagedBuildingId,
+        // Sichtbarkeit/Neuheit - Preis und Kaufbarkeit bleiben bewusst draußen, die
+        // hängen an der Bewertung und würden diese Ableitung in jeden Tick ziehen.
+        unlocked,
+        isTeaser: entry.id === teaserId,
+        // "Noch nie gebaut, aber freigeschaltet" - Grundlage für den NEU-Hinweis am
+        // Zonenschild (die Bewertung kommt erst in CampusScene dazu).
+        isNew: unlocked && count === 0,
+        baseCost: meta ? meta.baseCost : 0,
       };
     });
 
     const population = zoneBuildings.reduce((sum, b) => sum + b.count, 0);
+    const revealed = zoneBuildings.some((b) => b.unlocked);
 
     return {
       id: zone.id,
@@ -140,6 +155,11 @@ export function deriveZones({
       population,
       tier: tierFromThresholds(population, ZONE_TIER_THRESHOLDS),
       unlocked: population > 0,
+      // revealed: Zone existiert für den Spieler (Schild, Platte, anklickbar).
+      // teaser: die eine Zone dahinter, als "???" ohne Namen und ohne Kaufpanel.
+      // Weder noch -> die Zone wird gar nicht gezeichnet.
+      revealed,
+      teaser: !revealed && zoneBuildings.some((b) => b.isTeaser),
       zoneVps: zoneBuildings.reduce((sum, b) => sum + b.vps, 0),
       // Die ganze Zone blinkt, wenn eine ihrer Engines gerade einen Black Swan abbekam.
       damaged: zone.id === damagedZoneId,
@@ -147,6 +167,23 @@ export function deriveZones({
       laidOff: zoneBuildings.some((b) => b.laidOff),
     };
   });
+}
+
+// Welche Zonen sollen gerade ein "NEU" am Schild tragen? Getrennt von deriveZones, weil
+// hier die Bewertung mitspielt: die ändert sich in JEDEM Tick, deriveZones nur beim
+// Kaufen (siehe Kommentar oben). Läuft über höchstens 20 Engines und ist damit billig.
+//
+// Kriterium bewusst "freigeschaltet UND noch nie gebaut UND bezahlbar": ohne den Preis
+// stünde nach jedem Kauf sofort wieder ein NEU an der nächsten Stufe und der Hinweis
+// wäre Dauerzustand statt Signal.
+export function getNewZoneIds({ zones = [], valuation = 0 } = {}) {
+  const ids = new Set();
+  zones.forEach((zone) => {
+    if (!zone.revealed) return;
+    const hit = zone.buildings.some((b) => b.isNew && b.baseCost > 0 && valuation >= b.baseCost);
+    if (hit) ids.add(zone.id);
+  });
+  return ids;
 }
 
 export function deriveFurnace({ vps = 0, gpuTemp = 0, isOverheated = false } = {}) {

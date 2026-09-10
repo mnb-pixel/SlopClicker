@@ -20,6 +20,12 @@ const ZONE_BUILDERS = {
 // Farbe), sobald die Zone freigeschaltet ist, sonst dunkleres Gras. Sie sind das
 // Klickziel für das Kaufpanel und liefern die Ankerpunkte der HTML-Beschriftungen.
 // Die eigentlichen Gebäude kommen ab Phase 3 als Kinder dieser Gruppen dazu.
+//
+// Drei Sichtbarkeitsstufen pro Zone (aus deriveZones, Regel in utils/buildingUnlock.js):
+// revealed = Platte sichtbar und anklickbar; teaser = Platte sichtbar, aber dunkel und
+// nicht anklickbar (das ist die eine "???"-Zone dahinter); alles Weitere ist gar nicht
+// erst da - die Platte wird unsichtbar geschaltet, damit die Insel nicht verrät, was
+// noch kommt.
 export function buildZones(palette, zonesData) {
   const group = new THREE.Group();
   const hitMeshes = [];
@@ -125,6 +131,10 @@ export function buildZones(palette, zonesData) {
     plate.position.set(anchor3d.x, 0.15, anchor3d.z);
     plate.receiveShadow = true;
     plate.userData.zoneId = zone.id;
+    // Beides setzt update() pro Frame. Start: nicht da - sonst blitzt beim ersten Bild
+    // die komplette Insel auf, bevor der erste update() die Sichtbarkeit kennt.
+    plate.visible = false;
+    plate.userData.clickable = false;
     group.add(plate);
     hitMeshes.push(plate);
     plates[zone.id] = { plate, mat, unlocked: null, selected: null };
@@ -162,6 +172,16 @@ export function buildZones(palette, zonesData) {
     // ctx: { dt, t, reduced, tickerText }
     update(zones, selectedId, p, ctx) {
       zones.forEach((z) => {
+        const entryEarly = plates[z.id];
+        if (entryEarly) {
+          // Nicht freigeschaltet und auch nicht der Platzhalter -> Zone existiert für
+          // den Spieler noch gar nicht.
+          entryEarly.plate.visible = z.revealed || z.teaser;
+          // Der Platzhalter ist bewusst tot: es gibt dort nichts zu kaufen, ein
+          // Kaufpanel mit ausschließlich gesperrten Zeilen wäre nur eine Sackgasse.
+          entryEarly.plate.userData.clickable = Boolean(z.revealed);
+        }
+
         const built = builders[z.id];
         if (built) {
           built.group.visible = z.unlocked;

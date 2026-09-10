@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Lock, Sparkles, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { getIcon } from '../../utils/iconMap';
 import { BUILDINGS_DATA } from '../../data/buildingsData';
+import { getBuildingVisibility } from '../../utils/buildingUnlock';
 import { UPGRADES_DATA, getAvailableUpgrades } from '../../data/upgradesData';
 import { GREENWASHING_LAYOFFS_DATA, getCorporateActionCost } from '../../data/greenwashingLayoffsData';
 import { formatCurrency, formatNumber, getBuildingCost, getBuildingBulkCost, getMaxAffordableBuildings } from '../../utils/formatters';
@@ -130,22 +131,16 @@ export function StoreTab({
   }, 0);
 
   // Progressive Building Visibility: a building's tile only shows once the PREVIOUS
-  // building is actually owned (no shortcut via valuation alone).
+  // building is actually owned (no shortcut via valuation alone). Die Regel selbst liegt
+  // in utils/buildingUnlock.js, weil die 3D-Insel (/voxel) dieselbe braucht.
+  const { unlockedIds, teaserId } = getBuildingVisibility(buildings);
   const visibleBuildings = [];
-  let foundFirstLocked = false;
 
-  BUILDINGS_DATA.forEach((b, idx) => {
-    const count = buildings[b.id] || 0;
-    const prevBuilding = idx > 0 ? BUILDINGS_DATA[idx - 1] : null;
-    const prevCount = prevBuilding ? (buildings[prevBuilding.id] || 0) : 0;
-
-    const isUnlocked = idx === 0 || count > 0 || prevCount >= 1;
-
-    if (isUnlocked) {
+  BUILDINGS_DATA.forEach((b) => {
+    if (unlockedIds.has(b.id)) {
       visibleBuildings.push(b);
-    } else if (!foundFirstLocked) {
+    } else if (b.id === teaserId) {
       visibleBuildings.push({ id: `locked_teaser_${b.id}`, isTeaser: true });
-      foundFirstLocked = true;
     }
   });
 
