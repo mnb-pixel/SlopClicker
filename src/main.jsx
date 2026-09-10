@@ -29,7 +29,17 @@ const rootEl = document.getElementById('root')
 const isNativePlatform = !!window.Capacitor?.isNativePlatform?.()
 const siteRoute = isNativePlatform || isCrazyGamesBuild() ? null : findSiteRoute(window.location.pathname)
 
-if (siteRoute) {
+// Versteckte Testseite für die neue 3D-Ansicht (siehe VoxelApp.jsx). Weder in
+// siteRoutes.js noch in routes.js eingetragen: sie ist nirgends verlinkt, steht nicht in
+// der Sitemap und ist per robots.txt vom Index ausgeschlossen - erreichbar nur, wer die
+// URL kennt. Nur im reinen Web-Build: die iOS-App und CrazyGames laden das Bundle unter
+// "/" und haben mit dieser Testseite nichts zu tun.
+const normalizedPath = window.location.pathname.replace(/\/+$/, '') || '/'
+const isVoxelRoute = !isNativePlatform && !isCrazyGamesBuild() && normalizedPath === '/voxel'
+
+if (isVoxelRoute) {
+  mountVoxel()
+} else if (siteRoute) {
   siteRoute.load().then((Page) => {
     const tree = (
       <StrictMode>
@@ -50,6 +60,27 @@ if (siteRoute) {
   })
 } else {
   mountGame()
+}
+
+// Die 3D-Testansicht hängt an keinem Router: die Schubladen laufen über activeTab, nicht
+// über die URL (siehe VoxelApp.jsx). scene3d.css wird NUR hier geladen, damit die Regeln
+// nicht im Bundle der Content-Website und des normalen Spiels landen.
+function mountVoxel() {
+  Promise.all([import('./VoxelApp.jsx'), import('./scene3d.css')]).then(([{ default: VoxelApp }]) => {
+    // Wie in mountGame(): das SPA-Fallback-HTML ist eine vorgerenderte Content-Seite,
+    // deren Canonical-Link und Inhalt hier nicht gelten.
+    document.querySelector('link[rel="canonical"]')?.remove()
+    rootEl.replaceChildren()
+    document.title = '3D-Testansicht – Token Furnace'
+
+    createRoot(rootEl).render(
+      <StrictMode>
+        <ErrorBoundary>
+          <VoxelApp />
+        </ErrorBoundary>
+      </StrictMode>,
+    )
+  })
 }
 
 function mountGame() {

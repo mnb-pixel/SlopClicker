@@ -65,4 +65,16 @@ writeFileSync(
 );
 console.log('prerender: /play/* -> dist/play.html (leere Spiel-Hülle)');
 
+// Versteckte 3D-Testansicht unter /voxel (siehe src/main.jsx, src/VoxelApp.jsx): dieselbe
+// leere Hülle wie /play, zusätzlich auf noindex gesetzt. Bewusst NICHT in siteRoutes.js:
+// die Seite hat keinen Content, keine Sitemap-Zeile und keinen Link von irgendwo - sie ist
+// eine reine Testadresse. robots.txt sperrt sie zusätzlich aus.
+writeFileSync(
+  resolve(distDir, 'voxel.html'),
+  template
+    .replace(/<!--site-html-->/, '')
+    .replace(/<!--site-head-->/, '<meta name="robots" content="noindex, nofollow" />'),
+);
+console.log('prerender: /voxel -> dist/voxel.html (leere 3D-Hülle, noindex)');
+
 rmSync(ssrDir, { recursive: true, force: true });

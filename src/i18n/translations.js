@@ -213,6 +213,24 @@ export const TRANSLATIONS = {
 
     // Store Tab (ergänzend)
     buyModeLabel: 'Kaufmodus:',
+    buyModeMax: 'MAX',
+
+    // Vollbild-Shell der 3D-Testansicht unter /voxel (src/components/shell/)
+    hudFire: 'FEUERN',
+    hudOptions: 'Optionen',
+    hudCoolingShort: 'Kühlt ab',
+    hudDrawerShop: 'KI-Infrastruktur & Upgrades',
+    hudDrawerStats: 'Statistik, Logs & Achievements',
+    hudDrawerMisc: 'Belohnungen & Einstellungen',
+
+    // Fabrik-Szene (src/components/scene3d/)
+    sceneAriaLabel: 'Slop-Fabrik im Querschnitt',
+    closeLabel: 'Schließen',
+    zone_office_name: 'Großraumbüro',
+    zone_basement_name: 'Serverkeller',
+    zone_stage_name: 'Bühne & Presse',
+    zone_tower_name: 'Kapital-Turm',
+    zone_endgame_name: 'Singularitäts-Horizont',
     lockedEngineTier: '??? Gesperrte Engine-Stufe',
     lockedEngineTierDesc: 'Erfordert den Besitz der vorherigen Engine-Stufe.',
     buyLabel: 'KAUFEN',
@@ -653,6 +671,24 @@ export const TRANSLATIONS = {
 
     // Store Tab (additional)
     buyModeLabel: 'Buy Mode:',
+    buyModeMax: 'MAX',
+
+    // Fullscreen shell of the 3D test view at /voxel (src/components/shell/)
+    hudFire: 'FIRE',
+    hudOptions: 'Options',
+    hudCoolingShort: 'Cooling',
+    hudDrawerShop: 'AI Infrastructure & Upgrades',
+    hudDrawerStats: 'Stats, Logs & Achievements',
+    hudDrawerMisc: 'Rewards & Settings',
+
+    // Factory scene (src/components/scene3d/)
+    sceneAriaLabel: 'Slop factory cross-section',
+    closeLabel: 'Close',
+    zone_office_name: 'Open-Plan Office',
+    zone_basement_name: 'Server Basement',
+    zone_stage_name: 'Stage & Press',
+    zone_tower_name: 'Capital Tower',
+    zone_endgame_name: 'Singularity Horizon',
     lockedEngineTier: '??? Locked Engine Tier',
     lockedEngineTierDesc: 'Requires owning the previous Engine tier.',
     buyLabel: 'BUY',

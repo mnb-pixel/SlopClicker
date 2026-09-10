@@ -261,6 +261,12 @@ export function useGameStore() {
   // undefined = Engine noch nie beobachtet -> beim ersten Tick mit Bestand > 0 auf
   // "jetzt + 24h" gesetzt (Gnadenfrist, bevor überhaupt ein erstes Event möglich ist).
   const [blackSwanNextEligible, setBlackSwanNextEligible] = useState({});
+  // Rein visuelles Signal für die 3D-Szene (/voxel, siehe utils/sceneState.js): welche
+  // Engine zuletzt einen Black Swan abbekommen hat, damit deren Zone kurz sichtbar
+  // brennt/blinkt. Bewusst NICHT im Spielstand gespeichert - nach einem Neuladen soll kein
+  // Schaden mehr aufblitzen, der Stunden zurückliegt. Die bestehenden Ansichten lesen das
+  // Feld nicht, für sie ändert sich nichts.
+  const [lastBlackSwan, setLastBlackSwan] = useState(null);
   const [boughtUpgrades, setBoughtUpgrades] = useState([]);
   const [unlockedUpgrades, setUnlockedUpgrades] = useState([]);
   const [boughtHeavenlyUpgrades, setBoughtHeavenlyUpgrades] = useState([]);
@@ -1344,6 +1350,7 @@ export function useGameStore() {
             const lost = Math.max(1, Math.floor(owned * event.lossPct));
             setBuildings((prev) => ({ ...prev, [b.id]: Math.max(0, (prev[b.id] || 0) - lost) }));
             setBlackSwanNextEligible((prev) => ({ ...prev, [b.id]: now + BLACK_SWAN_COOLDOWN_MS }));
+            setLastBlackSwan({ buildingId: b.id, lost, at: now });
             addLog(`${t(`blackswan_${b.id}_title`)} - ${t(`building_${b.id}_name`)}: -${lost} (-${Math.round(event.lossPct * 100)}%). ${t(`blackswan_${b.id}_desc`)}`, 'danger');
           }
         });
@@ -2091,6 +2098,7 @@ export function useGameStore() {
     boughtUpgrades, unlockedUpgrades, buyUpgrade, buyAllUpgrades,
     unlockedAchievements,
     activeEvent, dismissEvent, bubbleGlitchUntil,
+    lastBlackSwan,
     adState, requestBonus, isAdReady, getAdCooldownRemaining,
     adRewardToast, dismissAdRewardToast, grantAdPreview, scheduledAdPreview,
     adFree, adFreeProduct, purchaseState, purchaseAvailable: purchaseBridge.isAvailable, purchaseAdFree, restorePurchases,
