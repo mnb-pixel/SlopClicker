@@ -229,6 +229,7 @@ export const TRANSLATIONS = {
     // Fabrik-Szene (src/components/scene3d/)
     sceneAriaLabel: 'Slop-Fabrik im Querschnitt',
     sceneNewBadge: 'NEU',
+    sceneResetView: 'Ansicht zurücksetzen',
     closeLabel: 'Schließen',
     zone_office_name: 'Großraumbüro',
     zone_basement_name: 'Serverkeller',
@@ -689,6 +690,7 @@ export const TRANSLATIONS = {
     // Factory scene (src/components/scene3d/)
     sceneAriaLabel: 'Slop factory cross-section',
     sceneNewBadge: 'NEW',
+    sceneResetView: 'Reset view',
     closeLabel: 'Close',
     zone_office_name: 'Open-Plan Office',
     zone_basement_name: 'Server Basement',

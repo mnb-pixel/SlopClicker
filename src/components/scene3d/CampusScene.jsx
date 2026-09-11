@@ -8,6 +8,7 @@ import React, {
   useImperativeHandle,
 } from 'react';
 import * as THREE from 'three';
+import { Crosshair } from 'lucide-react';
 import { ZONES_DATA } from '../../data/zonesData';
 import {
   deriveZones,
@@ -35,6 +36,16 @@ import { FURNACE_ANCHOR } from '../../data/zonesData';
 const PIN_EDGE_PX = 46;
 const PIN_TOP_PX = 196;
 const PIN_BOTTOM_PX = 112;
+
+// Ab welcher Inselgröße die Kamera NICHT mehr weiter herauszoomt (Vielfaches der
+// Basisinsel, siehe utils/campusLayout.js). Bis dahin passt die Insel von selbst ins
+// Bild; darüber hinaus würde alles nur noch kleiner und unleserlich - ab da schiebt
+// und zoomt der Spieler selbst.
+const VIEW_FIT_MAX = 40 / 24;
+const ZOOM_MAX = 3;
+const ZOOM_STEP = 0.0016; // Rad pro Mausrad-Pixel
+// Ab so vielen Pixeln Bewegung ist es ein Schieben und kein Tippen mehr.
+const DRAG_THRESHOLD_PX = 6;
 
 // Die 3D-Insel als React-Komponente.
 //
@@ -76,6 +87,13 @@ export const CampusScene = forwardRef(function CampusScene(
   const [selectedZone, setSelectedZone] = useState(null);
   const [labelPos, setLabelPos] = useState({});
   const [rebuild, setRebuild] = useState(0);
+  // Sichtbar, sobald der Spieler geschoben oder gezoomt hat: ohne Rückweg verliert man
+  // auf einer Insel, die größer ist als das Bild, die Orientierung.
+  const [viewMoved, setViewMoved] = useState(false);
+  const viewMovedRef = useRef(false);
+  // Die Stecknadeln werden pro Frame direkt im DOM gesetzt (siehe Render-Loop), nicht
+  // über React - beim Schieben wäre das ein Re-Render pro Bild.
+  const pinRefs = useRef(new Map());
 
   // Black-Swan-Blitz: der Store hält den letzten Treffer dauerhaft, sichtbar ist er
   // nur DAMAGE_FLASH_MS lang. Gemerkt wird, welcher Treffer schon abgeblitzt ist.
@@ -110,8 +128,22 @@ export const CampusScene = forwardRef(function CampusScene(
 
   stateRef.current = { zones, furnace, island: islandState, mood, theme, selectedZone, isOverheated, reduced, handleTapAGI, tickerText, hypeTier };
 
+  // Ref-Setter je Zone, stabil über Renders hinweg - ein neuer Callback pro Render
+  // würde React jedes Mal ab- und wieder anmelden lassen.
+  const pinRefSetters = useRef(new Map());
+  const setPinRef = useCallback((id) => {
+    const map = pinRefSetters.current;
+    if (!map.has(id)) {
+      map.set(id, (el) => {
+        if (el) pinRefs.current.set(id, el);
+        else pinRefs.current.delete(id);
+      });
+    }
+    return map.get(id);
+  }, []);
+
   // Bildschirmposition (Client-Koordinaten) eines Weltpunkts, für Beschriftungen und
-  // für den Feuer-Button, dessen Partikel am Ofen starten sollen.
+  // für den Feuer-Button, dessen Partikel am Schrank starten sollen.
   const projectToClient = useCallback((vec3) => {
     const api = apiRef.current;
     const el = containerRef.current;
@@ -127,7 +159,19 @@ export const CampusScene = forwardRef(function CampusScene(
   useImperativeHandle(
     ref,
     () => ({
-      getFurnaceScreenPos: () => (apiRef.current ? projectToClient(apiRef.current.furnace.corePosition) : null),
+      // Auf den sichtbaren Bereich geklemmt: seit die Insel größer sein darf als das
+      // Bild, kann der Schrank weggeschoben sein - die fliegenden Zahlen sollen dann am
+      // Bildrand in seiner Richtung starten statt unsichtbar daneben.
+      getFurnaceScreenPos: () => {
+        const el = containerRef.current;
+        const pos = apiRef.current ? projectToClient(apiRef.current.furnace.corePosition) : null;
+        if (!pos || !el) return pos;
+        const r = el.getBoundingClientRect();
+        return {
+          clientX: Math.min(r.right - 24, Math.max(r.left + 24, pos.clientX)),
+          clientY: Math.min(r.bottom - 24, Math.max(r.top + 24, pos.clientY)),
+        };
+      },
       pulse: () => apiRef.current && apiRef.current.furnace.pulse(),
     }),
     [projectToClient]
@@ -153,16 +197,33 @@ export const CampusScene = forwardRef(function CampusScene(
     let palette = getPalette3d(stateRef.current.theme);
     let appliedTheme = stateRef.current.theme;
 
-    // Orthografische Kamera von vorne links oben, ca. 32 Grad Neigung.
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
-    camera.position.set(30, 26, 30);
+    // Orthografische Kamera von vorne links oben, ca. 32 Grad Neigung. Die BLICKRICHTUNG
+    // wird genau einmal gesetzt und danach nie mehr angefasst: Schieben heißt, die Kamera
+    // entlang ihrer eigenen Rechts-/Hoch-Achse zu versetzen (lookAt() erneut aufzurufen
+    // würde die Isometrie verdrehen).
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 400);
+    const CAM_BASE = new THREE.Vector3(30, 26, 30);
+    camera.position.copy(CAM_BASE);
     camera.lookAt(0, 0, 0);
+    camera.updateMatrixWorld();
+    const camRight = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).normalize();
+    const camUp = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1).normalize();
+    const camForward = new THREE.Vector3();
+    camera.getWorldDirection(camForward);
+    const focus = new THREE.Vector3();
 
     const hemi = new THREE.HemisphereLight(palette.hemiSky, palette.hemiGround, 0.9);
     scene.add(hemi);
     const sun = new THREE.DirectionalLight(palette.sun, 2.2);
-    sun.position.set(-14, 26, 10);
+    const SUN_OFFSET = new THREE.Vector3(-14, 26, 10);
+    sun.position.copy(SUN_OFFSET);
     sun.castShadow = true;
+    // Die Schattenkarte deckt nicht mehr die ganze Insel ab - die kann inzwischen
+    // sechsmal so groß sein wie der Bildausschnitt. Stattdessen folgt sie dem Blick:
+    // scharfe Schatten dort, wo man hinschaut, statt matschiger überall.
+    const sunTarget = new THREE.Object3D();
+    scene.add(sunTarget);
+    sun.target = sunTarget;
     const isSmall = Math.min(window.innerWidth, window.innerHeight) < 700;
     sun.shadow.mapSize.set(isSmall ? 1024 : 2048, isSmall ? 1024 : 2048);
     sun.shadow.camera.left = -22;
@@ -183,17 +244,26 @@ export const CampusScene = forwardRef(function CampusScene(
     const campus = buildCampus(palette, ZONES_DATA, FURNACE_ANCHOR);
     scene.add(campus.group);
 
-    apiRef.current = { renderer, scene, camera, furnace: furnaceObj, zones: zonesObj };
+    // resetView() wird weiter unten definiert, deshalb der Umweg über den Aufruf -
+    // der Knopf drückt erst, wenn längst alles steht.
+    apiRef.current = { renderer, scene, camera, furnace: furnaceObj, zones: zonesObj, resetView: () => resetView() };
     container.style.background = palette.skyCss;
 
-    // Kamera-Ausschnitt: Hochformat füllt die Breite (Insel diagonal ~34 Einheiten),
-    // Querformat die Höhe. Der Ursprung liegt bewusst ÜBER der Bildmitte: der
-    // sichtbare Schwerpunkt der Insel (Sockel nach unten) soll etwa auf 45 Prozent
-    // Höhe sitzen, damit weder Zähler noch Buttons über der Insel liegen.
-    // `zoom` ist die aktuelle Inselgröße relativ zur Basis: die Kamera fährt mit dem
-    // Wachstum zurück, sonst schöbe die größere Insel ihre äußeren Zonen aus dem Bild.
+    // Kamera-Ausschnitt: Hochformat füllt die Breite, Querformat die Höhe. Der Ursprung
+    // liegt bewusst ÜBER der Bildmitte: der sichtbare Schwerpunkt der Insel (Sockel nach
+    // unten) soll etwa auf 45 Prozent Höhe sitzen, damit weder Zähler noch Buttons über
+    // der Insel liegen.
+    //
+    // `viewScale` ist die Inselgröße relativ zur Basis, gedeckelt auf VIEW_FIT_MAX: bis
+    // dahin fährt die Kamera beim Wachstum zurück, danach bleibt der Maßstab stehen und
+    // die Insel ragt über den Bildrand hinaus - ab da schiebt und zoomt der Spieler.
     let viewScale = 1;
     let lastSize = { w: 0, h: 0 };
+    let pinVersion = -1;
+    // Der vom Spieler gesteuerte Teil der Kamera: Versatz entlang der Bildachsen und
+    // Zoomfaktor auf dem eingepassten Ausschnitt (1 = eingepasst).
+    const view = { panX: 0, panY: 0, zoom: 1 };
+    let islandExtent = 24;
     const fitCamera = (w, h) => {
       lastSize = { w, h };
       const aspect = w / Math.max(1, h);
@@ -217,25 +287,119 @@ export const CampusScene = forwardRef(function CampusScene(
       camera.bottom = -halfH - shiftY;
       camera.left = -halfW;
       camera.right = halfW;
-      camera.updateProjectionMatrix();
+      applyView();
     };
 
-    let layoutVersion = -1;
+    // Halbe sichtbare Weltbreite/-höhe beim aktuellen Zoom.
+    const halfViewW = () => (camera.right - camera.left) / (2 * view.zoom);
+    const halfViewH = () => (camera.top - camera.bottom) / (2 * view.zoom);
+
+    // Wie weit darf man schieben? Nur so weit, wie die Insel über den Bildrand hinaus
+    // ragt, plus etwas Luft. Passt sie ganz ins Bild (weit herausgezoomt), bleibt sie
+    // damit von selbst in der Mitte - sonst könnte man die ganze Insel aus dem Bild
+    // schieben und stünde vor leerem Himmel.
+    const panLimit = () => {
+      const half = islandExtent / 2;
+      const spanU = half * (Math.abs(camRight.x) + Math.abs(camRight.z));
+      const spanV = half * (Math.abs(camUp.x) + Math.abs(camUp.z));
+      return {
+        x: Math.max(0, spanU - halfViewW() * 0.75) + 3,
+        y: Math.max(0, spanV - halfViewH() * 0.75) + 3,
+      };
+    };
+    // Kleinster Zoom: so weit heraus, dass die ganze Insel ins Bild passt (mehr bringt
+    // nichts), aber nie enger als der eingepasste Ausschnitt.
+    const minZoom = () => Math.min(1, (VIEW_FIT_MAX * 24) / Math.max(24, islandExtent));
+
+    let viewVersion = 0;
+    function applyView() {
+      view.zoom = Math.min(ZOOM_MAX, Math.max(minZoom(), view.zoom));
+      const lim = panLimit();
+      view.panX = Math.min(lim.x, Math.max(-lim.x, view.panX));
+      view.panY = Math.min(lim.y, Math.max(-lim.y, view.panY));
+      camera.position.copy(CAM_BASE).addScaledVector(camRight, view.panX).addScaledVector(camUp, view.panY);
+      camera.zoom = view.zoom;
+      camera.updateProjectionMatrix();
+      camera.updateMatrixWorld();
+      // Schattenkarte und Sonne auf den Punkt setzen, den die Kamera gerade anschaut:
+      // von der Kameraposition entlang der Blickrichtung bis auf Bodenhöhe.
+      focus.copy(camera.position).addScaledVector(camForward, -camera.position.y / camForward.y);
+      sunTarget.position.copy(focus);
+      sun.position.copy(focus).add(SUN_OFFSET);
+      const shadowHalf = Math.min(26, Math.max(halfViewW(), halfViewH()) * 0.85);
+      sun.shadow.camera.left = -shadowHalf;
+      sun.shadow.camera.right = shadowHalf;
+      sun.shadow.camera.top = shadowHalf;
+      sun.shadow.camera.bottom = -shadowHalf;
+      sun.shadow.camera.updateProjectionMatrix();
+      viewVersion += 1;
+      const moved = Math.abs(view.panX) > 0.5 || Math.abs(view.panY) > 0.5 || Math.abs(view.zoom - 1) > 0.02;
+      if (moved !== viewMovedRef.current) {
+        viewMovedRef.current = moved;
+        setViewMoved(moved);
+      }
+    }
+
+    // Zoomen um einen Bildpunkt herum: der Weltpunkt unter dem Finger bleibt liegen.
+    const zoomAt = (factor, px, py, rect) => {
+      const before = { w: halfViewW(), h: halfViewH() };
+      view.zoom = Math.min(ZOOM_MAX, Math.max(minZoom(), view.zoom * factor));
+      const after = { w: halfViewW(), h: halfViewH() };
+      const nx = (px / rect.width) * 2 - 1;
+      const ny = 1 - (py / rect.height) * 2;
+      view.panX += nx * (before.w - after.w);
+      view.panY += ny * (before.h - after.h);
+      applyView();
+    };
+
+    const resetView = () => {
+      view.panX = 0;
+      view.panY = 0;
+      view.zoom = 1;
+      applyView();
+    };
+
+    // Bildschirmposition einer Zonen-Stecknadel, auf den sichtbaren Bereich geklemmt.
+    const pinVec = new THREE.Vector3();
+    const pinScreen = (anchor, w, h) => {
+      pinVec.copy(anchor).project(camera);
+      // Stecknadeln bleiben im Bild, auch wenn ihr Ankerpunkt weit außerhalb liegt -
+      // seit die Insel größer sein darf als das Bild, ist das der Normalfall und nicht
+      // mehr die Ausnahme: die geklemmte Nadel zeigt, in welcher Richtung die Zone
+      // liegt. Der Rand ist auf die Nadel zugeschnitten (PIN_EDGE_PX, halbe
+      // Nadelbreite): früher lag er bei 72px für die breiten Namensschilder - der schob
+      // die äußeren Schilder so weit nach innen, dass sie auf den Gebäuden landeten,
+      // die sie beschriften sollten.
+      const x = Math.min(w - PIN_EDGE_PX, Math.max(PIN_EDGE_PX, ((pinVec.x + 1) / 2) * w));
+      const y = Math.min(h - PIN_BOTTOM_PX, Math.max(PIN_TOP_PX, ((1 - pinVec.y) / 2) * h));
+      return { x, y };
+    };
+
+    // Beim Mount und bei Größenänderungen: Positionen über React setzen, damit die
+    // Nadeln schon im ersten Bild richtig stehen.
     const updateLabels = () => {
       const r = container.getBoundingClientRect();
       const next = {};
       Object.entries(zonesObj.labelAnchors).forEach(([id, anchor]) => {
-        const v = anchor.clone().project(camera);
-        // Stecknadeln bleiben im Bild, auch wenn ihr Ankerpunkt am Inselrand knapp
-        // außerhalb liegt (Hochformat, äußere Zonen). Der Rand ist auf die Nadel
-        // zugeschnitten (PIN_EDGE_PX, halbe Nadelbreite): früher lag er bei 72px für
-        // die breiten Namensschilder - der schob die äußeren Schilder so weit nach
-        // innen, dass sie auf den Gebäuden landeten, die sie beschriften sollten.
-        const x = Math.min(r.width - PIN_EDGE_PX, Math.max(PIN_EDGE_PX, ((v.x + 1) / 2) * r.width));
-        const y = Math.min(r.height - PIN_BOTTOM_PX, Math.max(PIN_TOP_PX, ((1 - v.y) / 2) * r.height));
-        next[id] = { x, y };
+        next[id] = pinScreen(anchor, r.width, r.height);
       });
       setLabelPos(next);
+    };
+
+    // Pro Frame: nur noch Pixel ins DOM schreiben, ohne React.
+    const placePins = () => {
+      const w = lastSize.w;
+      const h = lastSize.h;
+      const version = viewVersion + zonesObj.getLayoutVersion();
+      if (version === pinVersion) return;
+      pinVersion = version;
+      pinRefs.current.forEach((el, id) => {
+        const anchor = zonesObj.labelAnchors[id];
+        if (!el || !anchor) return;
+        const pos = pinScreen(anchor, w, h);
+        el.style.left = `${Math.round(pos.x)}px`;
+        el.style.top = `${Math.round(pos.y)}px`;
+      });
     };
 
     const resize = () => {
@@ -250,22 +414,26 @@ export const CampusScene = forwardRef(function CampusScene(
     const ro = new ResizeObserver(resize);
     ro.observe(container);
 
-    // Klick: Raycast auf Ofen und Zonenplatten. pointerdown statt click, damit
-    // schnelles Tippen nicht am Klick-Timing hängt.
+    // Zeigereingabe: EIN Finger schiebt die Insel oder tippt (unter DRAG_THRESHOLD_PX
+    // Bewegung), ZWEI Finger zoomen, das Mausrad zoomt. Der Tap darf erst beim Loslassen
+    // ausgelöst werden - sonst feuerte jeder Schiebe-Anfang einen Klick auf den Schrank.
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
-    const onPointerDown = (e) => {
-      if (e.button !== undefined && e.button !== 0) return;
+    const pointers = new Map(); // pointerId -> { x, y }
+    let dragged = false;
+    let pinchDist = 0;
+
+    const tapAt = (clientX, clientY) => {
       const r = canvas.getBoundingClientRect();
-      pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1;
-      pointer.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+      pointer.x = ((clientX - r.left) / r.width) * 2 - 1;
+      pointer.y = -((clientY - r.top) / r.height) * 2 + 1;
       raycaster.setFromCamera(pointer, camera);
 
       const furnaceHit = raycaster.intersectObjects(furnaceObj.hitMeshes, false);
       if (furnaceHit.length > 0) {
         if (!stateRef.current.isOverheated) {
           furnaceObj.pulse();
-          stateRef.current.handleTapAGI({ clientX: e.clientX, clientY: e.clientY });
+          stateRef.current.handleTapAGI({ clientX, clientY });
         }
         return;
       }
@@ -279,7 +447,95 @@ export const CampusScene = forwardRef(function CampusScene(
         setSelectedZone(zoneHit.object.userData.zoneId);
       }
     };
+
+    const pointerCenter = () => {
+      let x = 0;
+      let y = 0;
+      pointers.forEach((p) => {
+        x += p.x;
+        y += p.y;
+      });
+      return { x: x / pointers.size, y: y / pointers.size };
+    };
+
+    const onPointerDown = (e) => {
+      if (e.button !== undefined && e.button > 0) return;
+      // Capture kann fehlschlagen (fremder/abgelaufener Zeiger). Das darf das Schieben
+      // nicht verhindern - ohne Capture geht es nur schlechter, nicht gar nicht.
+      try {
+        canvas.setPointerCapture(e.pointerId);
+      } catch {
+        /* ignoriert */
+      }
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, ox: e.clientX, oy: e.clientY });
+      if (pointers.size === 1) {
+        dragged = false;
+      } else if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        pinchDist = Math.hypot(a.x - b.x, a.y - b.y);
+        dragged = true; // zwei Finger sind nie ein Tap
+      }
+    };
+
+    const onPointerMove = (e) => {
+      const prev = pointers.get(e.pointerId);
+      if (!prev) return;
+      const r = canvas.getBoundingClientRect();
+      const beforeCenter = pointerCenter();
+      prev.x = e.clientX;
+      prev.y = e.clientY;
+      const afterCenter = pointerCenter();
+
+      if (pointers.size >= 2) {
+        const [a, b] = [...pointers.values()];
+        const dist = Math.hypot(a.x - b.x, a.y - b.y);
+        if (pinchDist > 0 && dist > 0) {
+          const mid = afterCenter;
+          zoomAt(dist / pinchDist, mid.x - r.left, mid.y - r.top, r);
+        }
+        pinchDist = dist;
+      }
+
+      // Schieben: Bildpixel in Weltmaß umrechnen und die Kamera gegenläufig versetzen.
+      const dx = afterCenter.x - beforeCenter.x;
+      const dy = afterCenter.y - beforeCenter.y;
+      if (dx || dy) {
+        view.panX -= (dx / r.width) * 2 * halfViewW();
+        view.panY += (dy / r.height) * 2 * halfViewH();
+        applyView();
+      }
+      // Tap oder Schieben? Entschieden wird am Abstand zum Startpunkt, nicht an der
+      // letzten Bewegung: ein Finger zittert beim Tippen, und jedes Zittern als
+      // Schieben zu werten würde das Tippen auf den Schrank unmöglich machen.
+      if (Math.hypot(prev.x - prev.ox, prev.y - prev.oy) > DRAG_THRESHOLD_PX) dragged = true;
+    };
+
+    const onPointerUp = (e) => {
+      const p = pointers.get(e.pointerId);
+      if (!p) return;
+      pointers.delete(e.pointerId);
+      try {
+        canvas.releasePointerCapture(e.pointerId);
+      } catch {
+        /* ignoriert */
+      }
+      if (pointers.size < 2) pinchDist = 0;
+      if (pointers.size === 0 && !dragged && e.type === 'pointerup') {
+        tapAt(e.clientX, e.clientY);
+      }
+    };
+
+    const onWheel = (e) => {
+      e.preventDefault();
+      const r = canvas.getBoundingClientRect();
+      zoomAt(Math.exp(-e.deltaY * ZOOM_STEP), e.clientX - r.left, e.clientY - r.top, r);
+    };
+
     canvas.addEventListener('pointerdown', onPointerDown);
+    canvas.addEventListener('pointermove', onPointerMove);
+    canvas.addEventListener('pointerup', onPointerUp);
+    canvas.addEventListener('pointercancel', onPointerUp);
+    canvas.addEventListener('wheel', onWheel, { passive: false });
 
     // Kontextverlust: Loop stoppen, nach Wiederherstellung alles neu bauen.
     const onLost = (e) => {
@@ -349,24 +605,20 @@ export const CampusScene = forwardRef(function CampusScene(
       const targetScale = (s.island && s.island.scale) || 1;
       island.update(dt, now / 1000, s.reduced, targetScale);
       const grown = island.getScale();
+      islandExtent = 24 * grown;
       furnaceObj.update(s, dt, now / 1000, palette);
       zonesObj.update(s.zones, s.selectedZone, palette, { dt, t: now / 1000, reduced: s.reduced, tickerText: s.tickerText });
       campus.update(s.hypeTier, now / 1000, s.reduced, s.zones, grown);
-      // Wächst die Insel, muss die Kamera zurückfahren und die Stecknadeln müssen neu
-      // projiziert werden. Beides bewusst nur bei spürbarer Änderung: sonst stünde hier
-      // ein React-Render pro Frame, genau das, was diese Komponente vermeidet.
-      if (lastSize.w && (Math.abs(grown - viewScale) > 0.01 || zonesObj.getLayoutVersion() !== layoutVersion)) {
-        viewScale = grown;
-        layoutVersion = zonesObj.getLayoutVersion();
-        // Schattenkamera mitwachsen lassen, sonst enden die Schatten am alten Rand.
-        sun.shadow.camera.left = -22 * grown;
-        sun.shadow.camera.right = 22 * grown;
-        sun.shadow.camera.top = 22 * grown;
-        sun.shadow.camera.bottom = -22 * grown;
-        sun.shadow.camera.updateProjectionMatrix();
+      // Wächst die Insel, wird der eingepasste Ausschnitt neu gerechnet - bis zur
+      // Obergrenze VIEW_FIT_MAX. Danach bleibt der Maßstab stehen und die Insel ragt
+      // über den Bildrand hinaus; ab da ist Schieben und Zoomen dran.
+      if (lastSize.w && Math.abs(grown - viewScale) > 0.01) {
+        viewScale = Math.min(grown, VIEW_FIT_MAX);
         fitCamera(lastSize.w, lastSize.h);
-        updateLabels();
       }
+      // Stecknadeln: Position direkt im DOM, jedes Bild. Über React wäre das beim
+      // Schieben ein Re-Render pro Frame.
+      if (lastSize.w) placePins();
       renderer.render(scene, camera);
     };
     raf = requestAnimationFrame(tick);
@@ -388,6 +640,10 @@ export const CampusScene = forwardRef(function CampusScene(
       io.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
       canvas.removeEventListener('pointerdown', onPointerDown);
+      canvas.removeEventListener('pointermove', onPointerMove);
+      canvas.removeEventListener('pointerup', onPointerUp);
+      canvas.removeEventListener('pointercancel', onPointerUp);
+      canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('webglcontextlost', onLost);
       canvas.removeEventListener('webglcontextrestored', onRestored);
       scene.traverse((obj) => {
@@ -431,6 +687,7 @@ export const CampusScene = forwardRef(function CampusScene(
           return (
             <span
               key={z.id}
+              ref={setPinRef(z.id)}
               className="zone-pin zone-pin--teaser"
               style={{ left: pos.x, top: pos.y }}
               title={tr('lockedEngineTierDesc')}
@@ -447,6 +704,7 @@ export const CampusScene = forwardRef(function CampusScene(
         return (
           <button
             key={z.id}
+            ref={setPinRef(z.id)}
             type="button"
             className={`zone-pin ${z.unlocked ? '' : 'zone-pin--locked'} ${selectedZone === z.id ? 'is-selected' : ''}`}
             style={{ left: pos.x, top: pos.y, '--zone-accent': accent }}
@@ -466,6 +724,21 @@ export const CampusScene = forwardRef(function CampusScene(
           </button>
         );
       })}
+
+      {/* Zurück zur Übersicht: erscheint erst, wenn geschoben oder gezoomt wurde.
+          Auf einer Insel, die größer ist als der Bildausschnitt, ist das der einzige
+          verlässliche Weg zurück zum Schrank. */}
+      {viewMoved && (
+        <button
+          type="button"
+          className="scene-recenter"
+          onClick={() => apiRef.current && apiRef.current.resetView()}
+          aria-label={tr('sceneResetView')}
+          title={tr('sceneResetView')}
+        >
+          <Crosshair className="scene-recenter__glyph" aria-hidden="true" />
+        </button>
+      )}
 
       {selectedDef && (
         <ZoneBuyPanel

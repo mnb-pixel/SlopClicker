@@ -28,7 +28,7 @@ export const FURNACE_ANCHOR = { x: 0, z: 0 };
 // Ab welchem Zonen-Bestand eine Zone eine zusätzliche Halle NEBEN ihrer Grundfläche
 // bekommt. Betrifft die Zonen ohne eigenes Grundstücks-Layout (siehe `plot` unten):
 // deren Props stehen auf festen Plätzen, der Zuwachs wandert in die Anbauten.
-export const ZONE_ANNEX_THRESHOLDS = [30, 80, 200, 500];
+export const ZONE_ANNEX_THRESHOLDS = [30, 80, 200, 500, 1200, 3000, 8000, 20000];
 
 // Ab wie vielen Engines einer Zone deren Ausbaustufe steigt (0 = leer/verriegelt).
 export const ZONE_TIER_THRESHOLDS = [1, 3, 8, 20, 50, 120, 300];
@@ -46,14 +46,16 @@ export const ZONES_DATA = [
     footprint: { w: 8, d: 7 },
     labelAnchor3d: { x: -10.8, y: 0.5, z: 8.2 },
     buildings: [
-      { id: 'prompt_intern', maxProps: 16, plot: { capacity: 4, max: 4, axis: 'x', lane: 0 } },
-      { id: 'prompt_engineer', maxProps: 8, plot: { capacity: 4, max: 2, axis: 'z', lane: 0, offset: 1 } },
+      { id: 'prompt_intern', maxProps: 48, plot: { capacity: 4, max: 12, axis: 'x', lane: 0, perRow: 4 } },
+      // Eigene Spalten (offset 4) statt eigener Achse: so wächst jede Engine als
+      // zusammenhängendes Viertel, und die beiden geraten sich nie ins Gehege.
+      { id: 'prompt_engineer', maxProps: 36, plot: { capacity: 4, max: 9, axis: 'x', lane: 0, perRow: 3, offset: 4 } },
       { id: 'chatbot_widget', maxProps: 10 },
     ],
   },
   {
     id: 'basement',
-    annexMax: 4,
+    annexMax: 8,
     anchor3d: { x: -7, z: -6 },
     footprint: { w: 8, d: 7 },
     // Nicht in die hintere Ecke: die projiziert auf dieselbe Bildschirmstelle wie der
@@ -69,7 +71,7 @@ export const ZONES_DATA = [
   },
   {
     id: 'stage',
-    annexMax: 4,
+    annexMax: 8,
     anchor3d: { x: 7, z: 6 },
     footprint: { w: 8, d: 7 },
     labelAnchor3d: { x: 11.2, y: 0.5, z: 8.6 },
@@ -83,7 +85,7 @@ export const ZONES_DATA = [
   },
   {
     id: 'tower',
-    annexMax: 4,
+    annexMax: 8,
     anchor3d: { x: 7, z: -6 },
     footprint: { w: 8, d: 7 },
     labelAnchor3d: { x: 11.2, y: 0.5, z: -3.4 },

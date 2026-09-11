@@ -14,7 +14,11 @@ export const LOT_SIZE = 3.6;
 
 // Inselmaße. Basis ist das alte feste Raster, dann in Schritten bis zum Maximum.
 export const ISLAND_BASE_SIZE = 24;
-export const ISLAND_MAX_SIZE = 44;
+// Obergrenze der Insel. Bewusst weit über dem, was auf einen Bildschirm passt: ab
+// etwa 40 Einheiten zoomt die Kamera nicht mehr weiter heraus, sondern der Spieler
+// schiebt und zoomt selbst (siehe CampusScene.jsx). Das Spielfeld darf größer sein
+// als das Bild - genau das ist der Punkt.
+export const ISLAND_MAX_SIZE = 96;
 export const ISLAND_STEP = 4;
 // Luft zwischen dem äußersten Gebäude und der Inselkante.
 const ISLAND_MARGIN = 1.4;
@@ -32,11 +36,20 @@ export function outwardDirs(zone) {
 // Zonen-Anker). `lane` ist die Reihe quer zur Wachstumsachse, `index` die Position
 // darin: index 0 liegt in der inneren Ecke der Grundfläche, jeder weitere Schritt geht
 // nach außen - und ab der Kante der Grundfläche eben über sie hinaus.
+//
+// `perRow` bricht die Reihe um: nach so vielen Häusern fängt eine neue Reihe an
+// (`laneStep` weiter quer). Ohne das würde eine Engine mit einem Dutzend Häusern eine
+// einzige endlose Straße über die halbe Insel bilden statt eines Viertels.
+// `offset` schiebt den Startplatz - so bekommen zwei Engines derselben Zone ihre
+// eigenen Spalten, ohne sich ins Gehege zu kommen.
 export function lotLocal(zone, plot, index) {
   const { ox, oz } = outwardDirs(zone);
   const { w, d } = zone.footprint;
-  const lane = plot.lane || 0;
-  const i = index + (plot.offset || 0);
+  const perRow = plot.perRow || 0;
+  const col = perRow ? index % perRow : index;
+  const row = perRow ? Math.floor(index / perRow) : 0;
+  const lane = (plot.lane || 0) + row * (plot.laneStep || 1);
+  const i = col + (plot.offset || 0);
   const alongX = plot.axis !== 'z';
   const stepX = alongX ? i : lane;
   const stepZ = alongX ? lane : i;

@@ -11,11 +11,13 @@ dampfend, qualmend, und erst ganz oben schlagen Flammen aus dem Dachschlitz (sie
 "Die Mitte: der Server-Schrank"). Der Spielzustand heißt im Code weiter `furnace`, und
 das Spiel weiter Token Furnace - das ist der Markenname, nicht die Grafik.
 
-**Das Spielfeld wächst mit.** Insel und Zonenplatten sind nicht mehr fest: Engines mit
-`plot` (bisher Praktikanten und Prompt Engineers) füllen ein Gebäude bis zur Kapazität,
-danach entsteht das nächste NEBENAN; Zonen ohne eigenes Grundstücks-Layout bekommen
-Anbauhallen neben ihrer Grundfläche. Stoßen die äußersten Gebäude an den Rand, wächst
-die Insel eine Stufe (siehe "Grundstücke und Inselwachstum").
+**Das Spielfeld wächst mit - über den Bildrand hinaus.** Insel und Zonenplatten sind
+nicht mehr fest: Engines mit `plot` (bisher Praktikanten und Prompt Engineers) füllen
+ein Gebäude bis zur Kapazität, danach entsteht das nächste NEBENAN; Zonen ohne eigenes
+Grundstücks-Layout bekommen Anbauhallen neben ihrer Grundfläche. Stoßen die äußersten
+Gebäude an den Rand, wächst die Insel eine Stufe - bis über das hinaus, was auf einen
+Bildschirm passt. Ab da zoomt die Kamera nicht weiter heraus, sondern der Spieler
+schiebt und zoomt selbst (siehe "Grundstücke und Inselwachstum" und "Kamera").
 
 Stand: alle sieben Phasen gebaut, dazu der Umbau auf Server-Schrank und wachsendes
 Spielfeld. Die 3D-Insel ist der einzige Spielbildschirm mit
@@ -95,6 +97,7 @@ bildschirm ersetzt. Hier ist sie vorerst NUR eine versteckte Testseite:
 | Bildschirm | Eine Vollbild-Szene, keine Kopf- und Fußzeile mehr. Zähler und wenige Buttons liegen als Overlay auf der Szene |
 | Panels | Shop, Statistik, Einstellungen, Belohnungen öffnen als Schublade über der Szene, die Szene bleibt sichtbar |
 | Tippen | Server-Schrank in der Szene und ein großer Feuer-Button unten lösen dieselbe Aktion aus |
+| Kamera | Fest eingepasst, solange die Insel ins Bild passt; danach schiebt und zoomt der Spieler selbst (ein Finger/Maus schiebt, zwei Finger/Mausrad zoomen) |
 | Sound | Eigene Phase nach der Grafik, nicht Teil dieses Konzepts |
 | Gameplay-Ideen (Halten, Forschung, Pivots, Sweet Spot) | Nicht Teil dieses Konzepts |
 
@@ -239,8 +242,8 @@ Phase 4 eine zweite Leitung derselben Art.
 
 | Zone | Engine | Prop (Low-Poly) | Max. Objekte |
 |---|---|---|---|
-| office | Prompt-Praktikant | Person am schiefen Tisch, Monitor, Tastatur, Tasse, tippende Arme, hängende Schultern - vier pro Haus, danach ein Haus nebenan (bis 4 Häuser) | 16 |
-| office | Prompt Engineer | Person am breiteren Tisch mit zwei Monitoren, aufrechte Haltung, schnelleres Tippen - vier pro Haus, zweites Haus dahinter | 8 |
+| office | Prompt-Praktikant | Person am schiefen Tisch, Monitor, Tastatur, Tasse, tippende Arme, hängende Schultern - vier pro Haus, danach ein Haus nebenan, nach vier Häusern eine neue Reihe (bis 12 Häuser) | 48 |
+| office | Prompt Engineer | Person am breiteren Tisch mit zwei Monitoren, aufrechte Haltung, schnelleres Tippen - vier pro Haus, eigene Spalten neben den Praktikanten (bis 9 Häuser) | 36 |
 | office | Chatbot-Widget | Schwebende Sprechblasen mit pulsierenden Punkten über den Tischen | 10 |
 | office | Datenleitung | Transparente Röhre vom Büro zum Schranksockel, Tokens rasen hindurch, Menge nach Zonenstufe | 40 Tokens |
 | basement | GPU-Rack | Schmaler Turm mit vier blinkenden LED-Streifen | 14 |
@@ -275,17 +278,45 @@ den Bauern, müsste die Insel raten, wie weit die Zonen inzwischen gewachsen sin
   in die innere Ecke der Grundfläche, jeder weitere Schritt nach außen - ab der Kante
   eben über sie hinaus.
 * **Engines mit `plot`** (`zonesData.js`): `capacity` Objekte pro Haus, `max` Häuser,
-  `axis` die Wachstumsrichtung, `lane`/`offset` die Reihe. `maxProps` ist bei ihnen
-  bewusst `capacity * max`, sonst stünde das letzte Haus halb leer.
-* **Anbauhallen** (`annexMax` an der Zone): für Zonen, deren Props auf festen Plätzen
-  stehen (Keller, Bühne, Turm). Sie liegen komplett außerhalb der Grundfläche und
-  kommen bei 30, 80, 200 und 500 Objekten Zonenbestand dazu.
+  `axis` die Wachstumsrichtung, `perRow` der Reihenumbruch, `lane`/`offset` die Reihe
+  bzw. die Startspalte. `maxProps` ist bei ihnen bewusst `capacity * max`, sonst stünde
+  das letzte Haus halb leer. Ohne `perRow` würde ein Dutzend Häuser eine einzige
+  endlose Straße über die halbe Insel bilden statt eines Viertels; `offset` gibt der
+  zweiten Engine derselben Zone ihre eigenen Spalten.
+* **Anbauhallen** (`annexMax` an der Zone, derzeit 8): für Zonen, deren Props auf festen
+  Plätzen stehen (Keller, Bühne, Turm). Sie liegen komplett außerhalb der Grundfläche
+  und kommen bei 30, 80, 200, 500, 1200, 3000, 8000 und 20000 Objekten Zonenbestand dazu.
 * **Zonenplatte und Stecknadel** folgen dem Rechteck aus Grundfläche + Grundstücken
   (`zoneRect`), die Nadel rückt um genau den Zuwachs nach außen.
 * **Inselgröße**: `islandSizeForLots()` nimmt das äußerste Grundstück plus Rand und
-  rastert auf Vierer-Schritte (24 bis 44). Gewachsen wird über einen Skalierungsfaktor
-  auf der Landmasse, nicht über neue Geometrie; Kamera, Schattenkamera, Bäume,
-  Randlicht und Leiterbahnen fahren mit.
+  rastert auf Vierer-Schritte (24 bis 96; ausgebaut kommt der Campus heute auf etwa 60).
+  Gewachsen wird über einen Skalierungsfaktor auf der Landmasse, nicht über neue
+  Geometrie; Bäume, Randlicht und Leiterbahnen fahren mit.
+
+## Kamera: einpassen, schieben, zoomen
+
+Bis zu einer Inselkante von 40 Einheiten (`VIEW_FIT_MAX` in `CampusScene.jsx`) passt die
+Kamera die ganze Insel ins Bild. Darüber bleibt der Maßstab stehen: weiter herauszoomen
+hieße, dass Häuser und Personen zu klein werden, um noch etwas zu erkennen. Stattdessen
+ragt die Insel über den Bildrand hinaus und der Spieler bewegt sich selbst.
+
+* **Schieben**: ein Finger oder die linke Maustaste. Die Kamera wird dabei entlang ihrer
+  eigenen Rechts-/Hoch-Achse versetzt - `lookAt()` erneut aufzurufen würde die Isometrie
+  verdrehen. Geschoben wird nur so weit, wie die Insel über den Bildrand hinausragt;
+  passt sie ganz ins Bild, bleibt sie von selbst mittig.
+* **Zoomen**: Mausrad oder zwei Finger, um den Punkt unter Zeiger bzw. Fingermitte
+  herum. Bereich: von "ganze Insel im Bild" bis dreifach vergrößert.
+* **Tippen bleibt Tippen**: der Tap auf Schrank oder Zone löst erst beim LOSLASSEN aus
+  und nur, wenn der Zeiger sich um weniger als 6 Pixel bewegt hat. Entschieden wird am
+  Abstand zum Startpunkt, nicht an der letzten Bewegung - ein Finger zittert beim Tippen.
+* **Zurück zur Übersicht**: ein Knopf unten rechts, sichtbar nur nach Schieben oder
+  Zoomen. Ohne ihn findet man auf einer Insel, die größer ist als das Bild, nicht
+  zurück zum Schrank.
+* **Stecknadeln** werden dabei pro Frame direkt im DOM gesetzt, nicht über React - beim
+  Schieben wäre das ein Re-Render pro Bild. Nadeln außerhalb des Bildes bleiben an der
+  Kante kleben und zeigen so die Richtung ihrer Zone an.
+* **Schattenkarte folgt dem Blick** statt die ganze Insel abzudecken: bei sechsfacher
+  Inselfläche wäre sonst jeder Schatten matschig.
 
 ## Die Mitte: der Server-Schrank
 
@@ -324,7 +355,7 @@ Zwei unabhängige Achsen, beide bereits im Gerüst angelegt:
 | Hitze cold bis critical | GPU-Temperatur | LED-Farbe, Lüfterdrehzahl, Dampf, Glut, ab critical Flammen |
 | meltdown | Overheat-Lock | Schrank verrußt und brennt, Absperrband, Kühlnebel, Klick gesperrt |
 | Rauchstufe 0 bis 7 | VPS, logarithmisch | Anzahl und Größe der Wölkchen aus dem Abluftrohr (Farbe nach Hitze) |
-| Inselgröße 24 bis 44 | belegte Grundstücke | Landmasse, Kamera, Bäume und Randlicht wachsen in Stufen mit |
+| Inselgröße 24 bis 96 | belegte Grundstücke | Landmasse, Bäume und Randlicht wachsen in Stufen mit; bis 40 zoomt die Kamera mit heraus, danach wird geschoben |
 | surge | Power Click | Türkise Blitze zucken um den Schrank, alle 80 ms neu gewürfelt |
 | golden | Golden Meme | Goldrauch, Goldflammen, Goldmünzen regnen über die Insel |
 | bubble | Bubble Burn | Statt Rauch steigen Seifenblasen auf und platzen oben |

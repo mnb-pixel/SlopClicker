@@ -5,8 +5,8 @@ import { buildLotShells } from './buildLotShells';
 // Großraumbüro (Zone "office"): Praktikanten und Prompt Engineers sitzen an schäbigen
 // Schreibtischen und tippen - seit dem Grundstücks-Umbau nicht mehr frei auf der Wiese,
 // sondern IN Häusern. Vier Arbeitsplätze passen in ein Haus; ist es voll, entsteht das
-// nächste nebenan (Praktikanten nach außen in x, Engineers nach hinten in z, siehe
-// utils/campusLayout.js). Vom Büro führt weiter eine Datenleitung zum Ofen, durch die
+// nächste nebenan; nach vier bzw. drei Häusern beginnt eine neue Reihe, sodass jede
+// Engine als eigenes Viertel wächst (siehe utils/campusLayout.js). Vom Büro führt weiter eine Datenleitung zum Ofen, durch die
 // Tokens rasen; Chatbot-Widgets schweben als Sprechblasen über den Dächern.
 //
 // Jede Teilesorte (Tischplatte, Böcke, Monitor, Tastatur, Stuhl, Körper, Kopf, Arme,
@@ -14,10 +14,10 @@ import { buildLotShells } from './buildLotShells';
 // geänderter Anzahl neu gesetzt, pro Frame bewegen sich nur Arme, Köpfe, Blasen,
 // Tokens und das Deckenlicht.
 
-const INTERN_MAX = 16;
-const ENGINEER_MAX = 8;
-const INTERN_LOTS_MAX = 4;
-const ENGINEER_LOTS_MAX = 2;
+const INTERN_MAX = 48;
+const ENGINEER_MAX = 36;
+const INTERN_LOTS_MAX = 12;
+const ENGINEER_LOTS_MAX = 9;
 const WIDGET_MAX = 10;
 const UNIT_YAW = Math.PI / 4; // Tische schauen zur offenen Hausecke (+x,+z) und damit zur Kamera
 // Arbeitsplätze sind kleiner als früher: sie stehen jetzt in einem Haus von 3,3

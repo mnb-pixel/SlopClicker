@@ -658,10 +658,43 @@
   display: block;
   width: 100%;
   height: 100%;
-  touch-action: manipulation;
+  /* none statt manipulation: die Insel wird mit dem Finger geschoben und gezoomt
+     (siehe CampusScene.jsx). Mit der Browser-Geste dazwischen würde jedes Schieben
+     die Seite scrollen statt die Kamera zu bewegen. */
+  touch-action: none;
+  cursor: grab;
   user-select: none;
   -webkit-user-select: none;
 }
+
+.campus-scene__canvas:active { cursor: grabbing; }
+
+/* Zurück zur Übersicht. Liegt über der Szene, aber unter Schublade und Kaufpanel;
+   sitzt über der Buttonreihe rechts, wo keine Stecknadel hinkommt (PIN_BOTTOM_PX). */
+.scene-recenter {
+  position: absolute;
+  right: 14px;
+  bottom: 104px;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--game-paper);
+  color: var(--game-ink);
+  border: 2px solid var(--game-line);
+  box-shadow: 0 3px 0 var(--game-line-strong), 0 6px 14px var(--game-shadow);
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 4;
+}
+
+.scene-recenter:active {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 var(--game-line-strong), 0 3px 8px var(--game-shadow);
+}
+
+.scene-recenter__glyph { width: 20px; height: 20px; }
 
 /* Zonen-Stecknadeln: kleine Marker statt der früheren breiten Namensschilder.
    Position per Projektion (left/top in Pixeln), die Spitze sitzt auf dem Ankerpunkt.
