@@ -9,12 +9,19 @@ import React, {
 } from 'react';
 import * as THREE from 'three';
 import { ZONES_DATA } from '../../data/zonesData';
-import { deriveZones, deriveFurnace, getSceneMood, getNewZoneIds, DAMAGE_FLASH_MS } from '../../utils/sceneState';
+import {
+  deriveZones,
+  deriveFurnace,
+  deriveIsland,
+  getSceneMood,
+  getNewZoneIds,
+  DAMAGE_FLASH_MS,
+} from '../../utils/sceneState';
 import { ZoneBuyPanel } from './ZoneBuyPanel';
 import { getZoneVisual } from './zoneVisuals';
 import { getPalette3d } from './palette';
 import { buildIsland } from './buildIsland';
-import { buildFurnace } from './buildFurnace';
+import { buildServerRack } from './buildServerRack';
 import { buildZones } from './buildZones';
 import { buildCampus } from './buildCampus';
 import { FURNACE_ANCHOR } from '../../data/zonesData';
@@ -88,6 +95,8 @@ export const CampusScene = forwardRef(function CampusScene(
   // NEU-Hinweis am Zonenschild: bewusst NICHT im zones-useMemo, das hängt an der
   // Bewertung und würde sonst die ganze Zonen-Ableitung in jeden Tick ziehen.
   const newZoneIds = useMemo(() => getNewZoneIds({ zones, valuation }), [zones, valuation]);
+  // Wie groß muss die Insel sein? Hängt nur an den Zonen, also am selben Memo-Takt.
+  const islandState = useMemo(() => deriveIsland(zones), [zones]);
 
   const furnace = deriveFurnace({ vps, gpuTemp, isOverheated });
   const mood = getSceneMood({ isOverheated, activeEvent, powerClickActive });
@@ -99,7 +108,7 @@ export const CampusScene = forwardRef(function CampusScene(
     window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  stateRef.current = { zones, furnace, mood, theme, selectedZone, isOverheated, reduced, handleTapAGI, tickerText, hypeTier };
+  stateRef.current = { zones, furnace, island: islandState, mood, theme, selectedZone, isOverheated, reduced, handleTapAGI, tickerText, hypeTier };
 
   // Bildschirmposition (Client-Koordinaten) eines Weltpunkts, für Beschriftungen und
   // für den Feuer-Button, dessen Partikel am Ofen starten sollen.
@@ -167,7 +176,7 @@ export const CampusScene = forwardRef(function CampusScene(
 
     const island = buildIsland(palette);
     scene.add(island.group);
-    const furnaceObj = buildFurnace(palette);
+    const furnaceObj = buildServerRack(palette);
     scene.add(furnaceObj.group);
     const zonesObj = buildZones(palette, ZONES_DATA);
     scene.add(zonesObj.group);
@@ -181,26 +190,37 @@ export const CampusScene = forwardRef(function CampusScene(
     // Querformat die Höhe. Der Ursprung liegt bewusst ÜBER der Bildmitte: der
     // sichtbare Schwerpunkt der Insel (Sockel nach unten) soll etwa auf 45 Prozent
     // Höhe sitzen, damit weder Zähler noch Buttons über der Insel liegen.
+    // `zoom` ist die aktuelle Inselgröße relativ zur Basis: die Kamera fährt mit dem
+    // Wachstum zurück, sonst schöbe die größere Insel ihre äußeren Zonen aus dem Bild.
+    let viewScale = 1;
+    let lastSize = { w: 0, h: 0 };
     const fitCamera = (w, h) => {
+      lastSize = { w, h };
       const aspect = w / Math.max(1, h);
       let halfW;
       let halfH;
+      // Der Versatz nach unten ist bewusst eine feste Weltgröße (aus dem UNskalierten
+      // Ausschnitt), keine Prozentzahl: er gleicht die Felsspitze unter der Insel aus,
+      // und die wächst nicht mit. Als Anteil gerechnet schöbe er die Insel bei jedem
+      // Wachstumsschritt weiter nach oben aus dem Bild.
+      let shiftY;
       if (aspect < 1) {
-        halfW = 17.5;
-        halfH = 17.5 / aspect;
-        camera.top = halfH * 0.82;
-        camera.bottom = -halfH * 1.18;
+        halfW = 17.5 * viewScale;
+        halfH = halfW / aspect;
+        shiftY = (17.5 / aspect) * 0.18;
       } else {
-        halfH = 17;
-        halfW = 17 * aspect;
-        camera.top = halfH * 1.02;
-        camera.bottom = -halfH * 0.98;
+        halfH = 17 * viewScale;
+        halfW = halfH * aspect;
+        shiftY = 17 * 0.02;
       }
+      camera.top = halfH - shiftY;
+      camera.bottom = -halfH - shiftY;
       camera.left = -halfW;
       camera.right = halfW;
       camera.updateProjectionMatrix();
     };
 
+    let layoutVersion = -1;
     const updateLabels = () => {
       const r = container.getBoundingClientRect();
       const next = {};
@@ -290,16 +310,21 @@ export const CampusScene = forwardRef(function CampusScene(
       // Wird in der Loop gelesen, damit er auch ohne React-Render greift.
       const dbg = window.__campusDebug;
       if (dbg) window.__campusApi = apiRef.current;
+      const dbgZones =
+        dbg && dbg.buildings
+          ? deriveZones({
+              buildings: dbg.buildings,
+              boughtGreenwashingLayoffs: dbg.boughtGreenwashingLayoffs || [],
+              damagedBuildingId: dbg.damaged || null,
+            })
+          : null;
       const s = dbg
         ? {
             ...stateRef.current,
-            zones: dbg.buildings
-              ? deriveZones({
-                  buildings: dbg.buildings,
-                  boughtGreenwashingLayoffs: dbg.boughtGreenwashingLayoffs || [],
-                  damagedBuildingId: dbg.damaged || null,
-                })
-              : stateRef.current.zones,
+            zones: dbgZones || stateRef.current.zones,
+            // Die Insel wächst auch im Debug-Modus mit - sonst zeigte ein Screenshot
+            // vierzig Praktikanten auf der Startinsel.
+            island: dbgZones ? deriveIsland(dbgZones) : stateRef.current.island,
             hypeTier: dbg.hypeTier || stateRef.current.hypeTier,
             theme: dbg.theme || stateRef.current.theme,
             furnace: { ...stateRef.current.furnace, ...dbg },
@@ -321,10 +346,27 @@ export const CampusScene = forwardRef(function CampusScene(
         container.style.background = palette.skyCss;
       }
 
-      island.update(dt, now / 1000, s.reduced);
+      const targetScale = (s.island && s.island.scale) || 1;
+      island.update(dt, now / 1000, s.reduced, targetScale);
+      const grown = island.getScale();
       furnaceObj.update(s, dt, now / 1000, palette);
       zonesObj.update(s.zones, s.selectedZone, palette, { dt, t: now / 1000, reduced: s.reduced, tickerText: s.tickerText });
-      campus.update(s.hypeTier, now / 1000, s.reduced, s.zones);
+      campus.update(s.hypeTier, now / 1000, s.reduced, s.zones, grown);
+      // Wächst die Insel, muss die Kamera zurückfahren und die Stecknadeln müssen neu
+      // projiziert werden. Beides bewusst nur bei spürbarer Änderung: sonst stünde hier
+      // ein React-Render pro Frame, genau das, was diese Komponente vermeidet.
+      if (lastSize.w && (Math.abs(grown - viewScale) > 0.01 || zonesObj.getLayoutVersion() !== layoutVersion)) {
+        viewScale = grown;
+        layoutVersion = zonesObj.getLayoutVersion();
+        // Schattenkamera mitwachsen lassen, sonst enden die Schatten am alten Rand.
+        sun.shadow.camera.left = -22 * grown;
+        sun.shadow.camera.right = 22 * grown;
+        sun.shadow.camera.top = 22 * grown;
+        sun.shadow.camera.bottom = -22 * grown;
+        sun.shadow.camera.updateProjectionMatrix();
+        fitCamera(lastSize.w, lastSize.h);
+        updateLabels();
+      }
       renderer.render(scene, camera);
     };
     raf = requestAnimationFrame(tick);

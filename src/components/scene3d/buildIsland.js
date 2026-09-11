@@ -4,10 +4,20 @@ import { ISLAND_SIZE } from '../../data/zonesData';
 // Die schwebende Insel: Grasplatte, zwei Erdschichten, darunter eine nach unten
 // spitz zulaufende Felsspitze. Dazu drei Low-Poly-Wolken, die langsam driften.
 //
+// Die Insel WÄCHST: sobald die Zonen über ihre Grundfläche hinaus bauen, verlangt
+// deriveIsland() eine größere Kantenlänge (utils/sceneState.js). Gewachsen wird über
+// einen Skalierungsfaktor auf der Landmasse in x/z - Geometrie neu zu bauen würde bei
+// jedem Kauf einen Ruckler kosten, und die Stufen sind ohnehin nur Vielfache der
+// Basisgröße. Die Höhe bleibt bewusst gleich: ein mitgewachsener Felskegel würde die
+// Insel in der Isometrie nach unten aus dem Bild schieben.
+//
 // Alles Flat Shading ohne Texturen. Materialien werden in einem Objekt gesammelt,
 // damit applyPalette() beim Theme-Wechsel nur Farben tauscht statt Geometrie neu zu bauen.
 export function buildIsland(palette) {
   const group = new THREE.Group();
+  // Landmasse getrennt von den Wolken: skaliert wird nur das Land.
+  const land = new THREE.Group();
+  group.add(land);
   const mats = {};
   const S = ISLAND_SIZE;
 
@@ -22,21 +32,21 @@ export function buildIsland(palette) {
   const grass = new THREE.Mesh(new THREE.BoxGeometry(S, 1.2, S), lambert('grass'));
   grass.position.y = -0.6;
   grass.receiveShadow = true;
-  group.add(grass);
+  land.add(grass);
 
   // Schmaler dunklerer Grasrand, damit die Kante lesbar bleibt.
   const edge = new THREE.Mesh(new THREE.BoxGeometry(S + 0.3, 0.35, S + 0.3), lambert('grassEdge'));
   edge.position.y = -1.0;
-  group.add(edge);
+  land.add(edge);
 
   // Erdschichten, jede etwas kleiner als die vorige.
   const soil = new THREE.Mesh(new THREE.BoxGeometry(S - 0.6, 2.4, S - 0.6), lambert('soil'));
   soil.position.y = -2.4;
-  group.add(soil);
+  land.add(soil);
 
   const deep = new THREE.Mesh(new THREE.BoxGeometry(S - 2.0, 1.6, S - 2.0), lambert('soilDeep'));
   deep.position.y = -4.4;
-  group.add(deep);
+  land.add(deep);
 
   // Felsspitze: Zylinder mit 4 Segmenten = umgedrehte Pyramide, um 45 Grad gedreht,
   // damit die Kanten mit der Inselplatte fluchten.
@@ -44,7 +54,7 @@ export function buildIsland(palette) {
   const spike = new THREE.Mesh(spikeGeo, lambert('soilDeep'));
   spike.rotation.y = Math.PI / 4;
   spike.position.y = -7.9;
-  group.add(spike);
+  land.add(spike);
 
   // Wolken: drei Klumpen aus je drei bis vier Ikosaedern.
   const clouds = new THREE.Group();
@@ -70,19 +80,33 @@ export function buildIsland(palette) {
     });
     c.position.set(spec.x, spec.y, spec.z);
     c.userData.baseX = spec.x;
+    c.userData.baseZ = spec.z;
     c.userData.speed = spec.speed;
     clouds.add(c);
   });
   group.add(clouds);
 
+  let scale = 1;
+
   return {
     group,
-    update(dt, t, reduced) {
+    // targetScale kommt aus deriveIsland(); die Insel fährt weich darauf zu, damit ein
+    // Kauf die Welt nicht springen lässt.
+    update(dt, t, reduced, targetScale = 1) {
+      if (Math.abs(targetScale - scale) > 0.001) {
+        scale = reduced ? targetScale : scale + (targetScale - scale) * Math.min(1, dt * 2.5);
+        land.scale.set(scale, 1, scale);
+        // Wolken rücken mit nach außen, sonst hängen sie bei großer Insel über ihr.
+        clouds.children.forEach((c) => {
+          c.position.z = c.userData.baseZ * scale;
+        });
+      }
       if (reduced) return;
       clouds.children.forEach((c, i) => {
-        c.position.x = c.userData.baseX + Math.sin(t * c.userData.speed + i) * 1.5;
+        c.position.x = (c.userData.baseX + Math.sin(t * c.userData.speed + i) * 1.5) * scale;
       });
     },
+    getScale: () => scale,
     applyPalette(p) {
       Object.entries(mats).forEach(([key, list]) => {
         list.forEach((m) => m.color.setHex(p[key]));

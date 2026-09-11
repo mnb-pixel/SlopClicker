@@ -10,8 +10,9 @@
 import { BUILDINGS_DATA } from '../data/buildingsData';
 import { UPGRADES_DATA } from '../data/upgradesData';
 import { GREENWASHING_LAYOFFS_DATA } from '../data/greenwashingLayoffsData';
-import { ZONES_DATA, ZONE_TIER_THRESHOLDS, ZONE_BY_BUILDING } from '../data/zonesData';
+import { ZONES_DATA, ZONE_TIER_THRESHOLDS, ZONE_BY_BUILDING, ZONE_ANNEX_THRESHOLDS } from '../data/zonesData';
 import { getBuildingVisibility } from './buildingUnlock';
+import { annexLocal, islandSizeForLots, lotLocal, toWorld, zoneRect, ISLAND_BASE_SIZE } from './campusLayout';
 
 const UPGRADES_BY_ID = Object.fromEntries(UPGRADES_DATA.map((u) => [u.id, u]));
 const GREENWASHING_BY_ID = Object.fromEntries(GREENWASHING_LAYOFFS_DATA.map((g) => [g.id, g]));
@@ -120,12 +121,18 @@ export function deriveZones({
       const count = buildings[entry.id] || 0;
       const unlocked = unlockedIds.has(entry.id);
 
+      const props = Math.min(count, entry.maxProps);
+
       return {
         id: entry.id,
         maxProps: entry.maxProps,
         count,
         // Wie viele Einzelobjekte der Grafik-Pass tatsächlich zeichnet.
-        props: Math.min(count, entry.maxProps),
+        props,
+        // Wie viele Gebäude diese Engine dafür braucht: ist eines voll, entsteht das
+        // nächste nebenan (siehe utils/campusLayout.js).
+        plot: entry.plot || null,
+        plots: entry.plot ? Math.min(entry.plot.max, Math.ceil(props / entry.plot.capacity)) : 0,
         // Rest, der nur noch als Zahl am Zonenschild auftaucht.
         overflow: Math.max(0, count - entry.maxProps),
         mult: mod.mult,
@@ -147,12 +154,33 @@ export function deriveZones({
     const population = zoneBuildings.reduce((sum, b) => sum + b.count, 0);
     const revealed = zoneBuildings.some((b) => b.unlocked);
 
+    // Belegte Grundstücke der Zone: erst die Gebäude der Engines mit `plot`, dann die
+    // Anbauhallen der Zonen ohne eigenes Grundstücks-Layout. Beides zusammen bestimmt,
+    // wie groß Zonenplatte und Insel sein müssen.
+    const lots = [];
+    if (population > 0) {
+      zoneBuildings.forEach((b) => {
+        for (let i = 0; i < b.plots; i += 1) {
+          const local = lotLocal(zone, b.plot, i);
+          lots.push({ id: b.id, index: i, lx: local.x, lz: local.z, ...toWorld(zone, local) });
+        }
+      });
+      const annexCount = Math.min(zone.annexMax || 0, tierFromThresholds(population, ZONE_ANNEX_THRESHOLDS));
+      for (let i = 0; i < annexCount; i += 1) {
+        const local = annexLocal(zone, i);
+        lots.push({ id: 'annex', index: i, lx: local.x, lz: local.z, ...toWorld(zone, local) });
+      }
+    }
+
     return {
       id: zone.id,
       anchor3d: zone.anchor3d,
       footprint: zone.footprint,
       buildings: zoneBuildings,
       population,
+      lots,
+      // Grundfläche plus Grundstücke - daraus wachsen Platte und Stecknadel.
+      rect: zoneRect(zone, lots),
       tier: tierFromThresholds(population, ZONE_TIER_THRESHOLDS),
       unlocked: population > 0,
       // revealed: Zone existiert für den Spieler (Schild, Platte, anklickbar).
@@ -184,6 +212,18 @@ export function getNewZoneIds({ zones = [], valuation = 0 } = {}) {
     if (hit) ids.add(zone.id);
   });
   return ids;
+}
+
+// Wie groß muss die Insel sein, damit alle belegten Grundstücke daraufpassen?
+// Getrennt von deriveZones, damit die Szene den Wert auch aus dem Debug-Zustand
+// ableiten kann; billig, weil deriveZones die Grundstücke schon fertig geliefert hat.
+export function deriveIsland(zones = []) {
+  const lots = [];
+  zones.forEach((z) => {
+    if (z.unlocked && z.lots) lots.push(...z.lots);
+  });
+  const size = islandSizeForLots(lots);
+  return { size, scale: size / ISLAND_BASE_SIZE };
 }
 
 export function deriveFurnace({ vps = 0, gpuTemp = 0, isOverheated = false } = {}) {

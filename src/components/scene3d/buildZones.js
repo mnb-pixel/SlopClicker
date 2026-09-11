@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { FURNACE_ANCHOR } from '../../data/zonesData';
+import { buildLotShells } from './buildLotShells';
 import { buildOffice } from './buildOffice';
 import { buildBasement } from './buildBasement';
 import { buildStage } from './buildStage';
@@ -16,6 +17,16 @@ const ZONE_BUILDERS = {
   endgame: buildEndgame,
 };
 
+// Akzentfarbe der Anbauhallen je Zone (palette.js-Schlüssel). Bewusst dieselbe Familie
+// wie die Props der Zone, damit eine Halle nicht wie ein Fremdkörper wirkt.
+const ANNEX_ACCENT = {
+  basement: 'token',
+  stage: 'spot',
+  tower: 'glass',
+  office: 'screen',
+  endgame: 'neon',
+};
+
 // Zonen-Grundplatten auf der Insel. In Phase 1 sind das nur flache Platten: hell (Weg-
 // Farbe), sobald die Zone freigeschaltet ist, sonst dunkleres Gras. Sie sind das
 // Klickziel für das Kaufpanel und liefern die Ankerpunkte der HTML-Beschriftungen.
@@ -30,7 +41,9 @@ export function buildZones(palette, zonesData) {
   const group = new THREE.Group();
   const hitMeshes = [];
   const plates = {};
+  const annexes = {};
   const labelAnchors = {};
+  const labelBase = {};
   const builders = {};
   const effects = {};
   const dummy = new THREE.Object3D();
@@ -137,7 +150,23 @@ export function buildZones(palette, zonesData) {
     plate.userData.clickable = false;
     group.add(plate);
     hitMeshes.push(plate);
-    plates[zone.id] = { plate, mat, unlocked: null, selected: null };
+    plates[zone.id] = { plate, mat, unlocked: null, selected: null, rectKey: null };
+
+    // Anbauhallen: leere Grundstücke neben der Zone, die sich mit dem Bestand füllen
+    // (siehe utils/campusLayout.js). Zonen ohne annexMax bekommen gar keine.
+    if (zone.annexMax) {
+      const shells = buildLotShells(palette, {
+        max: zone.annexMax,
+        size: 3.3,
+        height: 2.2,
+        roof: 'closed',
+        accentKey: ANNEX_ACCENT[zone.id] || 'neon',
+      });
+      shells.group.position.set(anchor3d.x, 0.3, anchor3d.z);
+      shells.group.visible = false;
+      group.add(shells.group);
+      annexes[zone.id] = { shells, count: -1 };
+    }
 
     effects[zone.id] = buildEffects(zone);
     group.add(effects[zone.id].group);
@@ -163,12 +192,37 @@ export function buildZones(palette, zonesData) {
         anchor3d.z + (anchor3d.z / len) * push
       );
     }
+    // Die Nadel wandert mit, sobald die Zone über ihre Grundfläche hinauswächst -
+    // sonst stünde sie bei vier Häusern mitten in der Siedlung statt an deren Rand.
+    labelBase[zone.id] = labelAnchors[zone.id].clone();
   });
+
+  // Wandert die Platte einer Zone (neues Grundstück), müssen auch die Stecknadeln neu
+  // projiziert werden. Der Zähler ist das Signal dafür an CampusScene - billiger als
+  // jeden Frame alle Anker zu vergleichen.
+  let layoutVersion = 0;
+
+  // Platte und Stecknadel auf das gewachsene Zonen-Rechteck setzen.
+  function applyRect(zone, entry) {
+    const def = zonesData.find((z) => z.id === zone.id);
+    if (!def || !zone.rect) return;
+    const { w, d } = def.footprint;
+    const rect = zone.rect;
+    entry.plate.scale.set(rect.w / w, 1, rect.d / d);
+    entry.plate.position.set(rect.cx, 0.15, rect.cz);
+    const base = labelBase[zone.id];
+    const anchor = labelAnchors[zone.id];
+    const dx = def.anchor3d.x < 0 ? rect.minX - (def.anchor3d.x - w / 2) : rect.maxX - (def.anchor3d.x + w / 2);
+    const dz = def.anchor3d.z < 0 ? rect.minZ - (def.anchor3d.z - d / 2) : rect.maxZ - (def.anchor3d.z + d / 2);
+    anchor.set(base.x + dx, base.y, base.z + dz);
+    layoutVersion += 1;
+  }
 
   return {
     group,
     hitMeshes,
     labelAnchors,
+    getLayoutVersion: () => layoutVersion,
     // ctx: { dt, t, reduced, tickerText }
     update(zones, selectedId, p, ctx) {
       zones.forEach((z) => {
@@ -180,6 +234,24 @@ export function buildZones(palette, zonesData) {
           // Der Platzhalter ist bewusst tot: es gibt dort nichts zu kaufen, ein
           // Kaufpanel mit ausschließlich gesperrten Zeilen wäre nur eine Sackgasse.
           entryEarly.plate.userData.clickable = Boolean(z.revealed);
+        }
+
+        // Plattengröße und Anbauhallen folgen den belegten Grundstücken.
+        if (entryEarly) {
+          const rectKey = z.rect ? `${z.rect.cx},${z.rect.cz},${z.rect.w},${z.rect.d}` : '';
+          if (rectKey !== entryEarly.rectKey) {
+            entryEarly.rectKey = rectKey;
+            applyRect(z, entryEarly);
+          }
+        }
+        const annex = annexes[z.id];
+        if (annex) {
+          const lots = (z.lots || []).filter((l) => l.id === 'annex');
+          annex.shells.group.visible = z.unlocked && lots.length > 0;
+          if (lots.length !== annex.count) {
+            annex.count = lots.length;
+            annex.shells.layout(lots.map((l) => ({ x: l.lx, z: l.lz })));
+          }
         }
 
         const built = builders[z.id];
@@ -231,6 +303,7 @@ export function buildZones(palette, zonesData) {
         e.unlocked = null;
       });
       Object.values(builders).forEach((b) => b.applyPalette(p));
+      Object.values(annexes).forEach((a) => a.shells.applyPalette(p));
       Object.values(effects).forEach((fx) => {
         fx.mats.boxMat.color.setHex(p.cardboard);
         fx.mats.potMat.color.setHex(p.pot);

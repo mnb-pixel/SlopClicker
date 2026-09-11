@@ -1,10 +1,24 @@
 # Token-Furnace-Campus: isometrisches Low-Poly-Diorama
 
 Das Spielfeld wird ein einziges, wachsendes Bild: eine schwebende Insel im Stil von
-Egg Inc, in der Mitte der Schmelzofen, rundherum die fünf Zonen des KI-Startups.
+Egg Inc, in der Mitte der Server-Schrank, rundherum die fünf Zonen des KI-Startups.
 Rein visuell. Spielprinzip, Zahlen und Punktesystem bleiben unverändert.
 
-Stand: alle sieben Phasen gebaut. Die 3D-Insel ist der einzige Spielbildschirm mit
+**Der Schmelzofen ist ein Server-Schrank.** Die Mitte war anfangs ein Ziegel-Bienenkorb
+mit Kamin, der von der ersten Sekunde an loderte. Ein Rechenzentrum brennt aber nicht,
+es heizt sich hoch - und deshalb läuft die Hitzeskala jetzt andersherum: kalt, warm,
+dampfend, qualmend, und erst ganz oben schlagen Flammen aus dem Dachschlitz (siehe
+"Die Mitte: der Server-Schrank"). Der Spielzustand heißt im Code weiter `furnace`, und
+das Spiel weiter Token Furnace - das ist der Markenname, nicht die Grafik.
+
+**Das Spielfeld wächst mit.** Insel und Zonenplatten sind nicht mehr fest: Engines mit
+`plot` (bisher Praktikanten und Prompt Engineers) füllen ein Gebäude bis zur Kapazität,
+danach entsteht das nächste NEBENAN; Zonen ohne eigenes Grundstücks-Layout bekommen
+Anbauhallen neben ihrer Grundfläche. Stoßen die äußersten Gebäude an den Rand, wächst
+die Insel eine Stufe (siehe "Grundstücke und Inselwachstum").
+
+Stand: alle sieben Phasen gebaut, dazu der Umbau auf Server-Schrank und wachsendes
+Spielfeld. Die 3D-Insel ist der einzige Spielbildschirm mit
 WebGL; ohne WebGL läuft die frühere Ansicht (Kopfzeile, Tabs, GPU-Button, Icon-Liste)
 als Fallback weiter. Das SVG-Zwischengerüst ist entfernt.
 
@@ -80,7 +94,7 @@ bildschirm ersetzt. Hier ist sie vorerst NUR eine versteckte Testseite:
 | Tilt-Shift | Nicht als Post-Processing (zu teuer auf Mobile), stattdessen weiche Vignette am Inselrand |
 | Bildschirm | Eine Vollbild-Szene, keine Kopf- und Fußzeile mehr. Zähler und wenige Buttons liegen als Overlay auf der Szene |
 | Panels | Shop, Statistik, Einstellungen, Belohnungen öffnen als Schublade über der Szene, die Szene bleibt sichtbar |
-| Tippen | Ofen in der Szene und ein großer Feuer-Button unten lösen dieselbe Aktion aus |
+| Tippen | Server-Schrank in der Szene und ein großer Feuer-Button unten lösen dieselbe Aktion aus |
 | Sound | Eigene Phase nach der Grafik, nicht Teil dieses Konzepts |
 | Gameplay-Ideen (Halten, Forschung, Pivots, Sweet Spot) | Nicht Teil dieses Konzepts |
 
@@ -94,7 +108,7 @@ bildschirm ersetzt. Hier ist sie vorerst NUR eine versteckte Testseite:
 | Wege, Förderband-Rand | `#E2E8F0` |
 | Tech-Fassaden | `#F7FAFC` |
 | Daten, Neon | Türkis `#22D3EE` |
-| Hitze, Ofen | Rotorange `#F97316` |
+| Hitze, Feuer | Rotorange `#F97316` |
 | Kapital, Hype | Gold `#FACC15` |
 | Inselsockel | Erdbraun, unten dunkler, mit türkisen Leiterbahn-Linien |
 | Himmel | Hellblau-Verlauf, zwei bis drei Low-Poly-Wolken |
@@ -109,11 +123,11 @@ maximal einige hundert Dreiecke.
 dunkle Drahtgitter-Kanten, Himmel Pergament. Ein Materialset pro Theme, sonst nichts.
 
 **Juiciness (rein visuell):**
-- Tap auf den Ofen: Ofen pulsiert kurz (Scale 1.0 auf 1.06 und zurück), Flammenstoß
-  und Funkenschauer aus dem Ofenmund.
+- Tap auf den Schrank: Schrank pulsiert kurz (Scale 1.0 auf 1.04 und zurück), alle LEDs
+  flackern auf, Funkenschauer aus dem Dachschlitz.
 - Fliegende Zahlen bleiben wie heute (`ClickParticles`), nur über der Canvas.
 - Kauf einer Engine: der neue Prop wächst mit Überschwinger aus dem Boden.
-- Rauchdichte und Ofenglut folgen VPS und Hitze wie bereits in `sceneState.js` abgeleitet.
+- Rauchdichte und Schrankglut folgen VPS und Hitze wie bereits in `sceneState.js` abgeleitet.
 
 ## Bildschirmaufbau
 
@@ -132,7 +146,7 @@ Insel nur größer und die Schublade liegt rechts statt unten.
 |                                                    |
 |                                                    |
 |                  S Z E N E                         |
-|        (Insel, Ofen, Zonen, Zonen-Stecknadeln)     |
+|     (Insel, Schrank, Zonen, Zonen-Stecknadeln)     |
 |                                                    |
 |                                                    |
 |  [ FEUERN ]   [ SHOP (3) ]   [Stats]  [Optionen]   |  <- Overlay unten
@@ -148,7 +162,7 @@ schwarzem Schlagschatten - der Himmel ist hell, dunkler Text liest sich darauf b
   Sprache, Handbuch, Teilen (Pitch Deck).
 - Valuation groß in der Mitte, darunter drei Chips: Burn, Netto-VPS, Hype-Stufe.
   Slop-Zähler wandert in die Statistik.
-- GPU-Hitze als schmaler Balken unter den Chips. Zusätzlich färbt der Ofen selbst.
+- GPU-Hitze als schmaler Balken unter den Chips. Zusätzlich färbt sich der Schrank selbst.
 - Newsticker: LED-Laufschrift auf dem Dach des Kapital-Turms (`utils/tickerText.js`
   liefert den Text für Tafel und HTML-Laufzeile). Die dünne Laufzeile oben gibt es nur
   noch im SVG-Fallback ohne WebGL.
@@ -156,9 +170,9 @@ schwarzem Schlagschatten - der Himmel ist hell, dunkler Text liest sich darauf b
   über allem.
 
 **Overlay unten:**
-- **FEUERN**, groß, links: löst `handleTapAGI` aus, identisch zum Tap auf den Ofen.
+- **FEUERN**, groß, links: löst `handleTapAGI` aus, identisch zum Tap auf den Schrank.
   Ein Daumen-Button ist auf dem Handy ergonomischer als ein Ziel in der Bildmitte.
-  Die fliegenden Zahlen starten trotzdem am Ofen. Bei Überhitzung zeigt der Button
+  Die fliegenden Zahlen starten trotzdem am Schrank. Bei Überhitzung zeigt der Button
   die Abkühlung und den Kühl-Werbespot an, der heute in der roten Warnbox steckt.
 - **SHOP**, groß, rechts daneben: Engines, Upgrades, Corporate, Buzzwords. Badge
   mit der Zahl leistbarer Upgrades wie heute in der Tab-Leiste.
@@ -182,8 +196,10 @@ bleibt dahinter sichtbar und läuft weiter. Die bestehenden Tab-Komponenten
 
 ## Die Insel
 
-Ein Raster von 24 x 24 Einheiten, Ursprung in der Mitte. Der Ofen steht auf dem
-Ursprung. Blickrichtung: die Kamera schaut von vorne links, vorne ist +Z.
+Ein Raster von 24 x 24 Einheiten als BASIS, Ursprung in der Mitte. Der Server-Schrank
+steht auf dem Ursprung. Blickrichtung: die Kamera schaut von vorne links, vorne ist +Z.
+Die Insel wächst in Vierer-Schritten bis 44 Einheiten mit, sobald Gebäude über den Rand
+hinauswollen - gerechnet in `utils/campusLayout.js`, ausgelöst über `deriveIsland()`.
 
 ```
                    hinten
@@ -202,16 +218,20 @@ Ursprung. Blickrichtung: die Kamera schaut von vorne links, vorne ist +Z.
                    vorne
 ```
 
-| Zone | Ankerpunkt (x, z) | Grundfläche |
+Die Anker der Zonen bleiben fest, gewachsen wird nach AUSSEN: neue Grundstücke hängen
+sich vom Ofen weg an die Grundfläche an, die Zonenplatte wächst mit ihnen, und die
+Datenleitungen zum Schrank bleiben unangetastet.
+
+| Zone | Ankerpunkt (x, z) | Grundfläche (Basis) |
 |---|---|---|
-| Ofen | 0, 0 | 5 x 5 |
+| Server-Schrank | 0, 0 | 7 x 6 (Sockel) |
 | office | -7, +6 | 8 x 7 |
 | stage | +7, +6 | 8 x 7 |
 | basement | -7, -6 | 8 x 7 |
 | tower | +7, -6 | 8 x 7 |
-| endgame | 0, -10 sowie Luftraum über dem Ofen | 14 x 3 |
+| endgame | 0, -10 sowie Luftraum über dem Schrank | 14 x 3 |
 
-Vom Büro führt eine transparente Datenleitung über die Tische zum Ofensockel, durch
+Vom Büro führt eine transparente Datenleitung über die Tische zum Schranksockel, durch
 die Tokens rasen (instanziert, Menge nach Zonenstufe). Die Server-Silos bekommen in
 Phase 4 eine zweite Leitung derselben Art.
 
@@ -219,16 +239,16 @@ Phase 4 eine zweite Leitung derselben Art.
 
 | Zone | Engine | Prop (Low-Poly) | Max. Objekte |
 |---|---|---|---|
-| office | Prompt-Praktikant | Person am schiefen Tisch, Monitor, Tastatur, Tasse, tippende Arme, hängende Schultern | 12 |
-| office | Prompt Engineer | Person am breiteren Tisch mit zwei Monitoren, aufrechte Haltung, schnelleres Tippen | 8 |
+| office | Prompt-Praktikant | Person am schiefen Tisch, Monitor, Tastatur, Tasse, tippende Arme, hängende Schultern - vier pro Haus, danach ein Haus nebenan (bis 4 Häuser) | 16 |
+| office | Prompt Engineer | Person am breiteren Tisch mit zwei Monitoren, aufrechte Haltung, schnelleres Tippen - vier pro Haus, zweites Haus dahinter | 8 |
 | office | Chatbot-Widget | Schwebende Sprechblasen mit pulsierenden Punkten über den Tischen | 10 |
-| office | Datenleitung | Transparente Röhre vom Büro zum Ofensockel, Tokens rasen hindurch, Menge nach Zonenstufe | 40 Tokens |
+| office | Datenleitung | Transparente Röhre vom Büro zum Schranksockel, Tokens rasen hindurch, Menge nach Zonenstufe | 40 Tokens |
 | basement | GPU-Rack | Schmaler Turm mit vier blinkenden LED-Streifen | 14 |
 | basement | Rechenzentrum | Weißer Zylinder mit zwei Türkis-Ringen und Band, Lüfter oben dreht | 8 |
 | basement | Token-Burner | Kubus mit wabernd orangem Kern | 8 |
 | basement | Web-Scraper | Drohne mit vier Rotoren und rotem Auge, kreist über den Silos | 12 |
 | basement | Grauer-Markt-RZ | Dunkles Silo unter grüner Plane hinter Zaun, links am Rand | 6 |
-| basement | Datenleitung | Zweite Röhre zum Ofen, kommt an dessen linker, sichtbarer Seite an | 40 Tokens |
+| basement | Datenleitung | Zweite Röhre zum Schrank, kommt an dessen linker, sichtbarer Seite an | 40 Tokens |
 | stage | Keynote-Bühne | Podest mit Pult, leuchtender Rückwand mit Gold-Balkendiagramm; jede weitere Bühne ein Scheinwerfer mit schwenkendem Lichtkegel | 4 |
 | stage | Thought Leader | Person mit Krawatte und Mikrofon, gestikuliert, vordere Reihe auf der Bühne | 10 |
 | stage | Hype-Journalist | Person mit Kamera vor dem Gesicht, Blitz ploppt zufällig auf | 10 |
@@ -241,9 +261,49 @@ Phase 4 eine zweite Leitung derselben Art.
 | endgame | Kleiner Atomreaktor | Kühlturm an der hinteren Kante mit weißem Dampf, je einer links und rechts | 4 |
 | endgame | 3D-Welt-Geisterstadt | Hologramm-Skyline aus türkisen Glasquadern auf einem Projektor, flimmert | 6 |
 | endgame | Selbstbewusste Excel-Tabelle | Schwebendes Gitterblatt mit zwei Augen, dreht sich, hoch über den Silos | 6 |
-| endgame | Die Singularity | Schwarze Kugel mit zwei Akkretionsringen im Rauch über dem Schlot, Trümmer kreisen hinein | 1 |
+| endgame | Die Singularity | Schwarze Kugel mit zwei Akkretionsringen im Rauch über dem Abluftrohr, Trümmer kreisen hinein | 1 |
 
 Über die Maximalzahl hinaus wächst nur die Zahl an der Zonen-Stecknadel und die Ausbaustufe.
+
+## Grundstücke und Inselwachstum
+
+`utils/campusLayout.js` ist die einzige Quelle für beides - Ableitung (`sceneState.js`)
+und Bauer (`components/scene3d/*`) rechnen mit denselben Zahlen. Läge die Rechnung in
+den Bauern, müsste die Insel raten, wie weit die Zonen inzwischen gewachsen sind.
+
+* **Grundstück** (`LOT_SIZE` 3,6): ein Haus. `lotLocal()` legt es in die Zone, Index 0
+  in die innere Ecke der Grundfläche, jeder weitere Schritt nach außen - ab der Kante
+  eben über sie hinaus.
+* **Engines mit `plot`** (`zonesData.js`): `capacity` Objekte pro Haus, `max` Häuser,
+  `axis` die Wachstumsrichtung, `lane`/`offset` die Reihe. `maxProps` ist bei ihnen
+  bewusst `capacity * max`, sonst stünde das letzte Haus halb leer.
+* **Anbauhallen** (`annexMax` an der Zone): für Zonen, deren Props auf festen Plätzen
+  stehen (Keller, Bühne, Turm). Sie liegen komplett außerhalb der Grundfläche und
+  kommen bei 30, 80, 200 und 500 Objekten Zonenbestand dazu.
+* **Zonenplatte und Stecknadel** folgen dem Rechteck aus Grundfläche + Grundstücken
+  (`zoneRect`), die Nadel rückt um genau den Zuwachs nach außen.
+* **Inselgröße**: `islandSizeForLots()` nimmt das äußerste Grundstück plus Rand und
+  rastert auf Vierer-Schritte (24 bis 44). Gewachsen wird über einen Skalierungsfaktor
+  auf der Landmasse, nicht über neue Geometrie; Kamera, Schattenkamera, Bäume,
+  Randlicht und Leiterbahnen fahren mit.
+
+## Die Mitte: der Server-Schrank
+
+Ein Rack auf einem Doppelboden-Podest, flankiert von zwei halbhohen Nachbarschränken,
+hinten ein schmales Abluftrohr. Die Front ist eine offene Schale mit Glastür: dahinter
+liegen die Blades mit ihren LEDs, davor der Türrahmen. Ein geschlossener Quader war die
+erste Fassung - und sah aus wie ein Quader.
+
+| Stufe | Was der Schrank tut |
+|---|---|
+| cold | LEDs türkis, Lüfter drehen gemächlich, kein Dampf |
+| warm | LEDs gold, Lüfter schneller, erster Wasserdampf aus dem Dachschlitz |
+| hot | LEDs orange, dichter Dampf, Glut zwischen den Blades, erste Funken |
+| critical | LEDs rot, dunkler Qualm, Flammen aus Dachschlitz und Türspalt |
+| meltdown | Gehäuse verrußt, volle Flammen, Absperrband, Warnlicht, Kühlnebel |
+
+Die Rauchfahne aus dem Abluftrohr hängt weiter an den VPS (`smokeTier`), ihre FARBE an
+der Hitze: weißer Dampf, solange es kühl ist, dann grau, dann schwarz.
 
 ## Ausbaustufen
 
@@ -251,7 +311,7 @@ Zwei unabhängige Achsen, beide bereits im Gerüst angelegt:
 
 1. **Campus-Stufe, inselweit**, gekoppelt an die vorhandene Hype-Stufe (1 bis 10),
    siehe `buildCampus.js`: Garage (1 bis 2) nackte Insel; Co-Working (3 bis 5) Wege
-   von den freigeschalteten Zonen zum Ofen und sechs Bäume; Container-Dorf (6 bis 8)
+   von den freigeschalteten Zonen zum Schrank und sechs Bäume; Container-Dorf (6 bis 8)
    zehn Bäume und schwach leuchtender Inselrand; Hyperscale (9 bis 10) vierzehn Bäume,
    Rand voll, türkise Leiterbahnen im Fels, acht Lichtdrohnen um die Insel.
 2. **Zonen-Stufe** aus dem Bestand der Zone (`tier` 0 bis 7 in `sceneState.js`):
@@ -261,10 +321,11 @@ Zwei unabhängige Achsen, beide bereits im Gerüst angelegt:
 
 | Zustand | Quelle | Wirkung |
 |---|---|---|
-| Hitze cold bis critical | GPU-Temperatur | Ofenmauer grau bis rot glühend, Flammenhöhe |
-| meltdown | Overheat-Lock | Ofen dunkel, Absperrband, Kühlnebel, Klick gesperrt |
-| Rauchstufe 0 bis 7 | VPS, logarithmisch | Anzahl und Größe der Rauchwölkchen |
-| surge | Power Click | Türkise Blitze zucken um den Schlot, alle 80 ms neu gewürfelt |
+| Hitze cold bis critical | GPU-Temperatur | LED-Farbe, Lüfterdrehzahl, Dampf, Glut, ab critical Flammen |
+| meltdown | Overheat-Lock | Schrank verrußt und brennt, Absperrband, Kühlnebel, Klick gesperrt |
+| Rauchstufe 0 bis 7 | VPS, logarithmisch | Anzahl und Größe der Wölkchen aus dem Abluftrohr (Farbe nach Hitze) |
+| Inselgröße 24 bis 44 | belegte Grundstücke | Landmasse, Kamera, Bäume und Randlicht wachsen in Stufen mit |
+| surge | Power Click | Türkise Blitze zucken um den Schrank, alle 80 ms neu gewürfelt |
 | golden | Golden Meme | Goldrauch, Goldflammen, Goldmünzen regnen über die Insel |
 | bubble | Bubble Burn | Statt Rauch steigen Seifenblasen auf und platzen oben |
 | glitch | Halluzination | Kurzes Kanal-Versatz-Flackern der ganzen Insel (CSS auf dem Container) |
@@ -276,7 +337,7 @@ Zwei unabhängige Achsen, beide bereits im Gerüst angelegt:
 ## Debug-Haken für Screenshots
 
 `window.__campusDebug = { heatStage, heatPct, smokeTier, mood, buildings }` überschreibt
-in der Render-Loop NUR die Anzeige (Ofen und Zonen-Bestand), nie den Spielzustand. Solange er gesetzt ist,
+in der Render-Loop NUR die Anzeige (Schrank, Zonen-Bestand und Inselgröße), nie den Spielzustand. Solange er gesetzt ist,
 liegt die Szenen-API unter `window.__campusApi`. Gedacht für Screenshots aller Stufen
 ohne stundenlanges Spielen; kein Cheat, weil nichts davon in den Store zurückfließt.
 
@@ -289,7 +350,7 @@ ohne stundenlanges Spielen; kein Cheat, weil nichts davon in den Store zurückfl
   3D-Chunk warten. Budget: rund 150 KB gzip zusätzlich.
 - **Instancing** für Praktikanten, Rauch, Blätter, Drohnen. Alles Wuselnde ist ein
   InstancedMesh mit Matrix-Update pro Frame, nie einzelne Meshes.
-- **Interaktion per Raycast**: Ofen löst `handleTapAGI(event)` aus (Clientkoordinaten
+- **Interaktion per Raycast**: der Schrank löst `handleTapAGI(event)` aus (Clientkoordinaten
   bleiben erhalten, die fliegenden Zahlen brauchen sie), Zonen öffnen `ZoneBuyPanel`.
 - **Render nur bei Bedarf**: Loop läuft mit 60 FPS, solange die Szene sichtbar und der
   Tab aktiv ist. Bei `prefers-reduced-motion` stehen Rauch und Wusler still.
@@ -307,14 +368,16 @@ ohne stundenlanges Spielen; kein Cheat, weil nichts davon in den Store zurückfl
 | `src/platform/webgl.js` | Einmalige WebGL-Erkennung, entscheidet Shell oder Fallback |
 | `src/components/shell/GameShell.jsx`, `HudTop.jsx`, `HudBottom.jsx`, `Drawer.jsx` | Vollbild-Shell mit Overlays und Schubladen |
 | `src/components/scene3d/CampusScene.jsx` | React-Wrapper: Renderer, Kamera, Licht, Loop, Raycast, Beschriftungen, Debug-Haken |
-| `src/components/scene3d/buildIsland.js`, `buildFurnace.js`, `buildCampus.js` | Insel, Ofen, Campus-Stufen |
+| `src/components/scene3d/buildIsland.js`, `buildServerRack.js`, `buildCampus.js` | Insel (inkl. Wachstum), Server-Schrank, Campus-Stufen |
+| `src/components/scene3d/buildLotShells.js` | Gebäudehüllen auf den Grundstücken (halboffen fürs Büro, geschlossen für Anbauhallen) |
+| `src/utils/campusLayout.js` | Grundstücks-Raster, Zonen-Rechteck, Inselgröße - reine Geometrie |
 | `src/components/scene3d/buildOffice.js`, `buildBasement.js`, `buildStage.js`, `buildTower.js`, `buildEndgame.js` | Die fünf Zonen |
 | `src/components/scene3d/buildZones.js` | Platten, Klickziele, Nadel-Anker, Zonen-Effekte, hostet die Zonen-Bauer |
 | `src/components/scene3d/buildDataLine.js`, `buildPeople.js` | Gemeinsame Bausteine: Datenleitung, Personen |
 | `src/components/scene3d/ZoneBuyPanel.jsx` | Kaufen aus der Szene, Preise über dieselben Helfer wie der Shop |
 | `src/components/scene3d/palette.js` | Materialfarben je Theme, Himmel als CSS-Verlauf |
 | `src/components/scene3d/zoneVisuals.js` | Icon und Akzentfarbe je Zone, für Stecknadel und Panelkopf |
-| `src/data/zonesData.js` | Zonen-Anker, Grundflächen, Nadel-Anker (`labelAnchor3d`), Engine-Zuordnung, `maxProps` |
+| `src/data/zonesData.js` | Zonen-Anker, Grundflächen, Nadel-Anker (`labelAnchor3d`), Engine-Zuordnung, `maxProps`, `plot`, `annexMax` |
 | `src/utils/sceneState.js` | Spielzahlen zu Grafik-Stufen, reine Funktionen |
 | `src/utils/tickerText.js` | Ticker-Text für LED-Tafel und HTML-Laufzeile (Fallback) |
 | Store: `lastBlackSwan` | Rein visuelles Signal für den Schadensblitz, nicht gespeichert |

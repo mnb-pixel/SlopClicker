@@ -1,38 +1,43 @@
 import * as THREE from 'three';
 import { buildDataLine, defaultLineRoute } from './buildDataLine';
+import { buildLotShells } from './buildLotShells';
 
 // Großraumbüro (Zone "office"): Praktikanten und Prompt Engineers sitzen an schäbigen
-// Schreibtischen und tippen. Vom Büro führt eine Datenleitung über die Tische zum
-// Ofen, durch die Tokens rasen. Chatbot-Widgets schweben als Sprechblasen über den
-// Tischen, zwei Neonröhren flackern darüber.
+// Schreibtischen und tippen - seit dem Grundstücks-Umbau nicht mehr frei auf der Wiese,
+// sondern IN Häusern. Vier Arbeitsplätze passen in ein Haus; ist es voll, entsteht das
+// nächste nebenan (Praktikanten nach außen in x, Engineers nach hinten in z, siehe
+// utils/campusLayout.js). Vom Büro führt weiter eine Datenleitung zum Ofen, durch die
+// Tokens rasen; Chatbot-Widgets schweben als Sprechblasen über den Dächern.
 //
 // Jede Teilesorte (Tischplatte, Böcke, Monitor, Tastatur, Stuhl, Körper, Kopf, Arme,
 // Tasse, Papier, Blase, Token) ist EIN InstancedMesh. Statische Teile werden nur bei
 // geänderter Anzahl neu gesetzt, pro Frame bewegen sich nur Arme, Köpfe, Blasen,
-// Tokens und das Neonflackern.
+// Tokens und das Deckenlicht.
 
-const INTERN_MAX = 12;
+const INTERN_MAX = 16;
 const ENGINEER_MAX = 8;
+const INTERN_LOTS_MAX = 4;
+const ENGINEER_LOTS_MAX = 2;
 const WIDGET_MAX = 10;
-const UNIT_YAW = Math.PI / 4; // Tische schauen zur Kamera hin (+x,+z)
+const UNIT_YAW = Math.PI / 4; // Tische schauen zur offenen Hausecke (+x,+z) und damit zur Kamera
+// Arbeitsplätze sind kleiner als früher: sie stehen jetzt in einem Haus von 3,3
+// Einheiten Kantenlänge, in Originalgröße passte kein Vierer-Block hinein.
+const UNIT_SCALE = 0.68;
+const LOT_SIZE = 3.3;
+const WALL_H = 2.0;
+
+// Vier Arbeitsplätze je Haus, relativ zur Hausmitte.
+const DESK_OFFSETS = [
+  { x: -0.75, z: -0.75 },
+  { x: 0.75, z: -0.75 },
+  { x: -0.75, z: 0.75 },
+  { x: 0.75, z: 0.75 },
+];
+const DESKS_PER_LOT = DESK_OFFSETS.length;
 
 function hash01(i) {
   const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
   return x - Math.floor(x);
-}
-
-// Sitzplätze in Zonen-Koordinaten (relativ zum Zonen-Anker, y = 0 ist die Platte).
-const INTERN_SLOTS = [];
-for (let r = 0; r < 3; r += 1) {
-  for (let c = 0; c < 4; c += 1) {
-    INTERN_SLOTS.push({ x: -2.7 + c * 1.8, z: 2.4 - r * 1.4 });
-  }
-}
-const ENGINEER_SLOTS = [];
-for (let r = 0; r < 2; r += 1) {
-  for (let c = 0; c < 4; c += 1) {
-    ENGINEER_SLOTS.push({ x: -2.7 + c * 1.8, z: -1.9 - r * 1.3 });
-  }
 }
 
 export function buildOffice(palette, zoneDef, furnaceAnchor) {
@@ -64,6 +69,22 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
     return m;
   };
 
+  // --- Häuser ------------------------------------------------------------------------
+  const internShells = buildLotShells(palette, {
+    max: INTERN_LOTS_MAX,
+    size: LOT_SIZE,
+    height: WALL_H,
+    accentKey: 'screen',
+  });
+  group.add(internShells.group);
+  const engineerShells = buildLotShells(palette, {
+    max: ENGINEER_LOTS_MAX,
+    size: LOT_SIZE,
+    height: WALL_H,
+    accentKey: 'token',
+  });
+  group.add(engineerShells.group);
+
   // --- Teile -------------------------------------------------------------------------
   const deskTop = inst(new THREE.BoxGeometry(1.35, 0.08, 0.7), lambert('desk'), TOTAL);
   const deskLeg = inst(new THREE.BoxGeometry(0.08, 0.7, 0.62), lambert('deskLeg'), TOTAL * 2);
@@ -85,25 +106,11 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
   const bubble = inst(new THREE.BoxGeometry(0.7, 0.45, 0.12), lambert('bubble'), WIDGET_MAX, false);
   const bubbleDot = inst(new THREE.SphereGeometry(0.05, 5, 4), basic('token'), WIDGET_MAX * 3, false);
 
-  // --- Neonröhren -------------------------------------------------------------------
+  // --- Deckenlicht je Haus ------------------------------------------------------------
+  // Früher standen zwei freie Neonmasten auf der Wiese. Mit Häusern gehört das Licht
+  // unter deren Attika: eine Röhre pro Haus, gemeinsames Material, das flackert.
   const neonMat = basic('screen', { transparent: true, opacity: 0.9 });
-  const neonFixtures = [];
-  [
-    { x: -1.5, z: 0.6 },
-    { x: 1.8, z: -1.6 },
-  ].forEach((f) => {
-    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.6, 6), neonMat);
-    tube.rotation.z = Math.PI / 2;
-    tube.position.set(f.x, 2.9, f.z);
-    group.add(tube);
-    const holder = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.06, 0.16), lambert('deskLeg'));
-    holder.position.set(f.x, 2.98, f.z);
-    group.add(holder);
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 3.0, 4), lambert('deskLeg'));
-    pole.position.set(f.x + 1.3, 1.5, f.z);
-    group.add(pole);
-    neonFixtures.push(tube);
-  });
+  const ceilingLight = inst(new THREE.BoxGeometry(1.9, 0.07, 0.09), neonMat, INTERN_LOTS_MAX + ENGINEER_LOTS_MAX, false);
   let neonFlickerUntil = 0;
 
   // --- Datenleitung zum Ofen (gemeinsames Modul, siehe buildDataLine.js) ---------
@@ -117,10 +124,16 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
   const partM = new THREE.Matrix4();
   const tmp = new THREE.Object3D();
   const color = new THREE.Color();
+  const unitScale = new THREE.Vector3(UNIT_SCALE, UNIT_SCALE, UNIT_SCALE);
+  const unitQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), UNIT_YAW);
+  const unitPos = new THREE.Vector3();
 
   // Setzt ein Teil relativ zu einem Sitzplatz. Lokal: Person schaut nach +z.
+  // compose() statt makeRotationY().setPosition(): der Arbeitsplatz wird zusätzlich
+  // verkleinert (UNIT_SCALE), damit vier davon in ein Haus passen.
   const place = (mesh, index, slot, lx, ly, lz, rx = 0, ry = 0, rz = 0, sx = 1, sy = 1, sz = 1) => {
-    unitM.makeRotationY(UNIT_YAW).setPosition(slot.x, 0, slot.z);
+    unitPos.set(slot.x, slot.y || 0, slot.z);
+    unitM.compose(unitPos, unitQuat, unitScale);
     tmp.position.set(lx, ly, lz);
     tmp.rotation.set(rx, ry, rz);
     tmp.scale.set(sx, sy, sz);
@@ -129,17 +142,34 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
     mesh.setMatrixAt(index, partM);
   };
 
-  let placedInterns = -1;
-  let placedEngineers = -1;
+  let placedKey = null;
   let placedWidgets = -1;
-  let placedLaidOff = false;
-  let units = []; // { slot, isEngineer, index }
+  // Ruhelage der Sprechblasen (wird pro Frame nur noch auf und ab gewippt).
+  const widgetBase = new Float32Array(WIDGET_MAX);
+  const widgetPos = new Float32Array(WIDGET_MAX * 2);
+  let units = []; // { slot, isEngineer, seed, absent }
+
+  // Arbeitsplätze eines Hauses: vier Plätze auf der Bodenplatte (y = 0.18).
+  function deskSlots(lot) {
+    return DESK_OFFSETS.map((o) => ({ x: lot.lx + o.x, y: 0.18, z: lot.lz + o.z }));
+  }
 
   // laidOff: jede dritte Person fehlt (leerer Stuhl), der Tisch bleibt.
-  function layout(internCount, engineerCount, p, laidOff) {
+  function layout(internLots, engineerLots, internCount, engineerCount, p, laidOff) {
     units = [];
-    for (let i = 0; i < internCount; i += 1) units.push({ slot: INTERN_SLOTS[i], isEngineer: false, seed: i, absent: laidOff && i % 3 === 1 });
-    for (let i = 0; i < engineerCount; i += 1) units.push({ slot: ENGINEER_SLOTS[i], isEngineer: true, seed: 100 + i, absent: laidOff && i % 3 === 1 });
+    const fill = (lots, count, isEngineer) => {
+      let left = count;
+      lots.forEach((lot, li) => {
+        const slots = deskSlots(lot);
+        for (let k = 0; k < DESKS_PER_LOT && left > 0; k += 1) {
+          const seed = (isEngineer ? 100 : 0) + li * DESKS_PER_LOT + k;
+          units.push({ slot: slots[k], isEngineer, seed, absent: laidOff && seed % 3 === 1 });
+          left -= 1;
+        }
+      });
+    };
+    fill(internLots, internCount, false);
+    fill(engineerLots, engineerCount, true);
 
     const n = units.length;
     let monitorIdx = 0;
@@ -204,11 +234,37 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
       }
     );
     if (body.instanceColor) body.instanceColor.needsUpdate = true;
+
+    // Häuser und ihr Deckenlicht.
+    internShells.layout(internLots.map((l) => ({ x: l.lx, z: l.lz })));
+    engineerShells.layout(engineerLots.map((l) => ({ x: l.lx, z: l.lz })));
+    const allLots = [...internLots, ...engineerLots];
+    allLots.forEach((lot, i) => {
+      dummy.position.set(lot.lx, WALL_H + 0.02, lot.lz);
+      dummy.rotation.set(0, UNIT_YAW, 0);
+      dummy.scale.setScalar(1);
+      dummy.updateMatrix();
+      ceilingLight.setMatrixAt(i, dummy.matrix);
+    });
+    ceilingLight.count = allLots.length;
+    ceilingLight.instanceMatrix.needsUpdate = true;
   }
 
-  function layoutWidgets(count) {
+  function layoutWidgets(count, lots) {
+    for (let i = 0; i < count; i += 1) {
+      const lot = lots[i % Math.max(1, lots.length)] || { lx: 0, lz: 0 };
+      dummy.position.set(lot.lx + ((i % 2) - 0.5) * 1.2, WALL_H + 1.1 + (i % 3) * 0.35, lot.lz + ((i % 3) - 1) * 0.8);
+      dummy.rotation.set(0, UNIT_YAW, 0);
+      dummy.scale.setScalar(1);
+      dummy.updateMatrix();
+      bubble.setMatrixAt(i, dummy.matrix);
+      widgetBase[i] = dummy.position.y;
+      widgetPos[i * 2] = dummy.position.x;
+      widgetPos[i * 2 + 1] = dummy.position.z;
+    }
     bubble.count = count;
     bubbleDot.count = count * 3;
+    bubble.instanceMatrix.needsUpdate = true;
   }
 
   return {
@@ -221,16 +277,21 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
       const internCount = Math.min(INTERN_MAX, interns ? interns.props : 0);
       const engineerCount = Math.min(ENGINEER_MAX, engineers ? engineers.props : 0);
       const widgetCount = Math.min(WIDGET_MAX, widgets ? widgets.props : 0);
+      const lots = zone.lots || [];
+      const internLots = lots.filter((l) => l.id === 'prompt_intern').slice(0, INTERN_LOTS_MAX);
+      const engineerLots = lots.filter((l) => l.id === 'prompt_engineer').slice(0, ENGINEER_LOTS_MAX);
 
       const laidOff = Boolean(zone.laidOff);
-      if (internCount !== placedInterns || engineerCount !== placedEngineers || laidOff !== placedLaidOff) {
-        layout(internCount, engineerCount, p, laidOff);
-        placedInterns = internCount;
-        placedEngineers = engineerCount;
-        placedLaidOff = laidOff;
+      // Ein Schlüssel statt vier Vergleichen: die Häuser können sich auch bei gleicher
+      // Kopfzahl verschieben (neues Grundstück), dann muss alles neu gesetzt werden.
+      const key = `${internCount}/${engineerCount}/${internLots.length}/${engineerLots.length}/${laidOff}`;
+      if (key !== placedKey) {
+        layout(internLots, engineerLots, internCount, engineerCount, p, laidOff);
+        placedKey = key;
+        placedWidgets = -1;
       }
       if (widgetCount !== placedWidgets) {
-        layoutWidgets(widgetCount);
+        layoutWidgets(widgetCount, internLots.length ? internLots : engineerLots);
         placedWidgets = widgetCount;
       }
 
@@ -260,11 +321,10 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
         hair.instanceMatrix.needsUpdate = true;
       }
 
-      // Sprechblasen wippen über den Tischen.
+      // Sprechblasen wippen über den Dächern.
       for (let i = 0; i < widgetCount; i += 1) {
-        const slot = INTERN_SLOTS[i % INTERN_SLOTS.length];
         const bob = reduced ? 0 : Math.sin(t * 1.6 + i) * 0.12;
-        dummy.position.set(slot.x + 0.3, 2.2 + bob + (i % 2) * 0.3, slot.z - 0.3);
+        dummy.position.set(widgetPos[i * 2], widgetBase[i] + bob, widgetPos[i * 2 + 1]);
         dummy.rotation.set(0, UNIT_YAW, 0);
         dummy.scale.setScalar(1);
         dummy.updateMatrix();
@@ -287,20 +347,19 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
       // Tokens rasen durch die Leitung, Menge nach Zonenstufe.
       line.update(zone.tier, dt, t, reduced);
 
-      // Neonröhren flackern gelegentlich.
+      // Deckenlicht flackert gelegentlich.
       if (!reduced) {
         if (t > neonFlickerUntil && hash01(Math.floor(t * 3)) > 0.93) neonFlickerUntil = t + 0.25;
-        const flick = t < neonFlickerUntil ? 0.35 + Math.abs(Math.sin(t * 60)) * 0.5 : 0.9;
+        const flick = t < neonFlickerUntil ? 0.3 + Math.abs(Math.sin(t * 60)) * 0.4 : 0.75;
         neonMat.opacity = zone.unlocked ? flick : 0.25;
       }
-      neonFixtures.forEach((f) => {
-        f.visible = zone.unlocked;
-      });
     },
     applyPalette(p) {
       Object.entries(mats).forEach(([key, list]) => list.forEach((m) => m.color.setHex(p[key])));
       line.applyPalette(p);
-      placedInterns = -1; // erzwingt neues Layout inkl. Hoodie-Farben
+      internShells.applyPalette(p);
+      engineerShells.applyPalette(p);
+      placedKey = null; // erzwingt neues Layout inkl. Hoodie-Farben
     },
   };
 }

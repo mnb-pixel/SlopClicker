@@ -7,6 +7,10 @@ import { ISLAND_SIZE } from '../../data/zonesData';
 //   3 Container-Dorf (6-8): mehr Bäume, leuchtender Inselrand
 //   4 Hyperscale (9-10):   Leiterbahnen im Fels, Randlicht voll, Lichtdrohnen
 // Das Zonen-Wachstum (Bestand) läuft unabhängig davon in den Zonen-Bauern.
+//
+// Zusätzlich folgt alles hier der Inselgröße: wächst die Insel (deriveIsland), rücken
+// Bäume, Randlicht und Leiterbahnen nach außen mit. Ohne das läge der leuchtende Rand
+// nach dem ersten Wachstumsschritt quer über der Wiese.
 
 export function campusStage(hypeTier) {
   if (hypeTier >= 9) return 4;
@@ -61,7 +65,8 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
       paths.add(path);
     });
 
-  // Bäume: Stamm + zwei Kronen-Kegel, instanziert.
+  // Bäume: Stamm + zwei Kronen-Kegel, instanziert. Die Positionen sind auf die
+  // Basis-Inselgröße bezogen und werden mit ihr skaliert (layoutTrees).
   const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.12, 0.16, 0.7, 5), lambert('trunk'), TREE_SPOTS.length);
   const crownA = new THREE.InstancedMesh(new THREE.ConeGeometry(0.75, 1.3, 6), lambert('crown'), TREE_SPOTS.length);
   const crownB = new THREE.InstancedMesh(new THREE.ConeGeometry(0.55, 1.0, 6), lambert('crownDark'), TREE_SPOTS.length);
@@ -71,24 +76,29 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
     m.count = 0;
     group.add(m);
   });
-  TREE_SPOTS.forEach((s, i) => {
-    const k = 0.85 + ((i * 7) % 5) * 0.08;
-    dummy.position.set(s.x, 0.35, s.z);
-    dummy.rotation.set(0, 0, 0);
-    dummy.scale.setScalar(1);
-    dummy.updateMatrix();
-    trunk.setMatrixAt(i, dummy.matrix);
-    dummy.position.set(s.x, 1.1 * k + 0.3, s.z);
-    dummy.scale.setScalar(k);
-    dummy.updateMatrix();
-    crownA.setMatrixAt(i, dummy.matrix);
-    dummy.position.set(s.x, 1.9 * k + 0.3, s.z);
-    dummy.updateMatrix();
-    crownB.setMatrixAt(i, dummy.matrix);
-  });
-  [trunk, crownA, crownB].forEach((m) => {
-    m.instanceMatrix.needsUpdate = true;
-  });
+  function layoutTrees(islandScale) {
+    TREE_SPOTS.forEach((s, i) => {
+      const k = 0.85 + ((i * 7) % 5) * 0.08;
+      const x = s.x * islandScale;
+      const z = s.z * islandScale;
+      dummy.position.set(x, 0.35, z);
+      dummy.rotation.set(0, 0, 0);
+      dummy.scale.setScalar(1);
+      dummy.updateMatrix();
+      trunk.setMatrixAt(i, dummy.matrix);
+      dummy.position.set(x, 1.1 * k + 0.3, z);
+      dummy.scale.setScalar(k);
+      dummy.updateMatrix();
+      crownA.setMatrixAt(i, dummy.matrix);
+      dummy.position.set(x, 1.9 * k + 0.3, z);
+      dummy.updateMatrix();
+      crownB.setMatrixAt(i, dummy.matrix);
+    });
+    [trunk, crownA, crownB].forEach((m) => {
+      m.instanceMatrix.needsUpdate = true;
+    });
+  }
+  layoutTrees(1);
 
   // Leuchtender Inselrand: vier Streifen entlang der Grasplatte.
   const rimMat = basic('rim', { transparent: true, opacity: 0 });
@@ -102,6 +112,7 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
   ].forEach(([x, z, w, h, d]) => {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), rimMat);
     m.position.set(x, 0.02, z);
+    m.userData.base = { x, z, longX: w > 1, longZ: d > 1 };
     rim.add(m);
   });
   group.add(rim);
@@ -116,12 +127,15 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
   ].forEach(([x, y, z], i) => {
     const horizontal = new THREE.Mesh(new THREE.BoxGeometry(i < 3 ? 0.06 : 6 + (i % 3) * 2, 0.08, i < 3 ? 6 + (i % 3) * 2 : 0.06), traceMat);
     horizontal.position.set(x, y, z);
+    horizontal.userData.base = { x, z };
     traces.add(horizontal);
     const vertical = new THREE.Mesh(new THREE.BoxGeometry(i < 3 ? 0.06 : 0.08, 1.2, i < 3 ? 0.08 : 0.06), traceMat);
     vertical.position.set(x, y + 0.6, z);
+    vertical.userData.base = { x, z };
     traces.add(vertical);
     const node = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), traceMat);
     node.position.set(x, y + 1.2, z);
+    node.userData.base = { x, z };
     traces.add(node);
   });
   group.add(traces);
@@ -134,11 +148,32 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
   group.add(lights);
 
   let appliedStage = -1;
+  let appliedScale = -1;
+
+  // Randlicht, Leiterbahnen und Bäume auf die aktuelle Inselgröße setzen.
+  function applyIslandScale(k) {
+    rim.children.forEach((m) => {
+      const b = m.userData.base;
+      m.position.set(b.x * k, 0.02, b.z * k);
+      m.scale.set(b.longX ? k : 1, 1, b.longZ ? k : 1);
+    });
+    traces.children.forEach((m) => {
+      const b = m.userData.base;
+      m.position.x = b.x * k;
+      m.position.z = b.z * k;
+    });
+    layoutTrees(k);
+  }
 
   return {
     group,
     // zones: abgeleitete Zonen-Zustände, damit Wege nur zu freigeschalteten Zonen führen.
-    update(hypeTier, t, reduced, zones = []) {
+    // islandScale: aktuelle Inselgröße relativ zur Basis (siehe buildIsland).
+    update(hypeTier, t, reduced, zones = [], islandScale = 1) {
+      if (Math.abs(islandScale - appliedScale) > 0.005) {
+        appliedScale = islandScale;
+        applyIslandScale(islandScale);
+      }
       const stage = campusStage(hypeTier);
       paths.children.forEach((path) => {
         const z = zones.find((zz) => zz.id === path.userData.zoneId);
@@ -157,7 +192,7 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
       if (lights.count > 0) {
         for (let i = 0; i < 8; i += 1) {
           const a = (reduced ? 0 : t * 0.3) + (i / 8) * Math.PI * 2;
-          const r = 13.5;
+          const r = 13.5 * appliedScale;
           dummy.position.set(Math.cos(a) * r, 2.5 + Math.sin(t * 1.7 + i) * 0.5, Math.sin(a) * r);
           dummy.rotation.set(t, t * 1.3, 0);
           dummy.scale.setScalar(1);
