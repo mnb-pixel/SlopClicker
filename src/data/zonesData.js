@@ -3,8 +3,14 @@
 // Raster 24 x 24 Einheiten, Ursprung in der Inselmitte, +Z ist vorne (zur Kamera hin).
 // Der Ofen steht auf dem Ursprung und ist der Klick-Button; die fünf Zonen liegen als
 // Grundflächen um ihn herum. `anchor3d` ist der Mittelpunkt der Zonen-Grundfläche,
-// `footprint` deren Ausdehnung. `labelAnchor3d` (optional) setzt das Zonenschild
+// `footprint` deren Ausdehnung. `labelAnchor3d` (optional) setzt die Zonen-Stecknadel
 // abweichend von der Standardregel (vom Ofen weg gerückt).
+//
+// Die Anker sind auf die kleinen Stecknadeln aus CampusScene.jsx getrimmt: bodennah
+// (kleines y) am AUSSENrand der jeweiligen Platte, damit die Nadel über Gras oder
+// Inselkante steht statt über den Gebäuden der Zone. Nach innen gerückte Anker landen
+// in dieser Isometrie zwangsläufig auf dem Ofen bzw. dem Schlot - der liegt im
+// Bildschirmraum genau zwischen den vier Zonen.
 //
 // Jede Engine hat `maxProps`: mehr Objekte als das zeichnet die Szene nie, darüber
 // wächst nur noch die Zonen-Stufe (siehe ZONE_TIER_THRESHOLDS) und die Zahl am Schild.
@@ -21,6 +27,7 @@ export const ZONES_DATA = [
     id: 'office',
     anchor3d: { x: -7, z: 6 },
     footprint: { w: 8, d: 7 },
+    labelAnchor3d: { x: -10.8, y: 0.5, z: 8.2 },
     buildings: [
       { id: 'prompt_intern', maxProps: 12 },
       { id: 'prompt_engineer', maxProps: 8 },
@@ -31,6 +38,9 @@ export const ZONES_DATA = [
     id: 'basement',
     anchor3d: { x: -7, z: -6 },
     footprint: { w: 8, d: 7 },
+    // Nicht in die hintere Ecke: die projiziert auf dieselbe Bildschirmstelle wie der
+    // Schlot. Stattdessen an die linke Außenkante der Platte.
+    labelAnchor3d: { x: -11.2, y: 0.5, z: -3.4 },
     buildings: [
       { id: 'gpu_rack', maxProps: 14 },
       { id: 'datacenter', maxProps: 8 },
@@ -43,6 +53,7 @@ export const ZONES_DATA = [
     id: 'stage',
     anchor3d: { x: 7, z: 6 },
     footprint: { w: 8, d: 7 },
+    labelAnchor3d: { x: 11.2, y: 0.5, z: 8.6 },
     buildings: [
       { id: 'keynote_stage', maxProps: 4 },
       { id: 'thought_leader', maxProps: 10 },
@@ -55,6 +66,7 @@ export const ZONES_DATA = [
     id: 'tower',
     anchor3d: { x: 7, z: -6 },
     footprint: { w: 8, d: 7 },
+    labelAnchor3d: { x: 11.2, y: 0.5, z: -3.4 },
     buildings: [
       { id: 'vc_firm', maxProps: 6 },
       { id: 'pivot_startup', maxProps: 8 },
@@ -66,7 +78,7 @@ export const ZONES_DATA = [
     anchor3d: { x: 0, z: -10 },
     footprint: { w: 14, d: 3 },
     // Standardregel landete über dem Turm bzw. hinter dem Schlot.
-    labelAnchor3d: { x: -5.8, y: 5.4, z: -10.8 },
+    labelAnchor3d: { x: -6.6, y: 0.5, z: -10.6 },
     buildings: [
       { id: 'nuclear_reactor', maxProps: 4 },
       { id: 'metaverse_city', maxProps: 6 },

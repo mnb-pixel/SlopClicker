@@ -11,12 +11,23 @@ import * as THREE from 'three';
 import { ZONES_DATA } from '../../data/zonesData';
 import { deriveZones, deriveFurnace, getSceneMood, getNewZoneIds, DAMAGE_FLASH_MS } from '../../utils/sceneState';
 import { ZoneBuyPanel } from './ZoneBuyPanel';
+import { getZoneVisual } from './zoneVisuals';
 import { getPalette3d } from './palette';
 import { buildIsland } from './buildIsland';
 import { buildFurnace } from './buildFurnace';
 import { buildZones } from './buildZones';
 import { buildCampus } from './buildCampus';
 import { FURNACE_ANCHOR } from '../../data/zonesData';
+
+// Ränder, in denen der Ankerpunkt einer Zonen-Stecknadel noch liegen darf (Clientpixel).
+// Links/rechts etwa die halbe Nadelbreite, oben unter der Kopfzeile, unten über der
+// Buttonreihe - eine Nadel hinter dem HUD wäre weder gut sichtbar noch anklickbar.
+// Die Nadel steht ÜBER ihrem Anker, deshalb ist der obere Rand um ihre Höhe größer als
+// die Kopfzeile selbst. Greift praktisch nur im Querformat: dort ist die Insel flacher
+// und die hinteren Zonen projizieren bis in die Kopfzeile hinein.
+const PIN_EDGE_PX = 46;
+const PIN_TOP_PX = 196;
+const PIN_BOTTOM_PX = 112;
 
 // Die 3D-Insel als React-Komponente.
 //
@@ -195,10 +206,14 @@ export const CampusScene = forwardRef(function CampusScene(
       const next = {};
       Object.entries(zonesObj.labelAnchors).forEach(([id, anchor]) => {
         const v = anchor.clone().project(camera);
-        // Schilder bleiben im Bild, auch wenn ihr Ankerpunkt am Inselrand knapp
-        // außerhalb liegt (Hochformat, äußere Zonen).
-        const x = Math.min(r.width - 72, Math.max(72, ((v.x + 1) / 2) * r.width));
-        next[id] = { x, y: ((1 - v.y) / 2) * r.height };
+        // Stecknadeln bleiben im Bild, auch wenn ihr Ankerpunkt am Inselrand knapp
+        // außerhalb liegt (Hochformat, äußere Zonen). Der Rand ist auf die Nadel
+        // zugeschnitten (PIN_EDGE_PX, halbe Nadelbreite): früher lag er bei 72px für
+        // die breiten Namensschilder - der schob die äußeren Schilder so weit nach
+        // innen, dass sie auf den Gebäuden landeten, die sie beschriften sollten.
+        const x = Math.min(r.width - PIN_EDGE_PX, Math.max(PIN_EDGE_PX, ((v.x + 1) / 2) * r.width));
+        const y = Math.min(r.height - PIN_BOTTOM_PX, Math.max(PIN_TOP_PX, ((1 - v.y) / 2) * r.height));
+        next[id] = { x, y };
       });
       setLabelPos(next);
     };
@@ -355,10 +370,17 @@ export const CampusScene = forwardRef(function CampusScene(
     >
       <canvas ref={canvasRef} className="campus-scene__canvas" aria-label={tr('sceneAriaLabel')} role="img" />
 
-      {/* Zonen-Beschriftungen als HTML über der Canvas, Position per Projektion.
-          Was noch nicht freigeschaltet ist, bekommt gar kein Schild - genau eine Zone
-          weiter steht das "???"-Schild als Platzhalter (dieselbe Regel wie im Shop,
-          siehe utils/buildingUnlock.js). */}
+      {/* Zonen-Stecknadeln als HTML über der Canvas, Position per Projektion.
+          Was noch nicht freigeschaltet ist, bekommt gar keine Nadel - genau eine Zone
+          weiter steht die "?"-Nadel als Platzhalter (dieselbe Regel wie im Shop,
+          siehe utils/buildingUnlock.js).
+
+          Bewusst KEIN ausgeschriebener Zonenname mehr in der Szene: die alten breiten
+          Namensschilder ("GROSSRAUMBÜRO" & Co.) waren auf dem Handy breiter als die
+          halbe Insel und lagen dauerhaft über genau den Gebäuden, die sie benannten.
+          Jetzt trägt die Nadel nur Icon + Anzahl; der Name steht dort, wo Platz für ihn
+          ist - im Kaufpanel, das ein Tipp auf die Nadel öffnet (und auf dem Desktop
+          zusätzlich als Tooltip am title-Attribut). */}
       {zones.map((z) => {
         const pos = labelPos[z.id];
         if (!pos || (!z.revealed && !z.teaser)) return null;
@@ -367,28 +389,38 @@ export const CampusScene = forwardRef(function CampusScene(
           return (
             <span
               key={z.id}
-              className="campus-label campus-label--teaser"
+              className="zone-pin zone-pin--teaser"
               style={{ left: pos.x, top: pos.y }}
               title={tr('lockedEngineTierDesc')}
             >
-              <span className="campus-label__name">???</span>
+              <span className="zone-pin__icon" aria-hidden="true">?</span>
             </span>
           );
         }
+
+        const { Icon, accent } = getZoneVisual(z.id);
+        const name = tr(`zone_${z.id}_name`);
+        const isNew = newZoneIds.has(z.id);
 
         return (
           <button
             key={z.id}
             type="button"
-            className={`campus-label ${z.unlocked ? '' : 'campus-label--locked'} ${selectedZone === z.id ? 'is-selected' : ''}`}
-            style={{ left: pos.x, top: pos.y }}
+            className={`zone-pin ${z.unlocked ? '' : 'zone-pin--locked'} ${selectedZone === z.id ? 'is-selected' : ''}`}
+            style={{ left: pos.x, top: pos.y, '--zone-accent': accent }}
             onClick={() => setSelectedZone(z.id)}
+            aria-label={isNew ? `${name} - ${tr('sceneNewBadge')}` : name}
+            title={name}
           >
-            <span className="campus-label__name">{tr(`zone_${z.id}_name`)}</span>
-            {z.unlocked && <span className="campus-label__count">{z.population}</span>}
+            <span className="zone-pin__icon" aria-hidden="true">
+              <Icon className="zone-pin__glyph" />
+            </span>
+            {z.unlocked && <span className="zone-pin__count">{z.population}</span>}
             {/* "Hier ist gerade etwas Neues bezahlbar" - der einzige Weg, von der Insel
-                aus überhaupt mitzubekommen, dass eine Stufe aufgegangen ist. */}
-            {newZoneIds.has(z.id) && <span className="campus-label__new">{tr('sceneNewBadge')}</span>}
+                aus überhaupt mitzubekommen, dass eine Stufe aufgegangen ist. Als Punkt
+                statt als NEU-Schild: der Text hätte die Nadel wieder so breit gemacht
+                wie die alten Schilder. */}
+            {isNew && <span className="zone-pin__new" aria-hidden="true" />}
           </button>
         );
       })}

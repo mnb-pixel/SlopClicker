@@ -36,10 +36,27 @@ bildschirm ersetzt. Hier ist sie vorerst NUR eine versteckte Testseite:
   gezeichnet. Das Zonen-Kaufpanel listet ebenfalls nur freigeschaltete Engines plus
   denselben Platzhalter - sonst wäre die Freischaltung über den Umweg Insel ausgehebelt.
 * **NEU-Hinweis auf dem Spielplan.** Weil die Insel jetzt Stufen verbirgt, braucht sie
-  eine Gegenmeldung: ein Zonenschild trägt ein pulsierendes `NEU`, sobald dort eine noch
-  nie gebaute Engine freigeschaltet UND bezahlbar ist (`getNewZoneIds` in
+  eine Gegenmeldung: eine Zonen-Stecknadel trägt einen pulsierenden Punkt, sobald dort
+  eine noch nie gebaute Engine freigeschaltet UND bezahlbar ist (`getNewZoneIds` in
   `src/utils/sceneState.js`). Der Preis gehört bewusst ins Kriterium - ohne ihn stünde
   nach jedem Kauf sofort wieder ein NEU an der nächsten Stufe.
+* **Stecknadeln statt Namensschilder.** Die erste Fassung hängte den ausgeschriebenen
+  Zonennamen über die Insel (`GROSSRAUMBÜRO`, `SINGULARITÄTS-HORIZONT`). Auf dem Handy
+  war ein solches Schild breiter als die halbe Insel und lag dauerhaft über genau den
+  Gebäuden, die es benennen sollte. Ersetzt durch kleine Stecknadeln am Außenrand der
+  Zone: Icon in der Zonenfarbe plus Anzahl, mehr nicht. Den Namen trägt das Kaufpanel,
+  das ein Tipp darauf öffnet (auf dem Desktop zusätzlich der Tooltip). Icon und Farbe
+  je Zone kommen aus `src/components/scene3d/zoneVisuals.js` - eine Quelle für Nadel
+  und Panelkopf, sonst zeigt die Insel ein anderes Zeichen als das Menü dahinter.
+* **Menüs im Grafik-Stil der Insel.** Was sich aus der Szene heraus öffnet, sieht aus
+  wie ein Teil von ihr: Papierweiß, Tinte, klotzige Kanten mit 2-3px Unterkante, die
+  beim Drücken zusammenfällt. Die Farben liegen als CSS-Tokens auf `.game-shell`
+  (`--game-paper`, `--game-ink`, `--game-grass`, ...) und sind an `palette.js`
+  angelehnt. Das Zonen-Kaufpanel ist komplett so gebaut; die Schublade bekommt den
+  Rahmen (Griff, Papierkopf, runde Kanten) und setzt die Tab-Inhalte als dunkle
+  Einlassung hinein - `StoreTab` & Co. gehören auch der Ansicht unter `/play` und
+  tragen ihre Farben fest im Markup, sie hier per Fern-CSS umzufärben würde bei der
+  nächsten Änderung an den Tabs lautlos brechen.
 
 ## Entscheidungen
 
@@ -50,7 +67,7 @@ bildschirm ersetzt. Hier ist sie vorerst NUR eine versteckte Testseite:
 | Renderer | Three.js, Low-Poly ohne Texturen, Flat Shading, Vertex- bzw. Materialfarben |
 | Ohne WebGL | Alte Ansicht (Header, Tabs, GPU-Button, Icon-Liste) bleibt als Fallback, ohne Meme-Bild |
 | Licht | Ein Richtungslicht mit Schattenkarte plus Hemisphärenlicht, Tageslicht |
-| Stimmung | Insel im Tageslicht, Bedienpanels als dunkles Glas darüber |
+| Stimmung | Insel im Tageslicht, Menüs aus der Szene heraus im selben hellen Low-Poly-Stil (Papier, Tinte, klotzige Kanten) |
 | Kaufen | Direkt aus der Szene per Klick auf eine Zone, Shop-Tab bleibt bestehen |
 | Meme-Bilder | Nicht in der Szene |
 | Tilt-Shift | Nicht als Post-Processing (zu teuer auf Mobile), stattdessen weiche Vignette am Inselrand |
@@ -108,7 +125,7 @@ Insel nur größer und die Schublade liegt rechts statt unten.
 |                                                    |
 |                                                    |
 |                  S Z E N E                         |
-|         (Insel, Ofen, Zonen, Zonenschilder)        |
+|        (Insel, Ofen, Zonen, Zonen-Stecknadeln)     |
 |                                                    |
 |                                                    |
 |  [ FEUERN ]   [ SHOP (3) ]   [Stats]  [Optionen]   |  <- Overlay unten
@@ -217,7 +234,7 @@ Phase 4 eine zweite Leitung derselben Art.
 | endgame | Selbstbewusste Excel-Tabelle | Schwebendes Gitterblatt mit zwei Augen, dreht sich, hoch über den Silos | 6 |
 | endgame | Die Singularity | Schwarze Kugel mit zwei Akkretionsringen im Rauch über dem Schlot, Trümmer kreisen hinein | 1 |
 
-Über die Maximalzahl hinaus wächst nur das Zonenschild (Zahl) und die Ausbaustufe.
+Über die Maximalzahl hinaus wächst nur die Zahl an der Zonen-Stecknadel und die Ausbaustufe.
 
 ## Ausbaustufen
 
@@ -283,11 +300,12 @@ ohne stundenlanges Spielen; kein Cheat, weil nichts davon in den Store zurückfl
 | `src/components/scene3d/CampusScene.jsx` | React-Wrapper: Renderer, Kamera, Licht, Loop, Raycast, Beschriftungen, Debug-Haken |
 | `src/components/scene3d/buildIsland.js`, `buildFurnace.js`, `buildCampus.js` | Insel, Ofen, Campus-Stufen |
 | `src/components/scene3d/buildOffice.js`, `buildBasement.js`, `buildStage.js`, `buildTower.js`, `buildEndgame.js` | Die fünf Zonen |
-| `src/components/scene3d/buildZones.js` | Platten, Klickziele, Schild-Anker, Zonen-Effekte, hostet die Zonen-Bauer |
+| `src/components/scene3d/buildZones.js` | Platten, Klickziele, Nadel-Anker, Zonen-Effekte, hostet die Zonen-Bauer |
 | `src/components/scene3d/buildDataLine.js`, `buildPeople.js` | Gemeinsame Bausteine: Datenleitung, Personen |
 | `src/components/scene3d/ZoneBuyPanel.jsx` | Kaufen aus der Szene, Preise über dieselben Helfer wie der Shop |
 | `src/components/scene3d/palette.js` | Materialfarben je Theme, Himmel als CSS-Verlauf |
-| `src/data/zonesData.js` | Zonen-Anker, Grundflächen, Engine-Zuordnung, `maxProps` |
+| `src/components/scene3d/zoneVisuals.js` | Icon und Akzentfarbe je Zone, für Stecknadel und Panelkopf |
+| `src/data/zonesData.js` | Zonen-Anker, Grundflächen, Nadel-Anker (`labelAnchor3d`), Engine-Zuordnung, `maxProps` |
 | `src/utils/sceneState.js` | Spielzahlen zu Grafik-Stufen, reine Funktionen |
 | `src/utils/tickerText.js` | Ticker-Text für LED-Tafel und HTML-Laufzeile (Fallback) |
 | Store: `lastBlackSwan` | Rein visuelles Signal für den Schadensblitz, nicht gespeichert |

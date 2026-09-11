@@ -18,6 +18,44 @@
   height: 100dvh;
   overflow: hidden;
   background: #0b1a2e;
+
+  /* Grafik-Stil der Insel als CSS-Tokens: alles, was sich AUS der Szene heraus öffnet
+     (Zonen-Stecknadeln, Kaufpanel, Schublade), benutzt diese Werte statt eigener
+     Slate-/Cyan-Töne. Die Farben sind bewusst dieselben wie in der 3D-Palette
+     (src/components/scene3d/palette.js): Papier = Fassade, Tinte = Stahl-Dunkel,
+     Gras/Bernstein/Glut wie im Modell. So sieht ein Menü aus wie ein Teil der Insel
+     und nicht wie ein Terminal, das zufällig davor liegt. */
+  --game-paper: #fffdf6;
+  --game-paper-sunk: #f3ece0;
+  --game-ink: #22313f;
+  --game-ink-soft: #6d7f8e;
+  --game-line: #ded3bd;
+  --game-line-strong: #c8bb9f;
+  --game-grass: #48bb78;
+  --game-grass-dark: #2f855a;
+  --game-gold: #f59e0b;
+  --game-shadow: rgba(28, 42, 56, 0.28);
+}
+
+/* Klotzige Spielzeug-Buttons: 3px "Kante" unter der Fläche, die beim Drücken
+   zusammenfällt. Ein Stil für alle Menü-Buttons der Szene. */
+.game-shell .zone-pin,
+.game-shell .campus-mode,
+.game-shell .campus-row,
+.game-shell .campus-panel__close,
+.game-shell .hud-drawer__close {
+  transition: transform 0.08s ease, box-shadow 0.08s ease, border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-shell .zone-pin,
+  .game-shell .campus-mode,
+  .game-shell .campus-row,
+  .game-shell .campus-panel__close,
+  .game-shell .hud-drawer__close {
+    transition: none;
+  }
 }
 
 .game-shell__scene {
@@ -214,12 +252,15 @@
   padding: 0 0.5rem calc(0.25rem + env(safe-area-inset-bottom));
 }
 
-/* Schublade: Handy von unten, Desktop von rechts. */
+/* Schublade: Handy von unten, Desktop von rechts.
+   Rahmen im Grafik-Stil der Insel (Papier, klotzige Kanten, Griff), Inhalt in einer
+   dunklen Einlassung - siehe Kommentar in Drawer.jsx, warum die Tab-Inhalte selbst
+   bewusst unangetastet bleiben. */
 .hud-drawer-backdrop {
   position: absolute;
   inset: 0;
   z-index: 20;
-  background: rgba(2, 6, 23, 0.35);
+  background: rgba(28, 42, 56, 0.35);
 }
 
 .hud-drawer {
@@ -231,12 +272,24 @@
   max-height: 72dvh;
   display: flex;
   flex-direction: column;
-  background: rgba(2, 6, 23, 0.96);
-  border-top: 1px solid rgba(34, 211, 238, 0.35);
-  border-radius: 20px 20px 0 0;
-  box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
+  background: var(--game-paper);
+  border: 2px solid var(--game-line-strong);
+  border-bottom: none;
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -14px 40px var(--game-shadow);
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Griff wie an einer echten Schublade - und der sichtbare Hinweis, dass das Ding
+   unten angeschlagen ist. */
+.hud-drawer__grip {
+  display: block;
+  width: 44px;
+  height: 5px;
+  margin: 7px auto 0;
+  border-radius: 999px;
+  background: var(--game-line-strong);
+  flex-shrink: 0;
 }
 
 .hud-drawer__head {
@@ -244,15 +297,48 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.5rem 0.75rem 0.6rem;
+  flex-shrink: 0;
 }
 
+.hud-drawer__title {
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--game-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hud-drawer__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--game-paper-sunk);
+  border: 2px solid var(--game-line);
+  color: var(--game-ink-soft);
+  box-shadow: 0 2px 0 var(--game-line-strong);
+  flex-shrink: 0;
+}
+
+.hud-drawer__close:active { transform: translateY(2px); box-shadow: none; }
+
+/* Einlassung: die Tab-Inhalte bringen ihre dunklen Flächen selbst mit, hier bekommen
+   sie den Rahmen dazu. */
 .hud-drawer__body {
   overflow-y: auto;
   flex: 1;
   min-height: 0;
+  margin: 0 8px;
   padding: 0.25rem;
+  border-radius: 16px 16px 0 0;
+  background: #0c1826;
+  box-shadow: inset 0 2px 6px rgba(2, 6, 23, 0.6);
 }
 
 @media (min-width: 768px) {
@@ -263,11 +349,24 @@
     bottom: 0;
     width: 420px;
     max-height: none;
-    border-radius: 20px 0 0 20px;
-    border-top: none;
-    border-left: 1px solid rgba(34, 211, 238, 0.35);
+    border-radius: 24px 0 0 24px;
+    border-right: none;
     padding-top: env(safe-area-inset-top);
   }
+
+  /* Von rechts eingeschoben: der Griff sitzt an der linken Kante, nicht oben. */
+  .hud-drawer__grip {
+    position: absolute;
+    top: 50%;
+    left: 7px;
+    width: 5px;
+    height: 44px;
+    margin: 0;
+    transform: translateY(-50%);
+  }
+
+  .hud-drawer__head { padding-left: 1.25rem; }
+  .hud-drawer__body { margin: 0 8px 8px 16px; border-radius: 16px; }
 
   .hud-bottom__row {
     max-width: 640px;
@@ -322,73 +421,146 @@
   -webkit-user-select: none;
 }
 
-/* Zonen-Schilder: weiß mit dunkler Schrift wie im Referenzbild, per Projektion
-   positioniert (left/top in Pixeln, Mittelpunkt auf dem Ankerpunkt). */
-.campus-label {
+/* Zonen-Stecknadeln: kleine Marker statt der früheren breiten Namensschilder.
+   Position per Projektion (left/top in Pixeln), die Spitze sitzt auf dem Ankerpunkt.
+
+   Warum klein und ohne Namen: die alten Schilder trugen den ausgeschriebenen Zonennamen
+   ("GROSSRAUMBÜRO") und waren damit auf dem Handy breiter als die halbe Insel - sie
+   verdeckten genau die Gebäude, die sie benennen sollten. Die Nadel trägt nur noch
+   Icon + Anzahl; der Name steht im Kaufpanel, das sie öffnet, und klappt auf dem
+   Desktop beim Überfahren auf. */
+.zone-pin {
   position: absolute;
-  transform: translate(-50%, -100%);
+  /* -100% minus Spitze: die Nadel steht ÜBER ihrem Ankerpunkt, die Spitze zeigt darauf. */
+  transform: translate(-50%, calc(-100% - 7px));
+  transform-origin: 50% calc(100% + 7px);
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 3px 9px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.92);
-  color: #0f172a;
-  font-size: 11px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  border: 1px solid rgba(15, 23, 42, 0.15);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  gap: 5px;
+  height: 30px;
+  padding: 0 9px 0 3px;
+  border-radius: 999px;
+  background: var(--game-paper);
+  color: var(--game-ink);
+  border: 2px solid var(--game-line);
+  box-shadow: 0 3px 0 var(--game-line-strong), 0 6px 14px var(--game-shadow);
   cursor: pointer;
   pointer-events: auto;
+  white-space: nowrap;
   z-index: 3;
 }
 
-.campus-label--locked {
-  background: rgba(15, 23, 42, 0.55);
-  color: rgba(255, 255, 255, 0.85);
-  border-style: dashed;
-  border-color: rgba(255, 255, 255, 0.5);
+/* Spitze: derselbe Papierton, um 45 Grad gedreht und unter die Pille geschoben.
+   Die Kante unten rechts bleibt sichtbar und bildet den Rand der Spitze. */
+.zone-pin::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 11px;
+  height: 11px;
+  transform: translateX(-50%) rotate(45deg);
+  background: var(--game-paper);
+  border-right: 2px solid var(--game-line);
+  border-bottom: 2px solid var(--game-line);
+  border-bottom-right-radius: 3px;
 }
 
-.campus-label.is-selected {
-  outline: 2px solid #22d3ee;
+.zone-pin:hover { border-color: var(--game-line-strong); }
+.zone-pin:active { transform: translate(-50%, calc(-100% - 4px)); box-shadow: 0 0 0 var(--game-line-strong), 0 3px 8px var(--game-shadow); }
+
+.zone-pin.is-selected {
+  border-color: var(--zone-accent, var(--game-grass-dark));
+  box-shadow: 0 3px 0 var(--zone-accent, var(--game-line-strong)), 0 6px 16px var(--game-shadow);
 }
 
-.campus-label__count {
-  padding: 0 6px;
+.zone-pin.is-selected::after { border-color: var(--zone-accent, var(--game-line)); }
+
+/* Icon-Roundel in der Zonenfarbe - das Erkennungsmerkmal der Zone (zoneVisuals.js). */
+.zone-pin__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
   border-radius: 999px;
-  background: #22d3ee;
-  color: #0f172a;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: var(--zone-accent, var(--game-ink));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  flex-shrink: 0;
 }
+
+.zone-pin__glyph { width: 13px; height: 13px; }
+
+.zone-pin__count {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* Freigeschaltet, aber noch nichts gebaut: gedämpft statt bunt - die Zone steht zum
+   Kauf bereit, ist aber leer (kein Zähler an der Nadel). */
+.zone-pin--locked {
+  background: var(--game-paper-sunk);
+  color: var(--game-ink-soft);
+  padding-right: 3px;
+}
+
+.zone-pin--locked::after { background: var(--game-paper-sunk); }
+.zone-pin--locked .zone-pin__icon { filter: grayscale(0.45); opacity: 0.75; }
 
 /* Platzhalter-Zone: genau eine Stufe weiter als das, was der Spieler freigeschaltet hat.
    Kein Name, kein Zähler, kein Klickziel - das Gegenstück zur "???"-Kachel im Shop. */
-.campus-label--teaser {
-  background: rgba(15, 23, 42, 0.5);
-  color: rgba(255, 255, 255, 0.6);
+.zone-pin--teaser {
+  padding: 0 3px;
+  background: rgba(34, 49, 63, 0.55);
+  border-color: rgba(255, 255, 255, 0.45);
   border-style: dashed;
-  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: none;
   cursor: default;
   pointer-events: none;
-  letter-spacing: 0.15em;
 }
 
-/* NEU-Hinweis: die einzige Stelle, an der die Insel selbst meldet, dass gerade eine
-   Stufe aufgegangen ist, die man sich auch leisten kann (siehe getNewZoneIds). */
-.campus-label__new,
+.zone-pin--teaser::after {
+  background: rgba(34, 49, 63, 0.55);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.zone-pin--teaser .zone-pin__icon {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* NEU-Hinweis an der Nadel: die einzige Stelle, an der die Insel selbst meldet, dass
+   gerade eine Stufe aufgegangen ist, die man sich auch leisten kann (getNewZoneIds).
+   Als Punkt statt als Schriftzug - "NEU" hätte die Nadel wieder auf Schildbreite
+   aufgeblasen. */
+.zone-pin__new {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--game-gold);
+  border: 2px solid var(--game-paper);
+  animation: campus-new-pulse 1.4s ease-in-out infinite;
+}
+
+/* NEU-Marke im Kaufpanel: dort ist Platz für das Wort. */
 .campus-panel__new {
   display: inline-block;
+  margin-left: 6px;
   padding: 0 5px;
   border-radius: 999px;
-  background: #f59e0b;
-  color: #0f172a;
+  background: var(--game-gold);
+  color: var(--game-ink);
   font-size: 9px;
   font-weight: 900;
   letter-spacing: 0.08em;
+  vertical-align: middle;
   animation: campus-new-pulse 1.4s ease-in-out infinite;
 }
 
@@ -398,13 +570,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .campus-label__new,
+  .zone-pin__new,
   .campus-panel__new {
     animation: none;
   }
 }
 
-/* Kaufpanel einer Zone: HTML über der Canvas, unten angedockt, über den Buttons. */
+/* ==========================================================================
+   Kaufpanel einer Zone - im Grafik-Stil der Insel (Papier, Tinte, klotzige Kanten)
+   statt im dunklen Terminal-Look der Shop-Tabs. Es wird AUS der Szene heraus geöffnet
+   und soll deshalb aussehen wie ein Teil von ihr.
+   ========================================================================== */
 .campus-panel {
   position: absolute;
   left: 50%;
@@ -414,10 +590,157 @@
   max-height: 60%;
   overflow-y: auto;
   padding: 10px;
-  border-radius: 16px;
-  background: rgba(2, 6, 23, 0.94);
-  border: 1px solid rgba(34, 211, 238, 0.35);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(6px);
+  border-radius: 20px;
+  background: var(--game-paper);
+  border: 2px solid var(--game-line);
+  box-shadow: 0 5px 0 var(--game-line-strong), 0 20px 44px var(--game-shadow);
   z-index: 5;
 }
+
+.campus-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 2px solid var(--game-paper-sunk);
+}
+
+.campus-panel__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--zone-accent, var(--game-ink));
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 0 rgba(28, 42, 56, 0.25);
+}
+
+.campus-panel__badge-glyph { width: 16px; height: 16px; }
+
+.campus-panel__titles { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+
+.campus-panel__title {
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--game-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.campus-panel__sub {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  color: var(--game-ink-soft);
+}
+
+.campus-panel__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--game-paper-sunk);
+  border: 2px solid var(--game-line);
+  color: var(--game-ink-soft);
+  box-shadow: 0 2px 0 var(--game-line-strong);
+  flex-shrink: 0;
+}
+
+.campus-panel__close:active { transform: translateY(2px); box-shadow: none; }
+
+/* Kaufmodus als Reihe klotziger Tasten. */
+.campus-panel__modes { display: flex; gap: 5px; margin-bottom: 8px; }
+
+.campus-mode {
+  flex: 1;
+  padding: 5px 0 6px;
+  border-radius: 11px;
+  background: var(--game-paper-sunk);
+  border: 2px solid var(--game-line);
+  box-shadow: 0 2px 0 var(--game-line-strong);
+  color: var(--game-ink-soft);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.campus-mode.is-active {
+  background: var(--game-grass);
+  border-color: var(--game-grass-dark);
+  box-shadow: 0 2px 0 var(--game-grass-dark);
+  color: #0b2818;
+}
+
+.campus-mode:active { transform: translateY(2px); box-shadow: none; }
+
+.campus-panel__list { display: flex; flex-direction: column; gap: 6px; }
+
+.campus-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 14px;
+  text-align: left;
+  background: #fff;
+  border: 2px solid var(--game-line);
+  box-shadow: 0 2px 0 var(--game-line-strong);
+}
+
+.campus-row.is-affordable { border-color: var(--game-grass); box-shadow: 0 2px 0 var(--game-grass-dark); }
+.campus-row.is-affordable:active { transform: translateY(2px); box-shadow: none; }
+
+.campus-row.is-broke {
+  background: var(--game-paper-sunk);
+  box-shadow: none;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.campus-row--locked {
+  background: var(--game-paper-sunk);
+  border-style: dashed;
+  box-shadow: none;
+  justify-content: flex-start;
+  opacity: 0.8;
+}
+
+.campus-row__lock { width: 14px; height: 14px; color: var(--game-ink-soft); flex-shrink: 0; }
+.campus-row__texts { display: flex; flex-direction: column; min-width: 0; }
+
+.campus-row__name {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--game-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.campus-row__count,
+.campus-row__hint {
+  font-size: 10px;
+  color: var(--game-ink-soft);
+  line-height: 1.25;
+}
+
+.campus-row__count { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+.campus-row__price {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--game-ink-soft);
+  flex-shrink: 0;
+}
+
+.campus-row.is-affordable .campus-row__price { color: var(--game-grass-dark); }

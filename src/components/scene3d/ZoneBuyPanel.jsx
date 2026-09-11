@@ -1,6 +1,7 @@
 import React from 'react';
 import { Lock, X } from 'lucide-react';
 import { BUILDINGS_DATA } from '../../data/buildingsData';
+import { getZoneVisual } from './zoneVisuals';
 import {
   formatCurrency,
   getBuildingCost,
@@ -12,6 +13,12 @@ const BUY_MODES = ['1', '10', '100', 'MAX'];
 
 // Kaufpanel einer Zone: klickt man in der Szene z.B. den Serverkeller an, erscheint hier
 // genau dessen Engine-Liste zum Kaufen.
+//
+// Optik bewusst im Stil der Insel statt im dunklen Terminal-Look der Shop-Tabs: das
+// Panel klebt direkt an der hellen, freundlichen Low-Poly-Szene und wird aus ihr heraus
+// geöffnet. Die Klassen liegen in scene3d.css (.campus-panel*), die Akzentfarbe im Kopf
+// kommt aus derselben Quelle wie das Icon der Stecknadel (zoneVisuals.js) - so gehören
+// Nadel und Menü sichtbar zusammen.
 //
 // Bewusst KEINE eigene Kauflogik: Preise kommen aus denselben Helfern wie im Shop
 // (formatters.js) und gekauft wird über store.buyBuilding. Zwei Kaufwege, eine Wahrheit -
@@ -33,6 +40,7 @@ export function ZoneBuyPanel({
   t,
 }) {
   const tr = t || ((k) => k);
+  const { Icon, accent } = getZoneVisual(zoneDef.id);
 
   // zoneState.buildings trägt die Sichtbarkeits-Flags aus deriveZones. Fehlt es (die
   // Zone wurde noch nie abgeleitet), bleibt die Liste leer statt versehentlich alles zu
@@ -49,42 +57,35 @@ export function ZoneBuyPanel({
   };
 
   return (
-    <div className="campus-panel">
-      <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-800">
-        <div className="flex items-baseline gap-2 min-w-0">
-          <span className="text-xs font-black uppercase tracking-wider text-cyan-300 truncate">
-            {tr(`zone_${zoneDef.id}_name`)}
-          </span>
-          <span className="text-[10px] font-mono text-slate-400 shrink-0">
+    <div className="campus-panel" style={{ '--zone-accent': accent }}>
+      <div className="campus-panel__head">
+        <span className="campus-panel__badge" aria-hidden="true">
+          <Icon className="campus-panel__badge-glyph" />
+        </span>
+        <span className="campus-panel__titles">
+          <span className="campus-panel__title">{tr(`zone_${zoneDef.id}_name`)}</span>
+          <span className="campus-panel__sub">
             {zoneState ? zoneState.population : 0} · +{formatCurrency(zoneState ? zoneState.zoneVps : 0)}/s
           </span>
-        </div>
-        <button
-          onClick={onClose}
-          aria-label={tr('closeLabel')}
-          className="p-1 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 shrink-0"
-        >
+        </span>
+        <button onClick={onClose} aria-label={tr('closeLabel')} className="campus-panel__close">
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      <div className="flex gap-1 mb-2">
+      <div className="campus-panel__modes">
         {BUY_MODES.map((mode) => (
           <button
             key={mode}
             onClick={() => setBuyMode(mode)}
-            className={`flex-1 py-1 rounded-lg text-[10px] font-black transition-colors ${
-              buyMode === mode
-                ? 'bg-cyan-500 text-slate-950'
-                : 'bg-slate-800 text-slate-400 hover:text-slate-200'
-            }`}
+            className={`campus-mode ${buyMode === mode ? 'is-active' : ''}`}
           >
             {mode === 'MAX' ? tr('buyModeMax') : `x${mode}`}
           </button>
         ))}
       </div>
 
-      <div className="flex flex-col gap-1.5">
+      <div className="campus-panel__list">
         {zoneEntries.map((entry) => {
           const meta = BUILDINGS_DATA.find((b) => b.id === entry.id);
           if (!meta) return null;
@@ -92,18 +93,11 @@ export function ZoneBuyPanel({
           // Der Platzhalter verrät weder Namen noch Preis - wie die "???"-Kachel im Shop.
           if (entry.isTeaser) {
             return (
-              <div
-                key={entry.id}
-                className="flex items-center gap-2 p-2 rounded-xl border border-slate-800 bg-slate-950/70 opacity-60"
-              >
-                <Lock className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                <span className="min-w-0">
-                  <span className="block text-[11px] font-bold text-slate-400 truncate">
-                    {tr('lockedEngineTier')}
-                  </span>
-                  <span className="block text-[10px] text-slate-600 leading-tight">
-                    {tr('lockedEngineTierDesc')}
-                  </span>
+              <div key={entry.id} className="campus-row campus-row--locked">
+                <Lock className="campus-row__lock" />
+                <span className="campus-row__texts">
+                  <span className="campus-row__name">{tr('lockedEngineTier')}</span>
+                  <span className="campus-row__hint">{tr('lockedEngineTierDesc')}</span>
                 </span>
               </div>
             );
@@ -118,28 +112,18 @@ export function ZoneBuyPanel({
               key={entry.id}
               onClick={() => buyBuilding(entry.id)}
               disabled={!canAfford}
-              className={`flex items-center justify-between gap-2 p-2 rounded-xl border text-left transition-all ${
-                canAfford
-                  ? 'bg-slate-900 border-cyan-500/40 hover:border-cyan-400 active:scale-[0.99]'
-                  : 'bg-slate-950/70 border-slate-800 opacity-60 cursor-not-allowed'
-              }`}
+              className={`campus-row ${canAfford ? 'is-affordable' : 'is-broke'}`}
             >
-              <span className="min-w-0">
-                <span className="block text-[11px] font-bold text-slate-200 truncate">
+              <span className="campus-row__texts">
+                <span className="campus-row__name">
                   {tr(`building_${entry.id}_name`)}
                   {count === 0 && (
-                    <span className="ml-1.5 align-middle campus-panel__new">{tr('sceneNewBadge')}</span>
+                    <span className="campus-panel__new">{tr('sceneNewBadge')}</span>
                   )}
                 </span>
-                <span className="block text-[10px] font-mono text-slate-500">x{count}</span>
+                <span className="campus-row__count">x{count}</span>
               </span>
-              <span
-                className={`text-[11px] font-mono font-black shrink-0 ${
-                  canAfford ? 'text-emerald-400' : 'text-slate-500'
-                }`}
-              >
-                {formatCurrency(cost)}
-              </span>
+              <span className="campus-row__price">{formatCurrency(cost)}</span>
             </button>
           );
         })}
