@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { buildDataLine, defaultLineRoute } from './buildDataLine';
+import { tierMix } from './tierVisuals';
 
 // Serverkeller (Zone "basement"): GPU-Racks mit blinkenden LEDs, Token-Burner mit
 // glühendem Kern, Rechenzentrums-Silos mit drehendem Lüfter und Grauer-Markt-Silos
@@ -67,15 +68,18 @@ export function buildBasement(palette, zoneDef, furnaceAnchor) {
   const rackLed = inst(new THREE.BoxGeometry(0.3, 0.05, 0.03), basic('token'), RACK_MAX * 4, false);
   // Burner
   const burner = inst(new THREE.BoxGeometry(0.8, 0.8, 0.8), lambert('burner'), BURNER_MAX);
-  const burnerCore = inst(new THREE.BoxGeometry(0.5, 0.5, 0.5), basic('fire'), BURNER_MAX, false);
+  const burnerCoreMat = basic('fire');
+  const burnerCore = inst(new THREE.BoxGeometry(0.5, 0.5, 0.5), burnerCoreMat, BURNER_MAX, false);
   // Silos: Fassade, Band, Fensterring, Lüfterblätter
   const silo = inst(new THREE.CylinderGeometry(0.85, 0.9, 2.6, 10), lambert('facade'), SILO_MAX);
   const siloBand = inst(new THREE.CylinderGeometry(0.9, 0.9, 0.3, 10), lambert('siloBand'), SILO_MAX, false);
-  const siloRing = inst(new THREE.CylinderGeometry(0.87, 0.87, 0.14, 10), basic('token'), SILO_MAX * 2, false);
+  const siloRingMat = basic('token');
+  const siloRing = inst(new THREE.CylinderGeometry(0.87, 0.87, 0.14, 10), siloRingMat, SILO_MAX * 2, false);
   const fanBlade = inst(new THREE.BoxGeometry(0.75, 0.04, 0.16), lambert('steel'), SILO_MAX * 2, false);
   // Grauer Markt
   const graySilo = inst(new THREE.CylinderGeometry(0.42, 0.46, 1.8, 8), lambert('steelDark'), GRAY_MAX);
-  const tarp = inst(new THREE.BoxGeometry(1.1, 0.06, 1.0), lambert('tarp'), GRAY_MAX);
+  const tarpMat = lambert('tarp');
+  const tarp = inst(new THREE.BoxGeometry(1.1, 0.06, 1.0), tarpMat, GRAY_MAX);
   const fencePost = inst(new THREE.CylinderGeometry(0.04, 0.04, 1.0, 5), lambert('fence'), GRAY_MAX * 2, false);
   const fenceRail = inst(new THREE.BoxGeometry(0.95, 0.05, 0.05), lambert('fence'), GRAY_MAX * 2, false);
   // Drohnen (unverändert: frei fliegend, kein Grundstück)
@@ -90,6 +94,7 @@ export function buildBasement(palette, zoneDef, furnaceAnchor) {
   let placedKey = null;
   let siloLots = [];
   let burnerLots = [];
+  let lastTiers = '';
 
   // Racks: `n` Racks über so viele Grundstücke verteilt, wie nötig sind.
   function layoutRacks(lots, n) {
@@ -225,9 +230,15 @@ export function buildBasement(palette, zoneDef, furnaceAnchor) {
     group,
     update(zone, ctx, p) {
       const { dt, t, reduced } = ctx;
+      const find = (id) => zone.buildings.find((x) => x.id === id);
       const c = (id) => {
-        const b = zone.buildings.find((x) => x.id === id);
+        const b = find(id);
         return b ? b.props : 0;
+      };
+      // Sichtstufe (aus gekauften Upgrades) je Engine, siehe tierVisuals.js.
+      const tierOf = (id) => {
+        const b = find(id);
+        return b ? b.tier : 0;
       };
       const counts = {
         rack: Math.min(RACK_MAX, c('gpu_rack')),
@@ -244,10 +255,27 @@ export function buildBasement(palette, zoneDef, furnaceAnchor) {
         placedKey = key;
       }
 
-      // LEDs blinken: jede LED hat eigenen Takt.
+      // Sichtstufen aus gekauften Upgrades (siehe tierVisuals.js): eine Stufe je Engine,
+      // färbt LEDs, Glut, Fensterring und Plane wärmer/goldener statt neue Formen zu
+      // brauchen - vier Engines auf einmal hätten mit Bastel-Geometrie zu lange gedauert.
+      const rackTier = tierOf('gpu_rack');
+      const burnerTier = tierOf('token_burner');
+      const siloTier = tierOf('datacenter');
+      const grayTier = tierOf('gray_market_dc');
+      const tierKey = `${rackTier}|${burnerTier}|${siloTier}|${grayTier}`;
+      if (tierKey !== lastTiers) {
+        lastTiers = tierKey;
+        burnerCoreMat.color.setHex(tierMix(p.fire, p.gold, burnerTier, 0.7));
+        siloRingMat.color.setHex(tierMix(p.token, p.gold, siloTier, 0.7));
+        tarpMat.color.setHex(tierMix(p.tarp, p.gold, grayTier));
+      }
+
+      // LEDs blinken: jede LED hat eigenen Takt, die "an"-Farbe wandert mit der Stufe
+      // Richtung Gold.
+      const ledOnHex = tierMix(p.token, p.gold, rackTier, 0.7);
       for (let i = 0; i < counts.rack * 4; i += 1) {
         const on = reduced ? true : hash01(i + Math.floor(t * 4 + hash01(i) * 10)) > 0.35;
-        color.setHex(on ? p.token : p.rack);
+        color.setHex(on ? ledOnHex : p.rack);
         rackLed.setColorAt(i, color);
       }
       if (counts.rack > 0 && rackLed.instanceColor) rackLed.instanceColor.needsUpdate = true;
@@ -318,6 +346,7 @@ export function buildBasement(palette, zoneDef, furnaceAnchor) {
       Object.entries(mats).forEach(([key, list]) => list.forEach((m) => m.color.setHex(p[key])));
       line.applyPalette(p);
       placedKey = null;
+      lastTiers = '';
     },
   };
 }

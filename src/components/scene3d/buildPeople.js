@@ -51,8 +51,10 @@ export function createPeople(group, palette, capacity) {
   return {
     composePart,
     // armL/armR: Hebewinkel der Arme um die Schulter (0 = hängend, ~1.4 = waagerecht).
-    // lift: Person steht erhöht (z.B. auf der Bühne).
-    set(i, x, z, yaw, { seed = i, armL = 0, armR = 0, hoodie = null, lift = 0 } = {}, p = palette) {
+    // lift: Person steht erhöht (z.B. auf der Bühne). hoodieHex: fertige Hex-Farbe, die
+    // die seed-basierte Wahl übersteuert - für die Sichtstufe aus gekauften Upgrades
+    // (siehe tierVisuals.js), die zonenweit gilt und nicht mehr zufällig streuen darf.
+    set(i, x, z, yaw, { seed = i, armL = 0, armR = 0, hoodie = null, hoodieHex = null, lift = 0 } = {}, p = palette) {
       pants.setMatrixAt(i, composePart(x, z, yaw, 0, 0.2 + lift, 0));
       body.setMatrixAt(i, composePart(x, z, yaw, 0, 0.65 + lift, 0));
       head.setMatrixAt(i, composePart(x, z, yaw, 0, 1.08 + lift, 0));
@@ -62,7 +64,8 @@ export function createPeople(group, palette, capacity) {
       const len = 0.17;
       arm.setMatrixAt(i * 2, composePart(x, z, yaw, -0.27, shoulderY - Math.cos(armL) * len, Math.sin(armL) * len, -armL));
       arm.setMatrixAt(i * 2 + 1, composePart(x, z, yaw, 0.27, shoulderY - Math.cos(armR) * len, Math.sin(armR) * len, -armR));
-      color.setHex(p[hoodie || HOODIES[seed % 3]]);
+      if (hoodieHex != null) color.setHex(hoodieHex);
+      else color.setHex(p[hoodie || HOODIES[seed % 3]]);
       body.setColorAt(i, color);
     },
     commit(n) {

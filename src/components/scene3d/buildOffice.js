@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { buildDataLine, defaultLineRoute } from './buildDataLine';
 import { buildLotShells } from './buildLotShells';
+import { tierMix } from './tierVisuals';
 
 // Großraumbüro (Zone "office"): Praktikanten und Prompt Engineers sitzen an schäbigen
 // Schreibtischen und tippen - seit dem Grundstücks-Umbau nicht mehr frei auf der Wiese,
@@ -89,7 +90,8 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
   const deskTop = inst(new THREE.BoxGeometry(1.35, 0.08, 0.7), lambert('desk'), TOTAL);
   const deskLeg = inst(new THREE.BoxGeometry(0.08, 0.7, 0.62), lambert('deskLeg'), TOTAL * 2);
   const monitor = inst(new THREE.BoxGeometry(0.52, 0.4, 0.1), lambert('monitor'), TOTAL + ENGINEER_MAX);
-  const screen = inst(new THREE.PlaneGeometry(0.44, 0.32), basic('screen'), TOTAL + ENGINEER_MAX, false);
+  const screenMat = basic('screen');
+  const screen = inst(new THREE.PlaneGeometry(0.44, 0.32), screenMat, TOTAL + ENGINEER_MAX, false);
   const monitorStand = inst(new THREE.BoxGeometry(0.1, 0.16, 0.1), lambert('deskLeg'), TOTAL + ENGINEER_MAX, false);
   const keyboard = inst(new THREE.BoxGeometry(0.5, 0.04, 0.2), lambert('deskDark'), TOTAL, false);
   const chairSeat = inst(new THREE.BoxGeometry(0.5, 0.08, 0.5), lambert('chair'), TOTAL);
@@ -144,6 +146,7 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
 
   let placedKey = null;
   let placedWidgets = -1;
+  let lastScreenTier = -1;
   // Ruhelage der Sprechblasen (wird pro Frame nur noch auf und ab gewippt).
   const widgetBase = new Float32Array(WIDGET_MAX);
   const widgetPos = new Float32Array(WIDGET_MAX * 2);
@@ -154,8 +157,11 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
     return DESK_OFFSETS.map((o) => ({ x: lot.lx + o.x, y: 0.18, z: lot.lz + o.z }));
   }
 
-  // laidOff: jede dritte Person fehlt (leerer Stuhl), der Tisch bleibt.
-  function layout(internLots, engineerLots, internCount, engineerCount, p, laidOff) {
+  // laidOff: jede dritte Person fehlt (leerer Stuhl), der Tisch bleibt. internTier/
+  // engineerTier kommen aus gekauften Upgrades (siehe tierVisuals.js) und heben Hoodie-
+  // Farbe sowie Tisch-Zubehör an - dieselbe Stufe für alle Praktikanten bzw. alle
+  // Engineers, weil das Upgrade die ganze Engine betrifft, nicht eine einzelne Person.
+  function layout(internLots, engineerLots, internCount, engineerCount, p, laidOff, internTier, engineerTier) {
     units = [];
     const fill = (lots, count, isEngineer) => {
       let left = count;
@@ -201,13 +207,16 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
       place(body, i, slot, 0, 0.8, -0.7, slump, 0, 0, sc, sc, sc);
       place(head, i, slot, 0, 1.2 - slump * 0.3, -0.62 + slump * 0.3, 0, 0, 0, sc, sc, sc);
       place(hair, i, slot, 0, 1.24 - slump * 0.3, -0.62 + slump * 0.3, 0, 0, 0, sc, sc, sc);
-      color.setHex([p.hoodieA, p.hoodieB, p.hoodieC][seed % 3]);
+      const tier = isEngineer ? engineerTier : internTier;
+      color.setHex(tierMix([p.hoodieA, p.hoodieB, p.hoodieC][seed % 3], p.gold, tier));
       body.setColorAt(i, color);
-      if (hash01(seed + 7) > 0.45) {
+      // Ab Stufe 2 hat jeder Platz Tasse und Papier - besser ausgestattet statt
+      // zufällig, das liest sich als sichtbarer Fortschritt.
+      if (tier >= 2 || hash01(seed + 7) > 0.45) {
         place(cup, cupIdx, slot, 0.45, 0.85, -0.1);
         cupIdx += 1;
       }
-      if (hash01(seed + 13) > 0.5) {
+      if (tier >= 2 || hash01(seed + 13) > 0.5) {
         place(paper, paperIdx, slot, -0.45, 0.8, 0.05, 0, hash01(seed) * 0.6);
         paperIdx += 1;
       }
@@ -282,13 +291,23 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
       const engineerLots = lots.filter((l) => l.id === 'prompt_engineer').slice(0, ENGINEER_LOTS_MAX);
 
       const laidOff = Boolean(zone.laidOff);
-      // Ein Schlüssel statt vier Vergleichen: die Häuser können sich auch bei gleicher
-      // Kopfzahl verschieben (neues Grundstück), dann muss alles neu gesetzt werden.
-      const key = `${internCount}/${engineerCount}/${internLots.length}/${engineerLots.length}/${laidOff}`;
+      const internTier = interns ? interns.tier : 0;
+      const engineerTier = engineers ? engineers.tier : 0;
+      // Ein Schlüssel statt vieler Vergleiche: die Häuser können sich auch bei gleicher
+      // Kopfzahl verschieben (neues Grundstück) oder umfärben (neue Sichtstufe), dann
+      // muss alles neu gesetzt werden.
+      const key = `${internCount}/${engineerCount}/${internLots.length}/${engineerLots.length}/${laidOff}/${internTier}/${engineerTier}`;
       if (key !== placedKey) {
-        layout(internLots, engineerLots, internCount, engineerCount, p, laidOff);
+        layout(internLots, engineerLots, internCount, engineerCount, p, laidOff, internTier, engineerTier);
         placedKey = key;
         placedWidgets = -1;
+      }
+      // Monitore leuchten mit der höheren der beiden Sichtstufen heller/goldener -
+      // ein gemeinsames Material für alle Bildschirme, deshalb EINE Stufe fürs ganze Büro.
+      const screenTier = Math.max(internTier, engineerTier);
+      if (screenTier !== lastScreenTier) {
+        lastScreenTier = screenTier;
+        screenMat.color.setHex(tierMix(p.screen, p.gold, screenTier, 0.7));
       }
       if (widgetCount !== placedWidgets) {
         layoutWidgets(widgetCount, internLots.length ? internLots : engineerLots);
@@ -360,6 +379,7 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
       internShells.applyPalette(p);
       engineerShells.applyPalette(p);
       placedKey = null; // erzwingt neues Layout inkl. Hoodie-Farben
+      lastScreenTier = -1; // erzwingt neuen Monitor-Ton auf der frischen Palette
     },
   };
 }

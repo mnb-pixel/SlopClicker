@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { createPeople } from './buildPeople';
+import { tierMix } from './tierVisuals';
 
 // Bühne und Presse (Zone "stage"): Keynote-Podeste mit leuchtender Rückwand und Pult,
 // Scheinwerfer auf Traversen, Thought Leader mit Krawatte und Mikrofon, Journalisten
@@ -62,19 +63,16 @@ export function buildStage(palette, zoneDef) {
   // LOT_SIZE 3.6 statt die ganze Zone zu belegen.
   const stagePlatform = inst(new THREE.BoxGeometry(3.2, 0.4, 1.8), lambert('stageFloor'), STAGE_MAX);
   const stageWall = inst(new THREE.BoxGeometry(3.0, 1.5, 0.14), lambert('monitor'), STAGE_MAX);
-  const stageScreen = inst(new THREE.PlaneGeometry(2.75, 1.25), basic('screen'), STAGE_MAX, false);
+  const stageScreenMat = basic('screen');
+  const stageScreen = inst(new THREE.PlaneGeometry(2.75, 1.25), stageScreenMat, STAGE_MAX, false);
   const bars = inst(new THREE.BoxGeometry(0.22, 1, 0.05), lambert('gold'), STAGE_MAX * 5, false);
   const lectern = inst(new THREE.BoxGeometry(0.38, 0.75, 0.32), lambert('desk'), STAGE_MAX);
 
   // Scheinwerfer: ein Paar pro Bühnen-Grundstück (Mast, Kopf, Lichtkegel).
   const spotPole = inst(new THREE.CylinderGeometry(0.05, 0.06, 2.6, 5), lambert('steelDark'), STAGE_MAX * 2, false);
   const spotHead = inst(new THREE.CylinderGeometry(0.1, 0.16, 0.24, 6), lambert('steelDark'), STAGE_MAX * 2, false);
-  const spotBeam = inst(
-    new THREE.ConeGeometry(0.65, 2.3, 8, 1, true),
-    basic('spot', { transparent: true, opacity: 0.18, depthWrite: false, side: THREE.DoubleSide }),
-    STAGE_MAX * 2,
-    false
-  );
+  const spotBeamMat = basic('spot', { transparent: true, opacity: 0.18, depthWrite: false, side: THREE.DoubleSide });
+  const spotBeam = inst(new THREE.ConeGeometry(0.65, 2.3, 8, 1, true), spotBeamMat, STAGE_MAX * 2, false);
 
   // --- Personen ------------------------------------------------------------------------
   const people = createPeople(group, palette, LEADER_MAX + JOURNALIST_MAX + LOBBY_MAX);
@@ -91,7 +89,8 @@ export function buildStage(palette, zoneDef) {
   const mastBase = inst(new THREE.CylinderGeometry(0.4, 0.56, 0.32, 8), lambert('stoneDark'), LOBBY_MAX);
   const mastSeg = inst(new THREE.CylinderGeometry(0.1, 0.15, 1.0, 4), lambert('steel'), LOBBY_MAX * 3, false);
   const mastCross = inst(new THREE.BoxGeometry(0.6, 0.05, 0.05), lambert('steelDark'), LOBBY_MAX * 3, false);
-  const dish = inst(new THREE.SphereGeometry(0.4, 8, 6, 0, Math.PI * 2, 0, Math.PI * 0.4), lambert('facade'), LOBBY_MAX, false);
+  const dishMat = lambert('facade');
+  const dish = inst(new THREE.SphereGeometry(0.4, 8, 6, 0, Math.PI * 2, 0, Math.PI * 0.4), dishMat, LOBBY_MAX, false);
   const beacon = inst(new THREE.SphereGeometry(0.09, 6, 5), basic('warnRed'), LOBBY_MAX, false);
   const wave = inst(new THREE.TorusGeometry(0.3, 0.025, 4, 16), basic('token', { transparent: true, opacity: 0.6 }), LOBBY_MAX * 3, false);
 
@@ -100,6 +99,7 @@ export function buildStage(palette, zoneDef) {
   let leaderUnits = []; // { x, z, seed }
   let journalistUnits = [];
   let mastLots = [];
+  let lastTiers = '';
 
   function placeStages(lots, n) {
     stageLots = [];
@@ -208,9 +208,15 @@ export function buildStage(palette, zoneDef) {
     group,
     update(zone, ctx, p) {
       const { t, reduced } = ctx;
+      const find = (id) => zone.buildings.find((x) => x.id === id);
       const c = (id) => {
-        const b = zone.buildings.find((x) => x.id === id);
+        const b = find(id);
         return b ? b.props : 0;
+      };
+      // Sichtstufe (aus gekauften Upgrades) je Engine, siehe tierVisuals.js.
+      const tierOf = (id) => {
+        const b = find(id);
+        return b ? b.tier : 0;
       };
       const counts = {
         stage: Math.min(STAGE_MAX, c('keynote_stage')),
@@ -219,6 +225,17 @@ export function buildStage(palette, zoneDef) {
         paper: Math.min(PAPER_MAX, c('pitch_deck')),
         lobby: Math.min(LOBBY_MAX, c('lobbyist')),
       };
+      const stageTier = tierOf('keynote_stage');
+      const leaderTier = tierOf('thought_leader');
+      const journalistTier = tierOf('hype_journalist');
+      const lobbyTier = tierOf('lobbyist');
+      const tierKey = `${stageTier}|${leaderTier}|${journalistTier}|${lobbyTier}`;
+      if (tierKey !== lastTiers) {
+        lastTiers = tierKey;
+        stageScreenMat.color.setHex(tierMix(p.screen, p.gold, stageTier, 0.7));
+        spotBeamMat.color.setHex(tierMix(p.spot, p.gold, stageTier, 0.5));
+        dishMat.color.setHex(tierMix(p.facade, p.gold, lobbyTier, 0.35));
+      }
       const lotsFor = (id) => (zone.lots || []).filter((l) => l.id === id);
       const key = `${counts.stage}|${counts.leader}|${counts.journalist}|${counts.paper}|${counts.lobby}|${(zone.lots || []).length}`;
       if (key !== placedKey) {
@@ -259,13 +276,13 @@ export function buildStage(palette, zoneDef) {
       for (let i = 0; i < counts.leader; i += 1, pi += 1) {
         const u = leaderUnits[i];
         const gesture = reduced ? 0.6 : 0.5 + Math.max(0, Math.sin(t * 2.2 + i)) * 0.9;
-        people.set(pi, u.x, u.z, u.yaw, { seed: u.seed + 20, armL: gesture, armR: 1.3, hoodie: 'hoodieA' }, p);
+        people.set(pi, u.x, u.z, u.yaw, { seed: u.seed + 20, armL: gesture, armR: 1.3, hoodieHex: tierMix(p.hoodieA, p.gold, leaderTier) }, p);
         tie.setMatrixAt(i, people.composePart(u.x, u.z, u.yaw, 0, 0.72, 0.22, 0.1));
         mic.setMatrixAt(i, people.composePart(u.x, u.z, u.yaw, 0.27, 0.95, 0.25, 0.3));
       }
       for (let i = 0; i < counts.journalist; i += 1, pi += 1) {
         const u = journalistUnits[i];
-        people.set(pi, u.x, u.z, u.yaw, { seed: u.seed + 40, armL: 1.4, armR: 1.4 }, p);
+        people.set(pi, u.x, u.z, u.yaw, { seed: u.seed + 40, armL: 1.4, armR: 1.4, hoodieHex: tierMix([p.hoodieA, p.hoodieB, p.hoodieC][u.seed % 3], p.gold, journalistTier) }, p);
         camera.setMatrixAt(i, people.composePart(u.x, u.z, u.yaw, 0, 1.05, 0.25));
         const on = reduced ? false : hash01(i + Math.floor(t * 2.5 + hash01(i) * 7)) > 0.82;
         const k = on ? 1 + (t * 20) % 1 : 0.001;
@@ -281,7 +298,7 @@ export function buildStage(palette, zoneDef) {
         const yaw = Math.PI * 0.75;
         const lx = lot.lx - 0.9;
         const lz = lot.lz + 0.9;
-        people.set(pi, lx, lz, yaw, { seed: i + 60, armL: 0.1, armR: reduced ? 0.4 : 0.3 + Math.sin(t * 1.5 + i) * 0.15, hoodie: 'hoodieB' }, p);
+        people.set(pi, lx, lz, yaw, { seed: i + 60, armL: 0.1, armR: reduced ? 0.4 : 0.3 + Math.sin(t * 1.5 + i) * 0.15, hoodieHex: tierMix(p.hoodieB, p.gold, lobbyTier) }, p);
         briefcase.setMatrixAt(i, people.composePart(lx, lz, yaw, -0.3, 0.45, 0.05));
       }
       people.commit(pi);
@@ -343,6 +360,7 @@ export function buildStage(palette, zoneDef) {
       Object.entries(mats).forEach(([key, list]) => list.forEach((m) => m.color.setHex(p[key])));
       people.applyPalette(p);
       placedKey = null;
+      lastTiers = '';
     },
   };
 }

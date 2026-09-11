@@ -1,8 +1,10 @@
 # Token-Furnace-Campus: isometrisches Low-Poly-Diorama
 
-Das Spielfeld wird ein einziges, wachsendes Bild: eine schwebende Insel im Stil von
+Das Spielfeld wird ein einziges, wachsendes Bild: eine grüne Wiese im Stil von
 Egg Inc, in der Mitte der Server-Schrank, rundherum die fünf Zonen des KI-Startups.
-Rein visuell. Spielprinzip, Zahlen und Punktesystem bleiben unverändert.
+Keine schwebende Insel, kein Felssockel darunter - der Rasen ist von Anfang an riesig
+und reicht bis zum Horizont, bebaut wird immer nur ein wachsender Ausschnitt in der
+Mitte. Rein visuell. Spielprinzip, Zahlen und Punktesystem bleiben unverändert.
 
 **Der Schmelzofen ist ein Server-Schrank.** Die Mitte war anfangs ein Ziegel-Bienenkorb
 mit Kamin, der von der ersten Sekunde an loderte. Ein Rechenzentrum brennt aber nicht,
@@ -11,13 +13,21 @@ dampfend, qualmend, und erst ganz oben schlagen Flammen aus dem Dachschlitz (sie
 "Die Mitte: der Server-Schrank"). Der Spielzustand heißt im Code weiter `furnace`, und
 das Spiel weiter Token Furnace - das ist der Markenname, nicht die Grafik.
 
-**Das Spielfeld wächst mit - über den Bildrand hinaus.** Insel und Zonenplatten sind
-nicht mehr fest: Engines mit `plot` (bisher Praktikanten und Prompt Engineers) füllen
-ein Gebäude bis zur Kapazität, danach entsteht das nächste NEBENAN; Zonen ohne eigenes
-Grundstücks-Layout bekommen Anbauhallen neben ihrer Grundfläche. Stoßen die äußersten
-Gebäude an den Rand, wächst die Insel eine Stufe - bis über das hinaus, was auf einen
-Bildschirm passt. Ab da zoomt die Kamera nicht weiter heraus, sondern der Spieler
-schiebt und zoomt selbst (siehe "Grundstücke und Inselwachstum" und "Kamera").
+**Das Spielfeld wächst mit - über den Bildrand hinaus.** Zonenplatten sind nicht mehr
+fest: JEDE Engine aller fünf Zonen hat ihr eigenes `plot`-Grundstück (nicht mehr nur
+Praktikanten und Prompt Engineers im Büro) und füllt ein Gebäude bis zur Kapazität,
+danach entsteht das nächste NEBENAN, in einer eigenen Reihe je Engine. Stoßen die
+äußersten Gebäude an den Rand, wächst der bebaute Bereich eine Stufe - bis über das
+hinaus, was auf einen Bildschirm passt. Ab da zoomt die Kamera nicht weiter heraus,
+sondern der Spieler schiebt und zoomt selbst (siehe "Grundstücke und Inselwachstum"
+und "Kamera").
+
+**Upgrades verändern auch die Grafik, nicht nur die Zahl.** Jede Engine hat eine
+visuelle Tier-Stufe (0 bis 3), abgeleitet aus der Zahl ihrer gekauften
+Gebäude-Upgrades (siehe "Ausbaustufen"). Höhere Tiers färben die Props Richtung Gold -
+Kapuzenpullis, Bildschirme, LEDs, Turm-Etagen und mehr, je Zone verschieden. Kauft man
+Upgrades für die Prompt-Praktikanten, sieht man das also direkt an ihnen, nicht nur an
+der VPS-Zahl.
 
 Stand: alle sieben Phasen gebaut, dazu der Umbau auf Server-Schrank und wachsendes
 Spielfeld. Die 3D-Insel ist der einzige Spielbildschirm mit
@@ -113,7 +123,6 @@ bildschirm ersetzt. Hier ist sie vorerst NUR eine versteckte Testseite:
 | Daten, Neon | Türkis `#22D3EE` |
 | Hitze, Feuer | Rotorange `#F97316` |
 | Kapital, Hype | Gold `#FACC15` |
-| Inselsockel | Erdbraun, unten dunkler, mit türkisen Leiterbahn-Linien |
 | Himmel | Hellblau-Verlauf, zwei bis drei Low-Poly-Wolken |
 
 **Geometrie:** nur Quader, Zylinder, Kegel, Kugeln, Ikosaeder. Runde Kanten über
@@ -199,10 +208,17 @@ bleibt dahinter sichtbar und läuft weiter. Die bestehenden Tab-Komponenten
 
 ## Die Insel
 
-Ein Raster von 24 x 24 Einheiten als BASIS, Ursprung in der Mitte. Der Server-Schrank
-steht auf dem Ursprung. Blickrichtung: die Kamera schaut von vorne links, vorne ist +Z.
-Die Insel wächst in Vierer-Schritten bis 44 Einheiten mit, sobald Gebäude über den Rand
-hinauswollen - gerechnet in `utils/campusLayout.js`, ausgelöst über `deriveIsland()`.
+Trotz des Namens (aus der Zeit der schwebenden Insel, siehe unten) keine Insel mehr:
+`buildIsland.js` legt eine einzige, riesige flache Rasenfläche (800 x 800 Einheiten)
+unter die ganze Szene, ohne Kante, ohne Felssockel darunter - von jedem Zoomstand aus
+sieht man nur Gras bis zum Bildrand, wie bei Egg Inc. Bebaut wird trotzdem nur ein
+wachsender Ausschnitt in der Mitte: ein Raster von 24 x 24 Einheiten als BASIS,
+Ursprung in der Mitte. Der Server-Schrank steht auf dem Ursprung. Blickrichtung: die
+Kamera schaut von vorne links, vorne ist +Z. Dieser bebaute Bereich wächst in
+Vierer-Schritten bis 44 Einheiten mit, sobald Gebäude über den Rand hinauswollen -
+gerechnet in `utils/campusLayout.js`, ausgelöst über `deriveIsland()`; er bestimmt nur
+noch Kamera-Einpassung und Baumverteilung (`buildCampus.js`), nicht mehr die Größe des
+Rasens selbst.
 
 ```
                    hinten
@@ -297,8 +313,9 @@ den Bauern, müsste die Insel raten, wie weit die Zonen inzwischen gewachsen sin
   (`zoneRect`), die Nadel rückt um genau den Zuwachs nach außen.
 * **Inselgröße**: `islandSizeForLots()` nimmt das äußerste Grundstück plus Rand und
   rastert auf Vierer-Schritte (24 bis 96; ausgebaut kommt der Campus heute auf etwa 60).
-  Gewachsen wird über einen Skalierungsfaktor auf der Landmasse, nicht über neue
-  Geometrie; Bäume, Randlicht und Leiterbahnen fahren mit.
+  Der Rasen selbst ist davon unabhängig (siehe "Die Insel") - gewachsen wird nur über
+  einen Skalierungsfaktor auf Bäumen und Lichtdrohnen (`layoutTrees()` in
+  `buildCampus.js`) sowie über die Kamera-Einpassung, nicht über neue Bodengeometrie.
 
 ## Kamera: einpassen, schieben, zoomen
 
@@ -347,13 +364,20 @@ der Hitze: weißer Dampf, solange es kühl ist, dann grau, dann schwarz.
 
 Zwei unabhängige Achsen, beide bereits im Gerüst angelegt:
 
-1. **Campus-Stufe, inselweit**, gekoppelt an die vorhandene Hype-Stufe (1 bis 10),
-   siehe `buildCampus.js`: Garage (1 bis 2) nackte Insel; Co-Working (3 bis 5) Wege
+1. **Campus-Stufe, campusweit**, gekoppelt an die vorhandene Hype-Stufe (1 bis 10),
+   siehe `buildCampus.js`: Garage (1 bis 2) nackte Wiese; Co-Working (3 bis 5) Wege
    von den freigeschalteten Zonen zum Schrank und sechs Bäume; Container-Dorf (6 bis 8)
-   zehn Bäume und schwach leuchtender Inselrand; Hyperscale (9 bis 10) vierzehn Bäume,
-   Rand voll, türkise Leiterbahnen im Fels, acht Lichtdrohnen um die Insel.
+   zehn Bäume; Hyperscale (9 bis 10) vierzehn Bäume und acht Lichtdrohnen, die über dem
+   Campus kreisen.
 2. **Zonen-Stufe** aus dem Bestand der Zone (`tier` 0 bis 7 in `sceneState.js`):
    steuert, wie dicht und hoch die Props stehen.
+3. **Visuelle Upgrade-Stufe je Engine** (`tier` 0 bis 3, `tierVisuals.js`): aus der
+   Zahl gekaufter Gebäude-Upgrades dieser Engine (`Math.floor(upgradeCount / 4)`,
+   gedeckelt bei 3). Färbt Props Richtung Gold statt sie umzubauen - Kapuzenpullis,
+   Bildschirme, LEDs, Silo-Ring, Bühnenscheinwerfer, Turm-Etagen, Reaktordampf je nach
+   Zone. Anders als Campus- und Zonen-Stufe hängt sie nicht am Bestand, sondern direkt
+   an den gekauften Upgrades - kaufen sich zwei Spieler dieselbe Stückzahl, aber
+   unterschiedlich viele Upgrades, sehen ihre Engines unterschiedlich aus.
 
 ## Zustände, die die Szene zeigt
 
@@ -362,7 +386,8 @@ Zwei unabhängige Achsen, beide bereits im Gerüst angelegt:
 | Hitze cold bis critical | GPU-Temperatur | LED-Farbe, Lüfterdrehzahl, Dampf, Glut, ab critical Flammen |
 | meltdown | Overheat-Lock | Schrank verrußt und brennt, Absperrband, Kühlnebel, Klick gesperrt |
 | Rauchstufe 0 bis 7 | VPS, logarithmisch | Anzahl und Größe der Wölkchen aus dem Abluftrohr (Farbe nach Hitze) |
-| Inselgröße 24 bis 96 | belegte Grundstücke | Landmasse, Bäume und Randlicht wachsen in Stufen mit; bis 40 zoomt die Kamera mit heraus, danach wird geschoben |
+| Inselgröße 24 bis 96 | belegte Grundstücke | Baumverteilung wächst in Stufen mit, der Rasen selbst ist riesig und fest; bis 40 zoomt die Kamera mit heraus, danach wird geschoben |
+| Engine-Tier 0 bis 3 | gekaufte Gebäude-Upgrades je Engine | Props der Engine färben sich stufenweise Richtung Gold (`tierVisuals.js`) |
 | surge | Power Click | Türkise Blitze zucken um den Schrank, alle 80 ms neu gewürfelt |
 | golden | Golden Meme | Goldrauch, Goldflammen, Goldmünzen regnen über die Insel |
 | bubble | Bubble Burn | Statt Rauch steigen Seifenblasen auf und platzen oben |
@@ -406,18 +431,21 @@ ohne stundenlanges Spielen; kein Cheat, weil nichts davon in den Store zurückfl
 | `src/platform/webgl.js` | Einmalige WebGL-Erkennung, entscheidet Shell oder Fallback |
 | `src/components/shell/GameShell.jsx`, `HudTop.jsx`, `HudBottom.jsx`, `Drawer.jsx` | Vollbild-Shell mit Overlays und Schubladen |
 | `src/components/scene3d/CampusScene.jsx` | React-Wrapper: Renderer, Kamera, Licht, Loop, Raycast, Beschriftungen, Debug-Haken |
-| `src/components/scene3d/buildIsland.js`, `buildServerRack.js`, `buildCampus.js` | Insel (inkl. Wachstum), Server-Schrank, Campus-Stufen |
-| `src/components/scene3d/buildLotShells.js` | Gebäudehüllen auf den Grundstücken (halboffen fürs Büro, geschlossen für Anbauhallen) |
+| `src/components/scene3d/buildIsland.js` | Flacher, fester Rasen (800 x 800) plus Wolken - keine Insel mehr, Name geblieben |
+| `src/components/scene3d/buildServerRack.js`, `buildCampus.js` | Server-Schrank, Campus-Stufen (Wege, Bäume, Lichtdrohnen) |
+| `src/components/scene3d/buildLotShells.js` | Gebäudehüllen auf den Grundstücken (halboffen fürs Büro) |
+| `src/components/scene3d/tierVisuals.js` | `tierMix()`: mischt eine Materialfarbe Richtung Gold nach Engine-Upgrade-Stufe (0 bis 3) |
 | `src/utils/campusLayout.js` | Grundstücks-Raster, Zonen-Rechteck, Inselgröße - reine Geometrie |
-| `src/components/scene3d/buildOffice.js`, `buildBasement.js`, `buildStage.js`, `buildTower.js`, `buildEndgame.js` | Die fünf Zonen |
+| `src/components/scene3d/buildOffice.js`, `buildBasement.js`, `buildStage.js`, `buildTower.js`, `buildEndgame.js` | Die fünf Zonen, je mit eigenen Grundstücken pro Engine und Tier-Einfärbung über `tierVisuals.js` |
 | `src/components/scene3d/buildZones.js` | Platten, Klickziele, Nadel-Anker, Zonen-Effekte, hostet die Zonen-Bauer |
 | `src/components/scene3d/buildDataLine.js`, `buildPeople.js` | Gemeinsame Bausteine: Datenleitung, Personen |
-| `src/components/scene3d/ZoneBuyPanel.jsx` | Kaufen aus der Szene: Engines, Upgrades und Corporate Actions der angeklickten Zone in drei Reitern, Preise/Filterung über dieselben Helfer wie der Shop |
+| `src/components/scene3d/ZoneBuyPanel.jsx` | Kaufen aus der Szene: Engines, Upgrades und Corporate Actions der angeklickten Zone in drei Reitern mit Icon je Zeile (`utils/iconMap.js`), Preise/Filterung über dieselben Helfer wie der Shop |
 | `src/utils/storeCopy.js` | Anzeigetexte für Upgrades und Corporate Actions (Name, Zitat, Effektbeschreibung) - eine Quelle für StoreTab und ZoneBuyPanel |
+| `src/utils/iconMap.js` | Icon-Name (String aus den Datendateien) zu Lucide-Komponente, für Shop UND ZoneBuyPanel |
 | `src/components/scene3d/palette.js` | Materialfarben je Theme, Himmel als CSS-Verlauf |
 | `src/components/scene3d/zoneVisuals.js` | Icon und Akzentfarbe je Zone, für Stecknadel und Panelkopf |
-| `src/data/zonesData.js` | Zonen-Anker, Grundflächen, Nadel-Anker (`labelAnchor3d`), Engine-Zuordnung, `maxProps`, `plot`, `annexMax` |
-| `src/utils/sceneState.js` | Spielzahlen zu Grafik-Stufen, reine Funktionen |
+| `src/data/zonesData.js` | Zonen-Anker, Grundflächen, Nadel-Anker (`labelAnchor3d`), Engine-Zuordnung, `maxProps`, `plot` |
+| `src/utils/sceneState.js` | Spielzahlen zu Grafik-Stufen, reine Funktionen, inkl. Engine-Tier aus Upgrade-Zahl |
 | `src/utils/tickerText.js` | Ticker-Text für LED-Tafel und HTML-Laufzeile (Fallback) |
 | Store: `lastBlackSwan` | Rein visuelles Signal für den Schadensblitz, nicht gespeichert |
 | `Header.jsx`, `NavBar.jsx`, `DesktopView.jsx`, `SlopTab.jsx`, `BuildingVisualGrid.jsx` | Nur noch im Fallback ohne WebGL |

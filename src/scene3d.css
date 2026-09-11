@@ -1021,6 +1021,26 @@
 }
 
 .campus-row__lock { width: 14px; height: 14px; color: var(--game-ink-soft); flex-shrink: 0; }
+
+/* Icon-Kachel links in jeder Zeile - Engines, Upgrades UND Corporate Actions zeigen
+   jetzt alle ihr Icon aus den Datendateien (buildingsData/upgradesData/
+   greenwashingLayoffsData), statt nur Text zu sein. Gleicher badge-Look wie der
+   Zonen-Kopf oben, nur kleiner und in der Zeile statt im Panel-Header. */
+.campus-row__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--game-paper-sunk);
+  border: 2px solid var(--game-line);
+  color: var(--zone-accent, var(--game-ink));
+  flex-shrink: 0;
+}
+
+.campus-row__icon-glyph { width: 14px; height: 14px; }
+
 .campus-row__texts { display: flex; flex-direction: column; min-width: 0; }
 
 .campus-row__name {

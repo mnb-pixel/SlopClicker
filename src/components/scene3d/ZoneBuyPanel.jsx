@@ -5,6 +5,7 @@ import { ZONE_BY_BUILDING } from '../../data/zonesData';
 import { getAvailableUpgrades } from '../../data/upgradesData';
 import { getCorporateActionCost, getAvailableCorporateActions } from '../../data/greenwashingLayoffsData';
 import { getZoneVisual } from './zoneVisuals';
+import { getIcon } from '../../utils/iconMap';
 import { upgradeName, upgradeQuote, upgradeDescription, gwName, gwQuote, gwEffectDesc } from '../../utils/storeCopy';
 import {
   formatCurrency,
@@ -59,6 +60,18 @@ export function ZoneBuyPanel({
   const tr = t || ((k) => k);
   const { Icon, accent } = getZoneVisual(zoneDef.id);
   const [section, setSection] = useState('engines'); // 'engines' | 'upgrades' | 'corporate'
+
+  // Icon-Kachel je Zeile: dasselbe Icon-Feld, das der Shop (StoreTab) schon aus
+  // buildingsData/upgradesData/greenwashingLayoffsData zieht - hier landet's nur in der
+  // kleineren Panel-Optik statt im dunklen Terminal-Look.
+  const RowIcon = ({ name }) => {
+    const IconComp = getIcon(name, 'Zap');
+    return (
+      <span className="campus-row__icon" aria-hidden="true">
+        <IconComp className="campus-row__icon-glyph" />
+      </span>
+    );
+  };
 
   // zoneState.buildings trägt die Sichtbarkeits-Flags aus deriveZones. Fehlt es (die
   // Zone wurde noch nie abgeleitet), bleibt die Liste leer statt versehentlich alles zu
@@ -168,6 +181,7 @@ export function ZoneBuyPanel({
                   disabled={!canAfford}
                   className={`campus-row ${canAfford ? 'is-affordable' : 'is-broke'}`}
                 >
+                  <RowIcon name={meta.icon} />
                   <span className="campus-row__texts">
                     <span className="campus-row__name">
                       {tr(`building_${entry.id}_name`)}
@@ -199,6 +213,7 @@ export function ZoneBuyPanel({
                   disabled={!canAfford}
                   className={`campus-row campus-row--stacked ${canAfford ? 'is-affordable' : 'is-broke'}`}
                 >
+                  <RowIcon name={up.icon} />
                   <span className="campus-row__texts">
                     <span className="campus-row__name">{upgradeName(up, tr)}</span>
                     <span className="campus-row__hint">{upgradeDescription(up, tr)}</span>
@@ -228,6 +243,7 @@ export function ZoneBuyPanel({
                   disabled={!canAfford}
                   className={`campus-row campus-row--stacked ${canAfford ? 'is-affordable' : 'is-broke'}`}
                 >
+                  <RowIcon name={item.icon} />
                   <span className="campus-row__texts">
                     <span className="campus-row__name">{gwName(item, tr)}</span>
                     <span className="campus-row__hint">{gwEffectDesc(item, tr)}</span>

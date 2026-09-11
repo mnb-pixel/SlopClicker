@@ -204,8 +204,13 @@ export const CampusScene = forwardRef(function CampusScene(
     // wird genau einmal gesetzt und danach nie mehr angefasst: Schieben heißt, die Kamera
     // entlang ihrer eigenen Rechts-/Hoch-Achse zu versetzen (lookAt() erneut aufzurufen
     // würde die Isometrie verdrehen).
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 400);
-    const CAM_BASE = new THREE.Vector3(30, 26, 30);
+    // Die Kamera steht bewusst weit entfernt (statt nah dran mit kleinem Fern-Clip):
+    // bei orthografischer Projektion ändert der Abstand entlang einer festen Richtung
+    // weder Ausschnitt noch Maßstab, aber das flache Grasfeld (800x800) reicht beim
+    // Herauszoomen bis weit vor die Kamera - stünde sie zu nah, würde die dem
+    // Betrachter zugewandte Feldecke hinter der Nah-Clip-Ebene verschwinden.
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 3000);
+    const CAM_BASE = new THREE.Vector3(30, 26, 30).multiplyScalar(12);
     camera.position.copy(CAM_BASE);
     camera.lookAt(0, 0, 0);
     camera.updateMatrixWorld();

@@ -1,25 +1,19 @@
 import * as THREE from 'three';
-import { ISLAND_SIZE } from '../../data/zonesData';
 
-// Die schwebende Insel: Grasplatte, zwei Erdschichten, darunter eine nach unten
-// spitz zulaufende Felsspitze. Dazu drei Low-Poly-Wolken, die langsam driften.
-//
-// Die Insel WÄCHST: sobald die Zonen über ihre Grundfläche hinaus bauen, verlangt
-// deriveIsland() eine größere Kantenlänge (utils/sceneState.js). Gewachsen wird über
-// einen Skalierungsfaktor auf der Landmasse in x/z - Geometrie neu zu bauen würde bei
-// jedem Kauf einen Ruckler kosten, und die Stufen sind ohnehin nur Vielfache der
-// Basisgröße. Die Höhe bleibt bewusst gleich: ein mitgewachsener Felskegel würde die
-// Insel in der Isometrie nach unten aus dem Bild schieben.
+// Das Spielfeld: eine einzige, flache Wiese statt der früheren schwebenden Insel -
+// im Stil von Egg Inc, wo der Hof einfach auf einer grünen Fläche steht statt auf
+// einem Felsbrocken zu schweben. Der Rasen ist bewusst riesig (FIELD_SIZE), damit sein
+// Rand bei keinem Zoomstand je ins Bild gerät; die Kamera kann höchstens so weit heraus,
+// wie VIEW_FIT_MAX/ZOOM_MAX in CampusScene.jsx erlauben, und das bleibt weit innerhalb
+// dieser Kante. Dazu drei Low-Poly-Wolken, die langsam driften.
 //
 // Alles Flat Shading ohne Texturen. Materialien werden in einem Objekt gesammelt,
 // damit applyPalette() beim Theme-Wechsel nur Farben tauscht statt Geometrie neu zu bauen.
+const FIELD_SIZE = 800;
+
 export function buildIsland(palette) {
   const group = new THREE.Group();
-  // Landmasse getrennt von den Wolken: skaliert wird nur das Land.
-  const land = new THREE.Group();
-  group.add(land);
   const mats = {};
-  const S = ISLAND_SIZE;
 
   const lambert = (key) => {
     const m = new THREE.MeshLambertMaterial({ color: palette[key], flatShading: true });
@@ -28,38 +22,16 @@ export function buildIsland(palette) {
     return m;
   };
 
-  // Grasplatte: Oberkante bei y = 0.
-  const grass = new THREE.Mesh(new THREE.BoxGeometry(S, 1.2, S), lambert('grass'));
+  // Rasen: Oberkante bei y = 0, eine einzige flache Platte, kein sichtbarer Rand.
+  const grass = new THREE.Mesh(new THREE.BoxGeometry(FIELD_SIZE, 1.2, FIELD_SIZE), lambert('grass'));
   grass.position.y = -0.6;
   grass.receiveShadow = true;
-  land.add(grass);
-
-  // Schmaler dunklerer Grasrand, damit die Kante lesbar bleibt.
-  const edge = new THREE.Mesh(new THREE.BoxGeometry(S + 0.3, 0.35, S + 0.3), lambert('grassEdge'));
-  edge.position.y = -1.0;
-  land.add(edge);
-
-  // Erdschichten, jede etwas kleiner als die vorige.
-  const soil = new THREE.Mesh(new THREE.BoxGeometry(S - 0.6, 2.4, S - 0.6), lambert('soil'));
-  soil.position.y = -2.4;
-  land.add(soil);
-
-  const deep = new THREE.Mesh(new THREE.BoxGeometry(S - 2.0, 1.6, S - 2.0), lambert('soilDeep'));
-  deep.position.y = -4.4;
-  land.add(deep);
-
-  // Felsspitze: Zylinder mit 4 Segmenten = umgedrehte Pyramide, um 45 Grad gedreht,
-  // damit die Kanten mit der Inselplatte fluchten.
-  const spikeGeo = new THREE.CylinderGeometry(0, (S - 2.0) * 0.72, 5.5, 4, 1);
-  const spike = new THREE.Mesh(spikeGeo, lambert('soilDeep'));
-  spike.rotation.y = Math.PI / 4;
-  spike.position.y = -7.9;
-  land.add(spike);
+  group.add(grass);
 
   // Wolken: drei Klumpen aus je drei bis vier Ikosaedern.
   const clouds = new THREE.Group();
   const cloudMat = lambert('cloud');
-  // Alle Wolken hinter bzw. seitlich der Insel, keine vor dem Schlot.
+  // Alle Wolken hinter bzw. seitlich des Campus, keine vor dem Schrank.
   const cloudSpecs = [
     { x: -18, y: 12, z: -8, s: 1.0, speed: 0.12 },
     { x: 16, y: 14, z: -15, s: 1.4, speed: 0.08 },
@@ -86,17 +58,20 @@ export function buildIsland(palette) {
   });
   group.add(clouds);
 
+  // `scale` bleibt als Signal erhalten, auch wenn der Rasen selbst nicht mehr mitwächst
+  // (er ist ja schon riesig): buildCampus.js braucht ihn weiterhin, um Bäume, Wege und
+  // Lichtdrohnen mit dem tatsächlich bebauten Bereich nach außen wandern zu lassen, und
+  // CampusScene.jsx, um die Schattenkamera auf den bebauten Bereich zu begrenzen.
   let scale = 1;
 
   return {
     group,
-    // targetScale kommt aus deriveIsland(); die Insel fährt weich darauf zu, damit ein
-    // Kauf die Welt nicht springen lässt.
+    // targetScale kommt aus deriveIsland(); wandert weich, damit ein Kauf die
+    // Campus-Dekoration nicht springen lässt.
     update(dt, t, reduced, targetScale = 1) {
       if (Math.abs(targetScale - scale) > 0.001) {
         scale = reduced ? targetScale : scale + (targetScale - scale) * Math.min(1, dt * 2.5);
-        land.scale.set(scale, 1, scale);
-        // Wolken rücken mit nach außen, sonst hängen sie bei großer Insel über ihr.
+        // Wolken rücken mit nach außen, sonst hängen sie bei großem Campus über ihm.
         clouds.children.forEach((c) => {
           c.position.z = c.userData.baseZ * scale;
         });

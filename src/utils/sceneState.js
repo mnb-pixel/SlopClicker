@@ -63,14 +63,19 @@ export function getSceneMood({ isOverheated, activeEvent, powerClickActive }) {
 function buildBuildingModifiers(boughtUpgrades, boughtGreenwashingLayoffs) {
   const mods = {};
   const ensure = (id) => {
-    if (!mods[id]) mods[id] = { mult: 1.0, greenwashed: false, laidOff: false };
+    if (!mods[id]) mods[id] = { mult: 1.0, greenwashed: false, laidOff: false, upgradeCount: 0 };
     return mods[id];
   };
 
   boughtUpgrades.forEach((upId) => {
     const up = UPGRADES_BY_ID[upId];
     if (up && up.type === 'building' && up.buildingId) {
-      ensure(up.buildingId).mult *= up.effect.value;
+      const entry = ensure(up.buildingId);
+      entry.mult *= up.effect.value;
+      // Sichtstufe hängt an der ANZAHL gekaufter Upgrades für diese Engine, nicht am
+      // Multiplikator - der wäre je nach Tier-Höhe unterschiedlich groß und würde die
+      // Grafikstufen uneinheitlich springen lassen (siehe tierVisuals.js).
+      entry.upgradeCount += 1;
     }
   });
 
@@ -92,7 +97,15 @@ function buildBuildingModifiers(boughtUpgrades, boughtGreenwashingLayoffs) {
   return mods;
 }
 
-const EMPTY_MOD = { mult: 1.0, greenwashed: false, laidOff: false };
+const EMPTY_MOD = { mult: 1.0, greenwashed: false, laidOff: false, upgradeCount: 0 };
+
+// Wie viele Gebäude-Upgrades stecken hinter jeder Grafik-Stufe: 4 Upgrades pro Stufe,
+// weil es je Engine bis zu 13 davon gibt (UPGRADE_THRESHOLDS in upgrades.content.js) -
+// vier Stufen (0..VISUAL_TIER_MAX) sind spürbar genug, ohne bei jedem einzelnen Kauf
+// die Optik neu zu zeichnen. VISUAL_TIER_MAX muss zu tierVisuals.js (TIER_MAX) passen -
+// bewusst nicht von dort importiert, damit diese Datei ohne three.js auskommt.
+const UPGRADES_PER_VISUAL_TIER = 4;
+const VISUAL_TIER_MAX = 3;
 
 // --- Zwei getrennte Ableitungen, absichtlich ---------------------------------------
 //
@@ -138,6 +151,9 @@ export function deriveZones({
         mult: mod.mult,
         greenwashed: mod.greenwashed,
         laidOff: mod.laidOff,
+        // Grafik-Stufe aus gekauften Upgrades (siehe tierVisuals.js): steuert Farbe/
+        // Glanz der Engine-Props, NICHT ihre Anzahl oder Position.
+        tier: Math.min(VISUAL_TIER_MAX, Math.floor(mod.upgradeCount / UPGRADES_PER_VISUAL_TIER)),
         vps: count * (meta ? meta.baseCps : 0) * mod.mult,
         damaged: entry.id === damagedBuildingId,
         // Sichtbarkeit/Neuheit - Preis und Kaufbarkeit bleiben bewusst draußen, die

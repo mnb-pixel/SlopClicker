@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { tierMix } from './tierVisuals';
 
 // Singularitäts-Horizont (Zone "endgame") an der hinteren Inselkante: Kühltürme des
 // Atomreaktors mit Dampf und die Hologramm-Geisterstadt aus flimmernden Glasquadern -
@@ -106,6 +107,7 @@ export function buildEndgame(palette, zoneDef, furnaceAnchor) {
   debris.count = 24;
 
   let placedKey = null;
+  let lastTiers = '';
   let reactorLots = []; // Weltnahe (zonenlokale) x/z je Turm, ein Eintrag je Turm (nicht je Grundstück)
   let cityLots = []; // { x, z } je Grundstück (Projektor-Mitte)
 
@@ -189,11 +191,17 @@ export function buildEndgame(palette, zoneDef, furnaceAnchor) {
 
   return {
     group,
-    update(zone, ctx) {
+    update(zone, ctx, p) {
       const { dt, t, reduced } = ctx;
+      const find = (id) => zone.buildings.find((x) => x.id === id);
       const c = (id) => {
-        const b = zone.buildings.find((x) => x.id === id);
+        const b = find(id);
         return b ? b.props : 0;
+      };
+      // Sichtstufe (aus gekauften Upgrades) je Engine, siehe tierVisuals.js.
+      const tierOf = (id) => {
+        const b = find(id);
+        return b ? b.tier : 0;
       };
       const counts = {
         reactor: Math.min(REACTOR_MAX, c('nuclear_reactor')),
@@ -201,6 +209,16 @@ export function buildEndgame(palette, zoneDef, furnaceAnchor) {
         sheet: Math.min(SHEET_MAX, c('excel_sheet')),
         singularity: Math.min(1, c('singularity')),
       };
+      const reactorTier = tierOf('nuclear_reactor');
+      const cityTier = tierOf('metaverse_city');
+      const tierKey = `${reactorTier}|${cityTier}`;
+      if (tierKey !== lastTiers) {
+        lastTiers = tierKey;
+        // Reaktor mit mehr Upgrades dampft heißer/heller statt schlicht weiß; Hologramme
+        // wirken "premium" (Gold statt reinem Türkis) mit mehr Metaverse-Upgrades.
+        steamMat.color.setHex(tierMix(p.cloud, p.gold, reactorTier, 0.5));
+        holoMat.color.setHex(tierMix(p.token, p.gold, cityTier, 0.6));
+      }
       const lots = zone.lots || [];
       const key = `${counts.reactor}|${counts.city}|${counts.sheet}|${counts.singularity}|${lots.length}`;
       if (key !== placedKey) {
@@ -300,6 +318,7 @@ export function buildEndgame(palette, zoneDef, furnaceAnchor) {
     applyPalette(p) {
       Object.entries(mats).forEach(([key, list]) => list.forEach((m) => m.color.setHex(p[key])));
       placedKey = null;
+      lastTiers = '';
     },
   };
 }

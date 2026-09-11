@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { tierMix } from './tierVisuals';
 
 // Kapital-Turm (Zone "tower"): jede VC-Firma ein Stockwerk, Gold-Bänder zwischen den
 // Etagen. Ist ein Turm mit FLOOR_MAX Stockwerken voll, entsteht NICHT ein noch höherer
@@ -72,11 +73,8 @@ export function buildTower(palette, zoneDef) {
   const door = inst(new THREE.BoxGeometry(0.6, 0.8, 0.08), lambert('monitor'), TOWER_LOTS_MAX, false);
 
   // Leichtes Eigenleuchten, sonst färbt das grüne Bodenlicht das Glas oliv.
-  const floor = inst(
-    new THREE.BoxGeometry(TOWER_W, FLOOR_H, TOWER_W),
-    lambert('glass', { transparent: true, opacity: 0.85, emissive: new THREE.Color(0x2b6cb0), emissiveIntensity: 0.35 }),
-    FLOOR_MAX
-  );
+  const floorMat = lambert('glass', { transparent: true, opacity: 0.85, emissive: new THREE.Color(0x2b6cb0), emissiveIntensity: 0.35 });
+  const floor = inst(new THREE.BoxGeometry(TOWER_W, FLOOR_H, TOWER_W), floorMat, FLOOR_MAX);
   const band = inst(new THREE.BoxGeometry(TOWER_W + 0.15, 0.12, TOWER_W + 0.15), lambert('gold'), FLOOR_MAX + TOWER_LOTS_MAX, false);
 
   // Dach: nur auf dem ERSTEN Turm. Uhr und Laufschrift, Höhe folgt dessen Stockwerkzahl.
@@ -114,12 +112,14 @@ export function buildTower(palette, zoneDef) {
   roof.add(antenna);
 
   // --- Container -----------------------------------------------------------------------
-  const container = inst(new THREE.BoxGeometry(1.05, 0.7, 0.62), lambert('facade'), CONTAINER_MAX);
+  const containerMat = lambert('facade');
+  const container = inst(new THREE.BoxGeometry(1.05, 0.7, 0.62), containerMat, CONTAINER_MAX);
   const logo = inst(new THREE.BoxGeometry(0.44, 0.26, 0.05), new THREE.MeshBasicMaterial({ color: 0xffffff }), CONTAINER_MAX, false);
   const LOGO_KEYS = ['containerA', 'containerB', 'containerC', 'token'];
 
   let placedKey = null;
   let towerLots = [];
+  let lastTiers = '';
   let lastTickerText = '';
   let tickerWidth = 1;
   let lastClockSec = -1;
@@ -248,15 +248,30 @@ export function buildTower(palette, zoneDef) {
     group,
     update(zone, ctx, p) {
       const { t, reduced, tickerText } = ctx;
+      const find = (id) => zone.buildings.find((x) => x.id === id);
       const c = (id) => {
-        const b = zone.buildings.find((x) => x.id === id);
+        const b = find(id);
         return b ? b.props : 0;
+      };
+      // Sichtstufe (aus gekauften Upgrades) je Engine, siehe tierVisuals.js.
+      const tierOf = (id) => {
+        const b = find(id);
+        return b ? b.tier : 0;
       };
       const counts = {
         floors: Math.min(FLOOR_MAX, c('vc_firm')),
         containers: Math.min(CONTAINER_MAX, c('pivot_startup')),
         clock: Math.min(1, c('agi_clock')),
       };
+      const floorTier = tierOf('vc_firm');
+      const containerTier = tierOf('pivot_startup');
+      const tierKey = `${floorTier}|${containerTier}`;
+      if (tierKey !== lastTiers) {
+        lastTiers = tierKey;
+        // Premium-Glas statt des kühlen Blaus, je mehr Etagen-Upgrades gekauft sind.
+        floorMat.emissive.setHex(tierMix(0x2b6cb0, p.gold, floorTier, 0.6));
+        containerMat.color.setHex(tierMix(p.facade, p.gold, containerTier, 0.4));
+      }
       const towerLotsData = (zone.lots || []).filter((l) => l.id === 'vc_firm');
       const key = `${counts.floors}|${counts.containers}|${counts.clock}|${towerLotsData.length}`;
       if (key !== placedKey) {
@@ -285,6 +300,7 @@ export function buildTower(palette, zoneDef) {
       Object.entries(mats).forEach(([key, list]) => list.forEach((m) => m.color.setHex(p[key])));
       lastClockSec = -1;
       placedKey = null;
+      lastTiers = '';
     },
   };
 }
