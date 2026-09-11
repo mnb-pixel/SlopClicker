@@ -1,6 +1,7 @@
 import React, { useState, lazy, Suspense } from 'react';
 import { useGameStore } from './hooks/useGameStore';
 import { GameShell } from './components/shell/GameShell';
+import { SkinProvider } from './components/skin';
 import { GoldenMemeBanner } from './components/GoldenMemeBanner';
 import { AdRewardToast } from './components/AdRewardToast';
 import { ClickParticles } from './components/ClickParticles';
@@ -15,6 +16,12 @@ import { UPGRADES_DATA } from './data/upgradesData';
 // aber die 3D-Vollbild-Shell aus dem CrazyGames-Repo statt Kopfzeile + Tabs. App.jsx
 // (/play) und die Content-Website bleiben davon vollständig unberührt - deshalb eine
 // eigene Wurzelkomponente statt eines Schalters in App.jsx.
+//
+// Alles hier steckt in SkinProvider skin="game": die geteilten Komponenten (StoreTab,
+// StatsTab, MiscTab, BuzzwordAlbum, BadgesModal, ManualModal, GoldenMemeBanner) rendern
+// darin den Insel-Look statt des dunklen Terminal-Looks von /play - siehe
+// src/components/skin.js. Der Provider umschließt auch die Overlays, weil die per
+// createPortal an document.body hängen und den Kontext nur über den React-Baum bekommen.
 //
 // useRoutes ist hier bewusst fest false: die Schubladen (Shop/Statistik/Einstellungen)
 // laufen rein über activeTab, ohne die URL zu verändern. Die Tab-Routen aus routes.js
@@ -68,6 +75,7 @@ export default function VoxelApp() {
   }
 
   return (
+    <SkinProvider skin="game">
     <div className={`select-none ${store.bubbleGlitchUntil ? 'glitch-mode' : ''}`}>
       <GoldenMemeBanner
         activeEvent={store.activeEvent}
@@ -161,5 +169,6 @@ export default function VoxelApp() {
         />
       </Suspense>
     </div>
+    </SkinProvider>
   );
 }

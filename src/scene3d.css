@@ -12,19 +12,17 @@
    Vollbild-Shell: Szene + Overlays + Schubladen (src/components/shell/)
    ========================================================================== */
 
-.game-shell {
-  position: relative;
-  width: 100%;
-  height: 100dvh;
-  overflow: hidden;
-  background: #0b1a2e;
+/* Grafik-Stil der Insel als CSS-Tokens: alles, was sich AUS der Szene heraus öffnet
+   (Zonen-Stecknadeln, Kaufpanel, Schublade, Handbuch, Badges, Sammelalbum), benutzt
+   diese Werte statt eigener Slate-/Cyan-Töne. Die Farben sind bewusst dieselben wie in
+   der 3D-Palette (src/components/scene3d/palette.js): Papier = Fassade, Tinte =
+   Stahl-Dunkel, Gras/Bernstein/Glut wie im Modell. So sieht ein Menü aus wie ein Teil
+   der Insel und nicht wie ein Terminal, das zufällig davor liegt.
 
-  /* Grafik-Stil der Insel als CSS-Tokens: alles, was sich AUS der Szene heraus öffnet
-     (Zonen-Stecknadeln, Kaufpanel, Schublade), benutzt diese Werte statt eigener
-     Slate-/Cyan-Töne. Die Farben sind bewusst dieselben wie in der 3D-Palette
-     (src/components/scene3d/palette.js): Papier = Fassade, Tinte = Stahl-Dunkel,
-     Gras/Bernstein/Glut wie im Modell. So sieht ein Menü aus wie ein Teil der Insel
-     und nicht wie ein Terminal, das zufällig davor liegt. */
+   Bewusst auf :root statt nur auf .game-shell: die Overlays (Handbuch, Badges,
+   Kartendetail) hängen per createPortal an document.body und liegen damit AUSSERHALB
+   der Shell - auf .game-shell definierte Variablen erreichten sie nie. */
+:root {
   --game-paper: #fffdf6;
   --game-paper-sunk: #f3ece0;
   --game-ink: #22313f;
@@ -35,6 +33,24 @@
   --game-grass-dark: #2f855a;
   --game-gold: #f59e0b;
   --game-shadow: rgba(28, 42, 56, 0.28);
+
+  /* Akzente des Spiel-Skins: die vier Bedeutungsfarben der Menüs (Engines, Upgrades,
+     Corporate, Buzzwords) als gedeckte Insel-Töne statt Neon auf Schwarz. */
+  --game-teal: #0e7490;
+  --game-teal-dark: #155e75;
+  --game-plum: #7e3f9d;
+  --game-plum-dark: #5b2d73;
+  --game-rust: #b8420d;
+  --game-rust-dark: #8a3209;
+  --game-gold-dark: #a35b06;
+}
+
+.game-shell {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background: #0b1a2e;
 }
 
 /* Klotzige Spielzeug-Buttons: 3px "Kante" unter der Fläche, die beim Drücken
@@ -550,8 +566,9 @@
 
 .hud-drawer__close:active { transform: translateY(2px); box-shadow: none; }
 
-/* Einlassung: die Tab-Inhalte bringen ihre dunklen Flächen selbst mit, hier bekommen
-   sie den Rahmen dazu. */
+/* Innenfläche der Schublade: helles Papier, leicht eingelassen. Die Tab-Inhalte
+   bringen über useSkin() (siehe skin.js) selbst ihre Papier-Variante mit, hier kommt
+   nur noch der Rahmen dazu. */
 .hud-drawer__body {
   overflow-y: auto;
   flex: 1;
@@ -559,8 +576,8 @@
   margin: 0 8px;
   padding: 0.25rem;
   border-radius: 16px 16px 0 0;
-  background: #0c1826;
-  box-shadow: inset 0 2px 6px rgba(2, 6, 23, 0.6);
+  background: var(--game-paper-sunk);
+  box-shadow: inset 0 2px 6px rgba(28, 42, 56, 0.14);
 }
 
 @media (min-width: 768px) {
@@ -1099,3 +1116,707 @@
   border: 2px dashed var(--game-line);
   border-radius: 14px;
 }
+
+
+/* ==========================================================================
+   Spiel-Skin der geteilten Menüs (src/components/skin.js)
+
+   StoreTab, StatsTab, MiscTab, BuzzwordAlbum, BadgesModal und ManualModal gehören
+   BEIDEN Ansichten: der dunklen Tab-Ansicht unter /play und der Insel-Shell hier.
+   Sie wählen ihre Klassen über useSkin().cx(dunkel, spiel) - der zweite String sind
+   die gs-*-Klassen aus diesem Abschnitt. Alles hier ist auf .gs-skin (bzw. die
+   einzelnen gs-*-Klassen) begrenzt und wird nur auf /voxel geladen; /play sieht
+   davon nichts.
+   ========================================================================== */
+
+.gs-skin {
+  color: var(--game-ink);
+  font-family: inherit;
+}
+
+/* Klotzige Kante: dieselbe Sprache wie Kaufpanel und Bedienleiste - 2-3px "Dicke"
+   unter der Fläche, die beim Drücken zusammenfällt. */
+.gs-btn,
+.gs-seg-btn,
+.gs-row,
+.gs-iconbtn,
+.gs-card {
+  transition: transform 0.08s ease, box-shadow 0.08s ease, border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gs-btn,
+  .gs-seg-btn,
+  .gs-row,
+  .gs-iconbtn,
+  .gs-card {
+    transition: none;
+  }
+  .gs-btn:active,
+  .gs-seg-btn:active,
+  .gs-row:active,
+  .gs-iconbtn:active,
+  .gs-card:active {
+    transform: none;
+  }
+}
+
+/* --- Akzente ------------------------------------------------------------- */
+/* Eine Bedeutungsfarbe pro Element, gesetzt als Variable statt als eigener Regelsatz.
+   So teilen sich Segment-Knopf, Zeile, Karte und Fortschrittsbalken dieselbe Logik. */
+.gs-acc-teal  { --gs-accent: var(--game-teal);  --gs-accent-dark: var(--game-teal-dark); }
+.gs-acc-gold  { --gs-accent: var(--game-gold);  --gs-accent-dark: var(--game-gold-dark); }
+.gs-acc-grass { --gs-accent: var(--game-grass); --gs-accent-dark: var(--game-grass-dark); }
+.gs-acc-plum  { --gs-accent: var(--game-plum);  --gs-accent-dark: var(--game-plum-dark); }
+.gs-acc-rust  { --gs-accent: var(--game-rust);  --gs-accent-dark: var(--game-rust-dark); }
+/* Neutral: "keine besondere Bedeutung" (z.B. Seltenheit Common) - Tinte statt Farbe. */
+.gs-acc-ink   { --gs-accent: var(--game-ink-soft); --gs-accent-dark: var(--game-ink); }
+
+/* --- Flächen ------------------------------------------------------------- */
+.gs-panel {
+  background: var(--game-paper);
+  border: 2px solid var(--game-line);
+  border-radius: 14px;
+  box-shadow: 0 2px 0 var(--game-line-strong);
+  padding: 0.75rem;
+}
+
+.gs-panel--sunk {
+  background: var(--game-paper-sunk);
+  box-shadow: inset 0 2px 4px rgba(28, 42, 56, 0.08);
+}
+
+.gs-panel--flat { box-shadow: none; }
+
+/* Kopfzeile eines Abschnitts: Insel-Schild mit Unterstrich statt Neon-Überschrift. */
+.gs-title {
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--game-ink);
+}
+
+.gs-sub { font-size: 11px; color: var(--game-ink-soft); }
+
+.gs-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+
+.gs-quote {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--game-ink-soft);
+}
+
+/* --- Segmentleiste (Unterkategorien) ------------------------------------- */
+.gs-segment {
+  display: flex;
+  gap: 5px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--game-paper-sunk);
+  border: 2px solid var(--game-line);
+  box-shadow: inset 0 2px 4px rgba(28, 42, 56, 0.08);
+}
+
+.gs-segment--grid { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
+
+/* Beschriftung darf umbrechen statt abzuschneiden: "CORPORATE (2)" passt bei vier
+   Reitern auf einem 360px-Handy in keine Zeile, abgeschnittene Wörter ("CORPORA...")
+   sagen weniger als zwei kurze Zeilen. */
+.gs-seg-btn {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 3px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background: transparent;
+  color: var(--game-ink-soft);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+/* Kurze Beschriftungen (Kaufmodus 1/10/100/MAX): eigene Breite statt Viertelspalte. */
+.gs-seg-btn--auto {
+  flex: 0 0 auto;
+  padding-inline: 9px;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+.gs-seg-btn.is-active {
+  background: var(--gs-accent, var(--game-teal));
+  border-color: var(--gs-accent-dark, var(--game-teal-dark));
+  color: #fffdf6;
+  box-shadow: 0 2px 0 var(--gs-accent-dark, var(--game-teal-dark));
+}
+
+.gs-seg-btn:active { transform: translateY(2px); box-shadow: none; }
+
+/* --- Zeilen (Engine, Upgrade, Corporate, Badge) --------------------------- */
+.gs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 14px;
+  background: var(--game-paper);
+  border: 2px solid var(--game-line);
+  box-shadow: 0 2px 0 var(--game-line-strong);
+  text-align: left;
+  color: var(--game-ink);
+}
+
+.gs-row--stacked { align-items: flex-start; }
+
+.gs-row.is-affordable {
+  border-color: var(--game-grass);
+  box-shadow: 0 2px 0 var(--game-grass-dark);
+}
+
+.gs-row.is-broke { opacity: 0.62; }
+
+/* Gesperrt/Teaser: gestrichelte Kante, keine Druck-Kante - das Ding ist kein Knopf. */
+.gs-row--locked {
+  border-style: dashed;
+  border-color: var(--game-line-strong);
+  background: var(--game-paper-sunk);
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+.gs-row--done {
+  border-color: var(--game-grass);
+  background: color-mix(in srgb, var(--game-grass) 12%, var(--game-paper));
+  box-shadow: none;
+}
+
+/* --- Icon-Kachel --------------------------------------------------------- */
+.gs-iconbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: var(--game-paper-sunk);
+  border: 2px solid var(--game-line);
+  color: var(--gs-accent, var(--game-ink-soft));
+}
+
+.gs-iconbox--lg { width: 44px; height: 44px; border-radius: 12px; }
+
+/* Meme-Bildchen als Polaroid: heller Rand, klotziger Schatten - dieselbe Sprache wie
+   die übrigen Insel-Elemente statt des Cyan-Rands aus der dunklen Ansicht. */
+.gs-thumb {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid var(--game-paper);
+  outline: 2px solid var(--game-line-strong);
+  box-shadow: 0 2px 0 var(--game-line-strong);
+  background: var(--game-paper-sunk);
+}
+
+.gs-thumb--lg { width: 56px; height: 56px; border-radius: 10px; }
+
+/* --- Knöpfe -------------------------------------------------------------- */
+.gs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 12px;
+  border: 2px solid var(--game-line-strong);
+  background: var(--game-paper-sunk);
+  color: var(--game-ink);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  box-shadow: 0 3px 0 var(--game-line-strong);
+}
+
+.gs-btn:active { transform: translateY(3px); box-shadow: none; }
+
+.gs-btn--block { width: 100%; }
+
+/* Kaufen: grün wie die bezahlbaren Zeilen im Kaufpanel der Szene. */
+.gs-btn--buy {
+  background: var(--game-grass);
+  border-color: var(--game-grass-dark);
+  box-shadow: 0 3px 0 var(--game-grass-dark);
+  color: #0b2e1c;
+}
+
+.gs-btn--gold {
+  background: var(--game-gold);
+  border-color: var(--game-gold-dark);
+  box-shadow: 0 3px 0 var(--game-gold-dark);
+  color: #2b1a02;
+}
+
+.gs-btn--plum {
+  background: var(--game-plum);
+  border-color: var(--game-plum-dark);
+  box-shadow: 0 3px 0 var(--game-plum-dark);
+  color: #fffdf6;
+}
+
+.gs-btn--danger {
+  background: var(--game-rust);
+  border-color: var(--game-rust-dark);
+  box-shadow: 0 3px 0 var(--game-rust-dark);
+  color: #fffdf6;
+}
+
+.gs-btn:disabled,
+.gs-btn.is-disabled {
+  background: var(--game-paper-sunk);
+  border-color: var(--game-line);
+  color: var(--game-ink-soft);
+  box-shadow: none;
+  opacity: 0.75;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Preis-Knopf der Kaufzeilen: zwei Zeilen (Aktion, Betrag) im Monospace. */
+.gs-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  min-width: 86px;
+  flex-shrink: 0;
+}
+
+.gs-price__amount {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.gs-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--game-paper-sunk);
+  border: 2px solid var(--game-line);
+  color: var(--game-ink-soft);
+  box-shadow: 0 2px 0 var(--game-line-strong);
+}
+
+.gs-iconbtn:active { transform: translateY(2px); box-shadow: none; }
+
+/* --- Pillen und Zähler --------------------------------------------------- */
+.gs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--game-paper-sunk);
+  border: 2px solid var(--game-line);
+  color: var(--gs-accent-dark, var(--game-ink-soft));
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.gs-chip--solid {
+  background: var(--gs-accent, var(--game-gold));
+  border-color: var(--gs-accent-dark, var(--game-gold-dark));
+  color: #fffdf6;
+}
+
+/* --- Fortschrittsbalken -------------------------------------------------- */
+.gs-meter {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--game-paper-sunk);
+  border: 2px solid var(--game-line);
+  overflow: hidden;
+}
+
+.gs-meter__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--gs-accent, var(--game-gold));
+  transition: width 0.4s ease;
+}
+
+/* Einzelne Textfarben, wo eine ganze Komponente nur eine Bedeutungsfarbe braucht. */
+.gs-ink-soft  { color: var(--game-ink-soft); }
+.gs-ink-gold  { color: var(--game-gold-dark); }
+.gs-ink-grass { color: var(--game-grass-dark); }
+
+/* Trennlinie im Papier statt dunklem Rand. */
+.gs-hr { border-bottom: 2px solid var(--game-line); }
+
+/* Orden: runde Plakette mit Goldrand - der Unterschied zwischen "verdient" und
+   "Leerstelle" soll man auf einen Blick sehen. */
+.gs-medal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--gs-accent, var(--game-gold));
+  border: 2px solid var(--gs-accent-dark, var(--game-gold-dark));
+  box-shadow: 0 2px 0 var(--gs-accent-dark, var(--game-gold-dark));
+  color: #2b1a02;
+}
+
+.gs-row--medal { background: color-mix(in srgb, var(--game-gold) 10%, var(--game-paper)); }
+
+/* Trennlinie oberhalb einer Zeile (Gegenstück zu .gs-hr). */
+.gs-hr-top { border-top: 2px solid var(--game-line); }
+
+/* Hover-Karte über einer Kaufzeile: Papierzettel, der kurz aufklappt. */
+.gs-tip {
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 3px 0 var(--game-line-strong), 0 10px 24px var(--game-shadow);
+}
+
+/* --- Kennzahlen ---------------------------------------------------------- */
+.gs-stat { padding: 0.6rem; }
+
+.gs-stat__label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--game-ink-soft);
+}
+
+.gs-stat__value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--gs-accent-dark, var(--game-ink));
+}
+
+/* Runde Anzeige (Hype-Index): Messuhr statt Neon-Kreis. */
+.gs-dial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--game-paper-sunk);
+  border: 3px solid var(--gs-accent, var(--game-line-strong));
+  box-shadow: 0 2px 0 var(--gs-accent-dark, var(--game-line-strong));
+  color: var(--gs-accent-dark, var(--game-ink));
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* Log-Zeile: Notizzettel mit farbigem Rand links. */
+.gs-log {
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  background: var(--game-paper);
+  border: 1px solid var(--game-line);
+  border-left: 4px solid var(--gs-accent, var(--game-line-strong));
+  color: var(--game-ink);
+  font-size: 11px;
+}
+
+/* --- Eingabefeld --------------------------------------------------------- */
+.gs-input {
+  width: 100%;
+  padding: 6px 10px 6px 30px;
+  border-radius: 10px;
+  background: var(--game-paper);
+  border: 2px solid var(--game-line);
+  box-shadow: inset 0 2px 4px rgba(28, 42, 56, 0.08);
+  color: var(--game-ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+
+.gs-input:focus { outline: none; border-color: var(--game-gold); }
+.gs-input::placeholder { color: var(--game-ink-soft); }
+
+/* --- Overlays (Handbuch, Badges, Kartendetail) --------------------------- */
+.gs-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(28, 42, 56, 0.45);
+  backdrop-filter: blur(3px);
+}
+
+.gs-modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 42rem;
+  max-height: 86dvh;
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--game-paper);
+  border: 3px solid var(--game-line-strong);
+  box-shadow: 0 18px 44px var(--game-shadow);
+  color: var(--game-ink);
+}
+
+.gs-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-shrink: 0;
+  padding: 0.7rem 0.85rem;
+  background: var(--game-paper-sunk);
+  border-bottom: 2px solid var(--game-line);
+}
+
+.gs-modal__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.gs-modal__foot {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--game-paper-sunk);
+  border-top: 2px solid var(--game-line);
+}
+
+/* Handbuch-Abschnitt: Papierbogen mit farbigem Reiter an der Kante. */
+.gs-section {
+  border-radius: 14px;
+  border: 2px solid var(--game-line);
+  border-left: 6px solid var(--gs-accent, var(--game-gold));
+  background: var(--game-paper-sunk);
+  padding: 0.8rem;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--game-ink);
+}
+
+.gs-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gs-accent-dark, var(--game-gold-dark));
+}
+
+.gs-section strong { color: var(--game-ink); font-weight: 900; }
+
+/* Ereignis-Aushang (Golden Meme, Blasen-Debuff): schwebt über der Szene, deshalb
+   kräftigere Kante und Schlagschatten als die Panels in der Schublade. */
+.gs-banner {
+  border-width: 3px;
+  border-color: var(--gs-accent, var(--game-gold));
+  box-shadow: 0 4px 0 var(--gs-accent-dark, var(--game-gold-dark)), 0 14px 32px var(--game-shadow);
+}
+
+/* --- Sammelkarten -------------------------------------------------------- */
+.gs-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0.5rem;
+  border-radius: 12px;
+  background: var(--game-paper);
+  border: 2px solid var(--gs-accent, var(--game-line));
+  box-shadow: 0 3px 0 var(--gs-accent-dark, var(--game-line-strong));
+  color: var(--game-ink);
+  text-align: left;
+}
+
+.gs-card:active { transform: translateY(3px); box-shadow: none; }
+
+/* Angetippte Kachel im Kachelraster: goldener Doppelrand statt Neon-Ring. */
+.gs-card.is-selected {
+  border-color: var(--gs-accent-dark, var(--game-gold-dark));
+  box-shadow: 0 0 0 2px var(--gs-accent, var(--game-gold)), 0 3px 0 var(--gs-accent-dark, var(--game-gold-dark));
+}
+
+.gs-card--locked {
+  border-style: dashed;
+  border-color: var(--game-line-strong);
+  background: var(--game-paper-sunk);
+  box-shadow: none;
+  opacity: 0.72;
+}
+
+.gs-card__num {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--game-ink-soft);
+}
+
+.gs-card__name {
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.2;
+  color: var(--game-ink);
+}
+
+/* Bildfeld der Sammelkarte: eingelassenes Fenster, in dem das Motiv sitzt. */
+.gs-card__art {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding-block: 0.5rem;
+  border-radius: 10px;
+  background: var(--game-paper-sunk);
+  border: 2px solid var(--game-line);
+  box-shadow: inset 0 2px 4px rgba(28, 42, 56, 0.1);
+}
+
+/* Leerer Steckplatz: gestricheltes Fenster, damit die Lücke im Album als Lücke liest. */
+.gs-card__art--empty {
+  border-style: dashed;
+  background: transparent;
+}
+
+/* Fußzeile der Karte (Bonus, "im Album"). */
+.gs-card__foot {
+  width: 100%;
+  padding: 2px 4px;
+  border-radius: 8px;
+  background: var(--game-paper-sunk);
+  border: 1px solid var(--game-line);
+  color: var(--game-ink-soft);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.gs-card__foot--solid {
+  background: var(--gs-accent, var(--game-grass));
+  border-color: var(--gs-accent-dark, var(--game-grass-dark));
+  color: #fffdf6;
+}
+
+.gs-medal--lg { width: 54px; height: 54px; }
+
+/* Ungeöffnetes Booster-Päckchen im Ziehungs-Overlay. */
+.gs-pack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 112px;
+  border-radius: 16px;
+  background: var(--game-plum);
+  border: 4px solid var(--game-gold);
+  box-shadow: 0 5px 0 var(--game-plum-dark);
+  color: #fffdf6;
+}
+
+/* --- Sicherheitsnetz ----------------------------------------------------- */
+/* Alles, was in den geteilten Komponenten (noch) keine gs-Variante hat, trägt weiter
+   seine dunklen Tailwind-Klassen. Ohne diese Regeln stünde ein schwarzer Kasten mitten
+   im Papier. Sie färben NUR - Abstände, Rundungen und Layout bleiben Sache der
+   Komponente, und sobald ein Element eine gs-Klasse bekommt, greifen sie gar nicht
+   mehr (die Tailwind-Klasse ist dann weg). Attribut-Selektoren statt exakter
+   Klassennamen, weil Tailwind Deckkraft-Varianten wie bg-slate-900/90 mitbringt.
+   scene3d.css liegt außerhalb von @layer und gewinnt damit gegen Tailwind-Utilities. */
+.gs-skin [class*="bg-slate-9"],
+.gs-skin [class*="bg-slate-8"],
+.gs-skin [class*="bg-slate-7"] {
+  background-color: var(--game-paper-sunk);
+}
+
+.gs-skin [class*="bg-amber-95"],
+.gs-skin [class*="bg-emerald-95"],
+.gs-skin [class*="bg-rose-95"],
+.gs-skin [class*="bg-purple-95"],
+.gs-skin [class*="bg-fuchsia-95"],
+.gs-skin [class*="bg-cyan-95"] {
+  background-color: var(--game-paper-sunk);
+}
+
+.gs-skin [class*="border-slate-"] { border-color: var(--game-line); }
+
+.gs-skin [class*="text-slate-1"],
+.gs-skin [class*="text-slate-2"],
+.gs-skin [class*="text-slate-3"] { color: var(--game-ink); }
+
+.gs-skin [class*="text-slate-4"],
+.gs-skin [class*="text-slate-5"],
+.gs-skin [class*="text-slate-6"],
+.gs-skin [class*="text-slate-7"] { color: var(--game-ink-soft); }
+
+/* Bedeutungsfarben: dieselbe Aussage, nur als gedeckter Ton auf Papier statt Neon. */
+.gs-skin [class*="text-cyan-"],
+.gs-skin [class*="text-sky-"] { color: var(--game-teal); }
+.gs-skin [class*="text-amber-"],
+.gs-skin [class*="text-yellow-"] { color: var(--game-gold-dark); }
+.gs-skin [class*="text-emerald-"],
+.gs-skin [class*="text-green-"] { color: var(--game-grass-dark); }
+.gs-skin [class*="text-fuchsia-"],
+.gs-skin [class*="text-purple-"],
+.gs-skin [class*="text-violet-"] { color: var(--game-plum); }
+.gs-skin [class*="text-rose-"],
+.gs-skin [class*="text-red-"] { color: var(--game-rust); }
+
+/* Farbflächen mit dunkler Schrift (bg-cyan-500 + text-slate-950) sind Knöpfe - die
+   dürfen ihre Farbe behalten, der Text darauf muss aber dunkel bleiben. */
+.gs-skin [class*="text-slate-95"] { color: #1b2733; }
+
+/* Verläufe: auf Papier wird daraus ein Fleck. Wo ein Element beides trägt (Verlauf und
+   Grundfarbe), bleibt die Grundfarbe stehen; reine Verlaufsknöpfe bekommen Gold. */
+.gs-skin [class*="bg-gradient-to-"] {
+  background-image: none;
+  background-color: var(--game-paper-sunk);
+}
+
+/* Weichzeichner auf gesperrten Einträgen: auf Papier reicht die halbe Stärke. */
+.gs-skin .blur-\[3px\] { filter: blur(2px); }

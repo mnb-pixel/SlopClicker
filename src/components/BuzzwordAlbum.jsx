@@ -4,6 +4,7 @@ import { Layers, Sparkles, BookOpen, Zap, Search, Lock, CheckCircle2, X } from '
 import { getIcon } from '../utils/iconMap';
 import { BUZZWORDS_DATA, getBoosterPackCost } from '../data/buzzwordsData';
 import { formatCurrency } from '../utils/formatters';
+import { useSkin } from './skin';
 
 export function BuzzwordAlbum({
   valuation,
@@ -13,6 +14,11 @@ export function BuzzwordAlbum({
   t,
 }) {
   const tr = t || ((k) => k);
+  // Zwei Looks, ein Markup - siehe src/components/skin.jsx. Im Spiel-Skin wird aus dem
+  // dunklen Binder ein echtes Sammelalbum: Papierkarten mit farbigem Rand je Seltenheit,
+  // leere Plätze als gestrichelte Steckfächer. Die Seltenheiten behalten ihre vier
+  // Bedeutungsfarben, nur als gedeckte Insel-Töne.
+  const { cx } = useSkin();
   const [rarityFilter, setRarityFilter] = useState('ALL'); // 'ALL' | 'Legendary' | 'Rare' | 'Uncommon' | 'Common'
   const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | 'BOUGHT' | 'MISSING'
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,6 +33,14 @@ export function BuzzwordAlbum({
     const IconComp = getIcon(iconName, 'Sparkles');
     return <IconComp className={className} />;
   };
+
+  // Seltenheit -> Akzentklasse des Spiel-Skins (gs-acc-*). Eine Quelle für Album,
+  // Ziehungs-Overlay und Kartendetail.
+  const rarityAcc = (rarity) =>
+    rarity === 'Legendary' ? 'gs-acc-gold'
+    : rarity === 'Rare' ? 'gs-acc-plum'
+    : rarity === 'Uncommon' ? 'gs-acc-teal'
+    : 'gs-acc-ink';
 
   const packCost = getBoosterPackCost(boughtBuzzwords.length);
   const canAffordPack = valuation >= packCost && boughtBuzzwords.length < BUZZWORDS_DATA.length;
@@ -100,24 +114,33 @@ export function BuzzwordAlbum({
   return (
     <div className="flex flex-col gap-4">
       {/* 🎴 BOOSTER PACK SHOP CARD */}
-      <div className="rounded-2xl bg-gradient-to-r from-purple-950 via-slate-900 to-fuchsia-950 border-2 border-fuchsia-500/50 p-4 shadow-xl flex flex-col items-center text-center gap-3">
+      <div className={cx(
+        'rounded-2xl bg-gradient-to-r from-purple-950 via-slate-900 to-fuchsia-950 border-2 border-fuchsia-500/50 p-4 shadow-xl flex flex-col items-center text-center gap-3',
+        'gs-panel gs-acc-plum flex flex-col items-center text-center gap-3'
+      )}>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
-          <div className="p-3 rounded-2xl bg-gradient-to-br from-fuchsia-500 via-purple-600 to-amber-400 text-slate-950 border-2 border-amber-300 shadow-lg shrink-0">
-            <Layers className="w-7 h-7 text-slate-950" />
+          <div className={cx(
+            'p-3 rounded-2xl bg-gradient-to-br from-fuchsia-500 via-purple-600 to-amber-400 text-slate-950 border-2 border-amber-300 shadow-lg shrink-0',
+            'gs-medal gs-acc-plum w-11 h-11'
+          )}>
+            <Layers className={cx('w-7 h-7 text-slate-950', 'w-5 h-5')} />
           </div>
           <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
             <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
-              <span className="text-xs font-black uppercase text-amber-300 tracking-wider">
+              <span className={cx('text-xs font-black uppercase text-amber-300 tracking-wider', 'gs-title')}>
                 🎴 {tr('boosterPackTitle')}
               </span>
-              <span className="text-[10px] font-mono font-bold bg-fuchsia-500/20 text-fuchsia-300 px-1.5 py-0.5 rounded border border-fuchsia-500/40">
+              <span className={cx(
+                'text-[10px] font-mono font-bold bg-fuchsia-500/20 text-fuchsia-300 px-1.5 py-0.5 rounded border border-fuchsia-500/40',
+                'gs-chip gs-acc-plum'
+              )}>
                 {tr('duplicateProtection')}
               </span>
             </div>
-            <div className="text-xs text-slate-300 mt-0.5">
+            <div className={cx('text-xs text-slate-300 mt-0.5', 'gs-sub mt-0.5')}>
               {tr('boosterPackDesc')}
             </div>
-            <div className="text-[10px] font-mono text-fuchsia-400 font-bold mt-0.5">
+            <div className={cx('text-[10px] font-mono text-fuchsia-400 font-bold mt-0.5', 'gs-mono font-bold mt-0.5')}>
               {tr('remainingLabel')} {totalCards - boughtCount} / {totalCards}
             </div>
           </div>
@@ -127,11 +150,14 @@ export function BuzzwordAlbum({
         <button
           onClick={handleBuyBoosterPack}
           disabled={!canAffordPack}
-          className={`w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg mt-1 ${
-            canAffordPack
-              ? 'bg-gradient-to-r from-amber-400 via-fuchsia-500 to-cyan-400 text-slate-950 hover:brightness-110 active:scale-95 shadow-fuchsia-500/30'
-              : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-          }`}
+          className={cx(
+            `w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg mt-1 ${
+              canAffordPack
+                ? 'bg-gradient-to-r from-amber-400 via-fuchsia-500 to-cyan-400 text-slate-950 hover:brightness-110 active:scale-95 shadow-fuchsia-500/30'
+                : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+            }`,
+            `gs-btn gs-btn--block py-3 mt-1 ${canAffordPack ? 'gs-btn--plum' : 'is-disabled'}`
+          )}
         >
           <Sparkles className="w-4 h-4 shrink-0" />
           <span>{boughtCount >= totalCards ? tr('allCollected') : `${tr('openPackLabel')} (${formatCurrency(packCost)})`}</span>
@@ -139,80 +165,101 @@ export function BuzzwordAlbum({
       </div>
 
       {/* 📘 BINDER HEADER & PORTFOLIO PROGRESS */}
-      <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 shadow-xl flex flex-col gap-3">
+      <div className={cx(
+        'rounded-2xl bg-slate-900/90 border border-slate-800 p-4 shadow-xl flex flex-col gap-3',
+        'gs-panel gs-acc-plum flex flex-col gap-3'
+      )}>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-black text-slate-100 uppercase tracking-tight flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-fuchsia-400" />
+            <h2 className={cx(
+              'text-base font-black text-slate-100 uppercase tracking-tight flex items-center gap-2',
+              'gs-title flex items-center gap-2'
+            )}>
+              <BookOpen className={cx('w-5 h-5 text-fuchsia-400', 'w-4 h-4')} />
               {tr('albumPortfolioTitle')} ({boughtCount}/{totalCards})
             </h2>
           </div>
 
           {/* Cumulative Bonus Badge */}
-          <div className="bg-emerald-950/80 border border-emerald-500/50 px-3 py-1 rounded-xl shadow-md flex items-center gap-2 shrink-0">
-            <Zap className="w-4 h-4 text-emerald-400 animate-pulse" />
+          <div className={cx(
+            'bg-emerald-950/80 border border-emerald-500/50 px-3 py-1 rounded-xl shadow-md flex items-center gap-2 shrink-0',
+            'gs-panel gs-panel--sunk gs-acc-grass px-3 py-1 flex items-center gap-2 shrink-0'
+          )}>
+            <Zap className={cx('w-4 h-4 text-emerald-400 animate-pulse', 'w-4 h-4 gs-ink-grass')} />
             <div>
-              <div className="text-[9px] text-slate-400 uppercase font-mono font-bold">{tr('totalPortfolioBonus')}</div>
-              <div className="text-emerald-300 text-xs font-mono font-black">+ {totalBonusPct}% {tr('vpsGlobalLabel')}</div>
+              <div className={cx('text-[9px] text-slate-400 uppercase font-mono font-bold', 'gs-stat__label')}>{tr('totalPortfolioBonus')}</div>
+              <div className={cx('text-emerald-300 text-xs font-mono font-black', 'gs-mono font-black gs-ink-grass')}>+ {totalBonusPct}% {tr('vpsGlobalLabel')}</div>
             </div>
           </div>
         </div>
 
         {/* Progress Bar */}
         <div className="space-y-1">
-          <div className="flex justify-between text-xs font-mono font-bold text-slate-300">
+          <div className={cx('flex justify-between text-xs font-mono font-bold text-slate-300', 'flex justify-between gs-mono font-bold')}>
             <span>{tr('albumProgressLabel')}</span>
-            <span className="text-fuchsia-400">{progressPct}%</span>
+            <span className={cx('text-fuchsia-400', '')}>{progressPct}%</span>
           </div>
-          <div className="w-full bg-slate-950 h-2.5 rounded-full border border-slate-800 overflow-hidden p-0.5">
+          <div className={cx(
+            'w-full bg-slate-950 h-2.5 rounded-full border border-slate-800 overflow-hidden p-0.5',
+            'gs-meter gs-acc-plum w-full'
+          )}>
             <div
-              className="bg-gradient-to-r from-cyan-500 via-fuchsia-500 to-amber-400 h-full rounded-full transition-all duration-500 shadow-md"
+              className={cx(
+                'bg-gradient-to-r from-cyan-500 via-fuchsia-500 to-amber-400 h-full rounded-full transition-all duration-500 shadow-md',
+                'gs-meter__fill'
+              )}
               style={{ width: `${progressPct}%` }}
             />
           </div>
         </div>
 
         {/* Rarity Counter Badges */}
-        <div className="grid grid-cols-4 gap-1.5 text-center text-[10px] font-mono font-bold pt-1">
-          <div className="bg-slate-950 p-1.5 rounded-lg border border-slate-800 text-slate-300">
-            <span className="text-slate-400 block text-[9px]">COMMON</span>
-            <span className="text-slate-200">{rarityCounts.Common.bought}/40</span>
-          </div>
-          <div className="bg-cyan-950/40 p-1.5 rounded-lg border border-cyan-500/40 text-cyan-300">
-            <span className="text-cyan-400 block text-[9px]">UNCOMMON</span>
-            <span>{rarityCounts.Uncommon.bought}/25</span>
-          </div>
-          <div className="bg-purple-950/40 p-1.5 rounded-lg border border-purple-500/40 text-purple-300">
-            <span className="text-purple-400 block text-[9px]">RARE</span>
-            <span>{rarityCounts.Rare.bought}/10</span>
-          </div>
-          <div className="bg-amber-950/40 p-1.5 rounded-lg border border-amber-500/40 text-amber-300">
-            <span className="text-amber-400 block text-[9px]">★ LEGENDARY</span>
-            <span>{rarityCounts.Legendary.bought}/5</span>
-          </div>
+        <div className={cx(
+          'grid grid-cols-4 gap-1.5 text-center text-[10px] font-mono font-bold pt-1',
+          'grid grid-cols-4 gap-1.5 text-center pt-1'
+        )}>
+          {[
+            { key: 'Common', label: 'COMMON', total: 40, dark: 'bg-slate-950 p-1.5 rounded-lg border border-slate-800 text-slate-300', acc: '' },
+            { key: 'Uncommon', label: 'UNCOMMON', total: 25, dark: 'bg-cyan-950/40 p-1.5 rounded-lg border border-cyan-500/40 text-cyan-300', acc: 'gs-acc-teal' },
+            { key: 'Rare', label: 'RARE', total: 10, dark: 'bg-purple-950/40 p-1.5 rounded-lg border border-purple-500/40 text-purple-300', acc: 'gs-acc-plum' },
+            { key: 'Legendary', label: '★ LEGENDARY', total: 5, dark: 'bg-amber-950/40 p-1.5 rounded-lg border border-amber-500/40 text-amber-300', acc: 'gs-acc-gold' },
+          ].map((r) => (
+            <div key={r.key} className={cx(r.dark, `gs-panel gs-panel--sunk gs-stat ${r.acc}`)}>
+              <span className={cx('text-slate-400 block text-[9px]', 'gs-stat__label block')}>{r.label}</span>
+              <span className={cx('text-slate-200', 'gs-stat__value')}>{rarityCounts[r.key].bought}/{r.total}</span>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* 🔍 ALBUM FILTER & SEARCH BAR */}
-      <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex flex-col gap-2.5">
+      <div className={cx(
+        'bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex flex-col gap-2.5',
+        'gs-panel gs-panel--sunk flex flex-col gap-2.5'
+      )}>
         <div className="flex flex-col sm:flex-row gap-2 justify-between items-stretch sm:items-center">
           {/* Rarity Tabs */}
-          <div className="flex flex-wrap gap-1 text-[11px] font-bold">
+          <div className={cx('flex flex-wrap gap-1 text-[11px] font-bold', 'gs-segment flex-wrap')}>
             {['ALL', 'Common', 'Uncommon', 'Rare', 'Legendary'].map((rar) => (
               <button
                 key={rar}
                 onClick={() => setRarityFilter(rar)}
-                className={`px-2.5 py-1 rounded-lg transition-all ${
-                  rarityFilter === rar
-                    ? rar === 'Legendary'
-                      ? 'bg-amber-500 text-slate-950 font-black shadow-sm'
-                      : rar === 'Rare'
-                      ? 'bg-purple-500 text-slate-950 font-black shadow-sm'
-                      : rar === 'Uncommon'
-                      ? 'bg-cyan-500 text-slate-950 font-black shadow-sm'
-                      : 'bg-fuchsia-500 text-slate-950 font-black shadow-sm'
-                    : 'bg-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
+                className={cx(
+                  `px-2.5 py-1 rounded-lg transition-all ${
+                    rarityFilter === rar
+                      ? rar === 'Legendary'
+                        ? 'bg-amber-500 text-slate-950 font-black shadow-sm'
+                        : rar === 'Rare'
+                        ? 'bg-purple-500 text-slate-950 font-black shadow-sm'
+                        : rar === 'Uncommon'
+                        ? 'bg-cyan-500 text-slate-950 font-black shadow-sm'
+                        : 'bg-fuchsia-500 text-slate-950 font-black shadow-sm'
+                      : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                  }`,
+                  `gs-seg-btn gs-seg-btn--auto ${rar === 'ALL' ? 'gs-acc-plum' : rarityAcc(rar)} ${
+                    rarityFilter === rar ? 'is-active' : ''
+                  }`
+                )}
               >
                 {rar === 'ALL' ? tr('filterAll') : rar}
               </button>
@@ -221,37 +268,44 @@ export function BuzzwordAlbum({
 
           {/* Search Box */}
           <div className="relative min-w-[140px]">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className={cx(
+              'w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400',
+              'w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2'
+            )} />
             <input
               type="text"
               placeholder={tr('cardSearchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-fuchsia-500 font-mono"
+              className={cx(
+                'w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-fuchsia-500 font-mono',
+                'gs-input w-full'
+              )}
             />
           </div>
         </div>
 
         {/* Status Filter Toggle */}
-        <div className="flex gap-1 text-[10px] font-bold pt-1 border-t border-slate-800">
-          <button
-            onClick={() => setStatusFilter('ALL')}
-            className={`px-2.5 py-0.5 rounded ${statusFilter === 'ALL' ? 'bg-slate-700 text-white' : 'text-slate-400'}`}
-          >
-            {tr('allSlotsLabel')} (1-80)
-          </button>
-          <button
-            onClick={() => setStatusFilter('BOUGHT')}
-            className={`px-2.5 py-0.5 rounded ${statusFilter === 'BOUGHT' ? 'bg-emerald-500 text-slate-950 font-black' : 'text-slate-400'}`}
-          >
-            ✨ {tr('inAlbumLabel')} ({boughtCount})
-          </button>
-          <button
-            onClick={() => setStatusFilter('MISSING')}
-            className={`px-2.5 py-0.5 rounded ${statusFilter === 'MISSING' ? 'bg-rose-500 text-slate-950 font-black' : 'text-slate-400'}`}
-          >
-            🔒 {tr('undiscoveredLabel')} ({totalCards - boughtCount})
-          </button>
+        <div className={cx(
+          'flex gap-1 text-[10px] font-bold pt-1 border-t border-slate-800',
+          'gs-segment mt-1'
+        )}>
+          {[
+            { id: 'ALL', label: `${tr('allSlotsLabel')} (1-80)`, dark: 'bg-slate-700 text-white', acc: '' },
+            { id: 'BOUGHT', label: `✨ ${tr('inAlbumLabel')} (${boughtCount})`, dark: 'bg-emerald-500 text-slate-950 font-black', acc: 'gs-acc-grass' },
+            { id: 'MISSING', label: `🔒 ${tr('undiscoveredLabel')} (${totalCards - boughtCount})`, dark: 'bg-rose-500 text-slate-950 font-black', acc: 'gs-acc-rust' },
+          ].map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setStatusFilter(f.id)}
+              className={cx(
+                `px-2.5 py-0.5 rounded ${statusFilter === f.id ? f.dark : 'text-slate-400'}`,
+                `gs-seg-btn ${f.acc} ${statusFilter === f.id ? 'is-active' : ''}`
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -266,28 +320,46 @@ export function BuzzwordAlbum({
               <div
                 key={bw.id}
                 onClick={() => setSelectedCard(bw)}
-                className="group relative rounded-xl border border-slate-800 bg-slate-950/90 p-2.5 flex flex-col justify-between overflow-hidden shadow-sm cursor-pointer hover:border-fuchsia-500/50 transition-colors min-h-[130px]"
+                className={cx(
+                  'group relative rounded-xl border border-slate-800 bg-slate-950/90 p-2.5 flex flex-col justify-between overflow-hidden shadow-sm cursor-pointer hover:border-fuchsia-500/50 transition-colors min-h-[130px]',
+                  'gs-card gs-card--locked justify-between cursor-pointer min-h-[130px]'
+                )}
               >
                 {/* Top Bar: Card Num & Status Badge */}
-                <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-500">
+                <div className={cx(
+                  'flex items-center justify-between text-[10px] font-mono font-bold text-slate-500',
+                  'flex items-center justify-between gap-1 gs-card__num'
+                )}>
                   <span>{bw.cardNum}</span>
-                  <span className="uppercase text-[9px] px-1.5 py-0.2 rounded bg-slate-900 border border-slate-800 text-slate-500">
+                  <span className={cx(
+                    'uppercase text-[9px] px-1.5 py-0.2 rounded bg-slate-900 border border-slate-800 text-slate-500',
+                    'gs-chip'
+                  )}>
                     🔒 {tr('undiscoveredShort')}
                   </span>
                 </div>
 
                 {/* Silhouette Placeholder Content */}
-                <div className="my-2 flex flex-col items-center justify-center py-2.5 rounded-lg border border-slate-900 bg-slate-900/40 text-slate-600 group-hover:text-fuchsia-400 transition-colors">
-                  <div className="p-2 rounded-xl bg-slate-900 border border-slate-800 mb-1">
-                    <Lock className="w-5 h-5 text-slate-600 group-hover:text-fuchsia-400 transition-colors" />
+                <div className={cx(
+                  'my-2 flex flex-col items-center justify-center py-2.5 rounded-lg border border-slate-900 bg-slate-900/40 text-slate-600 group-hover:text-fuchsia-400 transition-colors',
+                  'gs-card__art gs-card__art--empty my-2'
+                )}>
+                  <div className={cx('p-2 rounded-xl bg-slate-900 border border-slate-800 mb-1', 'gs-iconbox mb-1')}>
+                    <Lock className={cx('w-5 h-5 text-slate-600 group-hover:text-fuchsia-400 transition-colors', 'w-4 h-4')} />
                   </div>
-                  <div className="text-[10px] font-bold text-slate-500 select-none blur-[3px] mt-0.5">
+                  <div className={cx(
+                    'text-[10px] font-bold text-slate-500 select-none blur-[3px] mt-0.5',
+                    'gs-card__num select-none blur-[3px] mt-0.5'
+                  )}>
                     ??? {tr('secretLabel')} ???
                   </div>
                 </div>
 
                 {/* Bottom Tag */}
-                <div className="w-full py-0.5 rounded font-mono font-bold text-[9px] bg-slate-900/80 text-slate-500 border border-slate-800 text-center">
+                <div className={cx(
+                  'w-full py-0.5 rounded font-mono font-bold text-[9px] bg-slate-900/80 text-slate-500 border border-slate-800 text-center',
+                  'gs-card__foot'
+                )}>
                   🔒 {tr('inBoosterPacksLabel')}
                 </div>
               </div>
@@ -317,34 +389,55 @@ export function BuzzwordAlbum({
             <div
               key={bw.id}
               onClick={() => setSelectedCard(bw)}
-              className={`group relative rounded-xl border-2 p-2.5 flex flex-col justify-between transition-all hover:scale-[1.03] hover:z-10 cursor-pointer min-h-[130px] ${cardStyle}`}
+              className={cx(
+                `group relative rounded-xl border-2 p-2.5 flex flex-col justify-between transition-all hover:scale-[1.03] hover:z-10 cursor-pointer min-h-[130px] ${cardStyle}`,
+                `gs-card ${rarityAcc(bw.rarity)} justify-between cursor-pointer min-h-[130px]`
+              )}
             >
               {/* Card Top: Number & Rarity Badge */}
-              <div className="flex items-center justify-between text-[10px] font-mono font-bold mb-1">
-                <span className="opacity-75">{bw.cardNum}</span>
-                <span className={`uppercase text-[9px] px-1.5 py-0.2 rounded border font-black ${badgeStyle}`}>
+              <div className={cx(
+                'flex items-center justify-between text-[10px] font-mono font-bold mb-1',
+                'flex items-center justify-between gap-1 gs-card__num mb-1'
+              )}>
+                <span className={cx('opacity-75', '')}>{bw.cardNum}</span>
+                <span className={cx(
+                  `uppercase text-[9px] px-1.5 py-0.2 rounded border font-black ${badgeStyle}`,
+                  `gs-chip gs-chip--solid ${rarityAcc(bw.rarity)}`
+                )}>
                   {bw.rarity === 'Legendary' ? '★ LEGENDARY' : bw.rarity}
                 </span>
               </div>
 
               {/* Card Artwork Icon Box */}
-              <div className="my-1 flex flex-col items-center justify-center py-2 rounded-lg border backdrop-blur-sm relative overflow-hidden group-hover:border-fuchsia-400/80 transition-colors">
-                <div className={`p-1.5 rounded-xl border ${iconBoxStyle} mb-1 shadow-inner`}>
-                  {renderCardIcon(bw.icon, 'w-5 h-5')}
+              <div className={cx(
+                'my-1 flex flex-col items-center justify-center py-2 rounded-lg border backdrop-blur-sm relative overflow-hidden group-hover:border-fuchsia-400/80 transition-colors',
+                'gs-card__art my-1'
+              )}>
+                <div className={cx(`p-1.5 rounded-xl border ${iconBoxStyle} mb-1 shadow-inner`, `gs-medal ${rarityAcc(bw.rarity)} mb-1`)}>
+                  {renderCardIcon(bw.icon, cx('w-5 h-5', 'w-4 h-4'))}
                 </div>
-                <div className="text-xs font-extrabold text-center px-1 truncate w-full text-slate-100">
+                <div className={cx(
+                  'text-xs font-extrabold text-center px-1 truncate w-full text-slate-100',
+                  'gs-card__name text-center px-1 truncate w-full'
+                )}>
                   {bw.name}
                 </div>
               </div>
 
               {/* Card Stats */}
               <div className="space-y-1">
-                <div className="text-[10px] font-mono font-black text-emerald-300 text-center bg-emerald-950/60 py-0.5 rounded border border-emerald-500/30">
+                <div className={cx(
+                  'text-[10px] font-mono font-black text-emerald-300 text-center bg-emerald-950/60 py-0.5 rounded border border-emerald-500/30',
+                  'gs-card__foot gs-acc-grass gs-card__foot--solid'
+                )}>
                   ⚡ +{Math.round(bw.bonus * 100)}% VPS
                 </div>
 
-                <div className="w-full py-0.5 rounded font-black text-[10px] bg-slate-950 text-slate-300 border border-slate-800 text-center flex items-center justify-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                <div className={cx(
+                  'w-full py-0.5 rounded font-black text-[10px] bg-slate-950 text-slate-300 border border-slate-800 text-center flex items-center justify-center gap-1',
+                  'gs-card__foot flex items-center justify-center gap-1'
+                )}>
+                  <CheckCircle2 className={cx('w-3 h-3 text-emerald-400', 'w-3 h-3 gs-ink-grass')} />
                   <span>{tr('inAlbumBadge')}</span>
                 </div>
               </div>
@@ -355,19 +448,34 @@ export function BuzzwordAlbum({
 
       {/* 🎬 BOOSTER PACK OPENING MODAL */}
       {openingState !== 'CLOSED' && pulledCard && createPortal(
-        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
-          <div className="relative max-w-sm w-full max-h-[90vh] overflow-y-auto my-auto bg-slate-900 border-2 border-amber-400/80 rounded-2xl p-4 sm:p-6 shadow-2xl flex flex-col items-center text-center">
+        <div className={cx(
+          'fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn',
+          'gs-modal-backdrop gs-skin animate-fadeIn'
+        )}>
+          <div className={cx(
+            'relative max-w-sm w-full max-h-[90vh] overflow-y-auto my-auto bg-slate-900 border-2 border-amber-400/80 rounded-2xl p-4 sm:p-6 shadow-2xl flex flex-col items-center text-center',
+            'gs-modal gs-acc-gold max-w-sm p-4 sm:p-6 items-center text-center'
+          )}>
             {/* Background Glow */}
-            <div className="absolute inset-0 bg-gradient-to-b from-amber-500/10 via-fuchsia-500/10 to-slate-950 pointer-events-none" />
+            <div className={cx(
+              'absolute inset-0 bg-gradient-to-b from-amber-500/10 via-fuchsia-500/10 to-slate-950 pointer-events-none',
+              'hidden'
+            )} />
 
             {/* STAGE 1: SHAKING PACK */}
             {openingState === 'SHAKING' && (
               <div className="relative flex flex-col items-center my-6">
-                <div className="w-20 h-28 rounded-2xl bg-gradient-to-tr from-fuchsia-600 via-purple-600 to-amber-400 border-4 border-amber-300 shadow-2xl flex flex-col items-center justify-center text-slate-950 animate-pulse">
-                  <Sparkles className="w-10 h-10 text-slate-950 animate-spin" />
+                <div className={cx(
+                  'w-20 h-28 rounded-2xl bg-gradient-to-tr from-fuchsia-600 via-purple-600 to-amber-400 border-4 border-amber-300 shadow-2xl flex flex-col items-center justify-center text-slate-950 animate-pulse',
+                  'gs-pack animate-pulse'
+                )}>
+                  <Sparkles className={cx('w-10 h-10 text-slate-950 animate-spin', 'w-8 h-8 animate-spin')} />
                   <span className="font-black text-[10px] uppercase tracking-wider mt-2">{tr('openingLabel')}</span>
                 </div>
-                <div className="text-amber-300 font-extrabold text-xs font-mono mt-4 animate-pulse">
+                <div className={cx(
+                  'text-amber-300 font-extrabold text-xs font-mono mt-4 animate-pulse',
+                  'gs-mono font-black gs-ink-gold mt-4 animate-pulse'
+                )}>
                   🎴 {tr('drawingCardLabel')}
                 </div>
               </div>
@@ -376,45 +484,63 @@ export function BuzzwordAlbum({
             {/* STAGE 2: REVEALED CARD */}
             {openingState === 'REVEALED' && (
               <div className="relative flex flex-col items-center w-full animate-fadeIn">
-                <div className="text-xs font-mono font-black text-amber-400 uppercase tracking-widest mb-2 flex items-center gap-1">
-                  <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
+                <div className={cx(
+                  'text-xs font-mono font-black text-amber-400 uppercase tracking-widest mb-2 flex items-center gap-1',
+                  'gs-title gs-ink-gold mb-2 flex items-center gap-1'
+                )}>
+                  <Sparkles className={cx('w-4 h-4 text-amber-300 animate-spin', 'w-4 h-4 animate-spin')} />
                   {tr('newCardDrawn')}
                 </div>
 
                 {/* Card Artwork */}
-                <div className={`w-full p-4 rounded-2xl border-2 my-2 shadow-2xl flex flex-col items-center gap-2 ${
-                  pulledCard.rarity === 'Legendary'
-                    ? 'border-amber-400 bg-gradient-to-b from-amber-950 via-slate-900 to-amber-950 text-amber-200'
-                    : pulledCard.rarity === 'Rare'
-                    ? 'border-purple-400 bg-gradient-to-b from-purple-950 via-slate-900 to-purple-950 text-purple-200'
-                    : pulledCard.rarity === 'Uncommon'
-                    ? 'border-cyan-400 bg-gradient-to-b from-cyan-950 via-slate-900 to-cyan-950 text-cyan-200'
-                    : 'border-slate-500 bg-slate-900 text-slate-100'
-                }`}>
-                  <div className="flex justify-between w-full text-xs font-mono font-extrabold">
+                <div className={cx(
+                  `w-full p-4 rounded-2xl border-2 my-2 shadow-2xl flex flex-col items-center gap-2 ${
+                    pulledCard.rarity === 'Legendary'
+                      ? 'border-amber-400 bg-gradient-to-b from-amber-950 via-slate-900 to-amber-950 text-amber-200'
+                      : pulledCard.rarity === 'Rare'
+                      ? 'border-purple-400 bg-gradient-to-b from-purple-950 via-slate-900 to-purple-950 text-purple-200'
+                      : pulledCard.rarity === 'Uncommon'
+                      ? 'border-cyan-400 bg-gradient-to-b from-cyan-950 via-slate-900 to-cyan-950 text-cyan-200'
+                      : 'border-slate-500 bg-slate-900 text-slate-100'
+                  }`,
+                  `gs-card ${rarityAcc(pulledCard.rarity)} w-full p-4 my-2 items-center gap-2`
+                )}>
+                  <div className={cx('flex justify-between w-full text-xs font-mono font-extrabold', 'flex justify-between items-center gap-2 w-full gs-card__num')}>
                     <span>{pulledCard.cardNum}</span>
-                    <span className="uppercase font-black px-2 py-0.5 rounded bg-slate-950/80 border border-current text-[10px]">
+                    <span className={cx(
+                      'uppercase font-black px-2 py-0.5 rounded bg-slate-950/80 border border-current text-[10px]',
+                      `gs-chip gs-chip--solid ${rarityAcc(pulledCard.rarity)}`
+                    )}>
                       {pulledCard.rarity === 'Legendary' ? '★ LEGENDARY ★' : pulledCard.rarity}
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-slate-950/80 border border-current/50 my-1 text-amber-300">
-                    {renderCardIcon(pulledCard.icon, 'w-10 h-10')}
+                  <div className={cx(
+                    'p-3 rounded-2xl bg-slate-950/80 border border-current/50 my-1 text-amber-300',
+                    `gs-medal gs-medal--lg ${rarityAcc(pulledCard.rarity)} my-1`
+                  )}>
+                    {renderCardIcon(pulledCard.icon, cx('w-10 h-10', 'w-7 h-7'))}
                   </div>
 
-                  <div className="text-base font-black text-slate-100">{pulledCard.name}</div>
-                  <div className="text-[11px] font-mono italic text-slate-300">"{pulledCard.quote}"</div>
+                  <div className={cx('text-base font-black text-slate-100', 'gs-card__name text-base')}>{pulledCard.name}</div>
+                  <div className={cx('text-[11px] font-mono italic text-slate-300', 'gs-quote text-center')}>"{pulledCard.quote}"</div>
 
-                  <div className="mt-1 text-xs font-mono font-black text-emerald-400 bg-emerald-950/80 px-3 py-1 rounded-xl border border-emerald-500/40">
+                  <div className={cx(
+                    'mt-1 text-xs font-mono font-black text-emerald-400 bg-emerald-950/80 px-3 py-1 rounded-xl border border-emerald-500/40',
+                    'gs-chip gs-chip--solid gs-acc-grass mt-1'
+                  )}>
                     ⚡ +{Math.round(pulledCard.bonus * 100)}% {tr('globalVpsBonusLabel')}
                   </div>
                 </div>
 
                 <button
                   onClick={handleInsertIntoAlbum}
-                  className="w-full mt-3 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-amber-400 text-slate-950 hover:bg-amber-300 active:scale-95 shadow-xl transition-all flex items-center justify-center gap-1.5"
+                  className={cx(
+                    'w-full mt-3 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-amber-400 text-slate-950 hover:bg-amber-300 active:scale-95 shadow-xl transition-all flex items-center justify-center gap-1.5',
+                    'gs-btn gs-btn--gold gs-btn--block mt-3'
+                  )}
                 >
-                  <CheckCircle2 className="w-4 h-4 text-slate-950" />
+                  <CheckCircle2 className={cx('w-4 h-4 text-slate-950', 'w-4 h-4')} />
                   <span>✨ {tr('insertIntoAlbumLabel')}</span>
                 </button>
               </div>
@@ -431,67 +557,97 @@ export function BuzzwordAlbum({
 
         return createPortal(
           <div
-            className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn"
+            className={cx(
+              'fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn',
+              'gs-modal-backdrop gs-skin animate-fadeIn'
+            )}
             onClick={() => setSelectedCard(null)}
           >
             <div
-              className="relative max-w-xs w-full bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border-2 border-fuchsia-500/60 rounded-2xl p-5 shadow-2xl flex flex-col gap-3 text-slate-100"
+              className={cx(
+                'relative max-w-xs w-full bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border-2 border-fuchsia-500/60 rounded-2xl p-5 shadow-2xl flex flex-col gap-3 text-slate-100',
+                `gs-modal ${isBought ? rarityAcc(bw.rarity) || 'gs-acc-plum' : 'gs-acc-plum'} max-w-xs p-4 gap-3`
+              )}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close Button */}
               <button
                 onClick={() => setSelectedCard(null)}
-                className="absolute top-3 right-3 p-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white"
+                className={cx(
+                  'absolute top-3 right-3 p-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white',
+                  'gs-iconbtn absolute top-3 right-3'
+                )}
               >
                 <X className="w-4 h-4" />
               </button>
 
               {/* Card Header */}
-              <div className="flex items-center justify-between text-xs font-mono font-extrabold border-b border-slate-800 pb-2">
-                <span className="text-fuchsia-400">{bw.cardNum} {tr('ofLabel')} 80</span>
-                <span className="uppercase px-2 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40">
+              <div className={cx(
+                'flex items-center justify-between text-xs font-mono font-extrabold border-b border-slate-800 pb-2',
+                'flex items-center justify-between gap-2 pb-2 gs-hr gs-mono font-black'
+              )}>
+                <span className={cx('text-fuchsia-400', '')}>{bw.cardNum} {tr('ofLabel')} 80</span>
+                <span className={cx(
+                  'uppercase px-2 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40',
+                  `gs-chip ${isBought ? 'gs-chip--solid' : ''}`
+                )}>
                   {isBought ? bw.rarity : `🔒 ${tr('undiscoveredShort')}`}
                 </span>
               </div>
 
               {/* Card Content */}
               {isBought ? (
-                <div className="my-2 p-4 rounded-xl bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-fuchsia-500/30 flex flex-col items-center justify-center gap-2 shadow-inner">
-                  <div className="p-3 rounded-2xl bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-400/50 shadow-xl">
-                    {renderCardIcon(bw.icon, 'w-10 h-10')}
+                <div className={cx(
+                  'my-2 p-4 rounded-xl bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-fuchsia-500/30 flex flex-col items-center justify-center gap-2 shadow-inner',
+                  'gs-card__art my-2 p-4 gap-2'
+                )}>
+                  <div className={cx(
+                    'p-3 rounded-2xl bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-400/50 shadow-xl',
+                    'gs-medal gs-medal--lg'
+                  )}>
+                    {renderCardIcon(bw.icon, cx('w-10 h-10', 'w-7 h-7'))}
                   </div>
-                  <div className="text-base font-black text-center text-slate-100 mt-1">
+                  <div className={cx('text-base font-black text-center text-slate-100 mt-1', 'gs-card__name text-base text-center mt-1')}>
                     {bw.name}
                   </div>
-                  <div className="text-[11px] text-fuchsia-300/80 font-mono italic text-center">
+                  <div className={cx('text-[11px] text-fuchsia-300/80 font-mono italic text-center', 'gs-quote text-center')}>
                     "{bw.quote}"
                   </div>
                 </div>
               ) : (
-                <div className="my-2 p-4 rounded-xl bg-slate-950 border-2 border-slate-800 flex flex-col items-center justify-center gap-2 relative overflow-hidden select-none">
-                  <div className="p-3 rounded-2xl bg-slate-900 text-slate-700">
-                    <Lock className="w-8 h-8 text-fuchsia-400" />
+                <div className={cx(
+                  'my-2 p-4 rounded-xl bg-slate-950 border-2 border-slate-800 flex flex-col items-center justify-center gap-2 relative overflow-hidden select-none',
+                  'gs-card__art gs-card__art--empty my-2 p-4 gap-2 select-none'
+                )}>
+                  <div className={cx('p-3 rounded-2xl bg-slate-900 text-slate-700', 'gs-iconbox gs-iconbox--lg')}>
+                    <Lock className={cx('w-8 h-8 text-fuchsia-400', 'w-6 h-6')} />
                   </div>
-                  <div className="text-xs font-black text-center text-slate-400 uppercase">
+                  <div className={cx('text-xs font-black text-center text-slate-400 uppercase', 'gs-title text-center')}>
                     {tr('notYetUnlocked')}
                   </div>
-                  <div className="text-[10px] text-slate-400 text-center font-mono mt-1">
+                  <div className={cx('text-[10px] text-slate-400 text-center font-mono mt-1', 'gs-sub text-center mt-1')}>
                     {tr('unlockCardHint')}
                   </div>
                 </div>
               )}
 
               {/* Card Stats */}
-              <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-1.5">
-                <div className="flex justify-between">
-                  <span className="text-slate-400">{tr('vpsMultiplierLabel')}</span>
-                  <span className="text-emerald-400 font-extrabold">
+              <div className={cx(
+                'bg-slate-900/90 p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-1.5',
+                'gs-panel gs-panel--sunk gs-mono space-y-1.5'
+              )}>
+                <div className="flex justify-between gap-2">
+                  <span className={cx('text-slate-400', 'gs-ink-soft')}>{tr('vpsMultiplierLabel')}</span>
+                  <span className={cx('text-emerald-400 font-extrabold', 'font-black gs-ink-grass')}>
                     {isBought ? `+${Math.round(bw.bonus * 100)}% ${tr('vpsGlobalLabel')}` : '🔒 ???'}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">{tr('statusLabel')}</span>
-                  <span className={isBought ? 'text-emerald-400 font-bold' : 'text-slate-500 font-bold'}>
+                <div className="flex justify-between gap-2">
+                  <span className={cx('text-slate-400', 'gs-ink-soft')}>{tr('statusLabel')}</span>
+                  <span className={cx(
+                    isBought ? 'text-emerald-400 font-bold' : 'text-slate-500 font-bold',
+                    `font-black ${isBought ? 'gs-ink-grass' : 'gs-ink-soft'}`
+                  )}>
                     {isBought ? `✨ ${tr('completedInAlbum')}` : `🔒 ${tr('notYetDiscovered')}`}
                   </span>
                 </div>

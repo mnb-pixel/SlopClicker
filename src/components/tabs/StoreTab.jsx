@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Lock, Sparkles, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { getIcon } from '../../utils/iconMap';
 import { BUILDINGS_DATA } from '../../data/buildingsData';
@@ -8,6 +8,7 @@ import { GREENWASHING_LAYOFFS_DATA, getCorporateActionCost, getAvailableCorporat
 import { formatCurrency, formatNumber, getBuildingCost, getBuildingBulkCost, getMaxAffordableBuildings } from '../../utils/formatters';
 import { buildingName, upgradeName, upgradeQuote, upgradeDescription, upgradeTargetBadge, gwName, gwQuote, gwEffectDesc } from '../../utils/storeCopy';
 import { BuzzwordAlbum } from '../BuzzwordAlbum';
+import { useSkin } from '../skin';
 
 export function StoreTab({
   valuation,
@@ -26,14 +27,28 @@ export function StoreTab({
   boughtGreenwashingLayoffs = [],
   buyGreenwashingLayoff,
   stickyTopPx = 0,
+  // Startabschnitt von außen: aus der Sammlung (StatsTab) führt ein Knopf direkt in den
+  // Booster-Kiosk. Danach steuert der Nutzer die Reiter wieder selbst - deshalb nur ein
+  // Startwert und kein dauerhaft kontrollierter Zustand. Ein Wechsel des Props öffnet
+  // den Abschnitt erneut (siehe useEffect).
+  initialSection = 'engines',
   t,
 }) {
-  const [storeSection, setStoreSection] = useState('engines'); // 'engines' | 'upgrades' | 'corporate' | 'buzzwords'
+  const [storeSection, setStoreSection] = useState(initialSection); // 'engines' | 'upgrades' | 'corporate' | 'buzzwords'
   const [showBoughtUpgrades, setShowBoughtUpgrades] = useState(false);
   const [showBoughtCorporate, setShowBoughtCorporate] = useState(false);
   const [hoveredUpgradeId, setHoveredUpgradeId] = useState(null);
   const [hoveredBoughtUpgradeId, setHoveredBoughtUpgradeId] = useState(null);
   const tr = t || ((k) => k);
+  // Zwei Looks, ein Markup: 'dark' ist die Tab-Ansicht unter /play, 'game' der
+  // Insel-Stil der 3D-Shell. cx(dunkel, spiel) - siehe src/components/skin.js.
+  const { isGame, cx } = useSkin();
+
+  // Springt die Shell mit einem neuen Startabschnitt herein (Sammlung -> Kiosk), muss
+  // der Reiter mitziehen - der useState-Startwert allein greift nur beim ersten Aufbau.
+  useEffect(() => {
+    setStoreSection(initialSection);
+  }, [initialSection]);
 
   // Dynamic Icon Resolver helper
   const renderIcon = (iconName, className = 'w-4 h-4') => {
@@ -48,7 +63,10 @@ export function StoreTab({
         <img
           src={item.image}
           alt={tr('subEngines')}
-          className="w-7 h-7 rounded-lg object-cover border border-cyan-400/60 shadow-md"
+          className={cx(
+            'w-7 h-7 rounded-lg object-cover border border-cyan-400/60 shadow-md',
+            'gs-thumb'
+          )}
         />
       );
     }
@@ -117,59 +135,60 @@ export function StoreTab({
           ebenfalls sticky App-Header (dessen Höhe variiert, z.B. durch das SEC-Theme-Banner
           oder umbrechende Startup-Namen), auf Desktop relativ zur eigenen Scroll-Spalte (dort 0). */}
       <div
-        className="sticky z-10 grid grid-cols-4 gap-1 mb-4 bg-slate-900 p-1 rounded-xl border border-slate-800 text-[11px] font-bold"
+        className={cx(
+          'sticky z-10 grid grid-cols-4 gap-1 mb-4 bg-slate-900 p-1 rounded-xl border border-slate-800 text-[11px] font-bold',
+          'sticky z-10 mb-4 gs-segment gs-segment--grid'
+        )}
         style={{ top: stickyTopPx }}
       >
-        <button
-          onClick={() => setStoreSection('engines')}
-          className={`py-1.5 rounded-lg transition-all ${
-            storeSection === 'engines' ? 'bg-cyan-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          {tr('subEngines')}
-        </button>
-        <button
-          onClick={() => setStoreSection('upgrades')}
-          className={`py-1.5 rounded-lg transition-all ${
-            storeSection === 'upgrades' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          {tr('subUpgrades')} ({availableUpgrades.length})
-        </button>
-        <button
-          onClick={() => setStoreSection('corporate')}
-          className={`py-1.5 rounded-lg transition-all ${
-            storeSection === 'corporate' ? 'bg-emerald-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          {tr('subCorporate')} ({availableCorporate.length})
-        </button>
-        <button
-          onClick={() => setStoreSection('buzzwords')}
-          className={`py-1.5 rounded-lg transition-all ${
-            storeSection === 'buzzwords' ? 'bg-fuchsia-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          {tr('subBuzzwords')}
-        </button>
+        {/* Vier Unterkategorien, vier Bedeutungsfarben. Im Spiel-Skin sind das die
+            gedeckten Insel-Töne (teal/gold/gras/pflaume) statt Neon auf Schwarz. */}
+        {[
+          { id: 'engines', label: tr('subEngines'), dark: 'bg-cyan-500', acc: 'gs-acc-teal' },
+          { id: 'upgrades', label: `${tr('subUpgrades')} (${availableUpgrades.length})`, dark: 'bg-amber-500', acc: 'gs-acc-gold' },
+          { id: 'corporate', label: `${tr('subCorporate')} (${availableCorporate.length})`, dark: 'bg-emerald-500', acc: 'gs-acc-grass' },
+          { id: 'buzzwords', label: tr('subBuzzwords'), dark: 'bg-fuchsia-500', acc: 'gs-acc-plum' },
+        ].map((sec) => {
+          const active = storeSection === sec.id;
+          return (
+            <button
+              key={sec.id}
+              onClick={() => setStoreSection(sec.id)}
+              className={cx(
+                `py-1.5 rounded-lg transition-all ${active ? `${sec.dark} text-slate-950 shadow-md` : 'text-slate-400 hover:text-slate-200'}`,
+                `gs-seg-btn ${sec.acc} ${active ? 'is-active' : ''}`
+              )}
+            >
+              {sec.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* AI ENGINES SECTION */}
       {storeSection === 'engines' && (
         <div>
           {/* Buy Mode Selector Bar */}
-          <div className="flex items-center justify-between bg-slate-900/90 p-2 rounded-xl border border-slate-800 mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{tr('buyModeLabel')}</span>
-            <div className="flex gap-1">
+          <div className={cx(
+            'flex items-center justify-between bg-slate-900/90 p-2 rounded-xl border border-slate-800 mb-3',
+            'flex items-center justify-between gap-2 mb-3 gs-panel gs-panel--sunk'
+          )}>
+            <span className={cx('text-xs font-bold text-slate-400 uppercase tracking-wider', 'gs-title')}>
+              {tr('buyModeLabel')}
+            </span>
+            <div className={cx('flex gap-1', 'flex gap-1 shrink-0')}>
               {['1', '10', '100', 'MAX'].map((mode) => (
                 <button
                   key={mode}
                   onClick={() => setBuyMode(mode)}
-                  className={`px-2.5 py-1 text-xs font-black rounded-lg transition-all ${
-                    buyMode === mode
-                      ? 'bg-cyan-500 text-slate-950 shadow-sm'
-                      : 'bg-slate-800 text-slate-400 hover:text-slate-200'
-                  }`}
+                  className={cx(
+                    `px-2.5 py-1 text-xs font-black rounded-lg transition-all ${
+                      buyMode === mode
+                        ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                        : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                    }`,
+                    `gs-seg-btn gs-seg-btn--auto gs-acc-teal ${buyMode === mode ? 'is-active' : ''}`
+                  )}
                 >
                   {mode}
                 </button>
@@ -184,22 +203,28 @@ export function StoreTab({
                 return (
                   <div
                     key={b.id}
-                    className="p-2.5 rounded-xl border border-slate-800 bg-slate-950/70 flex items-center justify-between opacity-50 backdrop-blur-sm"
+                    className={cx(
+                      'p-2.5 rounded-xl border border-slate-800 bg-slate-950/70 flex items-center justify-between opacity-50 backdrop-blur-sm',
+                      'gs-row gs-row--locked'
+                    )}
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className="bg-slate-900 p-2 rounded-lg border border-slate-800 text-slate-600">
+                      <div className={cx('bg-slate-900 p-2 rounded-lg border border-slate-800 text-slate-600', 'gs-iconbox')}>
                         <Lock className="w-4 h-4" />
                       </div>
                       <div>
-                        <div className="font-bold text-xs text-slate-500">
+                        <div className={cx('font-bold text-xs text-slate-500', 'gs-title')}>
                           {tr('lockedEngineTier')}
                         </div>
-                        <div className="text-[11px] text-slate-500 italic mt-0.5">
+                        <div className={cx('text-[11px] text-slate-500 italic mt-0.5', 'gs-quote mt-0.5')}>
                           {tr('lockedEngineTierDesc')}
                         </div>
                       </div>
                     </div>
-                    <div className="px-2.5 py-1 rounded text-[10px] font-black bg-slate-900 text-slate-600 border border-slate-800">
+                    <div className={cx(
+                      'px-2.5 py-1 rounded text-[10px] font-black bg-slate-900 text-slate-600 border border-slate-800',
+                      'gs-chip'
+                    )}>
                       {tr('locked')}
                     </div>
                   </div>
@@ -251,12 +276,21 @@ export function StoreTab({
               return (
                 <div key={b.id} className="relative group">
                   {/* Mouseover Hover Tooltip Card */}
-                  <div className="hidden group-hover:flex flex-col gap-1 absolute bottom-full left-0 right-0 z-50 mb-2 p-3 bg-slate-950/95 backdrop-blur-md border border-cyan-500/50 rounded-xl shadow-2xl text-xs pointer-events-none animate-fadeIn">
-                    <div className="font-extrabold text-cyan-300 flex items-center justify-between">
+                  <div className={cx(
+                    'hidden group-hover:flex flex-col gap-1 absolute bottom-full left-0 right-0 z-50 mb-2 p-3 bg-slate-950/95 backdrop-blur-md border border-cyan-500/50 rounded-xl shadow-2xl text-xs pointer-events-none animate-fadeIn',
+                    'hidden group-hover:flex absolute bottom-full left-0 right-0 z-50 mb-2 pointer-events-none animate-fadeIn gs-panel gs-acc-teal gs-tip'
+                  )}>
+                    <div className={cx(
+                      'font-extrabold text-cyan-300 flex items-center justify-between',
+                      'flex items-center justify-between gap-2 gs-title'
+                    )}>
                       <span>{buildingName(b.id, tr)}</span>
-                      <span className="text-[10px] text-slate-400 font-mono">Base: {formatCurrency(b.baseCost)}</span>
+                      <span className={cx('text-[10px] text-slate-400 font-mono', 'gs-mono gs-ink-soft')}>Base: {formatCurrency(b.baseCost)}</span>
                     </div>
-                    <div className="text-emerald-400 font-mono font-bold text-[11px] pt-1 border-t border-slate-800 flex justify-between">
+                    <div className={cx(
+                      'text-emerald-400 font-mono font-bold text-[11px] pt-1 border-t border-slate-800 flex justify-between',
+                      'gs-mono font-bold gs-ink-grass pt-1 gs-hr-top flex justify-between gap-2'
+                    )}>
                       <span>1 Unit: +{formatCurrency(unitVps)}/s ({bMult.toFixed(1)}x mult)</span>
                       <span>Total: +{formatCurrency(buildingTotalVps)}/s ({vpsSharePct}%)</span>
                     </div>
@@ -264,21 +298,27 @@ export function StoreTab({
 
                   {/* Clean Detailed Row */}
                   <div
-                    className={`p-2.5 rounded-xl border flex items-center justify-between transition-all ${
-                      canAfford
-                        ? 'bg-slate-900/90 border-slate-700 hover:border-cyan-500/60 shadow-md'
-                        : 'bg-slate-950/60 border-slate-900 opacity-60'
-                    }`}
+                    className={cx(
+                      `p-2.5 rounded-xl border flex items-center justify-between transition-all ${
+                        canAfford
+                          ? 'bg-slate-900/90 border-slate-700 hover:border-cyan-500/60 shadow-md'
+                          : 'bg-slate-950/60 border-slate-900 opacity-60'
+                      }`,
+                      `gs-row gs-acc-teal ${canAfford ? 'is-affordable' : 'is-broke'}`
+                    )}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <div className="bg-slate-800 p-1.5 rounded-lg border border-slate-700 text-cyan-400 shrink-0">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className={cx('bg-slate-800 p-1.5 rounded-lg border border-slate-700 text-cyan-400 shrink-0', 'gs-iconbox')}>
                         {renderItemArtwork(b)}
                       </div>
-                      <div>
-                        <div className="font-extrabold text-xs text-slate-100 flex items-center gap-1.5">
+                      <div className={cx('', 'min-w-0')}>
+                        <div className={cx('font-extrabold text-xs text-slate-100 flex items-center gap-1.5', 'gs-title flex items-center gap-1.5')}>
                           {buildingName(b.id, tr)}
                           {count > 0 && (
-                            <span className="bg-cyan-500/20 text-cyan-300 text-[10px] font-black px-1.5 py-0.1 rounded border border-cyan-500/30">
+                            <span className={cx(
+                              'bg-cyan-500/20 text-cyan-300 text-[10px] font-black px-1.5 py-0.1 rounded border border-cyan-500/30',
+                              'gs-chip gs-acc-teal'
+                            )}>
                               x{count}
                             </span>
                           )}
@@ -297,14 +337,17 @@ export function StoreTab({
                     <button
                       onClick={() => buyBuilding(b.id)}
                       disabled={!canAfford}
-                      className={`px-3 py-1.5 rounded-lg font-black text-xs flex flex-col items-end transition-all min-w-[85px] ${
-                        canAfford
-                          ? 'bg-cyan-500 text-slate-950 hover:bg-cyan-400 active:scale-95 shadow-sm'
-                          : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-                      }`}
+                      className={cx(
+                        `px-3 py-1.5 rounded-lg font-black text-xs flex flex-col items-end transition-all min-w-[85px] ${
+                          canAfford
+                            ? 'bg-cyan-500 text-slate-950 hover:bg-cyan-400 active:scale-95 shadow-sm'
+                            : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                        }`,
+                        `gs-btn gs-price ${canAfford ? 'gs-btn--buy' : 'is-disabled'}`
+                      )}
                     >
                       <span>{tr('buyLabel')} {buyText}</span>
-                      <span className="text-[10px] opacity-90 font-mono">
+                      <span className={cx('text-[10px] opacity-90 font-mono', 'gs-price__amount')}>
                         {formatCurrency(cost)}
                       </span>
                     </button>
@@ -328,18 +371,24 @@ export function StoreTab({
         return (
           <div className="flex flex-col gap-3">
             {/* Header + Buy All */}
-            <div className="flex justify-between items-center bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
-              <div>
-                <div className="text-xs font-extrabold text-slate-200 flex items-center gap-1.5">
+            <div className={cx(
+              'flex justify-between items-center bg-slate-900/90 p-2.5 rounded-xl border border-slate-800',
+              'flex justify-between items-center gap-2 gs-panel gs-panel--sunk'
+            )}>
+              <div className="min-w-0">
+                <div className={cx('text-xs font-extrabold text-slate-200 flex items-center gap-1.5', 'gs-title flex items-center gap-1.5')}>
                   <Sparkles className="w-4 h-4 text-amber-400" />
                   <span>{tr('availableUpgradesLabel')} ({availableUpgrades.length})</span>
                 </div>
-                <div className="text-[10px] text-slate-400">{tr('tileTapHint')}</div>
+                <div className={cx('text-[10px] text-slate-400', 'gs-sub')}>{tr('tileTapHint')}</div>
               </div>
               <button
                 onClick={buyAllUpgrades}
                 disabled={availableUpgrades.filter((u) => valuation >= u.cost).length === 0}
-                className="bg-amber-500 text-slate-950 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg font-black text-xs shadow-md shadow-amber-500/20 active:scale-95 transition-all shrink-0"
+                className={cx(
+                  'bg-amber-500 text-slate-950 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg font-black text-xs shadow-md shadow-amber-500/20 active:scale-95 transition-all shrink-0',
+                  'gs-btn gs-btn--gold shrink-0'
+                )}
               >
                 ⚡ {tr('buyAllLabel')}
               </button>
@@ -347,10 +396,16 @@ export function StoreTab({
 
             {/* UNTRUNCATED UPGRADE INSPECTOR CARD (Fixed in document flow - Never cut off!) */}
             {activeUpgrade && (
-              <div className="bg-slate-950/95 border-2 border-amber-400/80 rounded-xl p-3 shadow-xl flex flex-col gap-1.5 text-xs text-slate-100 animate-fadeIn">
-                <div className="flex items-center justify-between font-extrabold text-amber-300 border-b border-slate-800 pb-1">
+              <div className={cx(
+                'bg-slate-950/95 border-2 border-amber-400/80 rounded-xl p-3 shadow-xl flex flex-col gap-1.5 text-xs text-slate-100 animate-fadeIn',
+                'gs-panel gs-acc-gold flex flex-col gap-1.5 text-xs animate-fadeIn'
+              )}>
+                <div className={cx(
+                  'flex items-center justify-between font-extrabold text-amber-300 border-b border-slate-800 pb-1',
+                  'flex items-center justify-between gap-2 pb-1 border-b-2 gs-title'
+                )} style={isGame ? { borderColor: 'var(--game-line)' } : undefined}>
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="p-1 rounded bg-slate-900 border border-slate-800 shrink-0">
+                    <div className={cx('p-1 rounded bg-slate-900 border border-slate-800 shrink-0', 'gs-iconbox')}>
                       {renderItemArtwork(activeUpgrade, 'Zap')}
                     </div>
                     <span className="truncate">{upgradeName(activeUpgrade, tr)}</span>
@@ -368,7 +423,10 @@ export function StoreTab({
                 </div>
 
                 {upgradeQuote(activeUpgrade, tr) && (
-                  <div className="text-slate-300 italic text-[11px] bg-slate-900/60 p-1.5 rounded border border-slate-800/80">
+                  <div className={cx(
+                    'text-slate-300 italic text-[11px] bg-slate-900/60 p-1.5 rounded border border-slate-800/80',
+                    'gs-quote gs-panel gs-panel--sunk gs-panel--flat p-1.5'
+                  )}>
                     "{upgradeQuote(activeUpgrade, tr)}"
                   </div>
                 )}
@@ -383,11 +441,14 @@ export function StoreTab({
                   <button
                     onClick={() => buyUpgrade(activeUpgrade.id)}
                     disabled={!canAffordActive}
-                    className={`px-3 py-1 rounded-lg font-black text-xs transition-all shrink-0 ${
-                      canAffordActive
-                        ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 active:scale-95 shadow-sm'
-                        : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-                    }`}
+                    className={cx(
+                      `px-3 py-1 rounded-lg font-black text-xs transition-all shrink-0 ${
+                        canAffordActive
+                          ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 active:scale-95 shadow-sm'
+                          : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                      }`,
+                      `gs-btn shrink-0 ${canAffordActive ? 'gs-btn--gold' : 'is-disabled'}`
+                    )}
                   >
                     {tr('buyActionLabel')}
                   </button>
@@ -397,7 +458,10 @@ export function StoreTab({
             )}
 
             {availableUpgrades.length === 0 ? (
-              <div className="text-center py-8 bg-slate-900/40 rounded-xl border border-slate-800/80 text-slate-400 text-xs italic">
+              <div className={cx(
+                'text-center py-8 bg-slate-900/40 rounded-xl border border-slate-800/80 text-slate-400 text-xs italic',
+                'text-center py-8 gs-panel gs-panel--sunk gs-panel--flat gs-quote'
+              )}>
                 {tr('noUpgradesAvailable')}
               </div>
             ) : (
@@ -412,20 +476,28 @@ export function StoreTab({
                       key={up.id}
                       onMouseEnter={() => setHoveredUpgradeId(up.id)}
                       onClick={() => setHoveredUpgradeId(up.id)}
-                      className={`w-full aspect-square rounded-xl border flex flex-col items-center justify-between p-1.5 cursor-pointer transition-all ${
-                        isHovered
-                          ? 'ring-2 ring-amber-400 border-amber-300 bg-amber-950/40 scale-105 shadow-lg shadow-amber-500/20'
-                          : canAfford
-                          ? 'bg-slate-900 border-amber-500/60 text-amber-400 hover:border-amber-300 hover:scale-105 active:scale-95 shadow-md'
-                          : 'bg-slate-950/80 border-slate-800/80 text-slate-600 opacity-50'
-                      }`}
+                      className={cx(
+                        `w-full aspect-square rounded-xl border flex flex-col items-center justify-between p-1.5 cursor-pointer transition-all ${
+                          isHovered
+                            ? 'ring-2 ring-amber-400 border-amber-300 bg-amber-950/40 scale-105 shadow-lg shadow-amber-500/20'
+                            : canAfford
+                            ? 'bg-slate-900 border-amber-500/60 text-amber-400 hover:border-amber-300 hover:scale-105 active:scale-95 shadow-md'
+                            : 'bg-slate-950/80 border-slate-800/80 text-slate-600 opacity-50'
+                        }`,
+                        `gs-card gs-acc-gold w-full aspect-square items-center justify-between cursor-pointer ${
+                          isHovered ? 'is-selected' : canAfford ? '' : 'gs-card--locked'
+                        }`
+                      )}
                     >
                       <div className="flex-1 flex items-center justify-center">
                         {renderItemArtwork(up, 'Zap')}
                       </div>
-                      <div className={`text-[9px] font-mono font-bold truncate w-full text-center ${
-                        canAfford ? 'text-amber-300' : 'text-slate-500'
-                      }`}>
+                      <div className={cx(
+                        `text-[9px] font-mono font-bold truncate w-full text-center ${
+                          canAfford ? 'text-amber-300' : 'text-slate-500'
+                        }`,
+                        'gs-card__num truncate w-full text-center'
+                      )}>
                         {formatCurrency(up.cost)}
                       </div>
                     </div>
@@ -435,10 +507,16 @@ export function StoreTab({
             )}
 
             {/* BOUGHT UPGRADES ACCORDION SECTION */}
-            <div className="mt-2 bg-slate-900/80 rounded-xl border border-slate-800 overflow-hidden">
+            <div className={cx(
+              'mt-2 bg-slate-900/80 rounded-xl border border-slate-800 overflow-hidden',
+              'mt-2 gs-panel gs-panel--sunk overflow-hidden p-0'
+            )}>
               <button
                 onClick={() => setShowBoughtUpgrades((prev) => !prev)}
-                className="w-full p-3 flex items-center justify-between font-extrabold text-xs text-emerald-400 hover:bg-slate-800/60 transition-colors"
+                className={cx(
+                  'w-full p-3 flex items-center justify-between font-extrabold text-xs text-emerald-400 hover:bg-slate-800/60 transition-colors',
+                  'w-full p-3 flex items-center justify-between gs-title gs-acc-grass'
+                )}
               >
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -536,39 +614,51 @@ export function StoreTab({
       {/* CORPORATE ACTIONS SECTION (Greenwashing & Layoffs - Strict Owned Engines & Progressive Tiers) */}
       {storeSection === 'corporate' && (
         <div className="flex flex-col gap-2">
-          <div className="bg-amber-950/40 p-3 rounded-xl border border-amber-500/40 mb-2 text-xs">
-            <div className="font-extrabold text-amber-300 flex items-center gap-1.5 mb-1">
+          <div className={cx(
+            'bg-amber-950/40 p-3 rounded-xl border border-amber-500/40 mb-2 text-xs',
+            'mb-2 gs-section gs-acc-gold'
+          )}>
+            <div className={cx('font-extrabold text-amber-300 flex items-center gap-1.5 mb-1', 'gs-title gs-acc-gold flex items-center gap-1.5 mb-1')}>
               <ShieldAlert className="w-4 h-4 text-amber-400" />
               {tr('corporateTitle')}
             </div>
-            <div className="text-[#EAE7DA]/80">
+            <div className={cx('text-[#EAE7DA]/80', 'gs-sub')}>
               {tr('corporateDesc')}
             </div>
           </div>
 
           {availableCorporate.length === 0 ? (
             <div className="flex flex-col gap-2">
-              <div className="text-center py-4 bg-slate-900/40 rounded-xl border border-slate-800/80 text-slate-400 text-xs italic">
+              <div className={cx(
+                'text-center py-4 bg-slate-900/40 rounded-xl border border-slate-800/80 text-slate-400 text-xs italic',
+                'text-center py-4 gs-panel gs-panel--sunk gs-panel--flat gs-quote'
+              )}>
                 {tr('noCorporateAvailable')}
               </div>
               {/* Teaser for next locked corporate protocol - gleicher stiller "gesperrt" Look wie bei Engines */}
               {BUILDINGS_DATA.filter((b) => (buildings[b.id] || 0) < 1).slice(0, 2).map((b) => (
                 <div
                   key={`teaser_${b.id}`}
-                  className="p-3 rounded-xl border border-slate-800/80 bg-slate-950/60 flex items-center justify-between opacity-60 backdrop-blur-sm"
+                  className={cx(
+                    'p-3 rounded-xl border border-slate-800/80 bg-slate-950/60 flex items-center justify-between opacity-60 backdrop-blur-sm',
+                    'gs-row gs-row--locked'
+                  )}
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-600">
+                    <div className={cx('p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-600', 'gs-iconbox')}>
                       <Lock className="w-4 h-4 text-slate-500" />
                     </div>
                     <div>
-                      <div className="font-extrabold text-xs text-slate-400">{tr('lockedCorporate')} ({buildingName(b.id, tr)})</div>
-                      <div className="text-[11px] text-slate-500 italic mt-0.5">
+                      <div className={cx('font-extrabold text-xs text-slate-400', 'gs-title')}>{tr('lockedCorporate')} ({buildingName(b.id, tr)})</div>
+                      <div className={cx('text-[11px] text-slate-500 italic mt-0.5', 'gs-quote mt-0.5')}>
                         {tr('lockedCorporateDesc')}
                       </div>
                     </div>
                   </div>
-                  <div className="px-2.5 py-1 rounded text-[10px] font-black bg-slate-900 text-slate-500 border border-slate-800">
+                  <div className={cx(
+                    'px-2.5 py-1 rounded text-[10px] font-black bg-slate-900 text-slate-500 border border-slate-800',
+                    'gs-chip'
+                  )}>
                     {tr('locked')}
                   </div>
                 </div>
@@ -584,16 +674,22 @@ export function StoreTab({
               return (
                 <div
                   key={item.id}
-                  className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
-                    canAfford
-                      ? 'bg-slate-900/90 border-amber-500/40 hover:border-amber-400 shadow-md'
-                      : 'bg-slate-950/60 border-slate-900 opacity-60'
-                  }`}
+                  className={cx(
+                    `p-3 rounded-xl border flex items-center justify-between transition-all ${
+                      canAfford
+                        ? 'bg-slate-900/90 border-amber-500/40 hover:border-amber-400 shadow-md'
+                        : 'bg-slate-950/60 border-slate-900 opacity-60'
+                    }`,
+                    `gs-row gs-acc-gold ${canAfford ? 'is-affordable' : 'is-broke'}`
+                  )}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className={`p-2 rounded-lg border shrink-0 ${
-                      item.type === 'greenwashing' ? 'bg-emerald-950 border-emerald-500/40 text-emerald-400' : 'bg-rose-950 border-rose-500/40 text-rose-400'
-                    }`}>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className={cx(
+                      `p-2 rounded-lg border shrink-0 ${
+                        item.type === 'greenwashing' ? 'bg-emerald-950 border-emerald-500/40 text-emerald-400' : 'bg-rose-950 border-rose-500/40 text-rose-400'
+                      }`,
+                      `gs-iconbox ${item.type === 'greenwashing' ? 'gs-acc-grass' : 'gs-acc-rust'}`
+                    )}>
                       {renderIcon(item.icon || (item.type === 'greenwashing' ? 'Recycle' : 'UserX'), 'w-4 h-4')}
                     </div>
                     <div>
@@ -611,11 +707,14 @@ export function StoreTab({
                   <button
                     onClick={() => buyGreenwashingLayoff(item.id)}
                     disabled={!canAfford}
-                    className={`px-3 py-1.5 rounded-lg font-black text-xs flex flex-col items-end transition-all min-w-[85px] shrink-0 ml-2 ${
-                      canAfford
-                        ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 active:scale-95 shadow-sm'
-                        : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-                    }`}
+                    className={cx(
+                      `px-3 py-1.5 rounded-lg font-black text-xs flex flex-col items-end transition-all min-w-[85px] shrink-0 ml-2 ${
+                        canAfford
+                          ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 active:scale-95 shadow-sm'
+                          : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                      }`,
+                      `gs-btn gs-price ml-2 ${canAfford ? 'gs-btn--gold' : 'is-disabled'}`
+                    )}
                   >
                     <span>{formatCurrency(cost)}</span>
                   </button>
@@ -625,10 +724,16 @@ export function StoreTab({
           )}
 
           {/* BOUGHT CORPORATE ACTIONS ACCORDION SECTION (same principle as Bought Upgrades) */}
-          <div className="mt-2 bg-slate-900/80 rounded-xl border border-slate-800 overflow-hidden">
+          <div className={cx(
+            'mt-2 bg-slate-900/80 rounded-xl border border-slate-800 overflow-hidden',
+            'mt-2 gs-panel gs-panel--sunk overflow-hidden p-0'
+          )}>
             <button
               onClick={() => setShowBoughtCorporate((prev) => !prev)}
-              className="w-full p-3 flex items-center justify-between font-extrabold text-xs text-emerald-400 hover:bg-slate-800/60 transition-colors"
+              className={cx(
+                'w-full p-3 flex items-center justify-between font-extrabold text-xs text-emerald-400 hover:bg-slate-800/60 transition-colors',
+                'w-full p-3 flex items-center justify-between gs-title gs-acc-grass'
+              )}
             >
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -651,7 +756,10 @@ export function StoreTab({
                     return (
                       <div
                         key={item.id}
-                        className="p-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 flex items-center justify-between opacity-90"
+                        className={cx(
+                          'p-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 flex items-center justify-between opacity-90',
+                          'gs-row gs-row--done gs-acc-grass'
+                        )}
                       >
                         <div className="flex items-center gap-2.5">
                           <div className={`p-2 rounded-lg border shrink-0 ${

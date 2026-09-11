@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Tv, Gift, Loader2, ThermometerSnowflake, Landmark, Zap, Trash2, ShieldCheck, RotateCcw, Download, Upload } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 import { isCrazyGamesBuild } from '../../monetization/crazyGamesSdk';
+import { useSkin } from '../skin';
 
 export function MiscTab({
   adState,
@@ -32,6 +33,7 @@ export function MiscTab({
   const fileInputRef = useRef(null);
   const tr = t || ((k) => k);
   const trf = tf || ((k) => k);
+  const { cx } = useSkin();
 
   const handleFileSelected = (e) => {
     const file = e.target.files?.[0];
@@ -76,14 +78,17 @@ export function MiscTab({
           unsichtbar - siehe PurchaseBridge.js, Guideline 3.1.1 verbietet einen Web-Checkout
           für denselben IAP. */}
       {purchaseAvailable && (
-        <div className="bg-slate-900 p-4 rounded-2xl border border-amber-500/30 flex flex-col gap-3">
+        <div className={cx(
+          'bg-slate-900 p-4 rounded-2xl border border-amber-500/30 flex flex-col gap-3',
+          'gs-panel gs-acc-gold flex flex-col gap-3'
+        )}>
           <div className="flex items-center gap-2">
             <ShieldCheck className={`w-5 h-5 ${adFree ? 'text-emerald-400' : 'text-amber-400'}`} />
             <div>
-              <h3 className="font-black text-sm uppercase text-slate-200">
+              <h3 className={cx('font-black text-sm uppercase text-slate-200', 'gs-title')}>
                 {tr('adFreeSettingTitle')}
               </h3>
-              <div className="text-[10px] text-slate-400">
+              <div className={cx('text-[10px] text-slate-400', 'gs-sub')}>
                 {adFree ? tr('adFreeSettingDescActive') : tr('adFreeSettingDescInactive')}
               </div>
             </div>
@@ -94,7 +99,10 @@ export function MiscTab({
               <button
                 onClick={purchaseAdFree}
                 disabled={purchaseState === 'purchasing' || purchaseState === 'pending'}
-                className="w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 to-fuchsia-500 text-slate-950 hover:brightness-110 active:scale-95 shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                className={cx(
+                  'w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-400 to-fuchsia-500 text-slate-950 hover:brightness-110 active:scale-95 shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed',
+                  'gs-btn gs-btn--gold gs-btn--block'
+                )}
               >
                 <ShieldCheck className="w-4 h-4" />
                 {purchaseState === 'purchasing'
@@ -110,7 +118,10 @@ export function MiscTab({
               <button
                 onClick={restorePurchases}
                 disabled={purchaseState === 'restoring'}
-                className="w-full py-2 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                className={cx(
+                  'w-full py-2 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed',
+                  'gs-btn gs-btn--block'
+                )}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 {purchaseState === 'restoring' ? tr('adFreeRestoring') : tr('adFreeRestoreBtn')}
@@ -121,21 +132,27 @@ export function MiscTab({
       )}
 
       {/* Rewarded Ad Monocle / Bonus-Liste (adFree: identische Boni, ohne Video) */}
-      <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
+      <div className={cx(
+          'bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3',
+          'gs-panel flex flex-col gap-3'
+        )}>
         <div className="flex items-center gap-2">
           <CtaIcon className="w-5 h-5 text-amber-400" />
           <div>
-            <h3 className="font-black text-sm uppercase text-slate-200">
+            <h3 className={cx('font-black text-sm uppercase text-slate-200', 'gs-title')}>
               {adFree ? tr('claimBonusesTitle') : tr('rewardedAdsTitle')}
             </h3>
-            <div className="text-[10px] text-slate-400">
+            <div className={cx('text-[10px] text-slate-400', 'gs-sub')}>
               {adFree ? tr('claimBonusesDesc') : tr('rewardedAdsDesc')}
             </div>
           </div>
         </div>
 
         {adState ? (
-          <div className="bg-slate-950 p-4 rounded-xl border border-amber-500 text-center animate-pulse">
+          <div className={cx(
+            'bg-slate-950 p-4 rounded-xl border border-amber-500 text-center animate-pulse',
+            'gs-panel gs-panel--sunk gs-acc-gold text-center animate-pulse'
+          )}>
             <Loader2 className="w-6 h-6 text-amber-400 animate-spin mx-auto mb-1" />
             <div className="font-black text-xs text-amber-300">
               {tr('adPlayingRemaining').replace('{sec}', adState.timer)}
@@ -146,18 +163,24 @@ export function MiscTab({
             {scheduledAdUnlocked && (
               <button
                 onClick={claimUnlockedScheduledAd}
-                className="p-3 rounded-xl bg-slate-950 border border-amber-500 hover:border-amber-400 text-left transition-all flex items-center justify-between group animate-pulse"
+                className={cx(
+                  'p-3 rounded-xl bg-slate-950 border border-amber-500 hover:border-amber-400 text-left transition-all flex items-center justify-between group animate-pulse',
+                  'gs-row gs-row--stacked gs-acc-gold text-left animate-pulse'
+                )}
               >
                 <div>
                   <div className="font-extrabold text-xs text-amber-300 flex items-center gap-1.5">
                     <CtaIcon className="w-4 h-4 text-amber-400" />
                     🎁 {tr('bonusAdAvailable')}
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">
+                  <div className={cx('text-[11px] text-slate-400 mt-0.5', 'gs-sub mt-0.5')}>
                     {tr('deferredAdWatchNow').replace('{amount}', formatCurrency(scheduledAdPreview))}
                   </div>
                 </div>
-                <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black px-2 py-1 rounded border border-amber-500/30 group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors shrink-0">
+                <span className={cx(
+                    'bg-amber-500/20 text-amber-300 text-[10px] font-black px-2 py-1 rounded border border-amber-500/30 group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors shrink-0',
+                    'gs-chip gs-chip--solid gs-acc-gold shrink-0'
+                  )}>
                   {adFree ? tr('claimBonusShort') : tr('watchAdShort')}
                 </span>
               </button>
@@ -165,19 +188,25 @@ export function MiscTab({
             <button
               onClick={() => requestBonus('nitrogen')}
               disabled={isAdReady && !isAdReady('nitrogen')}
-              className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500 text-left transition-all flex items-center justify-between group disabled:opacity-40 disabled:cursor-not-allowed"
+              className={cx(
+                  'p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500 text-left transition-all flex items-center justify-between group disabled:opacity-40 disabled:cursor-not-allowed',
+                  'gs-row gs-row--stacked gs-acc-teal text-left disabled:opacity-40 disabled:cursor-not-allowed'
+                )}
             >
               <div>
                 <div className="font-extrabold text-xs text-cyan-300 flex items-center gap-1.5">
                   <ThermometerSnowflake className="w-4 h-4 text-cyan-400" />
                   🧊 {tr('nitrogenCoolingTitle')}
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
+                <div className={cx('text-[11px] text-slate-400 mt-0.5', 'gs-sub mt-0.5')}>
                   {tr('nitrogenCoolingDesc')}
                 </div>
               </div>
               {renderAdCta('nitrogen') || (
-                <span className="bg-cyan-500/20 text-cyan-300 text-[10px] font-black px-2 py-1 rounded border border-cyan-500/30 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors shrink-0">
+                <span className={cx(
+                    'bg-cyan-500/20 text-cyan-300 text-[10px] font-black px-2 py-1 rounded border border-cyan-500/30 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors shrink-0',
+                    'gs-chip gs-chip--solid gs-acc-teal shrink-0'
+                  )}>
                   {adFree ? tr('claimBonusShort') : tr('watchAdShort')}
                 </span>
               )}
@@ -186,19 +215,25 @@ export function MiscTab({
             <button
               onClick={() => requestBonus('grant')}
               disabled={isAdReady && !isAdReady('grant')}
-              className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-amber-500 text-left transition-all flex items-center justify-between group disabled:opacity-40 disabled:cursor-not-allowed"
+              className={cx(
+                  'p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-amber-500 text-left transition-all flex items-center justify-between group disabled:opacity-40 disabled:cursor-not-allowed',
+                  'gs-row gs-row--stacked gs-acc-gold text-left disabled:opacity-40 disabled:cursor-not-allowed'
+                )}
             >
               <div>
                 <div className="font-extrabold text-xs text-amber-300 flex items-center gap-1.5">
                   <Landmark className="w-4 h-4 text-amber-400" />
                   💰 {tr('govGrantTitle')}
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
+                <div className={cx('text-[11px] text-slate-400 mt-0.5', 'gs-sub mt-0.5')}>
                   {tr('govGrantDesc').replace('{amount}', formatCurrency(grantAdPreview))}
                 </div>
               </div>
               {renderAdCta('grant') || (
-                <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black px-2 py-1 rounded border border-amber-500/30 group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors shrink-0">
+                <span className={cx(
+                    'bg-amber-500/20 text-amber-300 text-[10px] font-black px-2 py-1 rounded border border-amber-500/30 group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors shrink-0',
+                    'gs-chip gs-chip--solid gs-acc-gold shrink-0'
+                  )}>
                   {adFree ? tr('claimBonusShort') : tr('watchAdShort')}
                 </span>
               )}
@@ -207,19 +242,25 @@ export function MiscTab({
             <button
               onClick={() => requestBonus('power_click')}
               disabled={isAdReady && !isAdReady('power_click')}
-              className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-fuchsia-500 text-left transition-all flex items-center justify-between group disabled:opacity-40 disabled:cursor-not-allowed"
+              className={cx(
+                  'p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-fuchsia-500 text-left transition-all flex items-center justify-between group disabled:opacity-40 disabled:cursor-not-allowed',
+                  'gs-row gs-row--stacked gs-acc-plum text-left disabled:opacity-40 disabled:cursor-not-allowed'
+                )}
             >
               <div>
                 <div className="font-extrabold text-xs text-fuchsia-300 flex items-center gap-1.5">
                   <Zap className="w-4 h-4 text-fuchsia-400" />
                   ⚡ {tr('bonusPowerClickTitle')}
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
+                <div className={cx('text-[11px] text-slate-400 mt-0.5', 'gs-sub mt-0.5')}>
                   {tr('bonusPowerClickDesc')}
                 </div>
               </div>
               {renderAdCta('power_click') || (
-                <span className="bg-fuchsia-500/20 text-fuchsia-300 text-[10px] font-black px-2 py-1 rounded border border-fuchsia-500/30 group-hover:bg-fuchsia-500 group-hover:text-slate-950 transition-colors shrink-0">
+                <span className={cx(
+                    'bg-fuchsia-500/20 text-fuchsia-300 text-[10px] font-black px-2 py-1 rounded border border-fuchsia-500/30 group-hover:bg-fuchsia-500 group-hover:text-slate-950 transition-colors shrink-0',
+                    'gs-chip gs-chip--solid gs-acc-plum shrink-0'
+                  )}>
                   {adFree ? tr('claimBonusShort') : tr('watchAdShort')}
                 </span>
               )}
@@ -238,18 +279,24 @@ export function MiscTab({
           zuverlässig funktionieren - Spielstand-Sync läuft dort ohnehin primär über das
           CrazyGames Data Module (siehe platform/storage.js). */}
       {!isCrazyGamesBuild() && (
-        <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
+        <div className={cx(
+          'bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3',
+          'gs-panel flex flex-col gap-3'
+        )}>
           <div className="flex flex-col gap-2">
             <button
               onClick={() => exportSave && exportSave()}
-              className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500 text-left transition-all flex items-center justify-between group"
+              className={cx(
+                  'p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500 text-left transition-all flex items-center justify-between group',
+                  'gs-row gs-row--stacked gs-acc-teal text-left'
+                )}
             >
               <div>
                 <div className="font-extrabold text-xs text-cyan-300 flex items-center gap-1.5">
                   <Download className="w-4 h-4 text-cyan-400" />
                   {tr('exportSave')}
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
+                <div className={cx('text-[11px] text-slate-400 mt-0.5', 'gs-sub mt-0.5')}>
                   {tr('exportSaveDesc')}
                 </div>
               </div>
@@ -257,14 +304,17 @@ export function MiscTab({
 
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500 text-left transition-all flex items-center justify-between group"
+              className={cx(
+                  'p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500 text-left transition-all flex items-center justify-between group',
+                  'gs-row gs-row--stacked gs-acc-teal text-left'
+                )}
             >
               <div>
                 <div className="font-extrabold text-xs text-cyan-300 flex items-center gap-1.5">
                   <Upload className="w-4 h-4 text-cyan-400" />
                   {tr('importSave')}
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
+                <div className={cx('text-[11px] text-slate-400 mt-0.5', 'gs-sub mt-0.5')}>
                   {tr('importSaveDesc')}
                 </div>
               </div>
@@ -279,7 +329,10 @@ export function MiscTab({
           </div>
 
           {pendingImport && (
-            <div className="bg-rose-950/80 p-3 rounded-xl border border-rose-500 flex flex-col gap-2">
+            <div className={cx(
+              'bg-rose-950/80 p-3 rounded-xl border border-rose-500 flex flex-col gap-2',
+              'gs-panel gs-acc-rust flex flex-col gap-2'
+            )}>
               <div className="text-xs font-extrabold text-rose-300">
                 {trf('importConfirm', { name: pendingImport.name })}
               </div>
@@ -289,13 +342,13 @@ export function MiscTab({
                     importSave && importSave(pendingImport.text);
                     setPendingImport(null);
                   }}
-                  className="flex-1 py-1.5 bg-rose-600 text-white rounded font-bold text-xs"
+                  className={cx('flex-1 py-1.5 bg-rose-600 text-white rounded font-bold text-xs', 'gs-btn gs-btn--danger flex-1')}
                 >
                   {tr('yesImport')}
                 </button>
                 <button
                   onClick={() => setPendingImport(null)}
-                  className="flex-1 py-1.5 bg-slate-800 text-slate-300 rounded font-bold text-xs"
+                  className={cx('flex-1 py-1.5 bg-slate-800 text-slate-300 rounded font-bold text-xs', 'gs-btn flex-1')}
                 >
                   {tr('cancel')}
                 </button>
@@ -306,9 +359,15 @@ export function MiscTab({
       )}
 
       {/* Wipe Save Data (Sprache & Audio sind bereits in der Kopfzeile verfügbar) */}
-      <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
+      <div className={cx(
+          'bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3',
+          'gs-panel flex flex-col gap-3'
+        )}>
         {showWipeConfirm ? (
-          <div className="bg-rose-950/80 p-3 rounded-xl border border-rose-500 flex flex-col gap-2 mt-2">
+          <div className={cx(
+            'bg-rose-950/80 p-3 rounded-xl border border-rose-500 flex flex-col gap-2 mt-2',
+            'gs-panel gs-acc-rust flex flex-col gap-2 mt-2'
+          )}>
             <div className="text-xs font-extrabold text-rose-300">
               {tr('wipeConfirm')}
             </div>
@@ -318,13 +377,13 @@ export function MiscTab({
                   resetSave();
                   setShowWipeConfirm(false);
                 }}
-                className="flex-1 py-1.5 bg-rose-600 text-white rounded font-bold text-xs"
+                className={cx('flex-1 py-1.5 bg-rose-600 text-white rounded font-bold text-xs', 'gs-btn gs-btn--danger flex-1')}
               >
                 {tr('yesWipe')}
               </button>
               <button
                 onClick={() => setShowWipeConfirm(false)}
-                className="flex-1 py-1.5 bg-slate-800 text-slate-300 rounded font-bold text-xs"
+                className={cx('flex-1 py-1.5 bg-slate-800 text-slate-300 rounded font-bold text-xs', 'gs-btn flex-1')}
               >
                 {tr('cancel')}
               </button>
@@ -333,7 +392,10 @@ export function MiscTab({
         ) : (
           <button
             onClick={() => setShowWipeConfirm(true)}
-            className="mt-2 text-xs text-rose-400 hover:text-rose-300 font-bold flex items-center justify-center gap-1 py-2 rounded-xl bg-rose-950/30 border border-rose-500/20"
+            className={cx(
+              'mt-2 text-xs text-rose-400 hover:text-rose-300 font-bold flex items-center justify-center gap-1 py-2 rounded-xl bg-rose-950/30 border border-rose-500/20',
+              'gs-btn gs-btn--block mt-2'
+            )}
           >
             <Trash2 className="w-3.5 h-3.5" /> {tr('wipeSave')}
           </button>

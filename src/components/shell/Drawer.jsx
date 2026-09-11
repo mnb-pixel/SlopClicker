@@ -7,12 +7,12 @@ import { TAB_ROUTES } from '../../routes';
 // 420px breit. Die Szene bleibt dahinter sichtbar und läuft weiter. Inhalt sind die
 // unveränderten Tab-Komponenten (StoreTab, StatsTab, MiscTab).
 //
-// Rahmen im Grafik-Stil der Insel (Papier, Tinte, klotzige Kanten, Griff zum Ziehen),
-// Inhalt in einer dunklen Einlassung - wie ein Display, das in dieses Brett eingebaut
-// ist. Der Grund für die Zweiteilung ist handfest: StoreTab & Co. gehören AUCH der
-// normalen Spielansicht unter /play und tragen ihre dunklen Farben fest im Markup.
-// Sie hier hell umzufärben hieße, ihr Styling aus der Ferne per CSS zu überschreiben -
-// jede spätere Änderung an den Tabs würde in dieser Ansicht lautlos kaputtgehen.
+// Komplett im Grafik-Stil der Insel: Papier, Tinte, klotzige Kanten, Griff zum Ziehen -
+// und der Inhalt genauso. Die frühere dunkle Einlassung ("ein Display, das in dieses
+// Brett eingebaut ist") ist weg: StoreTab & Co. rendern über useSkin() (siehe
+// src/components/skin.js) jetzt selbst eine Papier-Variante, statt ihre dunklen Farben
+// fest im Markup zu tragen. Die Klasse gs-skin am Körper ist das Sicherheitsnetz für
+// alles, was dort (noch) keine Spiel-Variante hat - siehe scene3d.css.
 export function Drawer({ open, title, onClose, useRoutes = false, children }) {
   if (!open) return null;
 
@@ -41,7 +41,7 @@ export function Drawer({ open, title, onClose, useRoutes = false, children }) {
           <h2 className="hud-drawer__title">{title}</h2>
           {closeButton}
         </div>
-        <div className="hud-drawer__body">{children}</div>
+        <div className="hud-drawer__body gs-skin">{children}</div>
       </aside>
     </>
   );

@@ -64,6 +64,15 @@ export function GameShell({
     handleTapAGI(null);
   }, [handleTapAGI]);
 
+  // Aus der Sammlung (Statistik-Schublade) in den Booster-Kiosk des Shops: Schublade
+  // wechseln UND dort den Buzzword-Reiter öffnen. Der Zähler erzwingt das Öffnen auch
+  // beim zweiten Mal - der Abschnittsname allein hätte sich nicht geändert.
+  const [storeJump, setStoreJump] = useState({ section: 'engines', nonce: 0 });
+  const openCardKiosk = useCallback(() => {
+    setStoreJump((prev) => ({ section: 'buzzwords', nonce: prev.nonce + 1 }));
+    store.setActiveTab(2);
+  }, [store]);
+
   const drawerTab = store.activeTab >= 2 && store.activeTab <= 4 ? store.activeTab : null;
   const drawerTitle =
     drawerTab === 2 ? t('hudDrawerShop') : drawerTab === 3 ? t('hudDrawerStats') : t('hudDrawerMisc');
@@ -174,6 +183,8 @@ export function GameShell({
             boughtGreenwashingLayoffs={store.boughtGreenwashingLayoffs}
             buyGreenwashingLayoff={store.buyGreenwashingLayoff}
             stickyTopPx={0}
+            key={storeJump.nonce}
+            initialSection={storeJump.section}
             t={t}
           />
         )}
@@ -188,6 +199,8 @@ export function GameShell({
             unlockedAchievements={store.unlockedAchievements}
             logs={store.logs}
             adFree={store.adFree}
+            boughtBuzzwords={store.boughtBuzzwords}
+            onOpenCards={openCardKiosk}
             t={t}
           />
         )}
