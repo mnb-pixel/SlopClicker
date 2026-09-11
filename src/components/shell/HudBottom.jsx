@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Flame, ShoppingBag, BarChart2, Settings, Tv, Gift, ThermometerSnowflake } from 'lucide-react';
+import { Flame, ShoppingBag, BarChart2, Settings, Tv, Gift } from 'lucide-react';
 import { TAB_ROUTES } from '../../routes';
 import { formatCurrency } from '../../utils/formatters';
 
@@ -62,10 +62,10 @@ export function HudBottom({
     const adRunning = adState?.type === 'nitrogen';
     const onCooldown = isAdReady && !isAdReady('nitrogen');
     fireContent = (
-      <span className="flex flex-col items-center gap-0.5 leading-tight">
-        <span className="hud-nav-label text-rose-200">{tr('gpuOverheated')}</span>
+      <span className="hud-fire-overheat">
+        <span className="hud-nav-label">{tr('gpuOverheated')}</span>
         {adRunning ? (
-          <span className="text-[10px] font-mono text-amber-200 animate-pulse">{tr('adPlaying')} ({adState.timer}s)</span>
+          <span className="text-[10px] font-mono animate-pulse opacity-90">{tr('adPlaying')} ({adState.timer}s)</span>
         ) : onCooldown ? (
           <span className="text-[10px] font-mono opacity-80">
             {tr('hudCoolingShort')} {gpuTemp.toFixed(0)}°C · {tr('instantCoolingCooldown').replace('{sec}', getAdCooldownRemaining ? getAdCooldownRemaining('nitrogen') : 0)}
@@ -76,11 +76,16 @@ export function HudBottom({
             tabIndex={0}
             onClick={(e) => { e.stopPropagation(); requestBonus('nitrogen'); }}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); requestBonus('nitrogen'); } }}
-            className="text-[10px] font-black uppercase flex items-center gap-1 bg-cyan-400 text-slate-950 px-2 py-0.5 rounded-full"
+            className="hud-cool-chip"
+            title={adFree ? tr('claimInstantCooling') : tr('watchAdInstantCooling')}
+            aria-label={adFree ? tr('claimInstantCooling') : tr('watchAdInstantCooling')}
           >
-            {adFree ? <Gift className="w-3 h-3" /> : <Tv className="w-3 h-3" />}
-            <ThermometerSnowflake className="w-3 h-3" />
-            {adFree ? tr('claimInstantCooling') : tr('watchAdInstantCooling')}
+            {/* Ein Icon, Kurztext: in die Pille passt genau eine Zeile von rund 110px.
+                Das Video-/Geschenk-Icon bleibt (es sagt, was der Klick auslöst), der
+                Schneeflocken-Zusatz fiel raus - "kühlen" steht daneben. Der
+                ausgeschriebene Satz steht im title/aria-label. */}
+            {adFree ? <Gift className="hud-cool-chip__icon" /> : <Tv className="hud-cool-chip__icon" />}
+            {tr('hudCoolNow')}
           </span>
         ) : null}
       </span>

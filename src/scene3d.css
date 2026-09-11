@@ -166,54 +166,121 @@
   margin: 0 auto;
 }
 
+/* Klotzige Spielzeug-Tasten im Stil der Insel: flache Fläche, feste Unterkante
+   (`--btn-edge`), die beim Drücken zusammenfällt - kein Verlauf, kein Blur, kein
+   Neon. Dieselbe Sprache wie Kaufpanel und Schublade, damit die Bedienleiste zur
+   Szene gehört statt darüber zu schweben.
+
+   `--btn-edge` ist die Kantenfarbe je Variante: einmal im Schatten gesetzt, damit
+   Drücken und "Schublade offen" (.is-active) ohne Wiederholung pro Variante
+   auskommen. */
 .hud-nav-btn {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-height: 60px;
+  min-height: 62px;
   min-width: 0;
   padding: 0.4rem 0.35rem;
-  border-radius: 18px;
+  border-radius: 20px;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #f8fafc;
-  background: rgba(2, 6, 23, 0.78);
-  border: 2px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(6px);
-  transition: transform 0.08s, border-color 0.15s, filter 0.15s;
+  --btn-edge: var(--game-line-strong);
+  color: var(--game-ink);
+  background: var(--game-paper);
+  border: 2px solid var(--btn-edge);
+  box-shadow: 0 4px 0 var(--btn-edge), 0 8px 18px var(--game-shadow);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.15s;
   touch-action: manipulation;
   user-select: none;
 }
 
-.hud-nav-btn:active { transform: scale(0.96); }
-.hud-nav-btn.is-active { border-color: #22d3ee; color: #a5f3fc; }
-.hud-nav-btn.is-locked { filter: saturate(0.5); }
-
-.hud-nav-btn--fire {
-  background: linear-gradient(135deg, #f97316, #dc2626);
-  border-color: #fdba74;
-  box-shadow: 0 0 24px rgba(249, 115, 22, 0.45), 0 8px 24px rgba(0, 0, 0, 0.35);
+/* Gedrückt UND "Schublade offen" sehen gleich aus: die Taste steht unten an.
+   Das ersetzt den früheren Cyan-Rand als Aktiv-Zustand. */
+.hud-nav-btn:active,
+.hud-nav-btn.is-active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 var(--btn-edge), inset 0 3px 7px rgba(28, 42, 56, 0.22);
 }
 
+.hud-nav-btn--fire {
+  --btn-edge: #b8420d;
+  background: #f97316;
+  color: #fff8ec;
+  box-shadow: 0 4px 0 var(--btn-edge), 0 8px 22px rgba(184, 66, 13, 0.35);
+}
+
+/* Überhitzt: Taste tot, aber weiter lesbar - hier steht der Kühl-Status drin. */
 .hud-nav-btn--fire.is-locked {
-  background: linear-gradient(135deg, #7f1d1d, #450a0a);
-  border-color: #f43f5e;
+  --btn-edge: #5f2119;
+  background: #93362a;
+  color: #ffe4e0;
+  box-shadow: 0 4px 0 var(--btn-edge), 0 8px 18px var(--game-shadow);
 }
 
 .hud-nav-btn--shop {
-  background: linear-gradient(135deg, #0891b2, #2563eb);
-  border-color: #67e8f9;
+  --btn-edge: #1d6096;
+  background: #2f8fd0;
+  color: #f3fbff;
 }
 
 .hud-nav-btn--small {
   flex-direction: column;
   gap: 0.15rem;
-  min-height: 60px;
+  min-height: 62px;
 }
+
+/* Inhalt des überhitzten Feuer-Buttons. min-width/max-width sind nötig, damit die
+   Pille darin nicht über die Buttonkante hinausläuft - ohne sie wächst die Spalte
+   mit ihrem Inhalt statt sich am Button zu orientieren. */
+.hud-fire-overheat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  max-width: 100%;
+  line-height: 1.15;
+}
+
+/* Eine Nummer kleiner als die normale Beschriftung: "GPU ÜBERHITZT!" ist der
+   längste Text, der je in diesem Button steht, und auf 320px-Geräten wurde er
+   sonst abgeschnitten. */
+.hud-fire-overheat .hud-nav-label {
+  font-size: 9px;
+  letter-spacing: 0.02em;
+}
+
+/* Sofort-Kühlung im überhitzten Feuer-Button: helle Papier-Pille auf dem Rot.
+   Bewusst einzeilig (nowrap) - im Button sind knapp 140px Breite, ein umbrechender
+   Satz sprengte ihn nach unten. */
+.hud-cool-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  max-width: 100%;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--game-paper);
+  color: var(--game-ink);
+  border: 2px solid var(--game-line-strong);
+  box-shadow: 0 2px 0 var(--game-line-strong);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0;
+  /* Der Button darüber setzt uppercase - in der Pille kostet das Breite, die hier
+     nicht da ist. */
+  text-transform: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-cool-chip__icon { width: 12px; height: 12px; flex-shrink: 0; }
+.hud-cool-chip:active { transform: translateY(2px); box-shadow: none; }
 
 .hud-nav-icon { width: 20px; height: 20px; flex-shrink: 0; }
 .hud-nav-icon--big { width: 28px; height: 28px; }
@@ -228,14 +295,16 @@
 
 .hud-badge {
   position: absolute;
-  top: -6px;
-  right: -4px;
-  min-width: 18px;
-  height: 18px;
+  top: -7px;
+  right: -5px;
+  min-width: 20px;
+  height: 20px;
   padding: 0 5px;
   border-radius: 999px;
-  background: #f59e0b;
-  color: #020617;
+  background: var(--game-gold);
+  color: var(--game-ink);
+  /* Papierrand: sonst verschwimmt das Gold auf dem blauen Shop-Button. */
+  border: 2px solid var(--game-paper);
   font-size: 10px;
   font-weight: 900;
   display: flex;
@@ -391,9 +460,31 @@
   }
 }
 
-/* Reduzierte Bewegung: Buttons ohne Skalier-Feedback. */
+/* Noch schmaler (320px-Klasse): auch der Shop verliert seine Beschriftung. Davor
+   stand dort "SH..." - die Einkaufstasche allein ist eindeutiger als ein
+   abgeschnittenes Wort. */
+@media (max-width: 359px) {
+  .hud-nav-btn--shop .hud-nav-label {
+    display: none;
+  }
+  .hud-nav-btn--shop .hud-nav-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Der Feuer-Button trägt Flamme, Wort und Klickwert nebeneinander - bei 320px
+     Gerätebreite bleiben dafür knapp 100px, also eine Nummer kleiner. */
+  .hud-nav-btn { gap: 0.3rem; }
+  .hud-nav-btn--fire .hud-nav-icon--big { width: 22px; height: 22px; }
+  .hud-nav-label--big { font-size: 13px; }
+}
+
+/* Reduzierte Bewegung: Buttons ohne Druck-Feedback. Der Aktiv-Zustand bleibt
+   sichtbar, er sitzt im Schatten, nicht in der Verschiebung. */
 @media (prefers-reduced-motion: reduce) {
   .hud-nav-btn:active,
+  .hud-nav-btn.is-active,
+  .hud-cool-chip:active,
   .hud-round-btn:active {
     transform: none;
   }
