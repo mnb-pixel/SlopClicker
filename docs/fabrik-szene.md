@@ -48,15 +48,22 @@ bildschirm ersetzt. Hier ist sie vorerst NUR eine versteckte Testseite:
   das ein Tipp darauf öffnet (auf dem Desktop zusätzlich der Tooltip). Icon und Farbe
   je Zone kommen aus `src/components/scene3d/zoneVisuals.js` - eine Quelle für Nadel
   und Panelkopf, sonst zeigt die Insel ein anderes Zeichen als das Menü dahinter.
-* **Menüs im Grafik-Stil der Insel.** Was sich aus der Szene heraus öffnet, sieht aus
-  wie ein Teil von ihr: Papierweiß, Tinte, klotzige Kanten mit 2-3px Unterkante, die
-  beim Drücken zusammenfällt. Die Farben liegen als CSS-Tokens auf `.game-shell`
+* **Ein Grafik-Stil für die ganze Ansicht.** Menüs, Bedienleiste und Kopfzeile sehen
+  aus wie ein Teil der Insel: Papierweiß, Tinte, klotzige Kanten mit 2-4px Unterkante,
+  die beim Drücken zusammenfällt. Die Farben liegen als CSS-Tokens auf `.game-shell`
   (`--game-paper`, `--game-ink`, `--game-grass`, ...) und sind an `palette.js`
-  angelehnt. Das Zonen-Kaufpanel ist komplett so gebaut; die Schublade bekommt den
-  Rahmen (Griff, Papierkopf, runde Kanten) und setzt die Tab-Inhalte als dunkle
-  Einlassung hinein - `StoreTab` & Co. gehören auch der Ansicht unter `/play` und
-  tragen ihre Farben fest im Markup, sie hier per Fern-CSS umzufärben würde bei der
-  nächsten Änderung an den Tabs lautlos brechen.
+  angelehnt. Kein Verlauf, kein Blur, kein Neon.
+  * Zonen-Kaufpanel: komplett so gebaut.
+  * Schublade: Rahmen (Griff, Papierkopf, runde Kanten) mit den Tab-Inhalten als
+    dunkle Einlassung - `StoreTab` & Co. gehören auch der Ansicht unter `/play` und
+    tragen ihre Farben fest im Markup, sie hier per Fern-CSS umzufärben würde bei der
+    nächsten Änderung an den Tabs lautlos brechen.
+  * Buttonreihe unten: Kantenfarbe je Variante als `--btn-edge`, damit Drücken und
+    "Schublade offen" (`.is-active`) mit einer Regel auskommen. Der Aktiv-Zustand ist
+    die eingedrückte Taste, nicht mehr ein Cyan-Rand.
+  * Kopfzeile: Name und Kennzahlen als Papierpillen, Bewertung in dunklem Geldgrün
+    mit hellem Halo. Das frühere Weiß-auf-Schlagschatten war auf dem hellen Himmel
+    die schlechtere Hälfte des Kontrasts.
 
 ## Entscheidungen
 
@@ -134,7 +141,9 @@ Insel nur größer und die Schublade liegt rechts statt unten.
    darunter, nur Web-Build: SEO-Textblock, scrollbar
 ```
 
-**Overlay oben** (transparent, Text mit weichem Schatten auf dem Himmel):
+**Overlay oben** (transparent über dem Himmel, im Grafik-Stil der Insel: Papierpillen
+mit klotziger Unterkante, Tinte statt Weiß, freistehende Texte mit hellem Halo statt
+schwarzem Schlagschatten - der Himmel ist hell, dunkler Text liest sich darauf besser):
 - Startup-Name klein links, editierbar wie heute. Rechts drei runde Buttons:
   Sprache, Handbuch, Teilen (Pitch Deck).
 - Valuation groß in der Mitte, darunter drei Chips: Burn, Netto-VPS, Hype-Stufe.

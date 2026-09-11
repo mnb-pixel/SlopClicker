@@ -93,69 +93,220 @@
   padding-right: calc(0.5rem + env(safe-area-inset-right));
 }
 
-/* Text auf dem Himmel: kein Hintergrund, Lesbarkeit über Schatten. */
-.hud-text {
-  color: #f8fafc;
-  text-shadow: 0 1px 2px rgba(2, 6, 23, 0.9), 0 0 12px rgba(2, 6, 23, 0.6);
+/* Kopfzeile im Grafik-Stil der Insel. Der Himmel ist hell, also Tinte statt Weiß -
+   freistehende Texte (Bewertung, Hitze-Zeile) bekommen einen hellen Halo, damit sie
+   auch über Insel, Schlot und dunklem Rauch lesbar bleiben. Das ersetzt das frühere
+   Weiß mit schwarzem Schlagschatten und die dunklen Glas-Chips.
+
+   Startup-Name als Papierschild, daneben die runden Tasten. */
+.hud-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--game-paper);
+  color: var(--game-ink);
+  border: 2px solid var(--game-line-strong);
+  box-shadow: 0 2px 0 var(--game-line-strong);
 }
 
-.hud-top--sec .hud-text {
-  color: #0f172a;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+.hud-name:active { transform: translateY(2px); box-shadow: none; }
+
+.hud-name__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.hud-ticker {
+.hud-name__pen { width: 12px; height: 12px; flex-shrink: 0; color: var(--game-ink-soft); }
+
+/* .ai-Domain-Bonus: die eine goldene Marke in der Kopfzeile. */
+.hud-name__bonus {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--game-gold);
+  color: var(--game-ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+/* Unter 480px nur noch der Stern: ".AI HYPE-BONUS (+10% VPS)" ist breiter als der
+   halbe Bildschirm und schob den Namen sonst vollständig aus dem Schild. Der volle
+   Text bleibt als title am Bonus hängen. */
+@media (max-width: 479px) {
+  .hud-name__bonus-text { display: none; }
+  .hud-name__bonus { padding: 3px; }
+}
+
+.hud-name-input {
+  min-width: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--game-paper);
+  color: var(--game-ink);
+  border: 2px solid var(--game-grass);
+  font-size: 11px;
+  font-weight: 900;
+  outline: none;
+}
+
+.hud-name-save {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--game-grass);
+  color: #0b2818;
+  border: 2px solid var(--game-grass-dark);
+  box-shadow: 0 2px 0 var(--game-grass-dark);
   font-size: 10px;
-  line-height: 1.2;
-  padding: 2px 0;
-  background: rgba(2, 6, 23, 0.55);
-  pointer-events: none;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
+.hud-name-save:active { transform: translateY(2px); box-shadow: none; }
+
+/* Überschrift über der Bewertung. */
+.hud-caption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--game-ink);
+  text-shadow: 0 1px 0 rgba(255, 253, 246, 0.85), 0 0 6px rgba(255, 253, 246, 0.9);
+  opacity: 0.75;
+}
+
+/* Bewertung: die größte Zahl im Bild. Dunkles Geldgrün mit hellem Halo statt des
+   früheren Neongrüns - auf hellblauem Himmel war das kaum zu lesen. */
 .hud-valuation {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-weight: 900;
   font-size: clamp(1.75rem, 7vw, 2.75rem);
   line-height: 1.05;
   letter-spacing: -0.02em;
-  filter: drop-shadow(0 0 12px rgba(52, 211, 153, 0.35));
+  color: #12694a;
+  text-shadow: 0 2px 0 rgba(255, 253, 246, 0.9), 0 0 10px rgba(255, 253, 246, 0.95),
+    0 0 22px rgba(255, 253, 246, 0.7);
 }
 
+.hud-top--sec .hud-valuation { color: #38512e; }
+
+/* Kennzahlen als kleine Papierpillen. */
 .hud-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 2px 8px;
+  padding: 2px 9px;
   border-radius: 999px;
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 900;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  background: rgba(2, 6, 23, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(4px);
+  background: var(--game-paper);
+  color: var(--game-ink);
+  border: 2px solid var(--game-line-strong);
+  box-shadow: 0 2px 0 var(--game-line-strong);
 }
 
-.hud-chip--cyan { color: #a5f3fc; }
-.hud-chip--rose { color: #fda4af; }
-.hud-chip--amber { color: #fde68a; border-color: rgba(251, 191, 36, 0.6); }
+.hud-chip--net { color: var(--game-grass-dark); }
+.hud-chip--burn { color: #b8420d; }
+.hud-chip--power {
+  background: var(--game-gold);
+  border-color: #b45309;
+  box-shadow: 0 2px 0 #b45309;
+}
 
 .hud-round-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 999px;
-  background: rgba(2, 6, 23, 0.7);
-  color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(4px);
-  transition: transform 0.1s, border-color 0.15s;
+  background: var(--game-paper);
+  color: var(--game-ink);
+  border: 2px solid var(--game-line-strong);
+  box-shadow: 0 3px 0 var(--game-line-strong);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 900;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 
 .hud-round-btn--wide { width: auto; padding: 0 10px; }
-.hud-round-btn:hover { border-color: rgba(255, 255, 255, 0.5); }
-.hud-round-btn:active { transform: scale(0.94); }
+
+/* Teilen: die eine herausgehobene Aktion oben - Gold statt Papier. */
+.hud-round-btn--share {
+  background: var(--game-gold);
+  border-color: #b45309;
+  box-shadow: 0 3px 0 #b45309;
+}
+
+.hud-round-btn:active { transform: translateY(3px); box-shadow: none; }
+
+/* Hitzebalken: Papierrinne mit farbiger Füllung. */
+.hud-heat {
+  width: 100%;
+  max-width: 20rem;
+  margin: 0.5rem auto 0;
+  padding: 0 0.75rem;
+}
+
+.hud-heat__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 3px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--game-ink);
+  text-shadow: 0 1px 0 rgba(255, 253, 246, 0.85), 0 0 6px rgba(255, 253, 246, 0.9);
+}
+
+.hud-heat__label { display: inline-flex; align-items: center; gap: 4px; }
+.hud-heat__label.is-warm { color: #a35b06; }
+.hud-heat__label.is-hot { color: #b1121f; }
+.hud-heat__state { opacity: 0.7; font-weight: 700; }
+.hud-heat__alarm { display: inline-flex; align-items: center; gap: 4px; color: #b1121f; }
+
+.hud-heat__track {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--game-paper);
+  border: 2px solid var(--game-line-strong);
+}
+
+.hud-heat__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+.hud-heat__fill.is-cool { background: #38b2e0; }
+.hud-heat__fill.is-warm { background: var(--game-gold); }
+.hud-heat__fill.is-hot { background: #e0384a; }
 
 /* Untere Buttonreihe: zwei große, zwei kleine. */
 .hud-bottom__row {
