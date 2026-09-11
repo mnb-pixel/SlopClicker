@@ -10,9 +10,9 @@
 import { BUILDINGS_DATA } from '../data/buildingsData';
 import { UPGRADES_DATA } from '../data/upgradesData';
 import { GREENWASHING_LAYOFFS_DATA } from '../data/greenwashingLayoffsData';
-import { ZONES_DATA, ZONE_TIER_THRESHOLDS, ZONE_BY_BUILDING, ZONE_ANNEX_THRESHOLDS } from '../data/zonesData';
+import { ZONES_DATA, ZONE_TIER_THRESHOLDS, ZONE_BY_BUILDING } from '../data/zonesData';
 import { getBuildingVisibility } from './buildingUnlock';
-import { annexLocal, islandSizeForLots, lotLocal, toWorld, zoneRect, ISLAND_BASE_SIZE } from './campusLayout';
+import { islandSizeForLots, lotLocal, toWorld, zoneRect, ISLAND_BASE_SIZE } from './campusLayout';
 
 const UPGRADES_BY_ID = Object.fromEntries(UPGRADES_DATA.map((u) => [u.id, u]));
 const GREENWASHING_BY_ID = Object.fromEntries(GREENWASHING_LAYOFFS_DATA.map((g) => [g.id, g]));
@@ -154,9 +154,9 @@ export function deriveZones({
     const population = zoneBuildings.reduce((sum, b) => sum + b.count, 0);
     const revealed = zoneBuildings.some((b) => b.unlocked);
 
-    // Belegte Grundstücke der Zone: erst die Gebäude der Engines mit `plot`, dann die
-    // Anbauhallen der Zonen ohne eigenes Grundstücks-Layout. Beides zusammen bestimmt,
-    // wie groß Zonenplatte und Insel sein müssen.
+    // Belegte Grundstücke der Zone: ein Eintrag je Gebäude jeder Engine mit `plot`.
+    // Bestimmt zusammen mit der Grundfläche, wie groß Zonenplatte und Insel sein müssen
+    // (siehe zoneRect/islandSizeForLots unten).
     const lots = [];
     if (population > 0) {
       zoneBuildings.forEach((b) => {
@@ -165,11 +165,6 @@ export function deriveZones({
           lots.push({ id: b.id, index: i, lx: local.x, lz: local.z, ...toWorld(zone, local) });
         }
       });
-      const annexCount = Math.min(zone.annexMax || 0, tierFromThresholds(population, ZONE_ANNEX_THRESHOLDS));
-      for (let i = 0; i < annexCount; i += 1) {
-        const local = annexLocal(zone, i);
-        lots.push({ id: 'annex', index: i, lx: local.x, lz: local.z, ...toWorld(zone, local) });
-      }
     }
 
     return {

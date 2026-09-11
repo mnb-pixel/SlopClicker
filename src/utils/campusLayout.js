@@ -59,21 +59,6 @@ export function lotLocal(zone, plot, index) {
   };
 }
 
-// Anbauten: zusätzliche Hallen, die eine Zone bekommt, wenn ihr Bestand über die
-// Grundfläche hinauswächst. Sie liegen bewusst KOMPLETT außerhalb der Grundfläche
-// (eine halbe Lot-Breite hinter deren Außenkante), damit sie nie in den handgesetzten
-// Props der Zone landen - dort ist jeder Platz schon vergeben.
-export function annexLocal(zone, index) {
-  const { ox, oz } = outwardDirs(zone);
-  const { w, d } = zone.footprint;
-  const col = index % 2;
-  const row = Math.floor(index / 2);
-  return {
-    x: ox * (w / 2 + LOT_SIZE / 2 + col * LOT_SIZE),
-    z: oz * (-d / 2 + LOT_SIZE / 2 + row * LOT_SIZE),
-  };
-}
-
 export function toWorld(zone, local) {
   return { x: zone.anchor3d.x + local.x, z: zone.anchor3d.z + local.z };
 }

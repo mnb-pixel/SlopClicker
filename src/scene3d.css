@@ -41,6 +41,7 @@
    zusammenfällt. Ein Stil für alle Menü-Buttons der Szene. */
 .game-shell .zone-pin,
 .game-shell .campus-mode,
+.game-shell .campus-panel__tab,
 .game-shell .campus-row,
 .game-shell .campus-panel__close,
 .game-shell .hud-drawer__close {
@@ -51,6 +52,7 @@
 @media (prefers-reduced-motion: reduce) {
   .game-shell .zone-pin,
   .game-shell .campus-mode,
+  .game-shell .campus-panel__tab,
   .game-shell .campus-row,
   .game-shell .campus-panel__close,
   .game-shell .hud-drawer__close {
@@ -931,6 +933,35 @@
 
 .campus-panel__close:active { transform: translateY(2px); box-shadow: none; }
 
+/* Drei Reiter (Engines/Upgrades/Corporate) über der Liste - dieselbe klotzige Taste wie
+   der Kaufmodus darunter, nur als Gruppe von drei statt vier, weil hier keine Buzzwords
+   stehen (die gehören keiner Zone, bleiben im Shop). */
+.campus-panel__tabs { display: flex; gap: 5px; margin-bottom: 8px; }
+
+.campus-panel__tab {
+  flex: 1;
+  padding: 6px 4px;
+  border-radius: 11px;
+  background: var(--game-paper-sunk);
+  border: 2px solid var(--game-line);
+  box-shadow: 0 2px 0 var(--game-line-strong);
+  color: var(--game-ink-soft);
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.campus-panel__tab.is-active {
+  background: var(--zone-accent, var(--game-ink));
+  border-color: var(--game-line-strong);
+  box-shadow: 0 2px 0 var(--game-line-strong);
+  color: #fff;
+}
+
+.campus-panel__tab:active { transform: translateY(2px); box-shadow: none; }
+
 /* Kaufmodus als Reihe klotziger Tasten. */
 .campus-panel__modes { display: flex; gap: 5px; margin-bottom: 8px; }
 
@@ -1019,3 +1050,32 @@
 }
 
 .campus-row.is-affordable .campus-row__price { color: var(--game-grass-dark); }
+
+/* Upgrade- und Corporate-Zeilen: Name + Effekt + Zitat untereinander statt einer Zeile,
+   der Text ist hier länger als bei den Engines ("Praktikanten produzieren +50% mehr..."
+   passt nicht neben eine Stückzahl). Preis bleibt rechts, jetzt oben ausgerichtet statt
+   vertikal mittig, weil der Textblock links höher ist als eine Zeile. */
+.campus-row--stacked { align-items: flex-start; }
+.campus-row--stacked .campus-row__price { padding-top: 1px; }
+/* Namen wie "Praktikum als 'nachhaltige Talentförderung' deklariert" sind länger als bei
+   den Engines - hier darf der Name umbrechen statt mit "…" abzuschneiden, die Zeile ist
+   ohnehin schon mehrzeilig (Effekt + Zitat darunter). */
+.campus-row--stacked .campus-row__name { white-space: normal; overflow: visible; text-overflow: clip; }
+
+.campus-row__quote {
+  font-size: 10px;
+  font-style: italic;
+  color: var(--game-ink-soft);
+  line-height: 1.3;
+}
+
+.campus-panel__empty {
+  padding: 14px 10px;
+  text-align: center;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--game-ink-soft);
+  background: var(--game-paper-sunk);
+  border: 2px dashed var(--game-line);
+  border-radius: 14px;
+}

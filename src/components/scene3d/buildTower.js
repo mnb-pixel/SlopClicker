@@ -1,28 +1,29 @@
 import * as THREE from 'three';
 
-// Kapital-Turm (Zone "tower"): Glasturm, der mit jeder VC-Firma ein Stockwerk wächst,
-// Gold-Bänder zwischen den Etagen, Pivot-Startups als Container am Fuß, deren Logo
-// alle paar Sekunden die Farbe wechselt (der Pivot), auf dem Dach die AGI-Countdown-
-// Uhr, deren Zahl immer wieder zurückspringt, und die LED-Laufschrift mit dem
-// Newsticker.
+// Kapital-Turm (Zone "tower"): jede VC-Firma ein Stockwerk, Gold-Bänder zwischen den
+// Etagen. Ist ein Turm mit FLOOR_MAX Stockwerken voll, entsteht NICHT ein noch höherer
+// Turm, sondern der nächste GLASTURM auf dem Grundstück nebenan (siehe
+// utils/campusLayout.js) - so trägt auch diese Zone zum Inselwachstum bei, statt nur
+// in den Himmel zu wachsen. Pivot-Startups stehen als Container-Reihen auf eigenen
+// Grundstücken einer zweiten Reihe. Die AGI-Countdown-Uhr und die Newsticker-Tafel
+// gibt es nur EINMAL, auf dem ersten (ältesten) Turm - zwei tickende Uhren nebeneinander
+// wären nur verwirrend.
 //
 // Die beiden Tafeln sind die einzigen Stellen der Szene mit Texturen: Text braucht
 // eine Canvas-Textur, alles andere bleibt texturlos.
 
-const FLOOR_MAX = 6;
-const CONTAINER_MAX = 8;
+const FLOOR_PER_TOWER = 6;
+const TOWER_LOTS_MAX = 4;
+const FLOOR_MAX = FLOOR_PER_TOWER * TOWER_LOTS_MAX;
+const CONTAINER_MAX = 15;
+const CONTAINERS_PER_LOT = 3;
 const FLOOR_H = 1.1;
-const TOWER = { x: -0.9, z: -0.9, w: 2.6 };
+const TOWER_W = 2.6;
 
 const CONTAINER_SLOTS = [
-  { x: -3.0, z: 2.3, yaw: 0 },
-  { x: -1.6, z: 2.3, yaw: 0 },
-  { x: -0.2, z: 2.3, yaw: 0 },
-  { x: 1.2, z: 2.3, yaw: 0 },
-  { x: 2.6, z: -2.4, yaw: Math.PI / 2 },
-  { x: 2.6, z: -1.1, yaw: Math.PI / 2 },
-  { x: 2.6, z: 0.2, yaw: Math.PI / 2 },
-  { x: 2.6, z: 1.5, yaw: Math.PI / 2 },
+  { x: -1.0, z: -0.6, yaw: 0 },
+  { x: 1.0, z: -0.6, yaw: 0 },
+  { x: 0, z: 0.7, yaw: Math.PI / 2 },
 ];
 
 function hash01(i) {
@@ -65,31 +66,23 @@ export function buildTower(palette, zoneDef) {
   const dummy = new THREE.Object3D();
   const color = new THREE.Color();
 
-  // --- Turm --------------------------------------------------------------------------
-  const base = new THREE.Mesh(new THREE.BoxGeometry(TOWER.w + 0.6, 0.4, TOWER.w + 0.6), lambert('stone'));
-  base.position.set(TOWER.x, 0.2, TOWER.z);
-  base.receiveShadow = true;
-  group.add(base);
-  const lobby = new THREE.Mesh(new THREE.BoxGeometry(TOWER.w, FLOOR_H, TOWER.w), lambert('facade'));
-  lobby.position.set(TOWER.x, 0.4 + FLOOR_H / 2, TOWER.z);
-  lobby.castShadow = true;
-  group.add(lobby);
-  const door = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.08), lambert('monitor'));
-  door.position.set(TOWER.x, 0.8, TOWER.z + TOWER.w / 2 + 0.02);
-  group.add(door);
+  // --- Türme: Sockel + Lobby + Eingang je Grundstück, Stockwerke instanziert ------------
+  const base = inst(new THREE.BoxGeometry(TOWER_W + 0.6, 0.4, TOWER_W + 0.6), lambert('stone'), TOWER_LOTS_MAX);
+  const lobby = inst(new THREE.BoxGeometry(TOWER_W, FLOOR_H, TOWER_W), lambert('facade'), TOWER_LOTS_MAX);
+  const door = inst(new THREE.BoxGeometry(0.6, 0.8, 0.08), lambert('monitor'), TOWER_LOTS_MAX, false);
 
   // Leichtes Eigenleuchten, sonst färbt das grüne Bodenlicht das Glas oliv.
   const floor = inst(
-    new THREE.BoxGeometry(TOWER.w, FLOOR_H, TOWER.w),
+    new THREE.BoxGeometry(TOWER_W, FLOOR_H, TOWER_W),
     lambert('glass', { transparent: true, opacity: 0.85, emissive: new THREE.Color(0x2b6cb0), emissiveIntensity: 0.35 }),
     FLOOR_MAX
   );
-  const band = inst(new THREE.BoxGeometry(TOWER.w + 0.15, 0.12, TOWER.w + 0.15), lambert('gold'), FLOOR_MAX + 1, false);
+  const band = inst(new THREE.BoxGeometry(TOWER_W + 0.15, 0.12, TOWER_W + 0.15), lambert('gold'), FLOOR_MAX + TOWER_LOTS_MAX, false);
 
-  // Dach: Uhr und Laufschrift, Höhe folgt der Stockwerkzahl.
+  // Dach: nur auf dem ERSTEN Turm. Uhr und Laufschrift, Höhe folgt dessen Stockwerkzahl.
   const roof = new THREE.Group();
   group.add(roof);
-  const roofSlab = new THREE.Mesh(new THREE.BoxGeometry(TOWER.w + 0.2, 0.2, TOWER.w + 0.2), lambert('steelDark'));
+  const roofSlab = new THREE.Mesh(new THREE.BoxGeometry(TOWER_W + 0.2, 0.2, TOWER_W + 0.2), lambert('steelDark'));
   roof.add(roofSlab);
 
   const tickerBoard = makeBoard(1024, 128);
@@ -121,11 +114,12 @@ export function buildTower(palette, zoneDef) {
   roof.add(antenna);
 
   // --- Container -----------------------------------------------------------------------
-  const container = inst(new THREE.BoxGeometry(1.2, 0.8, 0.7), lambert('facade'), CONTAINER_MAX);
-  const logo = inst(new THREE.BoxGeometry(0.5, 0.3, 0.05), new THREE.MeshBasicMaterial({ color: 0xffffff }), CONTAINER_MAX, false);
+  const container = inst(new THREE.BoxGeometry(1.05, 0.7, 0.62), lambert('facade'), CONTAINER_MAX);
+  const logo = inst(new THREE.BoxGeometry(0.44, 0.26, 0.05), new THREE.MeshBasicMaterial({ color: 0xffffff }), CONTAINER_MAX, false);
   const LOGO_KEYS = ['containerA', 'containerB', 'containerC', 'token'];
 
-  let placed = null;
+  let placedKey = null;
+  let towerLots = [];
   let lastTickerText = '';
   let tickerWidth = 1;
   let lastClockSec = -1;
@@ -178,40 +172,76 @@ export function buildTower(palette, zoneDef) {
     clockBoard.texture.needsUpdate = true;
   }
 
-  function layout(counts) {
-    for (let i = 0; i < counts.floors; i += 1) {
-      dummy.position.set(TOWER.x, 0.4 + FLOOR_H * 1.5 + i * FLOOR_H, TOWER.z);
+  // Verteilt `totalFloors` Stockwerke auf so viele Türme, wie nötig sind (je bis zu
+  // FLOOR_PER_TOWER); ein Grundstück je Turm, ein Turmkörper (Sockel/Lobby/Tür) auch
+  // dann, wenn er noch kein einziges Stockwerk trägt - sonst stünde ein nacktes
+  // Grundstück ohne irgendein Gebäude da, sobald die Engine zum ersten Mal gekauft wird.
+  function layoutTowers(lots, totalFloors) {
+    towerLots = lots;
+    let floorIdx = 0;
+    let bandIdx = 0;
+    lots.forEach((lot, ti) => {
+      dummy.position.set(lot.lx, 0.2, lot.lz);
       dummy.rotation.set(0, 0, 0);
       dummy.scale.setScalar(1);
       dummy.updateMatrix();
-      floor.setMatrixAt(i, dummy.matrix);
-    }
-    floor.count = counts.floors;
-    for (let i = 0; i <= counts.floors; i += 1) {
-      dummy.position.set(TOWER.x, 0.4 + FLOOR_H + i * FLOOR_H, TOWER.z);
+      base.setMatrixAt(ti, dummy.matrix);
+      dummy.position.set(lot.lx, 0.4 + FLOOR_H / 2, lot.lz);
       dummy.updateMatrix();
-      band.setMatrixAt(i, dummy.matrix);
-    }
-    band.count = counts.floors + 1;
-    roof.position.set(TOWER.x, 0.4 + FLOOR_H * (counts.floors + 1) + 0.1, TOWER.z);
-    clockFrame.visible = counts.clock > 0;
-    clockMesh.visible = counts.clock > 0;
+      lobby.setMatrixAt(ti, dummy.matrix);
+      dummy.position.set(lot.lx, 0.8, lot.lz + TOWER_W / 2 + 0.02);
+      dummy.updateMatrix();
+      door.setMatrixAt(ti, dummy.matrix);
 
-    for (let i = 0; i < counts.containers; i += 1) {
-      const s = CONTAINER_SLOTS[i];
-      dummy.position.set(s.x, 0.4, s.z);
-      dummy.rotation.set(0, s.yaw, 0);
-      dummy.updateMatrix();
-      container.setMatrixAt(i, dummy.matrix);
-      dummy.position.set(s.x + Math.sin(s.yaw) * 0.38, 0.55, s.z + Math.cos(s.yaw) * 0.38);
-      dummy.updateMatrix();
-      logo.setMatrixAt(i, dummy.matrix);
-    }
-    container.count = counts.containers;
-    logo.count = counts.containers;
-    [floor, band, container, logo].forEach((m) => {
+      const floorsHere = Math.max(0, Math.min(FLOOR_PER_TOWER, totalFloors - ti * FLOOR_PER_TOWER));
+      for (let f = 0; f < floorsHere; f += 1, floorIdx += 1) {
+        dummy.position.set(lot.lx, 0.4 + FLOOR_H * 1.5 + f * FLOOR_H, lot.lz);
+        dummy.rotation.set(0, 0, 0);
+        dummy.scale.setScalar(1);
+        dummy.updateMatrix();
+        floor.setMatrixAt(floorIdx, dummy.matrix);
+      }
+      for (let f = 0; f <= floorsHere; f += 1, bandIdx += 1) {
+        dummy.position.set(lot.lx, 0.4 + FLOOR_H + f * FLOOR_H, lot.lz);
+        dummy.updateMatrix();
+        band.setMatrixAt(bandIdx, dummy.matrix);
+      }
+      if (ti === 0) {
+        roof.position.set(lot.lx, 0.4 + FLOOR_H * (floorsHere + 1) + 0.1, lot.lz);
+      }
+    });
+    base.count = lots.length;
+    lobby.count = lots.length;
+    door.count = lots.length;
+    floor.count = floorIdx;
+    band.count = bandIdx;
+    [base, lobby, door, floor, band].forEach((m) => {
       m.instanceMatrix.needsUpdate = true;
     });
+  }
+
+  function layoutContainers(lots, n) {
+    let idx = 0;
+    for (let li = 0; li < lots.length && idx < n; li += 1) {
+      const lot = lots[li];
+      for (let s = 0; s < CONTAINERS_PER_LOT && idx < n; s += 1, idx += 1) {
+        const slot = CONTAINER_SLOTS[s];
+        const x = lot.lx + slot.x;
+        const z = lot.lz + slot.z;
+        dummy.position.set(x, 0.35, z);
+        dummy.rotation.set(0, slot.yaw, 0);
+        dummy.scale.setScalar(1);
+        dummy.updateMatrix();
+        container.setMatrixAt(idx, dummy.matrix);
+        dummy.position.set(x + Math.sin(slot.yaw) * 0.33, 0.5, z + Math.cos(slot.yaw) * 0.33);
+        dummy.updateMatrix();
+        logo.setMatrixAt(idx, dummy.matrix);
+      }
+    }
+    container.count = n;
+    logo.count = n;
+    container.instanceMatrix.needsUpdate = true;
+    logo.instanceMatrix.needsUpdate = true;
   }
 
   return {
@@ -227,10 +257,15 @@ export function buildTower(palette, zoneDef) {
         containers: Math.min(CONTAINER_MAX, c('pivot_startup')),
         clock: Math.min(1, c('agi_clock')),
       };
-      const key = `${counts.floors}|${counts.containers}|${counts.clock}`;
-      if (key !== placed) {
-        layout(counts);
-        placed = key;
+      const towerLotsData = (zone.lots || []).filter((l) => l.id === 'vc_firm');
+      const key = `${counts.floors}|${counts.containers}|${counts.clock}|${towerLotsData.length}`;
+      if (key !== placedKey) {
+        layoutTowers(towerLotsData, counts.floors);
+        layoutContainers((zone.lots || []).filter((l) => l.id === 'pivot_startup'), counts.containers);
+        clockFrame.visible = counts.clock > 0;
+        clockMesh.visible = counts.clock > 0;
+        roof.visible = towerLotsData.length > 0;
+        placedKey = key;
       }
 
       // Pivot: Logo-Farbe wechselt alle paar Sekunden pro Container.
@@ -241,13 +276,15 @@ export function buildTower(palette, zoneDef) {
       }
       if (counts.containers > 0 && logo.instanceColor) logo.instanceColor.needsUpdate = true;
 
-      drawTicker(tickerText || '', reduced ? 0 : t * 140, p);
-      if (counts.clock > 0) drawClock(t, p);
+      if (towerLots.length > 0) {
+        drawTicker(tickerText || '', reduced ? 0 : t * 140, p);
+        if (counts.clock > 0) drawClock(t, p);
+      }
     },
     applyPalette(p) {
       Object.entries(mats).forEach(([key, list]) => list.forEach((m) => m.color.setHex(p[key])));
       lastClockSec = -1;
-      placed = null;
+      placedKey = null;
     },
   };
 }

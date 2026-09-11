@@ -43,3 +43,28 @@ const CORPORATE_ESCALATION = 1.15;
 export function getCorporateActionCost(item, baseCost, boughtCount) {
   return Math.floor(item.costMult * baseCost * Math.pow(CORPORATE_ESCALATION, boughtCount));
 }
+
+// Sichtbare Corporate Actions: nur die jeweils niedrigste noch nicht gekaufte Stufe pro
+// Gebäude+Art (Greenwashing bzw. Layoff getrennt gezählt), und nur für Gebäude, von
+// denen mindestens eines steht. Geteilt von StoreTab (alle Gebäude) und ZoneBuyPanel
+// (auf eine Zone gefiltert) - sonst könnten beide Stellen unterschiedliche "nächste
+// Stufe" zeigen.
+export function getAvailableCorporateActions(buildings, boughtGreenwashingLayoffs) {
+  const lowestUnbought = new Map();
+  GREENWASHING_LAYOFFS_DATA.forEach((item) => {
+    const isBought = boughtGreenwashingLayoffs.includes(item.id);
+    const ownedCount = buildings[item.buildingId] || 0;
+    if (ownedCount >= 1 && !isBought) {
+      const key = `${item.buildingId}_${item.type}`;
+      if (!lowestUnbought.has(key)) lowestUnbought.set(key, item);
+    }
+  });
+  return GREENWASHING_LAYOFFS_DATA.filter((item) => {
+    if (boughtGreenwashingLayoffs.includes(item.id)) return false;
+    const ownedCount = buildings[item.buildingId] || 0;
+    if (ownedCount < 1) return false;
+    const key = `${item.buildingId}_${item.type}`;
+    const nextItem = lowestUnbought.get(key);
+    return nextItem && nextItem.id === item.id;
+  });
+}

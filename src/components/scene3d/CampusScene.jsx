@@ -69,9 +69,12 @@ export const CampusScene = forwardRef(function CampusScene(
     themeMode,
     lastBlackSwan,
     valuation,
+    totalValuation,
     buyBuilding,
     buyMode,
     setBuyMode,
+    buyUpgrade,
+    buyGreenwashingLayoff,
     handleTapAGI,
     tickerText = '',
     hypeTier = 1,
@@ -745,10 +748,15 @@ export const CampusScene = forwardRef(function CampusScene(
           zoneDef={selectedDef}
           zoneState={selectedState}
           valuation={valuation}
+          totalValuation={totalValuation}
           buildings={buildings}
           buyBuilding={buyBuilding}
           buyMode={buyMode}
           setBuyMode={setBuyMode}
+          boughtUpgrades={boughtUpgrades}
+          buyUpgrade={buyUpgrade}
+          boughtGreenwashingLayoffs={boughtGreenwashingLayoffs}
+          buyGreenwashingLayoff={buyGreenwashingLayoff}
           onClose={() => setSelectedZone(null)}
           t={t}
         />

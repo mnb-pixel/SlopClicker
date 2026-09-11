@@ -1,35 +1,37 @@
 import * as THREE from 'three';
 import { buildDataLine, defaultLineRoute } from './buildDataLine';
 
-// Serverkeller (Zone "basement"): GPU-Racks mit blinkenden LEDs, Rechenzentrums-Silos
-// mit drehendem Lüfter, Token-Burner mit glühendem Kern, Scraper-Drohnen, die über den
-// Silos kreisen, Grauer-Markt-Silos hinter Bauzaun mit Plane. Dazu eine zweite
+// Serverkeller (Zone "basement"): GPU-Racks mit blinkenden LEDs, Token-Burner mit
+// glühendem Kern, Rechenzentrums-Silos mit drehendem Lüfter und Grauer-Markt-Silos
+// hinter Bauzaun - jede dieser vier Engines auf eigenen, WACHSENDEN Grundstücken
+// (siehe utils/campusLayout.js): ist ein Grundstück voll, entsteht das nächste
+// nebenan, in einer eigenen Reihe je Engine, damit sich die vier nie ins Gehege
+// kommen. Web-Scraper-Drohnen bleiben dagegen frei fliegend über der ganzen Zone,
+// wie schon vorher - eine Drohne braucht kein Grundstück. Dazu eine zweite
 // Datenleitung zum Ofen.
 
-const RACK_MAX = 14;
-const SILO_MAX = 8;
-const BURNER_MAX = 8;
+const RACK_MAX = 32;
+const BURNER_MAX = 20;
+const SILO_MAX = 12;
+const GRAY_MAX = 8;
 const DRONE_MAX = 12;
-const GRAY_MAX = 6;
 
 function hash01(i) {
   const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
   return x - Math.floor(x);
 }
 
-// Layout (lokal, Kamera schaut aus +x/+z): Racks vorne rechts, Silos rechts hinten,
-// Burner und Grauer Markt links, damit nichts hinter den hohen Silos verschwindet.
-const RACK_SLOTS = [];
-for (let r = 0; r < 2; r += 1) for (let c = 0; c < 7; c += 1) RACK_SLOTS.push({ x: -0.6 + c * 0.67, z: 2.9 - r * 0.85 });
-const SILO_SLOTS = [
-  { x: -0.2, z: 0.4 }, { x: 1.6, z: 0.4 }, { x: 3.2, z: 0.4 },
-  { x: -0.2, z: -1.4 }, { x: 1.6, z: -1.4 }, { x: 3.2, z: -1.4 },
-  { x: 1.6, z: -3.0 }, { x: 3.2, z: -3.0 },
+// Plätze INNERHALB eines Grundstücks, relativ zu dessen Mitte (lot.lx/lz).
+const RACK_SLOTS = [
+  { x: -1.2, z: -0.4 }, { x: -0.4, z: -0.4 }, { x: 0.4, z: -0.4 }, { x: 1.2, z: -0.4 },
+  { x: -1.2, z: 0.4 }, { x: -0.4, z: 0.4 }, { x: 0.4, z: 0.4 }, { x: 1.2, z: 0.4 },
 ];
-const BURNER_SLOTS = [];
-for (let c = 0; c < 2; c += 1) for (let r = 0; r < 4; r += 1) BURNER_SLOTS.push({ x: -2.1 + c * 0.95, z: 2.2 - r * 1.05 });
-const GRAY_SLOTS = [];
-for (let i = 0; i < 6; i += 1) GRAY_SLOTS.push({ x: -3.5, z: 2.6 - i * 0.95 });
+const BURNER_SLOTS = [
+  { x: -0.6, z: -0.6 }, { x: 0.6, z: -0.6 },
+  { x: -0.6, z: 0.6 }, { x: 0.6, z: 0.6 },
+];
+const SILO_SLOTS = [{ x: -0.95, z: 0 }, { x: 0.95, z: 0 }];
+const GRAY_SLOTS = [{ x: -0.75, z: 0 }, { x: 0.75, z: 0 }];
 
 export function buildBasement(palette, zoneDef, furnaceAnchor) {
   const group = new THREE.Group();
@@ -63,114 +65,158 @@ export function buildBasement(palette, zoneDef, furnaceAnchor) {
   // Racks + LED-Streifen
   const rack = inst(new THREE.BoxGeometry(0.55, 1.7, 0.55), lambert('rack'), RACK_MAX);
   const rackLed = inst(new THREE.BoxGeometry(0.3, 0.05, 0.03), basic('token'), RACK_MAX * 4, false);
+  // Burner
+  const burner = inst(new THREE.BoxGeometry(0.8, 0.8, 0.8), lambert('burner'), BURNER_MAX);
+  const burnerCore = inst(new THREE.BoxGeometry(0.5, 0.5, 0.5), basic('fire'), BURNER_MAX, false);
   // Silos: Fassade, Band, Fensterring, Lüfterblätter
   const silo = inst(new THREE.CylinderGeometry(0.85, 0.9, 2.6, 10), lambert('facade'), SILO_MAX);
   const siloBand = inst(new THREE.CylinderGeometry(0.9, 0.9, 0.3, 10), lambert('siloBand'), SILO_MAX, false);
   const siloRing = inst(new THREE.CylinderGeometry(0.87, 0.87, 0.14, 10), basic('token'), SILO_MAX * 2, false);
   const fanBlade = inst(new THREE.BoxGeometry(0.75, 0.04, 0.16), lambert('steel'), SILO_MAX * 2, false);
-  // Burner
-  const burner = inst(new THREE.BoxGeometry(0.8, 0.8, 0.8), lambert('burner'), BURNER_MAX);
-  const burnerCore = inst(new THREE.BoxGeometry(0.5, 0.5, 0.5), basic('fire'), BURNER_MAX, false);
-  // Drohnen
-  const droneBody = inst(new THREE.BoxGeometry(0.36, 0.12, 0.36), lambert('drone'), DRONE_MAX, false);
-  const droneRotor = inst(new THREE.CylinderGeometry(0.13, 0.13, 0.02, 8), lambert('steelDark'), DRONE_MAX * 4, false);
-  const droneEye = inst(new THREE.SphereGeometry(0.05, 5, 4), basic('warnRed'), DRONE_MAX, false);
   // Grauer Markt
   const graySilo = inst(new THREE.CylinderGeometry(0.42, 0.46, 1.8, 8), lambert('steelDark'), GRAY_MAX);
   const tarp = inst(new THREE.BoxGeometry(1.1, 0.06, 1.0), lambert('tarp'), GRAY_MAX);
   const fencePost = inst(new THREE.CylinderGeometry(0.04, 0.04, 1.0, 5), lambert('fence'), GRAY_MAX * 2, false);
   const fenceRail = inst(new THREE.BoxGeometry(0.95, 0.05, 0.05), lambert('fence'), GRAY_MAX * 2, false);
+  // Drohnen (unverändert: frei fliegend, kein Grundstück)
+  const droneBody = inst(new THREE.BoxGeometry(0.36, 0.12, 0.36), lambert('drone'), DRONE_MAX, false);
+  const droneRotor = inst(new THREE.CylinderGeometry(0.13, 0.13, 0.02, 8), lambert('steelDark'), DRONE_MAX * 4, false);
+  const droneEye = inst(new THREE.SphereGeometry(0.05, 5, 4), basic('warnRed'), DRONE_MAX, false);
 
   const route = defaultLineRoute(anchor3d, furnaceAnchor, -1.4, { x: -1, z: 0.35 });
   const line = buildDataLine(palette, route.points, group.position, route.dir);
   group.add(line.group);
 
-  let placed = null;
+  let placedKey = null;
+  let siloLots = [];
+  let burnerLots = [];
 
-  function layout(counts) {
-    // Racks
-    for (let i = 0; i < counts.rack; i += 1) {
-      const s = RACK_SLOTS[i];
-      dummy.position.set(s.x, 0.85, s.z);
-      dummy.rotation.set(0, 0, 0);
-      dummy.scale.setScalar(1);
-      dummy.updateMatrix();
-      rack.setMatrixAt(i, dummy.matrix);
-      for (let l = 0; l < 4; l += 1) {
-        dummy.position.set(s.x, 0.4 + l * 0.35, s.z + 0.29);
+  // Racks: `n` Racks über so viele Grundstücke verteilt, wie nötig sind.
+  function layoutRacks(lots, n) {
+    let idx = 0;
+    for (let li = 0; li < lots.length && idx < n; li += 1) {
+      const lot = lots[li];
+      for (let s = 0; s < RACK_SLOTS.length && idx < n; s += 1, idx += 1) {
+        const slot = RACK_SLOTS[s];
+        const x = lot.lx + slot.x;
+        const z = lot.lz + slot.z;
+        dummy.position.set(x, 0.85, z);
+        dummy.rotation.set(0, 0, 0);
+        dummy.scale.setScalar(1);
         dummy.updateMatrix();
-        rackLed.setMatrixAt(i * 4 + l, dummy.matrix);
+        rack.setMatrixAt(idx, dummy.matrix);
+        for (let l = 0; l < 4; l += 1) {
+          dummy.position.set(x, 0.4 + l * 0.35, z + 0.29);
+          dummy.updateMatrix();
+          rackLed.setMatrixAt(idx * 4 + l, dummy.matrix);
+        }
       }
     }
-    rack.count = counts.rack;
-    rackLed.count = counts.rack * 4;
-    // Silos
-    for (let i = 0; i < counts.silo; i += 1) {
-      const s = SILO_SLOTS[i];
-      dummy.position.set(s.x, 1.3, s.z);
-      dummy.rotation.set(0, 0, 0);
-      dummy.updateMatrix();
-      silo.setMatrixAt(i, dummy.matrix);
-      dummy.position.set(s.x, 1.3, s.z);
-      dummy.updateMatrix();
-      siloBand.setMatrixAt(i, dummy.matrix);
-      dummy.position.set(s.x, 0.7, s.z);
-      dummy.updateMatrix();
-      siloRing.setMatrixAt(i * 2, dummy.matrix);
-      dummy.position.set(s.x, 2.0, s.z);
-      dummy.updateMatrix();
-      siloRing.setMatrixAt(i * 2 + 1, dummy.matrix);
+    rack.count = n;
+    rackLed.count = n * 4;
+  }
+
+  function layoutBurners(lots, n) {
+    burnerLots = [];
+    let idx = 0;
+    for (let li = 0; li < lots.length && idx < n; li += 1) {
+      const lot = lots[li];
+      for (let s = 0; s < BURNER_SLOTS.length && idx < n; s += 1, idx += 1) {
+        const slot = BURNER_SLOTS[s];
+        const x = lot.lx + slot.x;
+        const z = lot.lz + slot.z;
+        burnerLots.push({ x, z });
+        dummy.position.set(x, 0.4, z);
+        dummy.rotation.set(0, 0, 0);
+        dummy.scale.setScalar(1);
+        dummy.updateMatrix();
+        burner.setMatrixAt(idx, dummy.matrix);
+      }
     }
-    silo.count = counts.silo;
-    siloBand.count = counts.silo;
-    siloRing.count = counts.silo * 2;
-    fanBlade.count = counts.silo * 2;
-    // Burner
-    for (let i = 0; i < counts.burner; i += 1) {
-      const s = BURNER_SLOTS[i];
-      dummy.position.set(s.x, 0.4, s.z);
-      dummy.rotation.set(0, 0, 0);
-      dummy.updateMatrix();
-      burner.setMatrixAt(i, dummy.matrix);
+    burner.count = n;
+    burnerCore.count = n;
+  }
+
+  function layoutSilos(lots, n) {
+    siloLots = [];
+    let idx = 0;
+    for (let li = 0; li < lots.length && idx < n; li += 1) {
+      const lot = lots[li];
+      for (let s = 0; s < SILO_SLOTS.length && idx < n; s += 1, idx += 1) {
+        const slot = SILO_SLOTS[s];
+        const x = lot.lx + slot.x;
+        const z = lot.lz + slot.z;
+        siloLots.push({ x, z });
+        dummy.position.set(x, 1.3, z);
+        dummy.rotation.set(0, 0, 0);
+        dummy.scale.setScalar(1);
+        dummy.updateMatrix();
+        silo.setMatrixAt(idx, dummy.matrix);
+        siloBand.setMatrixAt(idx, dummy.matrix);
+        dummy.position.set(x, 0.7, z);
+        dummy.updateMatrix();
+        siloRing.setMatrixAt(idx * 2, dummy.matrix);
+        dummy.position.set(x, 2.0, z);
+        dummy.updateMatrix();
+        siloRing.setMatrixAt(idx * 2 + 1, dummy.matrix);
+      }
     }
-    burner.count = counts.burner;
-    burnerCore.count = counts.burner;
-    // Drohnen
+    silo.count = n;
+    siloBand.count = n;
+    siloRing.count = n * 2;
+    fanBlade.count = n * 2;
+  }
+
+  function layoutGray(lots, n) {
+    let idx = 0;
+    for (let li = 0; li < lots.length && idx < n; li += 1) {
+      const lot = lots[li];
+      for (let s = 0; s < GRAY_SLOTS.length && idx < n; s += 1, idx += 1) {
+        const slot = GRAY_SLOTS[s];
+        const x = lot.lx + slot.x;
+        const z = lot.lz + slot.z;
+        dummy.position.set(x, 0.9, z);
+        dummy.rotation.set(0, 0, 0);
+        dummy.scale.setScalar(1);
+        dummy.updateMatrix();
+        graySilo.setMatrixAt(idx, dummy.matrix);
+        dummy.position.set(x, 1.85, z);
+        dummy.rotation.set(0.12, hash01(idx) * 0.5, -0.1);
+        dummy.updateMatrix();
+        tarp.setMatrixAt(idx, dummy.matrix);
+        dummy.rotation.set(0, 0, 0);
+        dummy.position.set(x + 0.6, 0.5, z - 0.45);
+        dummy.updateMatrix();
+        fencePost.setMatrixAt(idx * 2, dummy.matrix);
+        dummy.position.set(x + 0.6, 0.5, z + 0.45);
+        dummy.updateMatrix();
+        fencePost.setMatrixAt(idx * 2 + 1, dummy.matrix);
+        dummy.rotation.set(0, Math.PI / 2, 0);
+        dummy.position.set(x + 0.6, 0.35, z);
+        dummy.updateMatrix();
+        fenceRail.setMatrixAt(idx * 2, dummy.matrix);
+        dummy.position.set(x + 0.6, 0.8, z);
+        dummy.updateMatrix();
+        fenceRail.setMatrixAt(idx * 2 + 1, dummy.matrix);
+      }
+    }
+    graySilo.count = n;
+    tarp.count = n;
+    fencePost.count = n * 2;
+    fenceRail.count = n * 2;
+  }
+
+  function layout(zone, counts) {
+    const lotsFor = (id) => (zone.lots || []).filter((l) => l.id === id);
+    layoutRacks(lotsFor('gpu_rack'), counts.rack);
+    layoutBurners(lotsFor('token_burner'), counts.burner);
+    layoutSilos(lotsFor('datacenter'), counts.silo);
+    layoutGray(lotsFor('gray_market_dc'), counts.gray);
     droneBody.count = counts.drone;
     droneRotor.count = counts.drone * 4;
     droneEye.count = counts.drone;
-    // Grauer Markt
-    for (let i = 0; i < counts.gray; i += 1) {
-      const s = GRAY_SLOTS[i];
-      dummy.position.set(s.x, 0.9, s.z);
-      dummy.rotation.set(0, 0, 0);
-      dummy.updateMatrix();
-      graySilo.setMatrixAt(i, dummy.matrix);
-      dummy.position.set(s.x, 1.85, s.z);
-      dummy.rotation.set(0.12, hash01(i) * 0.5, -0.1);
-      dummy.updateMatrix();
-      tarp.setMatrixAt(i, dummy.matrix);
-      dummy.rotation.set(0, 0, 0);
-      dummy.position.set(s.x + 0.85, 0.5, s.z - 0.47);
-      dummy.updateMatrix();
-      fencePost.setMatrixAt(i * 2, dummy.matrix);
-      dummy.position.set(s.x + 0.85, 0.5, s.z + 0.47);
-      dummy.updateMatrix();
-      fencePost.setMatrixAt(i * 2 + 1, dummy.matrix);
-      dummy.rotation.set(0, Math.PI / 2, 0);
-      dummy.position.set(s.x + 0.85, 0.35, s.z);
-      dummy.updateMatrix();
-      fenceRail.setMatrixAt(i * 2, dummy.matrix);
-      dummy.position.set(s.x + 0.85, 0.8, s.z);
-      dummy.updateMatrix();
-      fenceRail.setMatrixAt(i * 2 + 1, dummy.matrix);
-    }
-    graySilo.count = counts.gray;
-    tarp.count = counts.gray;
-    fencePost.count = counts.gray * 2;
-    fenceRail.count = counts.gray * 2;
 
-    [rack, rackLed, silo, siloBand, siloRing, burner, graySilo, tarp, fencePost, fenceRail].forEach((m) => {
+    [rack, rackLed, burner, silo, siloBand, siloRing, graySilo, tarp, fencePost, fenceRail].forEach((m) => {
       m.instanceMatrix.needsUpdate = true;
     });
   }
@@ -185,15 +231,17 @@ export function buildBasement(palette, zoneDef, furnaceAnchor) {
       };
       const counts = {
         rack: Math.min(RACK_MAX, c('gpu_rack')),
-        silo: Math.min(SILO_MAX, c('datacenter')),
         burner: Math.min(BURNER_MAX, c('token_burner')),
-        drone: Math.min(DRONE_MAX, c('web_scraper')),
+        silo: Math.min(SILO_MAX, c('datacenter')),
         gray: Math.min(GRAY_MAX, c('gray_market_dc')),
+        drone: Math.min(DRONE_MAX, c('web_scraper')),
       };
-      const key = `${counts.rack}|${counts.silo}|${counts.burner}|${counts.drone}|${counts.gray}`;
-      if (key !== placed) {
-        layout(counts);
-        placed = key;
+      // Lot-Zähler mit in den Schlüssel: rutscht ein Grundstück (Nachbar-Engine wächst),
+      // müssen auch unveränderte Stückzahlen neu platziert werden.
+      const key = `${counts.rack}|${counts.burner}|${counts.silo}|${counts.gray}|${(zone.lots || []).length}`;
+      if (key !== placedKey) {
+        layout(zone, counts);
+        placedKey = key;
       }
 
       // LEDs blinken: jede LED hat eigenen Takt.
@@ -204,9 +252,21 @@ export function buildBasement(palette, zoneDef, furnaceAnchor) {
       }
       if (counts.rack > 0 && rackLed.instanceColor) rackLed.instanceColor.needsUpdate = true;
 
+      // Burner-Kern wabert
+      for (let i = 0; i < counts.burner; i += 1) {
+        const s = burnerLots[i];
+        const k = reduced ? 1 : 1 + Math.sin(t * 7 + i) * 0.12;
+        dummy.position.set(s.x, 0.4 + (reduced ? 0 : Math.sin(t * 3 + i) * 0.03), s.z);
+        dummy.rotation.set(t * 0.8 + i, t * 1.1, 0);
+        dummy.scale.setScalar(k);
+        dummy.updateMatrix();
+        burnerCore.setMatrixAt(i, dummy.matrix);
+      }
+      if (counts.burner > 0) burnerCore.instanceMatrix.needsUpdate = true;
+
       // Lüfter drehen
       for (let i = 0; i < counts.silo; i += 1) {
-        const s = SILO_SLOTS[i];
+        const s = siloLots[i];
         const a = reduced ? 0 : t * 6 + i;
         for (let b = 0; b < 2; b += 1) {
           dummy.position.set(s.x, 2.66, s.z);
@@ -218,24 +278,18 @@ export function buildBasement(palette, zoneDef, furnaceAnchor) {
       }
       if (counts.silo > 0) fanBlade.instanceMatrix.needsUpdate = true;
 
-      // Burner-Kern wabert
-      for (let i = 0; i < counts.burner; i += 1) {
-        const s = BURNER_SLOTS[i];
-        const k = reduced ? 1 : 1 + Math.sin(t * 7 + i) * 0.12;
-        dummy.position.set(s.x, 0.4 + (reduced ? 0 : Math.sin(t * 3 + i) * 0.03), s.z);
-        dummy.rotation.set(t * 0.8 + i, t * 1.1, 0);
-        dummy.scale.setScalar(k);
-        dummy.updateMatrix();
-        burnerCore.setMatrixAt(i, dummy.matrix);
-      }
-      if (counts.burner > 0) burnerCore.instanceMatrix.needsUpdate = true;
-
-      // Drohnen kreisen über den Silos
+      // Drohnen kreisen über dem Keller, Radius folgt der aktuell belegten Breite -
+      // sonst blieben sie über einer kleinen Startzone hängen, während die Racks längst
+      // weit hinausgewachsen sind.
+      const rect = zone.rect;
+      const cx = rect ? rect.cx - anchor3d.x : 0;
+      const cz = rect ? rect.cz - anchor3d.z : 0;
+      const spanR = rect ? Math.max(2.0, Math.min(rect.w, rect.d) * 0.4) : 2.0;
       for (let i = 0; i < counts.drone; i += 1) {
         const a = (reduced ? 0 : t * 0.35) + (i / DRONE_MAX) * Math.PI * 2;
-        const r = 2.0 + (i % 3) * 0.5;
-        const x = 1.4 + Math.cos(a) * r;
-        const z = -1.0 + Math.sin(a) * r * 0.6;
+        const r = spanR + (i % 3) * 0.5;
+        const x = cx + Math.cos(a) * r;
+        const z = cz + Math.sin(a) * r * 0.6;
         const y = 3.4 + (i % 2) * 0.5 + (reduced ? 0 : Math.sin(t * 2 + i) * 0.15);
         dummy.position.set(x, y, z);
         dummy.rotation.set(0.1, -a, 0);
@@ -263,7 +317,7 @@ export function buildBasement(palette, zoneDef, furnaceAnchor) {
     applyPalette(p) {
       Object.entries(mats).forEach(([key, list]) => list.forEach((m) => m.color.setHex(p[key])));
       line.applyPalette(p);
-      placed = null;
+      placedKey = null;
     },
   };
 }

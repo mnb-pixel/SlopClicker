@@ -4,8 +4,9 @@ import { getIcon } from '../../utils/iconMap';
 import { BUILDINGS_DATA } from '../../data/buildingsData';
 import { getBuildingVisibility } from '../../utils/buildingUnlock';
 import { UPGRADES_DATA, getAvailableUpgrades } from '../../data/upgradesData';
-import { GREENWASHING_LAYOFFS_DATA, getCorporateActionCost } from '../../data/greenwashingLayoffsData';
+import { GREENWASHING_LAYOFFS_DATA, getCorporateActionCost, getAvailableCorporateActions } from '../../data/greenwashingLayoffsData';
 import { formatCurrency, formatNumber, getBuildingCost, getBuildingBulkCost, getMaxAffordableBuildings } from '../../utils/formatters';
+import { buildingName, upgradeName, upgradeQuote, upgradeDescription, upgradeTargetBadge, gwName, gwQuote, gwEffectDesc } from '../../utils/storeCopy';
 import { BuzzwordAlbum } from '../BuzzwordAlbum';
 
 export function StoreTab({
@@ -55,59 +56,6 @@ export function StoreTab({
     return renderIcon(item?.icon || defaultIcon, `w-4 h-4 ${iconColor}`);
   };
 
-  const buildingName = (buildingId) => tr(`building_${buildingId}_name`);
-
-  // Target Badge Resolver helper
-  const getTargetBadge = (up) => {
-    if (!up) return '';
-    if (up.type === 'building') {
-      return `🎯 ${buildingName(up.buildingId)}`;
-    }
-    if (up.type === 'click') return `🎯 ${tr('affectsClick')}`;
-    if (up.type === 'syndicate') {
-      return up.req?.buildingId ? `🎯 ${buildingName(up.req.buildingId)}` : `🎯 ${tr('affectsSyndicate')}`;
-    }
-    if (up.type === 'global') return `🎯 ${tr('affectsGlobal')}`;
-    return `🎯 ${tr('affectsGlobal')}`;
-  };
-
-  // Für die 260 Gebäude-Upgrades (nur type:'building') gibt es Name/Flavor über t(),
-  // description wird dynamisch aus Gebäude-Name + Multiplikator gebaut.
-  const upgradeName = (up) => (up.type === 'building' ? tr(`upgrade_${up.id}_name`) : tr(`miscup_${up.id}_name`));
-  const upgradeQuote = (up) => (up.type === 'building' ? tr(`upgrade_${up.id}_quote`) : tr(`miscup_${up.id}_quote`));
-  const upgradeDescription = (up) => {
-    if (up.type !== 'building') return tr(`miscup_${up.id}_description`);
-    return tr('buildingUpgradeEffectDesc').replace('{building}', buildingName(up.buildingId)).replace('{pct}', Math.round((up.effect.value - 1) * 100));
-  };
-
-  // Für die 100 Greenwashing/Layoff-Aktionen: Name/Flavor über t(), effectDesc dynamisch.
-  const gwName = (item) => {
-    const key = `gw_${item.id}_name`;
-    const val = tr(key);
-    if (val && val !== key) return val;
-    const bName = buildingName(item.buildingId);
-    if (item.type === 'greenwashing') {
-      return `${tr('gwFallbackName')} ${item.tier} (${bName})`;
-    }
-    return `${tr('layoffFallbackName')} ${item.tier} (${bName})`;
-  };
-
-  const gwQuote = (item) => {
-    const key = `gw_${item.id}_quote`;
-    const val = tr(key);
-    if (val && val !== key) return val;
-    return item.type === 'greenwashing' ? tr('gwFallbackQuote') : tr('layoffFallbackQuote');
-  };
-
-  const gwEffectDesc = (item) => {
-    if (item.type === 'greenwashing' && item.tier === 1) return tr('gwEffect1');
-    if (item.type === 'greenwashing' && item.tier === 2) return tr('gwEffect2');
-    if (item.type === 'greenwashing' && item.tier === 3) return tr('gwEffect3');
-    if (item.type === 'layoff' && item.tier === 1) return tr('layoffEffect1');
-    if (item.type === 'layoff' && item.tier === 2) return tr('layoffEffect2');
-    return '';
-  };
-
   // Calculate gross base CPS sum across all buildings for income percentage share
   const totalGrossCpsSum = BUILDINGS_DATA.reduce((acc, b) => {
     const count = buildings[b.id] || 0;
@@ -150,25 +98,7 @@ export function StoreTab({
   // Corporate Actions List Filtering (gleiche "lowest unbought tier pro Gebäude" Regel wie
   // bei Upgrades) - oben berechnet, damit sowohl der Sub-Tab-Zähler als auch die Liste
   // selbst dieselbe Quelle nutzen.
-  const lowestUnboughtCorporateItem = new Map();
-  GREENWASHING_LAYOFFS_DATA.forEach((item) => {
-    const isBought = boughtGreenwashingLayoffs.includes(item.id);
-    const ownedCount = buildings[item.buildingId] || 0;
-    if (ownedCount >= 1 && !isBought) {
-      const key = `${item.buildingId}_${item.type}`;
-      if (!lowestUnboughtCorporateItem.has(key)) {
-        lowestUnboughtCorporateItem.set(key, item);
-      }
-    }
-  });
-  const availableCorporate = GREENWASHING_LAYOFFS_DATA.filter((item) => {
-    if (boughtGreenwashingLayoffs.includes(item.id)) return false;
-    const ownedCount = buildings[item.buildingId] || 0;
-    if (ownedCount < 1) return false;
-    const key = `${item.buildingId}_${item.type}`;
-    const nextItem = lowestUnboughtCorporateItem.get(key);
-    return nextItem && nextItem.id === item.id;
-  });
+  const availableCorporate = getAvailableCorporateActions(buildings, boughtGreenwashingLayoffs);
 
   const boughtUpgradesObjects = boughtUpgrades
     .map((upId) => UPGRADES_DATA.find((u) => u.id === upId))
@@ -323,7 +253,7 @@ export function StoreTab({
                   {/* Mouseover Hover Tooltip Card */}
                   <div className="hidden group-hover:flex flex-col gap-1 absolute bottom-full left-0 right-0 z-50 mb-2 p-3 bg-slate-950/95 backdrop-blur-md border border-cyan-500/50 rounded-xl shadow-2xl text-xs pointer-events-none animate-fadeIn">
                     <div className="font-extrabold text-cyan-300 flex items-center justify-between">
-                      <span>{buildingName(b.id)}</span>
+                      <span>{buildingName(b.id, tr)}</span>
                       <span className="text-[10px] text-slate-400 font-mono">Base: {formatCurrency(b.baseCost)}</span>
                     </div>
                     <div className="text-emerald-400 font-mono font-bold text-[11px] pt-1 border-t border-slate-800 flex justify-between">
@@ -346,7 +276,7 @@ export function StoreTab({
                       </div>
                       <div>
                         <div className="font-extrabold text-xs text-slate-100 flex items-center gap-1.5">
-                          {buildingName(b.id)}
+                          {buildingName(b.id, tr)}
                           {count > 0 && (
                             <span className="bg-cyan-500/20 text-cyan-300 text-[10px] font-black px-1.5 py-0.1 rounded border border-cyan-500/30">
                               x{count}
@@ -423,7 +353,7 @@ export function StoreTab({
                     <div className="p-1 rounded bg-slate-900 border border-slate-800 shrink-0">
                       {renderItemArtwork(activeUpgrade, 'Zap')}
                     </div>
-                    <span className="truncate">{upgradeName(activeUpgrade)}</span>
+                    <span className="truncate">{upgradeName(activeUpgrade, tr)}</span>
                   </div>
                   <span className="font-mono text-emerald-400 font-black text-sm shrink-0 ml-2">
                     {formatCurrency(activeUpgrade.cost)}
@@ -431,20 +361,20 @@ export function StoreTab({
                 </div>
 
                 <div className="flex items-center justify-between text-[10px] font-mono">
-                  <span className="text-cyan-300 font-bold">{getTargetBadge(activeUpgrade)}</span>
+                  <span className="text-cyan-300 font-bold">{upgradeTargetBadge(activeUpgrade, tr)}</span>
                   <span className={isActiveBought ? 'text-emerald-400 font-bold' : canAffordActive ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
                     {isActiveBought ? `✓ ${tr('boughtLabel')}` : canAffordActive ? `✓ ${tr('affordableLabel')}` : `🔒 ${tr('notEnoughValuation')}`}
                   </span>
                 </div>
 
-                {upgradeQuote(activeUpgrade) && (
+                {upgradeQuote(activeUpgrade, tr) && (
                   <div className="text-slate-300 italic text-[11px] bg-slate-900/60 p-1.5 rounded border border-slate-800/80">
-                    "{upgradeQuote(activeUpgrade)}"
+                    "{upgradeQuote(activeUpgrade, tr)}"
                   </div>
                 )}
 
                 <div className="text-amber-300 font-bold text-[11px] pt-1 flex justify-between items-center gap-2">
-                  <span>⚡ {upgradeDescription(activeUpgrade)}</span>
+                  <span>⚡ {upgradeDescription(activeUpgrade, tr)}</span>
                   {isActiveBought ? (
                     <span className="px-3 py-1 rounded-lg font-black text-xs shrink-0 bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5" /> {tr('boughtLabel')}
@@ -549,7 +479,7 @@ export function StoreTab({
                                       <div className="p-1 rounded bg-slate-900 border border-slate-800 shrink-0">
                                         {renderItemArtwork(activeItem, 'Check')}
                                       </div>
-                                      <span className="truncate">{upgradeName(activeItem)}</span>
+                                      <span className="truncate">{upgradeName(activeItem, tr)}</span>
                                     </div>
                                     <span className="flex items-center gap-1 text-emerald-400 font-black text-[10px] shrink-0 ml-2">
                                       <CheckCircle2 className="w-3.5 h-3.5" /> {tr('boughtLabel')}
@@ -557,17 +487,17 @@ export function StoreTab({
                                   </div>
 
                                   <div className="text-[10px] font-mono text-cyan-300 font-bold">
-                                    {getTargetBadge(activeItem)}
+                                    {upgradeTargetBadge(activeItem, tr)}
                                   </div>
 
-                                  {upgradeQuote(activeItem) && (
+                                  {upgradeQuote(activeItem, tr) && (
                                     <div className="text-slate-300 italic text-[11px] bg-slate-900/60 p-1.5 rounded border border-slate-800/80">
-                                      "{upgradeQuote(activeItem)}"
+                                      "{upgradeQuote(activeItem, tr)}"
                                     </div>
                                   )}
 
                                   <div className="text-emerald-300 font-bold text-[11px] pt-1">
-                                    ⚡ {upgradeDescription(activeItem)}
+                                    ⚡ {upgradeDescription(activeItem, tr)}
                                   </div>
                                 </div>
                               )}
@@ -583,7 +513,7 @@ export function StoreTab({
                                         ? 'ring-2 ring-emerald-400 border-emerald-300 scale-105 shadow-lg shadow-emerald-500/20'
                                         : 'border-emerald-500/40 hover:border-emerald-400'
                                     }`}
-                                    title={`${upgradeName(up)}: ${upgradeDescription(up)}`}
+                                    title={`${upgradeName(up, tr)}: ${upgradeDescription(up, tr)}`}
                                   >
                                     {renderItemArtwork(up, 'Check')}
                                     <span className="text-[9px] font-mono font-bold text-emerald-400/80 mt-0.5">✓</span>
@@ -632,7 +562,7 @@ export function StoreTab({
                       <Lock className="w-4 h-4 text-slate-500" />
                     </div>
                     <div>
-                      <div className="font-extrabold text-xs text-slate-400">{tr('lockedCorporate')} ({buildingName(b.id)})</div>
+                      <div className="font-extrabold text-xs text-slate-400">{tr('lockedCorporate')} ({buildingName(b.id, tr)})</div>
                       <div className="text-[11px] text-slate-500 italic mt-0.5">
                         {tr('lockedCorporateDesc')}
                       </div>
@@ -668,12 +598,12 @@ export function StoreTab({
                     </div>
                     <div>
                       <div className="font-extrabold text-xs text-slate-100 flex items-center gap-2">
-                        <span>{gwName(item)}</span>
-                        <span className="text-[10px] text-slate-400 font-mono font-normal">({b ? buildingName(b.id) : ''})</span>
+                        <span>{gwName(item, tr)}</span>
+                        <span className="text-[10px] text-slate-400 font-mono font-normal">({b ? buildingName(b.id, tr) : ''})</span>
                       </div>
-                      <div className="text-[11px] text-slate-300 italic">"{gwQuote(item)}"</div>
+                      <div className="text-[11px] text-slate-300 italic">"{gwQuote(item, tr)}"</div>
                       <div className="text-[10px] text-amber-400 font-mono font-bold mt-1 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30 inline-block">
-                        {gwEffectDesc(item)}
+                        {gwEffectDesc(item, tr)}
                       </div>
                     </div>
                   </div>
@@ -731,11 +661,11 @@ export function StoreTab({
                           </div>
                           <div>
                             <div className="font-extrabold text-xs text-slate-100 flex items-center gap-2">
-                              <span>{gwName(item)}</span>
-                              <span className="text-[10px] text-slate-400 font-mono font-normal">({b ? buildingName(b.id) : ''})</span>
+                              <span>{gwName(item, tr)}</span>
+                              <span className="text-[10px] text-slate-400 font-mono font-normal">({b ? buildingName(b.id, tr) : ''})</span>
                             </div>
                             <div className="text-[10px] text-amber-400 font-mono font-bold mt-1 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30 inline-block">
-                              {gwEffectDesc(item)}
+                              {gwEffectDesc(item, tr)}
                             </div>
                           </div>
                         </div>

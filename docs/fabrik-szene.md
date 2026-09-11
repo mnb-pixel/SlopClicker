@@ -91,7 +91,7 @@ bildschirm ersetzt. Hier ist sie vorerst NUR eine versteckte Testseite:
 | Ohne WebGL | Alte Ansicht (Header, Tabs, GPU-Button, Icon-Liste) bleibt als Fallback, ohne Meme-Bild |
 | Licht | Ein Richtungslicht mit Schattenkarte plus Hemisphärenlicht, Tageslicht |
 | Stimmung | Insel im Tageslicht, Menüs aus der Szene heraus im selben hellen Low-Poly-Stil (Papier, Tinte, klotzige Kanten) |
-| Kaufen | Direkt aus der Szene per Klick auf eine Zone, Shop-Tab bleibt bestehen |
+| Kaufen | Direkt aus der Szene per Klick auf eine Zone: Engines, deren Upgrades UND deren Corporate Actions in drei Reitern; Klick-Upgrades, Syndicate und Buzzwords bleiben im Shop-Tab, weil sie keiner Zone gehören |
 | Meme-Bilder | Nicht in der Szene |
 | Tilt-Shift | Nicht als Post-Processing (zu teuer auf Mobile), stattdessen weiche Vignette am Inselrand |
 | Bildschirm | Eine Vollbild-Szene, keine Kopf- und Fußzeile mehr. Zähler und wenige Buttons liegen als Overlay auf der Szene |
@@ -240,30 +240,37 @@ Phase 4 eine zweite Leitung derselben Art.
 
 ## Zonen und Props
 
+Fast jede Engine steht inzwischen auf einem eigenen, wachsenden Grundstück (siehe
+"Grundstücke und Inselwachstum" unten) statt auf einem festen Platz innerhalb der
+Zone: ist eines voll, entsteht das nächste NEBENAN, in einer eigenen Reihe je Engine.
+Ausnahmen sind Singletons (AGI-Uhr, Singularität - es gibt nie ein zweites davon) und
+frei schwebende Requisiten ohne Grundstück (Sprechblasen, Drohnen, Pitch-Deck-Papiere,
+Excel-Tabelle), die einfach über der ganzen - gewachsenen - Zone weiterziehen.
+
 | Zone | Engine | Prop (Low-Poly) | Max. Objekte |
 |---|---|---|---|
 | office | Prompt-Praktikant | Person am schiefen Tisch, Monitor, Tastatur, Tasse, tippende Arme, hängende Schultern - vier pro Haus, danach ein Haus nebenan, nach vier Häusern eine neue Reihe (bis 12 Häuser) | 48 |
 | office | Prompt Engineer | Person am breiteren Tisch mit zwei Monitoren, aufrechte Haltung, schnelleres Tippen - vier pro Haus, eigene Spalten neben den Praktikanten (bis 9 Häuser) | 36 |
-| office | Chatbot-Widget | Schwebende Sprechblasen mit pulsierenden Punkten über den Tischen | 10 |
+| office | Chatbot-Widget | Schwebende Sprechblasen mit pulsierenden Punkten über den Tischen, frei über der Zone | 10 |
 | office | Datenleitung | Transparente Röhre vom Büro zum Schranksockel, Tokens rasen hindurch, Menge nach Zonenstufe | 40 Tokens |
-| basement | GPU-Rack | Schmaler Turm mit vier blinkenden LED-Streifen | 14 |
-| basement | Rechenzentrum | Weißer Zylinder mit zwei Türkis-Ringen und Band, Lüfter oben dreht | 8 |
-| basement | Token-Burner | Kubus mit wabernd orangem Kern | 8 |
-| basement | Web-Scraper | Drohne mit vier Rotoren und rotem Auge, kreist über den Silos | 12 |
-| basement | Grauer-Markt-RZ | Dunkles Silo unter grüner Plane hinter Zaun, links am Rand | 6 |
+| basement | GPU-Rack | Schmaler Turm mit vier blinkenden LED-Streifen, vier pro Grundstück (bis 8 Grundstücke) | 32 |
+| basement | Token-Burner | Kubus mit wabernd orangem Kern, vier pro Grundstück (bis 5) | 20 |
+| basement | Rechenzentrum | Weißer Zylinder mit Türkis-Ring und Band, Lüfter oben dreht, zwei pro Grundstück (bis 6) | 12 |
+| basement | Grauer-Markt-RZ | Dunkles Silo unter grüner Plane hinter Zaun, zwei pro Grundstück (bis 4) | 8 |
+| basement | Web-Scraper | Drohne mit vier Rotoren und rotem Auge, kreist frei über der Zone, Radius folgt deren Größe | 12 |
 | basement | Datenleitung | Zweite Röhre zum Schrank, kommt an dessen linker, sichtbarer Seite an | 40 Tokens |
-| stage | Keynote-Bühne | Podest mit Pult, leuchtender Rückwand mit Gold-Balkendiagramm; jede weitere Bühne ein Scheinwerfer mit schwenkendem Lichtkegel | 4 |
-| stage | Thought Leader | Person mit Krawatte und Mikrofon, gestikuliert, vordere Reihe auf der Bühne | 10 |
-| stage | Hype-Journalist | Person mit Kamera vor dem Gesicht, Blitz ploppt zufällig auf | 10 |
-| stage | Recyceltes Pitch Deck | Weiße Blätter, die über der Bühne in Schleifen segeln | 14 |
-| stage | Regulierungs-Lobbyist | Person mit Aktenkoffer am Sendemast mit Schüssel, rotem Blinklicht und Sendewellen | 6 |
-| tower | VC-Firma | Glasturm, ein Stockwerk pro Objekt, Gold-Bänder, Lobby immer da | 6 |
-| tower | Pivot-Startup | Container am Turmfuß, Logo wechselt alle paar Sekunden die Farbe | 8 |
-| tower | AGI-Countdown-Uhr | LED-Tafel auf dem Dach, Countdown springt alle 25 Sekunden zurück | 1 |
-| tower | Newsticker | LED-Laufschrift auf dem Dach mit dem Text der bisherigen HUD-Laufzeile | 1 |
-| endgame | Kleiner Atomreaktor | Kühlturm an der hinteren Kante mit weißem Dampf, je einer links und rechts | 4 |
-| endgame | 3D-Welt-Geisterstadt | Hologramm-Skyline aus türkisen Glasquadern auf einem Projektor, flimmert | 6 |
-| endgame | Selbstbewusste Excel-Tabelle | Schwebendes Gitterblatt mit zwei Augen, dreht sich, hoch über den Silos | 6 |
+| stage | Keynote-Bühne | Podest mit Pult, leuchtender Rückwand mit Gold-Balkendiagramm und zwei Scheinwerfern - eine eigene, kleinere Bühne pro Grundstück (bis 6) | 6 |
+| stage | Thought Leader | Person mit Krawatte und Mikrofon, gestikuliert, vier pro Grundstück (bis 6) | 24 |
+| stage | Hype-Journalist | Person mit Kamera vor dem Gesicht, Blitz ploppt zufällig auf, vier pro Grundstück (bis 6) | 24 |
+| stage | Regulierungs-Lobbyist | Person mit Aktenkoffer an einem eigenen Sendemast mit Schüssel, rotem Blinklicht und Sendewellen, ein Mast pro Grundstück (bis 6) | 6 |
+| stage | Recyceltes Pitch Deck | Weiße Blätter, die frei über der Zone in Schleifen segeln, Mitte folgt deren Größe | 14 |
+| tower | VC-Firma | Glasturm, ein Stockwerk pro Objekt bis zu sechs pro Turm; ist einer voll, entsteht der nächste GANZE Glasturm nebenan (bis 4 Türme) | 24 |
+| tower | Pivot-Startup | Container-Trio am Turmfuß, Logo wechselt alle paar Sekunden die Farbe, drei pro Grundstück (bis 5) | 15 |
+| tower | AGI-Countdown-Uhr | LED-Tafel auf dem Dach des ERSTEN Turms, Countdown springt alle 25 Sekunden zurück | 1 |
+| tower | Newsticker | LED-Laufschrift auf dem Dach des ersten Turms mit dem Text der bisherigen HUD-Laufzeile | 1 |
+| endgame | Kleiner Atomreaktor | Kühlturm-Zwillingspaar mit weißem Dampf, ein Paar pro Grundstück (bis 4) | 8 |
+| endgame | 3D-Welt-Geisterstadt | Zwei Hologramm-Gebäude auf einem eigenen kleinen Projektor, ein Projektor pro Grundstück (bis 4) | 8 |
+| endgame | Selbstbewusste Excel-Tabelle | Schwebendes Gitterblatt mit zwei Augen, dreht sich frei hoch über den Silos | 6 |
 | endgame | Die Singularity | Schwarze Kugel mit zwei Akkretionsringen im Rauch über dem Abluftrohr, Trümmer kreisen hinein | 1 |
 
 Über die Maximalzahl hinaus wächst nur die Zahl an der Zonen-Stecknadel und die Ausbaustufe.
@@ -277,15 +284,15 @@ den Bauern, müsste die Insel raten, wie weit die Zonen inzwischen gewachsen sin
 * **Grundstück** (`LOT_SIZE` 3,6): ein Haus. `lotLocal()` legt es in die Zone, Index 0
   in die innere Ecke der Grundfläche, jeder weitere Schritt nach außen - ab der Kante
   eben über sie hinaus.
-* **Engines mit `plot`** (`zonesData.js`): `capacity` Objekte pro Haus, `max` Häuser,
-  `axis` die Wachstumsrichtung, `perRow` der Reihenumbruch, `lane`/`offset` die Reihe
-  bzw. die Startspalte. `maxProps` ist bei ihnen bewusst `capacity * max`, sonst stünde
-  das letzte Haus halb leer. Ohne `perRow` würde ein Dutzend Häuser eine einzige
-  endlose Straße über die halbe Insel bilden statt eines Viertels; `offset` gibt der
-  zweiten Engine derselben Zone ihre eigenen Spalten.
-* **Anbauhallen** (`annexMax` an der Zone, derzeit 8): für Zonen, deren Props auf festen
-  Plätzen stehen (Keller, Bühne, Turm). Sie liegen komplett außerhalb der Grundfläche
-  und kommen bei 30, 80, 200, 500, 1200, 3000, 8000 und 20000 Objekten Zonenbestand dazu.
+* **Engines mit `plot`** (`zonesData.js`): `capacity` Objekte pro Grundstück, `max`
+  Grundstücke, `axis` die Wachstumsrichtung (bei allen vier Zonen `'x'`, weil ihre
+  Anker ohnehin vom Ofen weg in x liegen), `lane` die Reihe quer dazu. Jede Engine
+  EINER Zone bekommt eine eigene `lane` - zwei Engines geraten sich dadurch beweisbar
+  nie ins Gehege, jede Reihe wächst unabhängig beliebig weit nach außen. `maxProps` ist
+  bei ihnen bewusst `capacity * max`, sonst stünde das letzte Grundstück halb leer,
+  während die Zahl am Schild weiterläuft. Ausnahmen: Singletons (`agi_clock`,
+  `singularity`, je `maxProps` 1) und frei schwebende Requisiten ganz ohne `plot`
+  (Sprechblasen, Drohnen, Pitch-Deck-Papiere, Excel-Tabelle).
 * **Zonenplatte und Stecknadel** folgen dem Rechteck aus Grundfläche + Grundstücken
   (`zoneRect`), die Nadel rückt um genau den Zuwachs nach außen.
 * **Inselgröße**: `islandSizeForLots()` nimmt das äußerste Grundstück plus Rand und
@@ -405,7 +412,8 @@ ohne stundenlanges Spielen; kein Cheat, weil nichts davon in den Store zurückfl
 | `src/components/scene3d/buildOffice.js`, `buildBasement.js`, `buildStage.js`, `buildTower.js`, `buildEndgame.js` | Die fünf Zonen |
 | `src/components/scene3d/buildZones.js` | Platten, Klickziele, Nadel-Anker, Zonen-Effekte, hostet die Zonen-Bauer |
 | `src/components/scene3d/buildDataLine.js`, `buildPeople.js` | Gemeinsame Bausteine: Datenleitung, Personen |
-| `src/components/scene3d/ZoneBuyPanel.jsx` | Kaufen aus der Szene, Preise über dieselben Helfer wie der Shop |
+| `src/components/scene3d/ZoneBuyPanel.jsx` | Kaufen aus der Szene: Engines, Upgrades und Corporate Actions der angeklickten Zone in drei Reitern, Preise/Filterung über dieselben Helfer wie der Shop |
+| `src/utils/storeCopy.js` | Anzeigetexte für Upgrades und Corporate Actions (Name, Zitat, Effektbeschreibung) - eine Quelle für StoreTab und ZoneBuyPanel |
 | `src/components/scene3d/palette.js` | Materialfarben je Theme, Himmel als CSS-Verlauf |
 | `src/components/scene3d/zoneVisuals.js` | Icon und Akzentfarbe je Zone, für Stecknadel und Panelkopf |
 | `src/data/zonesData.js` | Zonen-Anker, Grundflächen, Nadel-Anker (`labelAnchor3d`), Engine-Zuordnung, `maxProps`, `plot`, `annexMax` |
