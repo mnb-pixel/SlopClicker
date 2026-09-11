@@ -8,6 +8,17 @@ import { ISLAND_BASE_SIZE } from '../utils/campusLayout';
 // `footprint` deren Ausdehnung. `labelAnchor3d` (optional) setzt die Zonen-Stecknadel
 // abweichend von der Standardregel (vom Ofen weg gerückt).
 //
+// Die Zonen liegen bewusst weiter auseinander (x = +/-9, z = +/-8.5 statt vorher +/-7 und
+// +/-6). Der Zuwachs liegt vor allem in z: die Grundstuecke einer Zone wachsen alle in
+// x (siehe unten), dort kostet jeder zusaetzliche Meter Abstand also doppelt - die Zone
+// wuerde bei starkem Ausbau nur noch weiter aus dem Bild ragen. In z wachsen sie nicht,
+// da ist der Abstand geschenkt. Vorher klebten die vier Platten aneinander und reichten bis an den Ofensockel:
+// in der Isometrie wurde daraus ein einziger Klumpen, in dem man weder die Grenze
+// zwischen zwei Zonen noch den Ofen dazwischen ausmachen konnte. Der freie Ring, der
+// dadurch in der Mitte entsteht, ist kein Loch - dort liegt der Ofenhof (siehe
+// buildCampus.js: Plattenbelag, Kantstein, Pflanzkübel), und die Wege von den Zonen
+// enden an dessen Rand statt am Sockel.
+//
 // Die Anker sind auf die kleinen Stecknadeln aus CampusScene.jsx getrimmt: bodennah
 // (kleines y) am AUSSENrand der jeweiligen Platte, damit die Nadel über Gras oder
 // Inselkante steht statt über den Gebäuden der Zone. Nach innen gerückte Anker landen
@@ -49,9 +60,9 @@ export const ZONE_TIER_THRESHOLDS = [1, 3, 8, 20, 50, 120, 300];
 export const ZONES_DATA = [
   {
     id: 'office',
-    anchor3d: { x: -7, z: 6 },
+    anchor3d: { x: -9, z: 8.5 },
     footprint: { w: 8, d: 7 },
-    labelAnchor3d: { x: -10.8, y: 0.5, z: 8.2 },
+    labelAnchor3d: { x: -12.8, y: 0.5, z: 10.7 },
     buildings: [
       { id: 'prompt_intern', maxProps: 48, plot: { capacity: 4, max: 12, axis: 'x', lane: 0, perRow: 4 } },
       // Eigene Spalten (offset 4) statt eigener Achse: so wächst jede Engine als
@@ -62,11 +73,11 @@ export const ZONES_DATA = [
   },
   {
     id: 'basement',
-    anchor3d: { x: -7, z: -6 },
+    anchor3d: { x: -9, z: -8.5 },
     footprint: { w: 8, d: 7 },
     // Nicht in die hintere Ecke: die projiziert auf dieselbe Bildschirmstelle wie der
     // Schlot. Stattdessen an die linke Außenkante der Platte.
-    labelAnchor3d: { x: -11.2, y: 0.5, z: -3.4 },
+    labelAnchor3d: { x: -13.2, y: 0.5, z: -5.9 },
     buildings: [
       { id: 'gpu_rack', maxProps: 32, plot: { capacity: 4, max: 8, axis: 'x', lane: 0 } },
       { id: 'token_burner', maxProps: 20, plot: { capacity: 4, max: 5, axis: 'x', lane: 1 } },
@@ -77,9 +88,9 @@ export const ZONES_DATA = [
   },
   {
     id: 'stage',
-    anchor3d: { x: 7, z: 6 },
+    anchor3d: { x: 9, z: 8.5 },
     footprint: { w: 8, d: 7 },
-    labelAnchor3d: { x: 11.2, y: 0.5, z: 8.6 },
+    labelAnchor3d: { x: 13.2, y: 0.5, z: 11.1 },
     buildings: [
       { id: 'keynote_stage', maxProps: 6, plot: { capacity: 1, max: 6, axis: 'x', lane: 0 } },
       { id: 'thought_leader', maxProps: 24, plot: { capacity: 4, max: 6, axis: 'x', lane: 1 } },
@@ -90,9 +101,9 @@ export const ZONES_DATA = [
   },
   {
     id: 'tower',
-    anchor3d: { x: 7, z: -6 },
+    anchor3d: { x: 9, z: -8.5 },
     footprint: { w: 8, d: 7 },
-    labelAnchor3d: { x: 11.2, y: 0.5, z: -3.4 },
+    labelAnchor3d: { x: 13.2, y: 0.5, z: -5.9 },
     buildings: [
       // Jedes Grundstück ein eigener Glasturm mit bis zu 6 Stockwerken; ist einer voll,
       // wächst das nächste NEBENAN statt nur höher - so trägt auch der Kapital-Turm zum
@@ -104,10 +115,12 @@ export const ZONES_DATA = [
   },
   {
     id: 'endgame',
-    anchor3d: { x: 0, z: -10 },
+    // Ganz hinten, hinter den Reihen von Serverkeller und Kapital-Turm: deren
+    // aeusserste Grundstuecksreihe reicht bei vollem Ausbau bis etwa z = -17.
+    anchor3d: { x: 0, z: -20 },
     footprint: { w: 14, d: 3 },
     // Standardregel landete über dem Turm bzw. hinter dem Schlot.
-    labelAnchor3d: { x: -6.6, y: 0.5, z: -10.6 },
+    labelAnchor3d: { x: -6.6, y: 0.5, z: -20.6 },
     buildings: [
       { id: 'nuclear_reactor', maxProps: 8, plot: { capacity: 2, max: 4, axis: 'x', lane: 0 } },
       { id: 'metaverse_city', maxProps: 8, plot: { capacity: 2, max: 4, axis: 'x', lane: 1 } },

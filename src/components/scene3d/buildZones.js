@@ -120,6 +120,9 @@ export function buildZones(palette, zonesData) {
     };
   }
 
+  // Wie weit der Kantstein unter der Zonenplatte hervorschaut.
+  const KERB_OVERHANG = 0.45;
+
   zonesData.forEach((zone) => {
     const { anchor3d, footprint } = zone;
     const mat = new THREE.MeshLambertMaterial({
@@ -138,7 +141,25 @@ export function buildZones(palette, zonesData) {
     plate.userData.clickable = false;
     group.add(plate);
     hitMeshes.push(plate);
-    plates[zone.id] = { plate, mat, unlocked: null, selected: null, rectKey: null };
+
+    // Kantstein: eine Nummer größere, etwas flachere Platte DARUNTER, in Stein-Dunkel.
+    // Sie schaut ringsum ein Stück unter der Zonenplatte hervor und macht damit die
+    // Grenze eines Grundstücks sichtbar. Vorher lagen benachbarte Zonen als zwei
+    // gleich helle Flächen aneinander und verschmolzen in der Isometrie zu einer
+    // einzigen. Kein Klickziel (nicht in hitMeshes) - getroffen wird die Platte selbst.
+    const kerbMat = new THREE.MeshLambertMaterial({
+      color: palette.stoneDark,
+      flatShading: true,
+      transparent: true,
+      opacity: 0.55,
+    });
+    const kerb = new THREE.Mesh(new THREE.BoxGeometry(footprint.w, 0.22, footprint.d), kerbMat);
+    kerb.position.set(anchor3d.x, 0.11, anchor3d.z);
+    kerb.receiveShadow = true;
+    kerb.visible = false;
+    group.add(kerb);
+
+    plates[zone.id] = { plate, mat, kerb, kerbMat, unlocked: null, selected: null, rectKey: null };
 
     effects[zone.id] = buildEffects(zone);
     group.add(effects[zone.id].group);
@@ -182,6 +203,12 @@ export function buildZones(palette, zonesData) {
     const rect = zone.rect;
     entry.plate.scale.set(rect.w / w, 1, rect.d / d);
     entry.plate.position.set(rect.cx, 0.15, rect.cz);
+    // Der Kantstein bekommt ringsum KERB_OVERHANG mehr als die Platte - deshalb wird
+    // er nicht einfach mit demselben Faktor skaliert, sondern auf die Zielmaße
+    // gerechnet: ein gemeinsamer Faktor machte den Überstand bei großen Zonen breiter
+    // als bei kleinen.
+    entry.kerb.scale.set((rect.w + KERB_OVERHANG * 2) / w, 1, (rect.d + KERB_OVERHANG * 2) / d);
+    entry.kerb.position.set(rect.cx, 0.11, rect.cz);
     const base = labelBase[zone.id];
     const anchor = labelAnchors[zone.id];
     const dx = def.anchor3d.x < 0 ? rect.minX - (def.anchor3d.x - w / 2) : rect.maxX - (def.anchor3d.x + w / 2);
@@ -203,6 +230,9 @@ export function buildZones(palette, zonesData) {
           // Nicht freigeschaltet und auch nicht der Platzhalter -> Zone existiert für
           // den Spieler noch gar nicht.
           entryEarly.plate.visible = z.revealed || z.teaser;
+          // Kantstein nur an freigeschalteten Zonen: an einer "???"-Zone würde eine
+          // saubere Einfassung mehr versprechen, als dort steht.
+          entryEarly.kerb.visible = Boolean(z.revealed) && Boolean(z.unlocked);
           // Der Platzhalter ist bewusst tot: es gibt dort nichts zu kaufen, ein
           // Kaufpanel mit ausschließlich gesperrten Zeilen wäre nur eine Sackgasse.
           entryEarly.plate.userData.clickable = Boolean(z.revealed);
@@ -264,6 +294,7 @@ export function buildZones(palette, zonesData) {
       // Plattenfarben werden beim nächsten update() neu gesetzt.
       Object.values(plates).forEach((e) => {
         e.unlocked = null;
+        e.kerbMat.color.setHex(p.stoneDark);
       });
       Object.values(builders).forEach((b) => b.applyPalette(p));
       Object.values(effects).forEach((fx) => {

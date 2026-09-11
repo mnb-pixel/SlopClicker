@@ -257,10 +257,10 @@ export const CampusScene = forwardRef(function CampusScene(
     apiRef.current = { renderer, scene, camera, furnace: furnaceObj, zones: zonesObj, resetView: () => resetView() };
     container.style.background = palette.skyCss;
 
-    // Kamera-Ausschnitt: Hochformat füllt die Breite, Querformat die Höhe. Der Ursprung
-    // liegt bewusst ÜBER der Bildmitte: der sichtbare Schwerpunkt der Insel (Sockel nach
-    // unten) soll etwa auf 45 Prozent Höhe sitzen, damit weder Zähler noch Buttons über
-    // der Insel liegen.
+    // Kamera-Ausschnitt: Hochformat füllt die Breite, Querformat die Höhe. Der Campus
+    // sitzt eine Spur UNTER der Bildmitte: oben liegt die Kopfzeile (Name, Bewertung,
+    // Kennzahlen, Hitzebalken), unten nur die Buttonreihe - die freie Fläche dazwischen
+    // hat ihre Mitte also unterhalb der Bildmitte.
     //
     // `viewScale` ist die Inselgröße relativ zur Basis, gedeckelt auf VIEW_FIT_MAX: bis
     // dahin fährt die Kamera beim Wachstum zurück, danach bleibt der Maßstab stehen und
@@ -277,19 +277,24 @@ export const CampusScene = forwardRef(function CampusScene(
       const aspect = w / Math.max(1, h);
       let halfW;
       let halfH;
-      // Der Versatz nach unten ist bewusst eine feste Weltgröße (aus dem UNskalierten
-      // Ausschnitt), keine Prozentzahl: er gleicht die Felsspitze unter der Insel aus,
-      // und die wächst nicht mit. Als Anteil gerechnet schöbe er die Insel bei jedem
-      // Wachstumsschritt weiter nach oben aus dem Bild.
+      // Der Versatz ist bewusst eine feste Weltgröße (aus dem UNskalierten Ausschnitt),
+      // keine Prozentzahl: als Anteil gerechnet schöbe er den Campus bei jedem
+      // Wachstumsschritt weiter aus dem Bild.
+      //
+      // Er ist jetzt NEGATIV (Campus etwas tiefer im Bild). Der frühere kräftige Schub
+      // nach oben (0.18) stammt aus der Zeit der schwebenden Insel: die hatte eine
+      // Felsspitze unter sich, die Platz nach unten brauchte. Seit das Spielfeld eine
+      // flache Wiese ist, schob derselbe Wert den Campus nur noch in die obere
+      // Bildhälfte und ließ darunter ein leeres Drittel Rasen stehen.
       let shiftY;
       if (aspect < 1) {
         halfW = 17.5 * viewScale;
         halfH = halfW / aspect;
-        shiftY = (17.5 / aspect) * 0.18;
+        shiftY = -(17.5 / aspect) * 0.05;
       } else {
         halfH = 17 * viewScale;
         halfW = halfH * aspect;
-        shiftY = 17 * 0.02;
+        shiftY = -17 * 0.04;
       }
       camera.top = halfH - shiftY;
       camera.bottom = -halfH - shiftY;
