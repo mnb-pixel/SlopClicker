@@ -1,4 +1,5 @@
 import { SiteLayout } from '../SiteLayout.jsx';
+import { VoxelSiteLayout } from '../VoxelSiteLayout.jsx';
 import { IOS_APP } from '../content/iosApp.content.js';
 import {
   PageIntro,
@@ -14,10 +15,12 @@ import {
 
 // Einzige Seite neben der Startseite mit dem offiziellen App-Store-Badge (Apple: ein Badge
 // pro Layout, siehe ui.jsx). Die Screenshots hier zeigen die App im Simulator.
-export function IosAppPage() {
+export function IosAppPage({ isVoxel = false }) {
+  const Layout = isVoxel ? VoxelSiteLayout : SiteLayout;
+  const path = isVoxel ? '/voxel/ios-app' : '/ios-app';
   const c = IOS_APP;
   return (
-    <SiteLayout path="/ios-app" wide>
+    <Layout path={path} wide>
       <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_260px] md:items-center">
         <PageIntro kicker={c.kicker} title={c.title} lead={c.lead}>
           <div className="mt-6 flex flex-wrap items-center gap-4">
@@ -65,8 +68,16 @@ export function IosAppPage() {
           </Prose>
         </Section>
 
-        <PageEnd next={c.next} ctaText="Lieber ohne Installation? Die Web-Version ist dasselbe Spiel – direkt im Browser." />
+        <PageEnd
+          next={c.next}
+          ctaText="Lieber ohne Installation? Die Web-Version ist dasselbe Spiel – direkt im Browser."
+          isVoxel={isVoxel}
+        />
       </div>
-    </SiteLayout>
+    </Layout>
   );
+}
+
+export function VoxelIosAppPage() {
+  return <IosAppPage isVoxel />;
 }

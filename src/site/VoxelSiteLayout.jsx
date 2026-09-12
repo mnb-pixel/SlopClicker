@@ -27,12 +27,41 @@ function VoxelHeaderLogo() {
   );
 }
 
-export function VoxelSiteLayout({ children }) {
+export const VOXEL_NAV_ROUTES = [
+  { path: '/voxel', nav: 'Start', title: 'Start' },
+  { path: '/voxel/anleitung', nav: 'Anleitung', title: 'Anleitung' },
+  { path: '/voxel/strategie', nav: 'Strategie', title: 'Strategie' },
+  { path: '/voxel/glossar', nav: 'Glossar', title: 'Glossar' },
+  { path: '/voxel/faq', nav: 'FAQ', title: 'FAQ' },
+  { path: '/voxel/ios-app', nav: 'iOS-App', title: 'iOS-App' },
+  { path: '/voxel/ueber', nav: 'Über uns', title: 'Über uns' },
+];
+
+export function VoxelSiteLayout({ path = '/voxel', wide = false, children }) {
   useEffect(() => {
     initKlaro();
   }, []);
 
-  const navItems = SITE_ROUTES.filter((route) => route.nav && route.path !== '/voxel');
+  // Ziel für den "Classic 2D"-Umschalter: die exakte 2D-Entsprechung der aktuellen Seite
+  const classicPath = path === '/voxel' ? '/' : (path.replace(/^\/voxel/, '') || '/');
+
+  const navLink = (route, extra = '') => {
+    const active = route.path === path;
+    return (
+      <a
+        key={route.path}
+        href={route.path}
+        aria-current={active ? 'page' : undefined}
+        className={`px-3 py-1.5 text-xs font-mono font-bold rounded-xl transition-all ${
+          active
+            ? 'text-[#2f855a] bg-[#f3ece0] border-2 border-[#c8bb9f] shadow-[0_2px_0_#c8bb9f]'
+            : 'text-[#22313f] hover:text-[#2f855a] hover:bg-[#f3ece0]/70'
+        } ${extra}`}
+      >
+        {route.nav}
+      </a>
+    );
+  };
 
   return (
     <div
@@ -60,21 +89,13 @@ export function VoxelSiteLayout({ children }) {
 
           <nav aria-label="Voxel Navigation" className="hidden lg:flex items-center gap-1.5">
             <a
-              href="/"
+              href={classicPath}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-bold text-[#22313f] bg-[#f3ece0] hover:bg-[#fffdf6] rounded-xl border-2 border-[#c8bb9f] shadow-[0_2px_0_#c8bb9f] active:translate-y-0.5 active:shadow-none transition-all"
-              title="Zurück zur 2D-Startseite"
+              title="Zurück zur 2D-Version dieser Seite"
             >
               <ArrowLeft className="w-3.5 h-3.5 text-[#6d7f8e]" /> Classic 2D
             </a>
-            {navItems.map((route) => (
-              <a
-                key={route.path}
-                href={route.path}
-                className="px-3 py-1.5 text-xs font-mono font-bold text-[#22313f] hover:text-[#2f855a] hover:bg-[#f3ece0]/70 rounded-xl transition-colors"
-              >
-                {route.nav}
-              </a>
-            ))}
+            {VOXEL_NAV_ROUTES.map((route) => navLink(route))}
           </nav>
 
           <div className="flex items-center gap-2.5">
@@ -100,46 +121,43 @@ export function VoxelSiteLayout({ children }) {
                 className="absolute right-0 mt-2 w-56 flex flex-col gap-1 bg-[#fffdf6] border-2 border-[#c8bb9f] rounded-2xl p-2.5 shadow-[0_4px_0_#c8bb9f,0_12px_28px_rgba(28,42,56,0.15)] z-50 font-mono text-xs"
               >
                 <a
-                  href="/"
+                  href={classicPath}
                   className="flex items-center gap-2 px-3 py-2 text-[#22313f] bg-[#f3ece0] rounded-xl border border-[#c8bb9f] font-bold"
                 >
                   <ArrowLeft className="w-3.5 h-3.5 text-[#6d7f8e]" /> Zurück zu Classic 2D
                 </a>
-                {navItems.map((route) => (
-                  <a
-                    key={route.path}
-                    href={route.path}
-                    className="block px-3 py-2 text-[#22313f] hover:text-[#2f855a] hover:bg-[#f3ece0] rounded-xl font-bold transition-colors"
-                  >
-                    {route.nav}
-                  </a>
-                ))}
+                {VOXEL_NAV_ROUTES.map((route) => navLink(route, 'block'))}
               </nav>
             </details>
           </div>
         </div>
       </header>
 
-      <main id="inhalt" className="flex-1 w-full mx-auto px-4 py-8 sm:py-12 max-w-5xl relative z-10">
+      <main
+        id="inhalt"
+        className={`flex-1 w-full mx-auto px-4 py-8 sm:py-12 relative z-10 voxel-content ${
+          wide ? 'max-w-6xl' : 'max-w-5xl'
+        }`}
+      >
         {children}
       </main>
 
       <footer className="border-t-2 border-[#ded3bd] bg-[#fffdf6]/90 mt-12 relative z-10 shadow-[0_-4px_16px_rgba(28,42,56,0.03)]">
         <div className="max-w-5xl mx-auto px-4 py-8 text-[11px] text-[#6d7f8e] flex flex-col gap-3 text-center font-mono">
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <a href="/" className="text-[#0e7490] hover:underline font-bold">
+            <a href={classicPath} className="text-[#0e7490] hover:underline font-bold">
               Classic Version (2D)
             </a>
             <span className="text-[#ded3bd]">•</span>
-            <a href="/impressum" className="text-[#22313f] hover:text-[#2f855a] underline">
+            <a href="/voxel/impressum" className="text-[#22313f] hover:text-[#2f855a] underline">
               Impressum
             </a>
             <span className="text-[#ded3bd]">•</span>
-            <a href="/datenschutz" className="text-[#22313f] hover:text-[#2f855a] underline">
+            <a href="/voxel/datenschutz" className="text-[#22313f] hover:text-[#2f855a] underline">
               Datenschutz
             </a>
             <span className="text-[#ded3bd]">•</span>
-            <a href="/ueber#kontakt" className="text-[#22313f] hover:text-[#2f855a] underline">
+            <a href="/voxel/ueber#kontakt" className="text-[#22313f] hover:text-[#2f855a] underline">
               Kontakt
             </a>
             <span className="text-[#ded3bd]">•</span>

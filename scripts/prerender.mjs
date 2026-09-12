@@ -51,7 +51,9 @@ for (const route of SITE_ROUTES) {
   html = replaceOnce(html, /<meta name="twitter:description" content="[^"]*" \/>/, `<meta name="twitter:description" content="${description}" />`, 'twitter:description');
   html = replaceOnce(html, /<!--site-head-->/, `<link rel="canonical" href="${url}" />`, 'Marker <!--site-head-->');
 
-  writeFileSync(resolve(distDir, `${route.file}.html`), html);
+  const outPath = resolve(distDir, `${route.file}.html`);
+  mkdirSync(resolve(distDir, route.file.includes('/') ? route.file.split('/')[0] : ''), { recursive: true });
+  writeFileSync(outPath, html);
   console.log(`prerender: ${route.path} -> dist/${route.file}.html (${(appHtml.length / 1024).toFixed(1)} kB HTML)`);
 }
 

@@ -513,4 +513,166 @@
   animation: voxel-led-blink 1.2s ease-in-out infinite;
 }
 
+/* ==========================================================================
+   Voxel Parallel Site Styling (.voxel-content)
+   Harmonizes subpages (Anleitung, Strategie, Glossar, FAQ, etc.) with the
+   3D Voxel Game island daylight palette and paper-and-ink aesthetic.
+   ========================================================================== */
+
+.voxel-content {
+  color: #22313f;
+}
+
+.voxel-content h1,
+.voxel-content h2,
+.voxel-content h3,
+.voxel-content h4,
+.voxel-content strong,
+.voxel-content dt {
+  color: #22313f !important;
+}
+
+.voxel-content p,
+.voxel-content dd,
+.voxel-content td,
+.voxel-content li {
+  color: #334155;
+}
+
+.voxel-content .site-prose {
+  color: #334155 !important;
+}
+
+.voxel-content .site-prose li::marker {
+  color: #2f855a !important;
+}
+
+.voxel-content .site-link {
+  color: #0e7490 !important;
+  text-decoration-color: rgba(14, 116, 144, 0.4) !important;
+}
+
+.voxel-content .site-link:hover {
+  color: #2f855a !important;
+  text-decoration-color: #2f855a !important;
+}
+
+/* Kicker in Voxel Island Grass Green */
+.voxel-content header p.font-mono,
+.voxel-content section > p.font-mono {
+  color: #2f855a !important;
+  font-weight: 900 !important;
+}
+
+/* Header divider line */
+.voxel-content header div.h-px {
+  background: linear-gradient(to right, #48bb78, #38bdf8, transparent) !important;
+  height: 2px !important;
+}
+
+/* Paper Cards for Containers, Tables, TOC, Callouts */
+.voxel-content nav[aria-label="Inhalt"],
+.voxel-content .overflow-x-auto,
+.voxel-content .rounded-2xl.border,
+.voxel-content .rounded-xl.border,
+.voxel-content div.bg-slate-900 {
+  background-color: #fffdf6 !important;
+  border-color: #c8bb9f !important;
+  border-width: 2px !important;
+  box-shadow: 0 4px 0 #c8bb9f, 0 8px 20px rgba(28, 42, 56, 0.06) !important;
+}
+
+/* Table styling */
+.voxel-content table thead tr {
+  border-bottom: 2px solid #c8bb9f !important;
+}
+
+.voxel-content table th {
+  color: #2f855a !important;
+  font-weight: 900 !important;
+}
+
+.voxel-content table tbody tr {
+  border-color: #ded3bd !important;
+}
+
+.voxel-content table td.font-semibold {
+  color: #22313f !important;
+}
+
+/* Callouts / Warnings */
+.voxel-content aside {
+  background-color: #fef9ed !important;
+  border-color: #fde047 !important;
+  border-width: 2px !important;
+  box-shadow: 0 3px 0 #eab308, 0 6px 16px rgba(28, 42, 56, 0.06) !important;
+}
+
+.voxel-content aside p.font-mono {
+  color: #b45309 !important;
+  font-weight: 900 !important;
+}
+
+.voxel-content aside div {
+  color: #451a03 !important;
+}
+
+/* Numbered Steps */
+.voxel-content ol span.rounded-full {
+  background-color: #f3ece0 !important;
+  border-color: #c8bb9f !important;
+  border-width: 2px !important;
+  color: #2f855a !important;
+  font-weight: 900 !important;
+  box-shadow: 0 2px 0 #c8bb9f !important;
+}
+
+/* Next Articles navigation (PageEnd) */
+.voxel-content nav[aria-label="Weiterlesen"] a {
+  background-color: #fffdf6 !important;
+  border: 2px solid #c8bb9f !important;
+  box-shadow: 0 3px 0 #c8bb9f, 0 6px 16px rgba(28, 42, 56, 0.06) !important;
+  transition: transform 80ms ease, box-shadow 80ms ease !important;
+}
+
+.voxel-content nav[aria-label="Weiterlesen"] a:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 5px 0 #c8bb9f, 0 10px 20px rgba(28, 42, 56, 0.1) !important;
+}
+
+.voxel-content nav[aria-label="Weiterlesen"] a span.font-mono {
+  color: #2f855a !important;
+  font-weight: 900 !important;
+}
+
+.voxel-content nav[aria-label="Weiterlesen"] a svg {
+  color: #2f855a !important;
+}
+
+/* Legal text (Impressum / Datenschutz) */
+.voxel-content code {
+  background-color: #f3ece0 !important;
+  border: 1px solid #c8bb9f !important;
+  color: #2f855a !important;
+}
+
+.voxel-content svg.text-cyan-400 {
+  color: #2f855a !important;
+}
+
+.voxel-content div.text-slate-500 {
+  color: #6d7f8e !important;
+}
+
+.voxel-content .legal-html {
+  color: #334155 !important;
+}
+
+.voxel-content .legal-html h1,
+.voxel-content .legal-html h2,
+.voxel-content .legal-html h3 {
+  color: #22313f !important;
+}
+
+
 

@@ -32,6 +32,8 @@ export function SiteLayout({ path, wide = false, children }) {
     );
   };
 
+  const voxelPath = path === '/' ? '/voxel' : `/voxel${path}`;
+
   return (
     <div className="min-h-screen flex flex-col">
       <a
@@ -53,7 +55,7 @@ export function SiteLayout({ path, wide = false, children }) {
           </nav>
 
           <div className="flex items-center gap-2">
-            <VoxelButton variant="compact" className="hidden sm:inline-flex" />
+            <VoxelButton variant="compact" href={voxelPath} className="hidden sm:inline-flex" />
             <a href={PLAY_URL} className="inline-flex items-center gap-1.5 bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-sm px-4 py-2 rounded-xl transition-colors">
               <Play className="w-4 h-4" /> Spielen
             </a>
@@ -69,7 +71,7 @@ export function SiteLayout({ path, wide = false, children }) {
                 className="absolute right-0 mt-2 w-56 flex flex-col gap-0.5 bg-slate-900 border border-slate-700 rounded-xl p-2 shadow-2xl"
               >
                 <div className="sm:hidden mb-2 px-1">
-                  <VoxelButton variant="compact" className="w-full justify-start py-2" />
+                  <VoxelButton variant="compact" href={voxelPath} className="w-full justify-start py-2" />
                 </div>
                 {navItems.map((route) => navLink(route, 'block'))}
               </nav>

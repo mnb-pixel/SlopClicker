@@ -1,18 +1,21 @@
 import { ShieldCheck, AlertTriangle } from 'lucide-react';
 import { LEGAL_CONTENT, hasOpenTodos } from '../../i18n/content/legal.content';
 import { SiteLayout } from '../SiteLayout.jsx';
+import { VoxelSiteLayout } from '../VoxelSiteLayout.jsx';
 
 // Eigenständige Seite unter /datenschutz (statt des LegalModal im Spiel): bei direktem Aufruf
 // lädt main.jsx NUR diese Komponente, nie App.jsx/useGameStore - die Seite ist zudem die in
 // App Store Connect hinterlegte Privacy-Policy-URL. Nur Deutsch (siehe HINWEIS in
 // legal.content.js).
-export function DatenschutzPage() {
+export function DatenschutzPage({ isVoxel = false }) {
   const c = LEGAL_CONTENT.de;
   const doc = c.datenschutz;
   const isDraft = hasOpenTodos();
+  const Layout = isVoxel ? VoxelSiteLayout : SiteLayout;
+  const path = isVoxel ? '/voxel/datenschutz' : '/datenschutz';
 
   return (
-    <SiteLayout path="/datenschutz">
+    <Layout path={path}>
       <div className="bg-slate-900 border border-slate-700 rounded-2xl p-4 sm:p-6 shadow-2xl">
         <div className="flex items-center gap-2 mb-5">
           <ShieldCheck className="w-5 h-5 text-cyan-400 shrink-0" />
@@ -36,6 +39,10 @@ export function DatenschutzPage() {
           </div>
         </div>
       </div>
-    </SiteLayout>
+    </Layout>
   );
+}
+
+export function VoxelDatenschutzPage() {
+  return <DatenschutzPage isVoxel />;
 }

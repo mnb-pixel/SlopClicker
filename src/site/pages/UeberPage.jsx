@@ -1,5 +1,6 @@
 import { Mail } from 'lucide-react';
 import { SiteLayout } from '../SiteLayout.jsx';
+import { VoxelSiteLayout } from '../VoxelSiteLayout.jsx';
 import { OPERATOR } from '../../i18n/content/legal.content';
 import { UEBER } from '../content/ueber.content.js';
 import { PageIntro, Section, Prose, Bullets, PageEnd } from '../ui.jsx';
@@ -8,10 +9,14 @@ import { ContentSections } from '../blocks.jsx';
 // Bewusst OHNE Anschrift: die vollständigen Anbieterangaben (Firma, Adresse, UID,
 // Handelsregister) gehören ausschließlich ins Impressum (siehe ImpressumPage.jsx) - die
 // Kontakt-Sektion hier ist nur der schnelle Weg zur E-Mail, kein zweites Impressum.
-export function UeberPage() {
+export function UeberPage({ isVoxel = false }) {
+  const Layout = isVoxel ? VoxelSiteLayout : SiteLayout;
+  const path = isVoxel ? '/voxel/ueber' : '/ueber';
   const k = UEBER.kontakt;
+  const impressumHref = isVoxel ? '/voxel/impressum' : '/impressum';
+
   return (
-    <SiteLayout path="/ueber">
+    <Layout path={path}>
       <PageIntro kicker={UEBER.kicker} title={UEBER.title} lead={UEBER.lead} />
       <ContentSections sections={UEBER.sections} adAfter={-1} />
 
@@ -35,14 +40,18 @@ export function UeberPage() {
         </Prose>
         <p className="mt-6 text-sm text-slate-500">
           Vollständige Anbieterangaben (Firma, Anschrift, Handelsregister) stehen im{' '}
-          <a href="/impressum" className="site-link">
+          <a href={impressumHref} className="site-link">
             Impressum
           </a>
           .
         </p>
       </Section>
 
-      <PageEnd next={UEBER.next} ctaText={UEBER.ctaText} />
-    </SiteLayout>
+      <PageEnd next={UEBER.next} ctaText={UEBER.ctaText} isVoxel={isVoxel} />
+    </Layout>
   );
+}
+
+export function VoxelUeberPage() {
+  return <UeberPage isVoxel />;
 }

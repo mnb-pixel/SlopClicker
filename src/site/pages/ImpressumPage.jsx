@@ -8,6 +8,7 @@ import {
   LEGAL_TODO,
 } from '../../i18n/content/legal.content';
 import { SiteLayout } from '../SiteLayout.jsx';
+import { VoxelSiteLayout } from '../VoxelSiteLayout.jsx';
 
 // Statische Impressum-Seite unter /impressum (Direktaufruf ohne Spiel-Bundle). Im Spiel
 // selbst bleibt das Impressum weiterhin als LegalModal erreichbar - dieselben Texte
@@ -43,13 +44,15 @@ function renderLegal(text, keyPrefix) {
   });
 }
 
-export function ImpressumPage() {
+export function ImpressumPage({ isVoxel = false }) {
   const c = LEGAL_CONTENT.de;
   const doc = c.impressum;
   const isDraft = hasOpenTodos();
+  const Layout = isVoxel ? VoxelSiteLayout : SiteLayout;
+  const path = isVoxel ? '/voxel/impressum' : '/impressum';
 
   return (
-    <SiteLayout path="/impressum">
+    <Layout path={path}>
       <div className="bg-slate-900 border border-slate-700 rounded-2xl p-4 sm:p-6 shadow-2xl">
         <div className="flex items-center gap-2 mb-5">
           <Scale className="w-5 h-5 text-cyan-400 shrink-0" />
@@ -82,6 +85,10 @@ export function ImpressumPage() {
           </div>
         </div>
       </div>
-    </SiteLayout>
+    </Layout>
   );
+}
+
+export function VoxelImpressumPage() {
+  return <ImpressumPage isVoxel />;
 }

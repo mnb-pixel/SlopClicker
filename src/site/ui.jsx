@@ -245,16 +245,20 @@ export function AppStoreBadge() {
   );
 }
 
-export function CtaBar({ title = 'Selbst ausprobieren', text }) {
+export function CtaBar({ title = 'Selbst ausprobieren', text, isVoxel = false }) {
+  const playUrl = isVoxel ? VOXEL_PLAY_URL : PLAY_URL;
+  const playLabel = isVoxel ? 'Im Browser spielen (3D Voxel)' : 'Im Browser spielen';
+  const iosUrl = isVoxel ? '/voxel/ios-app' : '/ios-app';
+
   return (
     <div className="mt-14 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
       <p className="font-black text-slate-100 text-lg">{title}</p>
       {text && <p className="text-sm text-slate-400 mt-1 mb-4 max-w-xl">{text}</p>}
       <div className={`flex flex-wrap gap-3 ${text ? '' : 'mt-4'}`}>
-        <a href={PLAY_URL} className={BTN_PRIMARY}>
-          <Play className="w-4 h-4" /> Im Browser spielen
+        <a href={playUrl} className={isVoxel ? 'voxel-btn px-5 py-2.5 text-sm' : BTN_PRIMARY}>
+          <Play className="w-4 h-4 fill-current" /> {playLabel}
         </a>
-        <a href="/ios-app" className={BTN_SECONDARY}>
+        <a href={iosUrl} className={isVoxel ? 'voxel-btn-paper px-4 py-2.5 text-sm' : BTN_SECONDARY}>
           <Smartphone className="w-4 h-4" /> Auch als iOS-App
         </a>
       </div>
@@ -262,13 +266,20 @@ export function CtaBar({ title = 'Selbst ausprobieren', text }) {
   );
 }
 
-export function PageEnd({ next = [], ctaText }) {
+export function PageEnd({ next = [], ctaText, isVoxel = false }) {
+  const adjustedNext = isVoxel
+    ? next.map((item) => ({
+        ...item,
+        href: item.href.startsWith('/voxel') ? item.href : `/voxel${item.href}`,
+      }))
+    : next;
+
   return (
     <>
-      <CtaBar text={ctaText} />
-      {next.length > 0 && (
+      <CtaBar text={ctaText} isVoxel={isVoxel} />
+      {adjustedNext.length > 0 && (
         <nav aria-label="Weiterlesen" className="mt-8 grid gap-3 sm:grid-cols-2">
-          {next.map((item) => (
+          {adjustedNext.map((item) => (
             <a
               key={item.href}
               href={item.href}

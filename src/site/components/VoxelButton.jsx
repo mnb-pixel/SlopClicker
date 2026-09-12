@@ -28,11 +28,11 @@ function VoxelCubeIcon({ size = 22, className = '' }) {
   );
 }
 
-export function VoxelButton({ variant = 'hero', className = '' }) {
+export function VoxelButton({ variant = 'hero', href = VOXEL_URL, className = '' }) {
   if (variant === 'compact') {
     return (
       <a
-        href={VOXEL_URL}
+        href={href}
         className={`voxel-btn px-3 py-1.5 text-xs ${className}`}
         title="Token Furnace Voxel 3D starten"
       >
@@ -45,7 +45,7 @@ export function VoxelButton({ variant = 'hero', className = '' }) {
 
   return (
     <a
-      href={VOXEL_URL}
+      href={href}
       className={`voxel-btn px-6 py-3 text-sm sm:text-base ${className}`}
       title="Token Furnace Voxel im Browser spielen"
     >

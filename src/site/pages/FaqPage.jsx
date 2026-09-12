@@ -1,12 +1,16 @@
 import { Fragment } from 'react';
 import { SiteLayout } from '../SiteLayout.jsx';
+import { VoxelSiteLayout } from '../VoxelSiteLayout.jsx';
 import { AdBanner } from '../../components/AdBanner';
 import { PageIntro, Toc, Section, FaqItems, PageEnd } from '../ui.jsx';
 import { FAQ } from '../content/faq.content.js';
 
-export function FaqPage() {
+export function FaqPage({ isVoxel = false }) {
+  const Layout = isVoxel ? VoxelSiteLayout : SiteLayout;
+  const path = isVoxel ? '/voxel/faq' : '/faq';
+
   return (
-    <SiteLayout path="/faq">
+    <Layout path={path}>
       <PageIntro kicker={FAQ.kicker} title={FAQ.title} lead={FAQ.lead} />
       <Toc items={FAQ.groups} />
       {FAQ.groups.map((group, i) => (
@@ -21,7 +25,11 @@ export function FaqPage() {
           )}
         </Fragment>
       ))}
-      <PageEnd next={FAQ.next} ctaText={FAQ.ctaText} />
-    </SiteLayout>
+      <PageEnd next={FAQ.next} ctaText={FAQ.ctaText} isVoxel={isVoxel} />
+    </Layout>
   );
+}
+
+export function VoxelFaqPage() {
+  return <FaqPage isVoxel />;
 }
