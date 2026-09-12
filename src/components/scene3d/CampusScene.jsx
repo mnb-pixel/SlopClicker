@@ -43,8 +43,8 @@ const PIN_BOTTOM_PX = 112;
 // Basisinsel, siehe utils/campusLayout.js). Bis dahin passt die Insel von selbst ins
 // Bild; darüber hinaus würde alles nur noch kleiner und unleserlich - ab da schiebt
 // und zoomt der Spieler selbst.
-const VIEW_FIT_MAX = 40 / 24;
-const ZOOM_MAX = 3;
+const VIEW_FIT_MAX = 64 / 24;
+const ZOOM_MAX = 3.6;
 const ZOOM_STEP = 0.0016; // Rad pro Mausrad-Pixel
 // Ab so vielen Pixeln Bewegung ist es ein Schieben und kein Tippen mehr.
 const DRAG_THRESHOLD_PX = 6;

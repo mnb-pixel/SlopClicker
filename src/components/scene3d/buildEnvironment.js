@@ -93,13 +93,18 @@ const CHURCH_POS = { x: -16, z: 27 };
 const LAKE_CENTER = { x: 26, z: 24 };
 const LAKE_RADIUS = 5.8;
 
-// Der Fluss fließt quer über das gesamte Spielfeld
+// Der Fluss fließt quer über das gesamte Spielfeld (weicht der zentralen Ofen-Allee nach Süden aus)
 const RIVER_POINTS = [
   { x: -80, z: 35 },
   { x: -55, z: 34 },
-  { x: -32, z: 35.5 },
-  { x: -10, z: 35 }, // Hier kreuzt die Bogenbrücke!
-  { x: 8, z: 34.5 },
+  { x: -30, z: 36 },
+  { x: -16, z: 42 },
+  { x: -10, z: 50 }, // Hier kreuzt die Bogenbrücke der Nebenstraße!
+  { x: -6, z: 55 },
+  { x: 0, z: 57 }, // Bogen weit südlich der Ofen-Allee (die Allee endet bei z = 48)
+  { x: 6, z: 55 },
+  { x: 12, z: 49 },
+  { x: 18, z: 40 },
   { x: LAKE_CENTER.x - LAKE_RADIUS * 0.75, z: LAKE_CENTER.z + LAKE_RADIUS * 0.75 }, // fließt nah am See vorbei
   { x: 42, z: 36 },
   { x: 62, z: 35 },
@@ -107,8 +112,8 @@ const RIVER_POINTS = [
 ];
 const RIVER_WIDTH = 2.4;
 
-// Brückenposition bei x = -10, z = 35
-const BRIDGE_POS = { x: -10, z: 35 };
+// Brückenposition bei x = -10, z = 50
+const BRIDGE_POS = { x: -10, z: 50 };
 
 // Bootssteg am See
 const PIER_START = { x: LAKE_CENTER.x - 3.2, z: LAKE_CENTER.z - 2.8 };
@@ -131,7 +136,7 @@ const REED_SPOTS = [
   { x: LAKE_CENTER.x + 3.5, z: LAKE_CENTER.z + 3.6 },
   { x: LAKE_CENTER.x - 3.5, z: LAKE_CENTER.z + 3.2 },
   { x: -22, z: 34.2 },
-  { x: 2, z: 33.5 },
+  { x: 2, z: 54.5 },
   { x: 45, z: 34.5 },
   { x: -44, z: 33.8 },
 ];
@@ -139,13 +144,14 @@ const REED_SPOTS = [
 // Straßennetz: Verbindungsstraßen rund um den Campus (N, S, W, O)
 const ROAD_SEGMENTS = [
   // ZENTRALE OFEN-HAUPTSTRASSE (Permanente, unblockierte Zufahrts-Allee direkt zum Serverkamin bei x: 0, z: 0)
-  { a: { x: 0, z: 46 }, b: { x: 0, z: 2.2 }, w: 2.5 }, // Direkte Allee zum Kamin
+  // Vollständig auf festem, trockenem Land - der Fluss biegt südlich bei z = 57 ab!
+  { a: { x: 0, z: 48 }, b: { x: 0, z: 2.2 }, w: 2.5 }, // Direkte Allee zum Kamin
   { a: { x: -3.6, z: 3.6 }, b: { x: 3.6, z: 3.6 }, w: 3.2 }, // Wendebucht & Ofenhof vor dem Serverkamin
   { a: { x: -10, z: 22 }, b: { x: 0, z: 22 }, w: 2.2 }, // Verbindung zur Brückenstraße
 
-  // Nord-Süd Hauptverbindung (führt über die Brücke)
-  { a: { x: -10, z: -38 }, b: { x: -10, z: 32 }, w: 1.8 },
-  { a: { x: -10, z: 38 }, b: { x: -10, z: 46 }, w: 1.8 },
+  // Nord-Süd Hauptverbindung (führt über die Brücke bei z: 50)
+  { a: { x: -10, z: -38 }, b: { x: -10, z: 47 }, w: 1.8 },
+  { a: { x: -10, z: 53 }, b: { x: -10, z: 62 }, w: 1.8 },
 
   // Norddorf-Allee
   { a: { x: -35, z: -26 }, b: { x: 35, z: -26 }, w: 1.6 },
@@ -163,7 +169,7 @@ const ROAD_SEGMENTS = [
   { a: { x: -30, z: 22 }, b: { x: 22, z: 22 }, w: 1.6 },
   { a: { x: -16, z: 22 }, b: { x: -16, z: 30 }, w: 1.5 },
   { a: { x: 18, z: 22 }, b: { x: LAKE_CENTER.x - 3.2, z: LAKE_CENTER.z - 2.8 }, w: 1.3 }, // Seeweg
-  { a: { x: -35, z: 41 }, b: { x: 35, z: 41 }, w: 1.6 }, // Südstraße jenseits der Brücke
+  { a: { x: -35, z: 41 }, b: { x: 35, z: 41 }, w: 1.6 }, // Südstraße jenseits des Zentrums
 ];
 
 // ===============================================================================
@@ -390,15 +396,15 @@ export function buildEnvironment(palette) {
     }
   });
 
-  // Fahrbahn-Mittelstreifen auf der Ofen-Allee (x = 0 von z = 5 bis z = 44)
-  for (let z = 6; z <= 44; z += 3.2) {
+  // Fahrbahn-Mittelstreifen auf der Ofen-Allee (x = 0 von z = 5 bis z = 47)
+  for (let z = 6; z <= 47; z += 3.2) {
     const dash = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.065, 1.4), dashMat);
     dash.position.set(0, 0.045, z);
     group.add(dash);
   }
 
   // Straßenlaternen entlang der Hauptzufahrt zum Serverkamin
-  [8, 16, 24, 32, 40].forEach((lz) => {
+  [8, 16, 24, 32, 40, 48].forEach((lz) => {
     [-1.7, 1.7].forEach((lx) => {
       const pole = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.2, 0.12), lampPoleMat);
       pole.position.set(lx, 1.1, lz);

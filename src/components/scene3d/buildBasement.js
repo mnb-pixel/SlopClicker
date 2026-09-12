@@ -11,11 +11,11 @@ import { tierMix } from './tierVisuals';
 // wie schon vorher - eine Drohne braucht kein Grundstück. Dazu eine zweite
 // Datenleitung zum Ofen.
 
-const RACK_MAX = 32;
-const BURNER_MAX = 20;
-const SILO_MAX = 12;
-const GRAY_MAX = 8;
-const DRONE_MAX = 12;
+const RACK_MAX = 100;
+const BURNER_MAX = 60;
+const SILO_MAX = 40;
+const GRAY_MAX = 24;
+const DRONE_MAX = 28;
 
 function hash01(i) {
   const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
@@ -63,9 +63,12 @@ export function buildBasement(palette, zoneDef, furnaceAnchor) {
   const dummy = new THREE.Object3D();
   const color = new THREE.Color();
 
-  // Racks + LED-Streifen
+  // Racks + LED-Streifen + Blades + Abluftlüfter + Kabelkanäle
   const rack = inst(new THREE.BoxGeometry(0.55, 1.7, 0.55), lambert('rack'), RACK_MAX);
-  const rackLed = inst(new THREE.BoxGeometry(0.3, 0.05, 0.03), basic('token'), RACK_MAX * 4, false);
+  const rackBlade = inst(new THREE.BoxGeometry(0.46, 0.08, 0.05), lambert('steel'), RACK_MAX * 4, false);
+  const rackExhaust = inst(new THREE.BoxGeometry(0.38, 0.12, 0.38), lambert('steelDark'), RACK_MAX, false);
+  const rackCable = inst(new THREE.BoxGeometry(0.06, 1.6, 0.06), basic('token'), RACK_MAX, false);
+  const rackLed = inst(new THREE.BoxGeometry(0.12, 0.05, 0.03), basic('neon'), RACK_MAX * 4, false);
   // Burner
   const burner = inst(new THREE.BoxGeometry(0.8, 0.8, 0.8), lambert('burner'), BURNER_MAX);
   const burnerCoreMat = basic('fire');
@@ -110,14 +113,34 @@ export function buildBasement(palette, zoneDef, furnaceAnchor) {
         dummy.scale.setScalar(1);
         dummy.updateMatrix();
         rack.setMatrixAt(idx, dummy.matrix);
+
+        // Abluftlüfter auf dem Rack-Dach
+        dummy.position.set(x, 1.76, z);
+        dummy.updateMatrix();
+        rackExhaust.setMatrixAt(idx, dummy.matrix);
+
+        // Kabelkanal an der Seite
+        dummy.position.set(x - 0.28, 0.85, z);
+        dummy.updateMatrix();
+        rackCable.setMatrixAt(idx, dummy.matrix);
+
         for (let l = 0; l < 4; l += 1) {
-          dummy.position.set(x, 0.4 + l * 0.35, z + 0.29);
+          // Blade-Server Einschub
+          dummy.position.set(x, 0.4 + l * 0.35, z + 0.26);
+          dummy.updateMatrix();
+          rackBlade.setMatrixAt(idx * 4 + l, dummy.matrix);
+
+          // Status-LED
+          dummy.position.set(x + 0.15, 0.4 + l * 0.35, z + 0.29);
           dummy.updateMatrix();
           rackLed.setMatrixAt(idx * 4 + l, dummy.matrix);
         }
       }
     }
     rack.count = n;
+    rackExhaust.count = n;
+    rackCable.count = n;
+    rackBlade.count = n * 4;
     rackLed.count = n * 4;
   }
 
@@ -221,7 +244,7 @@ export function buildBasement(palette, zoneDef, furnaceAnchor) {
     droneRotor.count = counts.drone * 4;
     droneEye.count = counts.drone;
 
-    [rack, rackLed, burner, silo, siloBand, siloRing, graySilo, tarp, fencePost, fenceRail].forEach((m) => {
+    [rack, rackBlade, rackExhaust, rackCable, rackLed, burner, silo, siloBand, siloRing, graySilo, tarp, fencePost, fenceRail].forEach((m) => {
       m.instanceMatrix.needsUpdate = true;
     });
   }

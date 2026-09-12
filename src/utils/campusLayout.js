@@ -18,7 +18,7 @@ export const ISLAND_BASE_SIZE = 24;
 // etwa 40 Einheiten zoomt die Kamera nicht mehr weiter heraus, sondern der Spieler
 // schiebt und zoomt selbst (siehe CampusScene.jsx). Das Spielfeld darf größer sein
 // als das Bild - genau das ist der Punkt.
-export const ISLAND_MAX_SIZE = 96;
+export const ISLAND_MAX_SIZE = 128;
 export const ISLAND_STEP = 4;
 // Luft zwischen dem äußersten Gebäude und der Inselkante.
 const ISLAND_MARGIN = 1.4;

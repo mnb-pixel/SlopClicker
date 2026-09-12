@@ -10,13 +10,13 @@ import { tierMix } from './tierVisuals';
 // Kugel mit Akkretionsringen hoch über dem Ofen - bleibt der einmalige Endgegner ohne
 // Grundstück.
 
-const REACTOR_LOTS_MAX = 4;
+const REACTOR_LOTS_MAX = 16;
 const REACTOR_PER_LOT = 2;
 const REACTOR_MAX = REACTOR_LOTS_MAX * REACTOR_PER_LOT;
-const CITY_LOTS_MAX = 4;
-const CITY_PER_LOT = 2;
+const CITY_LOTS_MAX = 15;
+const CITY_PER_LOT = 3;
 const CITY_MAX = CITY_LOTS_MAX * CITY_PER_LOT;
-const SHEET_MAX = 6;
+const SHEET_MAX = 36;
 const STEAM_PER_TOWER = 5;
 
 function hash01(i) {
@@ -27,14 +27,15 @@ function hash01(i) {
 // Zwei Kühltürme je Grundstück, verkleinert (Original-Radius 0.85/1.35/1.55 -> etwa
 // 65%), damit ein Paar zusammen in LOT_SIZE 3.6 passt.
 const REACTOR_OFFSETS = [{ x: -0.85, z: 0 }, { x: 0.85, z: 0 }];
-// Zwei Hologramm-Gebäude je Stadt-Grundstück, um dessen eigenen kleinen Projektor.
+// Drei Hologramm-Gebäude je Stadt-Grundstück, um dessen eigenen kleinen Projektor.
 const CITY_OFFSETS = [
-  { x: -0.5, z: 0.1, h: 2.0 },
-  { x: 0.6, z: -0.2, h: 1.5 },
+  { x: -0.6, z: 0.2, h: 2.2 },
+  { x: 0.6, z: -0.3, h: 1.6 },
+  { x: 0.0, z: 0.5, h: 1.9 },
 ];
 const SHEET_SLOTS = [];
 // Hoch genug, um über den Silos des Serverkellers sichtbar zu bleiben.
-for (let i = 0; i < SHEET_MAX; i += 1) SHEET_SLOTS.push({ x: -2.2 - (i % 3) * 1.0, z: 0.6 - Math.floor(i / 3) * 1.1, y: 5.0 + (i % 2) * 0.9 });
+for (let i = 0; i < SHEET_MAX; i += 1) SHEET_SLOTS.push({ x: -2.2 - (i % 6) * 1.0, z: 0.6 - Math.floor(i / 6) * 1.1, y: 5.0 + (i % 3) * 0.8 });
 
 export function buildEndgame(palette, zoneDef, furnaceAnchor) {
   const group = new THREE.Group();

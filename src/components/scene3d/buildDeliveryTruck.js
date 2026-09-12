@@ -100,6 +100,27 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
     cabGroup.add(mirror);
   });
 
+  // Einstiegsstufen & Türgriffe
+  [-0.86, 0.86].forEach((sx) => {
+    const step = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.4), chassisMat);
+    step.position.set(sx, 0.22, 0.2);
+    cabGroup.add(step);
+
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.06, 0.18), wheelHubMat);
+    handle.position.set(sx * 0.98, 0.65, 0.1);
+    cabGroup.add(handle);
+  });
+
+  // Vertikales Chrom-Auspuffrohr hinter der Fahrerkabine
+  const exhaustPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.4, 6), wheelHubMat);
+  exhaustPipe.position.set(0.72, 0.95, -0.65);
+  exhaustPipe.castShadow = true;
+  cabGroup.add(exhaustPipe);
+  const exhaustCap = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.14), chassisMat);
+  exhaustCap.position.set(0.72, 1.68, -0.68);
+  exhaustCap.rotation.x = 0.3;
+  cabGroup.add(exhaustCap);
+
   // Rundumleuchten auf dem Dach (Amber Beacons)
   const beaconBar = new THREE.Group();
   beaconBar.position.set(0, 1.18, 0.2);
@@ -225,9 +246,9 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
 
   // --- TIMELINE & BEWEGUNGSPFAD ------------------------------------------------
   // Dauer: 45 Sekunden
-  // Start: direkt auf der neuen Ofen-Allee im Süden (x: 0, z: 42, Blickrichtung Norden)
+  // Start: direkt auf der neuen Ofen-Allee im Süden (x: 0, z: 48, Blickrichtung Norden)
   // Zielhalteplatz: Direkt vor dem Serverkamin auf dem Ofenhof (x: -1.5, z: 4.2)
-  const START_POS = { x: 0, z: 42, rot: Math.PI };
+  const START_POS = { x: 0, z: 48, rot: Math.PI };
   const PARK_POS = { x: -1.5, z: 4.2, rot: Math.PI - 0.25 };
 
   let internalStartTime = null;
@@ -347,7 +368,7 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
 
           // LKW wendet und fährt die Allee hinunter nach Süden (+z)
           truckRoot.position.x = PARK_POS.x + (0 - PARK_POS.x) * easeLeave;
-          truckRoot.position.z = PARK_POS.z + (44 - PARK_POS.z) * easeLeave;
+          truckRoot.position.z = PARK_POS.z + (48 - PARK_POS.z) * easeLeave;
           truckRoot.rotation.y = PARK_POS.rot - Math.PI * 0.9 * Math.min(1, tLeave * 2.0);
 
           if (!reduced) {

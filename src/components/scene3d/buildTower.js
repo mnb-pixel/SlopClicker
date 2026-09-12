@@ -14,9 +14,9 @@ import { tierMix } from './tierVisuals';
 // eine Canvas-Textur, alles andere bleibt texturlos.
 
 const FLOOR_PER_TOWER = 6;
-const TOWER_LOTS_MAX = 4;
+const TOWER_LOTS_MAX = 15;
 const FLOOR_MAX = FLOOR_PER_TOWER * TOWER_LOTS_MAX;
-const CONTAINER_MAX = 15;
+const CONTAINER_MAX = 45;
 const CONTAINERS_PER_LOT = 3;
 const FLOOR_H = 1.1;
 const TOWER_W = 2.6;

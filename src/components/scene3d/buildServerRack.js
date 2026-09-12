@@ -266,6 +266,23 @@ export function buildServerRack(palette) {
   group.add(status);
   hitMeshes.push(status);
 
+  // Wärmetauscher-Kühlrippen an den Seiten des Serverkamins
+  const finMat = lambert('steel');
+  [-CAB_W / 2 - 0.04, CAB_W / 2 + 0.04].forEach((sideX) => {
+    for (let f = 0; f < 6; f += 1) {
+      const fin = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, CAB_D * 0.75), finMat);
+      fin.position.set(sideX, PAD_TOP_Y + 0.7 + f * 0.45, 0);
+      fin.castShadow = true;
+      group.add(fin);
+    }
+  });
+
+  // Warnmarkierungsleiste vor der Schranktür
+  const stripeMat = basic('tapeYellow');
+  const stripeBar = new THREE.Mesh(new THREE.BoxGeometry(CAB_W * 0.85, 0.06, 0.08), stripeMat);
+  stripeBar.position.set(0, PAD_TOP_Y + 0.12, FRONT_Z + 0.16);
+  group.add(stripeBar);
+
   // --- Kabelbäume nach hinten in den Boden ----------------------------------------------
   const cableMat = lambert('junction');
   [-0.8, -0.2, 0.4].forEach((x, i) => {

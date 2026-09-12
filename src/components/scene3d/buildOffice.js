@@ -15,11 +15,11 @@ import { tierMix } from './tierVisuals';
 // geänderter Anzahl neu gesetzt, pro Frame bewegen sich nur Arme, Köpfe, Blasen,
 // Tokens und das Deckenlicht.
 
-const INTERN_MAX = 48;
-const ENGINEER_MAX = 36;
-const INTERN_LOTS_MAX = 12;
-const ENGINEER_LOTS_MAX = 9;
-const WIDGET_MAX = 10;
+const INTERN_MAX = 160;
+const ENGINEER_MAX = 120;
+const INTERN_LOTS_MAX = 40;
+const ENGINEER_LOTS_MAX = 30;
+const WIDGET_MAX = 25;
 const UNIT_YAW = Math.PI / 4; // Tische schauen zur offenen Hausecke (+x,+z) und damit zur Kamera
 // Arbeitsplätze sind kleiner als früher: sie stehen jetzt in einem Haus von 3,3
 // Einheiten Kantenlänge, in Originalgröße passte kein Vierer-Block hinein.
@@ -94,9 +94,13 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
   const screen = inst(new THREE.PlaneGeometry(0.44, 0.32), screenMat, TOTAL + ENGINEER_MAX, false);
   const monitorStand = inst(new THREE.BoxGeometry(0.1, 0.16, 0.1), lambert('deskLeg'), TOTAL + ENGINEER_MAX, false);
   const keyboard = inst(new THREE.BoxGeometry(0.5, 0.04, 0.2), lambert('deskDark'), TOTAL, false);
+  const mouse = inst(new THREE.BoxGeometry(0.08, 0.03, 0.12), lambert('deskDark'), TOTAL, false);
+  const pcTower = inst(new THREE.BoxGeometry(0.18, 0.42, 0.44), lambert('monitor'), TOTAL, false);
+  const pcLed = inst(new THREE.BoxGeometry(0.04, 0.04, 0.02), basic('neon'), TOTAL, false);
   const chairSeat = inst(new THREE.BoxGeometry(0.5, 0.08, 0.5), lambert('chair'), TOTAL);
   const chairBack = inst(new THREE.BoxGeometry(0.5, 0.5, 0.08), lambert('chair'), TOTAL);
   const chairLeg = inst(new THREE.CylinderGeometry(0.04, 0.04, 0.42, 5), lambert('deskLeg'), TOTAL, false);
+  const chairArm = inst(new THREE.BoxGeometry(0.06, 0.22, 0.32), lambert('chair'), TOTAL * 2, false);
   const bodyMat = new THREE.MeshLambertMaterial({ color: 0xffffff, flatShading: true });
   const body = inst(new THREE.CylinderGeometry(0.2, 0.24, 0.5, 7), bodyMat, TOTAL);
   const head = inst(new THREE.SphereGeometry(0.17, 7, 6), lambert('skin'), TOTAL);
@@ -188,6 +192,9 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
       place(deskLeg, i * 2, slot, -0.55 * (isEngineer ? 1.25 : 1), 0.36, 0);
       place(deskLeg, i * 2 + 1, slot, 0.55 * (isEngineer ? 1.25 : 1), 0.36, 0);
       place(keyboard, i, slot, 0, 0.81, -0.12);
+      place(mouse, i, slot, 0.32, 0.81, -0.12);
+      place(pcTower, i, slot, 0.48 * (isEngineer ? 1.2 : 1), 0.22, 0.05);
+      place(pcLed, i, slot, 0.48 * (isEngineer ? 1.2 : 1), 0.38, -0.16);
       const monitors = isEngineer ? 2 : 1;
       for (let m = 0; m < monitors; m += 1) {
         const mx = isEngineer ? (m === 0 ? -0.3 : 0.3) : 0;
@@ -201,6 +208,8 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
       place(chairSeat, i, slot, 0, 0.5, -0.72);
       place(chairBack, i, slot, 0, 0.78, -0.95);
       place(chairLeg, i, slot, 0, 0.25, -0.72);
+      place(chairArm, i * 2, slot, -0.28, 0.65, -0.72);
+      place(chairArm, i * 2 + 1, slot, 0.28, 0.65, -0.72);
       // Person: Körper sitzt auf dem Stuhl, Kopf darüber. Praktikanten hängen etwas.
       const slump = isEngineer ? 0 : 0.12;
       const sc = u.absent ? 0.001 : 1;
@@ -225,19 +234,23 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
     deskTop.count = n;
     deskLeg.count = n * 2;
     keyboard.count = n;
+    mouse.count = n;
+    pcTower.count = n;
+    pcLed.count = n;
     monitor.count = monitorIdx;
     monitorStand.count = monitorIdx;
     screen.count = monitorIdx;
     chairSeat.count = n;
     chairBack.count = n;
     chairLeg.count = n;
+    chairArm.count = n * 2;
     body.count = n;
     head.count = n;
     hair.count = n;
     arm.count = n * 2;
     cup.count = cupIdx;
     paper.count = paperIdx;
-    [deskTop, deskLeg, keyboard, monitor, monitorStand, screen, chairSeat, chairBack, chairLeg, body, head, hair, cup, paper].forEach(
+    [deskTop, deskLeg, keyboard, mouse, pcTower, pcLed, monitor, monitorStand, screen, chairSeat, chairBack, chairLeg, chairArm, body, head, hair, cup, paper].forEach(
       (m) => {
         m.instanceMatrix.needsUpdate = true;
       }
