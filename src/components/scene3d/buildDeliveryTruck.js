@@ -255,40 +255,56 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
 
   return {
     group,
-    update({ isOverheated, overheatedAt, now, dt = 0.016, reduced = false }) {
+    update({ isOverheated, overheatedAt, dt = 0.016, reduced = false }) {
       if (!isOverheated) {
         group.visible = false;
         internalStartTime = null;
+        truckRoot.visible = true;
+        deliveredRack.visible = false;
+        techGroup.visible = false;
+        sprayCone.visible = false;
         return;
       }
 
       group.visible = true;
 
-      if (!internalStartTime) {
-        internalStartTime = overheatedAt && overheatedAt > 0 ? overheatedAt : now;
+      // Robuste Zeitbasis in Sekunden:
+      // Im Spiel ist overheatedAt = Date.now(). Falls im Debug-Modus 0 oder nicht gesetzt,
+      // puffern wir internalStartTime ebenfalls mit Date.now().
+      let elapsed = 0;
+      if (overheatedAt && overheatedAt > 0) {
+        elapsed = Math.max(0, (Date.now() - overheatedAt) / 1000);
+      } else {
+        if (!internalStartTime) internalStartTime = Date.now();
+        elapsed = Math.max(0, (Date.now() - internalStartTime) / 1000);
       }
-
-      // Sekunden seit Überhitzungsstart (0 bis 45)
-      const elapsed = Math.max(0, (now - internalStartTime) / 1000);
 
       // Rundumleuchten rotieren lassen
       if (!reduced) {
         beaconBar.rotation.y += dt * 9.0;
       }
 
-      // --- PHASE 1: ANFAHRT (0s bis 8s) ---------------------------------------
-      if (elapsed < 8) {
-        const tDrive = Math.min(1, elapsed / 7.5);
-        // Smooth ease-out bremsen
-        const ease = 1 - Math.pow(1 - tDrive, 2);
+      // --- PHASE 1: ANFAHRT (0s bis 7.5s) ---------------------------------------
+      // Fährt von Süden (z = 48) auf der Allee (x = 0) heran und bremst vor dem Kamin (x = -1.5, z = 4.2)
+      if (elapsed < 7.5) {
+        truckRoot.visible = true;
+        const tDrive = Math.min(1, elapsed / 7.0);
+        // Geschmeidiges Abbremsen (Cubic Ease-Out)
+        const ease = 1 - Math.pow(1 - tDrive, 2.5);
 
-        truckRoot.position.x = START_POS.x + (PARK_POS.x - START_POS.x) * ease;
-        truckRoot.position.z = START_POS.z + (PARK_POS.z - START_POS.z) * ease;
-        truckRoot.rotation.y = START_POS.rot + (PARK_POS.rot - START_POS.rot) * ease;
+        // Bis kurz vor dem Kamin geradeaus, im letzten Drittel sanft nach x = -1.5 einlenken
+        const zCurrent = START_POS.z + (PARK_POS.z - START_POS.z) * ease;
+        const tCurve = Math.max(0, (ease - 0.65) / 0.35);
+        const smoothCurve = tCurve * tCurve * (3 - 2 * tCurve);
+        const xCurrent = START_POS.x + (PARK_POS.x - START_POS.x) * smoothCurve;
+        const rotCurrent = START_POS.rot + (PARK_POS.rot - START_POS.rot) * smoothCurve;
 
-        // Räder drehen sich beim Fahren
+        truckRoot.position.set(xCurrent, 0, zCurrent);
+        truckRoot.rotation.y = rotCurrent;
+
+        // Räder drehen sich beim Fahren passend zur Geschwindigkeit
         if (!reduced) {
-          const speed = (1 - ease) * 16.0;
+          const speed = Math.max(0, (1 - ease) * 24.0);
           wheels.forEach((w) => {
             w.children[0].rotation.x += dt * speed;
           });
@@ -301,19 +317,20 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
         sprayCone.visible = false;
       }
 
-      // --- PHASE 2 & 3: ENTLADEN & KÜHLEN / REPARIEREN (8s bis 32s) ------------
-      else if (elapsed >= 8 && elapsed < 32) {
+      // --- PHASE 2 & 3: ENTLADEN & KÜHLEN / REPARIEREN (7.5s bis 32s) ------------
+      else if (elapsed >= 7.5 && elapsed < 32) {
+        truckRoot.visible = true;
         truckRoot.position.set(PARK_POS.x, 0, PARK_POS.z);
         truckRoot.rotation.y = PARK_POS.rot;
 
-        // Türen öffnen sich in den ersten 2 Sekunden (8s bis 10s)
-        const doorProgress = Math.min(1, (elapsed - 8) / 2.0);
+        // Türen öffnen sich in den ersten 2 Sekunden (7.5s bis 9.5s)
+        const doorProgress = Math.min(1, (elapsed - 7.5) / 2.0);
         leftDoor.rotation.y = -doorProgress * 1.9;
         rightDoor.rotation.y = doorProgress * 1.9;
 
-        // Techniker steigt aus und tritt an den Kamin
+        // Techniker steigt aus und tritt an den Kamin (8.5s bis 11.5s)
         techGroup.visible = true;
-        const techT = Math.min(1, (elapsed - 9) / 3.0);
+        const techT = Math.min(1, Math.max(0, (elapsed - 8.5) / 3.0));
         techGroup.position.set(
           PARK_POS.x + (furnaceAnchor.x - 1.8 - PARK_POS.x) * techT,
           0,
@@ -321,34 +338,36 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
         );
         techGroup.rotation.y = Math.atan2(furnaceAnchor.x - techGroup.position.x, furnaceAnchor.z - techGroup.position.z);
 
-        // Neues GPU-Rack wird herausgebracht (ab 11s)
-        if (elapsed > 11) {
+        // Neues GPU-Rack wird herausgebracht (ab 10.5s)
+        if (elapsed > 10.5) {
           deliveredRack.visible = true;
-          const rackT = Math.min(1, (elapsed - 11) / 3.5);
+          const rackT = Math.min(1, (elapsed - 10.5) / 3.5);
           deliveredRack.position.set(
             PARK_POS.x + (furnaceAnchor.x - 1.3 - PARK_POS.x) * rackT,
             0,
             PARK_POS.z + (furnaceAnchor.z + 1.1 - PARK_POS.z) * rackT
           );
           deliveredRack.rotation.y = 0.2;
+        } else {
+          deliveredRack.visible = false;
         }
 
         // Kühlnebel aktivieren (zwischen 12s und 29s)
         if (elapsed > 12 && elapsed < 29) {
           sprayCone.visible = true;
-          const pulse = 0.85 + Math.sin(now * 8.0) * 0.15;
+          const pulse = 0.85 + Math.sin(elapsed * 10.0) * 0.15;
           sprayCone.scale.set(pulse, pulse * 1.2, pulse);
           sprayCone.position.set(
             techGroup.position.x + 0.3,
             0.6,
-            techGroup.position.y || (techGroup.position.z - 0.4)
+            techGroup.position.z - 0.4
           );
         } else {
           sprayCone.visible = false;
         }
       }
 
-      // --- PHASE 4 & 5: TÜREN SCHLIESSEN & ABFAHRT (32s bis 45s) --------------
+      // --- PHASE 4 & 5: TÜREN SCHLIESSEN, WENDEN & ABFAHRT (32s bis 45s) --------
       else if (elapsed >= 32 && elapsed < 45) {
         sprayCone.visible = false;
         techGroup.visible = false;
@@ -360,27 +379,50 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
         leftDoor.rotation.y = -(1 - closeProgress) * 1.9;
         rightDoor.rotation.y = (1 - closeProgress) * 1.9;
 
-        // Abfahrt (35s bis 44s)
-        if (elapsed >= 34.5) {
-          const tLeave = Math.min(1, (elapsed - 34.5) / 9.5);
-          const easeLeave = Math.pow(tLeave, 1.8);
+        // Wenden auf der Allee (34s bis 36.5s)
+        if (elapsed >= 34 && elapsed < 36.5) {
+          truckRoot.visible = true;
+          const tTurn = (elapsed - 34) / 2.5;
+          const easeTurn = tTurn * tTurn * (3 - 2 * tTurn);
+          const xTurn = PARK_POS.x + (0 - PARK_POS.x) * easeTurn;
+          const zTurn = PARK_POS.z - Math.sin(easeTurn * Math.PI) * 0.6;
+          const rotTurn = PARK_POS.rot - (PARK_POS.rot) * easeTurn;
 
-          // LKW wendet und fährt die Allee hinunter nach Süden (+z)
-          truckRoot.position.x = PARK_POS.x + (0 - PARK_POS.x) * easeLeave;
-          truckRoot.position.z = PARK_POS.z + (48 - PARK_POS.z) * easeLeave;
-          truckRoot.rotation.y = PARK_POS.rot - Math.PI * 0.9 * Math.min(1, tLeave * 2.0);
+          truckRoot.position.set(xTurn, 0, zTurn);
+          truckRoot.rotation.y = rotTurn;
 
           if (!reduced) {
             wheels.forEach((w) => {
-              w.children[0].rotation.x += dt * 14.0;
+              w.children[0].rotation.x += dt * 8.0;
             });
           }
         }
+        // Fahrt nach Süden die Allee hinunter (36.5s bis 43.5s)
+        else if (elapsed >= 36.5 && elapsed < 43.5) {
+          truckRoot.visible = true;
+          const tDriveOut = (elapsed - 36.5) / 7.0;
+          const easeOut = Math.pow(tDriveOut, 1.8);
+          const zOut = PARK_POS.z + (START_POS.z - PARK_POS.z) * easeOut;
+
+          truckRoot.position.set(0, 0, zOut);
+          truckRoot.rotation.y = 0; // Geradewegs nach Süden
+
+          if (!reduced) {
+            const speedOut = 8.0 + easeOut * 24.0;
+            wheels.forEach((w) => {
+              w.children[0].rotation.x += dt * speedOut;
+            });
+          }
+        }
+        // Ab 43.5s: Laster hat den Bildrand erreicht
+        else if (elapsed >= 43.5) {
+          truckRoot.visible = false;
+        }
       }
 
-      // Nach 45s ist der Einsatz abgeschlossen
+      // Nach 45s: Einsatz abgeschlossen, LKW ist weg
       else {
-        group.visible = false;
+        truckRoot.visible = false;
       }
     },
 
