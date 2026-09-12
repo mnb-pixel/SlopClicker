@@ -317,37 +317,50 @@ den Bauern, müsste die Insel raten, wie weit die Zonen inzwischen gewachsen sin
   einen Skalierungsfaktor auf Bäumen und Lichtdrohnen (`layoutTrees()` in
   `buildCampus.js`) sowie über die Kamera-Einpassung, nicht über neue Bodengeometrie.
 
-## Kulisse am Feldrand: Stadt, See und Fluss
+## Kulisse am Feldrand: Dörfer, Straßennetz und ein Fluss übers ganze Feld
 
-Weit vorne, jenseits von Großraumbüro und Bühne (`buildEnvironment.js`, Anker bei
-x = -15, z = 22): eine kleine Kleinstadt an einem See mit Fluss, rein satirische
-Kulisse ohne eigene Spielzahl. Die vier Zonen wachsen nur in x, nie in z (siehe oben) -
-der Streifen davor bleibt also unabhängig vom Ausbau für immer frei, die Kulisse
-bekommt nie Besuch von der wachsenden Grundstücksgrenze.
+Vier Dorf-Cluster verstreut über das ganze Spielfeld (`buildEnvironment.js`, alle auf
+z = 32, in Weltkoordinaten statt hinter einem einzelnen Anker): ein Hauptdorf (zwölf
+Hausplätze mit vollem Straßenring) bei x = -15, dazu drei kleinere Weiler bei
+x = -50, +20 und +52. Verbunden über ein durchgehendes Straßennetz, dazu EIN Fluss,
+der quer über das ganze Feld zieht und beim Hauptdorf eine Seeausbuchtung bildet. Rein
+satirische Kulisse ohne eigene Spielzahl.
+
+**Warum z = 32, nicht näher dran:** nachgerechnet statt geschätzt - mit jeder Engine
+aller 20 Gebäude auf ihrem harten `maxProps`-Deckel (zonesData.js, dem tatsächlich
+größtmöglichen Campus) kommt `campusRect()` aus buildCampus.js auf
+`{ minX: -37.5, maxX: 30.3, minZ: -29.4, maxZ: 23.1 }`. Die Grenze wächst in x sehr
+viel weiter als in z (die vier Zonen wachsen fast nur dort), deshalb reicht z = 32 mit
+klarem Abstand über `maxZ`, während die beiden äußeren Weiler ohnehin schon per x weit
+außerhalb liegen. Bei z = 22 (der ersten Fassung dieser Datei, mit nur einem Cluster)
+wären Haupt- und ein weiterer Ort noch teilweise INNERHALB der Grenze gelegen.
 
 Gesteuert von einem einzigen `progress`-Wert (0 bis 1) aus der Hype-Stufe (1 bis 10) -
 derselben Stufe, die auch Wege, Bäume und Lichtdrohnen des Campus schaltet (siehe
 "Ausbaustufen" oben), damit keine eigene Fortschrittszahl nötig ist:
 
-* **Stadt.** Zwölf Hausplätze in einem Raster. Mit steigendem `progress` weichen die
-  campusnächsten Plätze zuerst - dieselben Plätze, die dem Ofen am nächsten liegen -
-  grauen Glaskuben mit Antenne, die hintersten Häuser bleiben am längsten stehen. Beide
-  Varianten sind InstancedMeshes, umgeschichtet wird nur die COUNT-Grenze zwischen
-  ihnen, genau wie bei den Bäumen in `buildCampus.js`.
-* **See und Fluss.** Wasser schrumpft um bis zu 45% und trübt sich von Klarblau
-  Richtung Moosgrün; darunter liegt ein permanent sichtbares braunes Flussbett/Seebett,
-  das mit dem Schrumpfen mehr freigibt - ein trockener Rand statt eines unsichtbaren
-  Randes. Ab steigendem `progress` treiben zusätzlich dunkle Algenflecken auf, wieder
-  über die COUNT-Grenze eines InstancedMesh.
-* **Straßen.** Ein Raster aus drei Längs- und zwei Querstraßen in den Lücken zwischen
-  den Hausplätzen, dazu ein Ring rundherum - die Stadt liegt komplett eingefasst. Von
-  dessen campusseitigem Rand führt eine geknickte Zufahrt weiter Richtung Ofenhof.
-  Straßen bleiben unverändert liegen, auch wenn ein Haus daneben zum Kubus wird - nur
-  die Gebäude wechseln, das Straßenraster nicht. Die Zufahrt endet bewusst ein Stück vor
-  der Grundstücksgrenze (siehe "Grundstücke und Inselwachstum" oben) statt exakt an
-  deren - wandernder - Lücke: bei typischem Ausbau bleibt so immer sichtbarer Rasen
-  zwischen Zufahrt und Hecke, ohne dass die Straße durch die Hecke hindurch geometrisch
-  kollidiert.
+* **Dörfer.** Alle Hausplätze aller vier Cluster in EINER Liste, nach Abstand zum Ofen
+  sortiert. Mit steigendem `progress` weichen die campusnächsten Plätze zuerst - ganz
+  gleich in welchem Cluster - grauen Glaskuben mit Antenne; dahinter bleibt ein
+  aufgerissener Schlammfleck liegen (dieselbe Erdfarbe wie das Fluss-/Seebett) -
+  "abgerissen", nicht nur ausgetauscht. Häuser, Kuben und Schlammflecken sind je ein
+  InstancedMesh über ALLE Cluster hinweg, umgeschichtet wird nur die COUNT-Grenze,
+  genau wie bei den Bäumen in `buildCampus.js`.
+* **Fluss und See.** EIN Lauf von x = -75 bis x = +75, mit einer Ausbuchtung zum See
+  beim Hauptdorf. Wasser schrumpft um bis zu 45% und trübt sich von Klarblau Richtung
+  Moosgrün; darunter liegt ein permanent sichtbares braunes Flussbett/Seebett, das mit
+  dem Schrumpfen mehr freigibt. Ab steigendem `progress` treiben zusätzlich dunkle
+  Algenflecken auf (sechs feste um den See, dazu einer je Flussabschnitt).
+* **Straßennetz.** Drei Ebenen: das Ortsraster JEDES Clusters (Ring plus
+  Längs-/Querstraßen in den Lücken zwischen den Häusern, aus Spaltenzahl und
+  Zeilenzahl des Clusters abgeleitet statt von Hand gesetzt), eine durchgehende
+  Landstraße, die alle vier Cluster an ihrer campusseitigen Kante verbindet, und zwei
+  Stichstraßen, die von der Landstraße beim Hauptdorf und beim rechten Weiler weiter
+  Richtung Ofenhof abzweigen. Straßen bleiben unverändert liegen, auch wenn ein Haus
+  daneben zum Kubus wird. Die Stichstraßen dürfen - anders als die Cluster selbst -
+  durchaus nah an die Grundstücksgrenze heranreichen oder sie bei extremem Ausbau
+  sogar streifen: das liest sich als "die Zufahrt wird vom wachsenden Zaun eingeholt",
+  nicht als Fehler.
 
 ## Kamera: einpassen, schieben, zoomen
 
@@ -470,7 +483,7 @@ ohne stundenlanges Spielen; kein Cheat, weil nichts davon in den Store zurückfl
 | `src/utils/campusLayout.js` | Grundstücks-Raster, Zonen-Rechteck, Inselgröße - reine Geometrie |
 | `src/components/scene3d/buildOffice.js`, `buildBasement.js`, `buildStage.js`, `buildTower.js`, `buildEndgame.js` | Die fünf Zonen, je mit eigenen Grundstücken pro Engine und Tier-Einfärbung über `tierVisuals.js` |
 | `src/components/scene3d/buildZones.js` | Platten, Klickziele, Nadel-Anker, Zonen-Effekte, hostet die Zonen-Bauer |
-| `src/components/scene3d/buildEnvironment.js` | Kulisse am Feldrand: Kleinstadt, See und Fluss, verdrängt/verschmutzt sich mit der Hype-Stufe |
+| `src/components/scene3d/buildEnvironment.js` | Kulisse am Feldrand: vier Dorf-Cluster, Straßennetz und ein Fluss übers ganze Feld, verdrängt/verschmutzt sich mit der Hype-Stufe |
 | `src/components/scene3d/buildDataLine.js`, `buildPeople.js` | Gemeinsame Bausteine: Datenleitung, Personen |
 | `src/components/scene3d/ZoneBuyPanel.jsx` | Kaufen aus der Szene: Engines, Upgrades und Corporate Actions der angeklickten Zone in drei Reitern mit Icon je Zeile (`utils/iconMap.js`), Preise/Filterung über dieselben Helfer wie der Shop |
 | `src/utils/storeCopy.js` | Anzeigetexte für Upgrades und Corporate Actions (Name, Zitat, Effektbeschreibung) - eine Quelle für StoreTab und ZoneBuyPanel |
