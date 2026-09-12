@@ -339,6 +339,15 @@ derselben Stufe, die auch Wege, Bäume und Lichtdrohnen des Campus schaltet (sie
   das mit dem Schrumpfen mehr freigibt - ein trockener Rand statt eines unsichtbaren
   Randes. Ab steigendem `progress` treiben zusätzlich dunkle Algenflecken auf, wieder
   über die COUNT-Grenze eines InstancedMesh.
+* **Straßen.** Ein Raster aus drei Längs- und zwei Querstraßen in den Lücken zwischen
+  den Hausplätzen, dazu ein Ring rundherum - die Stadt liegt komplett eingefasst. Von
+  dessen campusseitigem Rand führt eine geknickte Zufahrt weiter Richtung Ofenhof.
+  Straßen bleiben unverändert liegen, auch wenn ein Haus daneben zum Kubus wird - nur
+  die Gebäude wechseln, das Straßenraster nicht. Die Zufahrt endet bewusst ein Stück vor
+  der Grundstücksgrenze (siehe "Grundstücke und Inselwachstum" oben) statt exakt an
+  deren - wandernder - Lücke: bei typischem Ausbau bleibt so immer sichtbarer Rasen
+  zwischen Zufahrt und Hecke, ohne dass die Straße durch die Hecke hindurch geometrisch
+  kollidiert.
 
 ## Kamera: einpassen, schieben, zoomen
 

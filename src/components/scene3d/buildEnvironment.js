@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
-// Die Kulisse am Feldrand: eine kleine Stadt an einem See mit Fluss, weit vorne
+// Die Kulisse am Feldrand: eine kleine Stadt an einem See mit Fluss, komplett von einem
+// Straßenring eingefasst und über eine Zufahrt an den Ofenhof angeschlossen, weit vorne
 // jenseits von Büro und Bühne (siehe zonesData.js - die vier Zonen wachsen nur in x,
 // nie in z, der Streifen davor bleibt also für immer frei). Rein satirisch: je mehr
 // Campus gebaut wird, desto mehr Häuser weichen grauen Unternehmens-Kuben, und der See
@@ -14,10 +15,12 @@ import * as THREE from 'three';
 // die wächst nur in x, ihre Frontkante in z bleibt fest bei rund 15 Einheiten.
 const ENV_ANCHOR = { x: -15, z: 22 };
 
-// Zwölf Hausplätze, vier Spalten mal drei Reihen, mit etwas Streuung. Reihe für Reihe
-// aufsteigend nach z sortiert (unten in der Liste): die Reihe, die dem Campus am
-// nächsten liegt (kleinstes z, siehe ENV_ANCHOR-Richtung), weicht bei wachsendem
-// `progress` zuerst den Unternehmens-Kuben - "die Innenstadt zuerst".
+// Zwölf Hausplätze, vier Spalten mal drei Reihen. Reihe für Reihe aufsteigend nach z
+// sortiert (unten in der Liste): die Reihe, die dem Campus am nächsten liegt (kleinstes
+// z, siehe ENV_ANCHOR-Richtung), weicht bei wachsendem `progress` zuerst den
+// Unternehmens-Kuben - "die Innenstadt zuerst". Nur die Drehung streut, die Position
+// bleibt exakt im Raster: dazwischen laufen die Straßen (siehe STREETS unten), die
+// dürfen kein Haus streifen.
 const HOUSE_ROWS = [-3.1, 0, 3.1];
 const HOUSE_COLS = [-4.8, -1.6, 1.6, 4.8];
 const HOUSE_SLOTS = [];
@@ -25,9 +28,9 @@ HOUSE_ROWS.forEach((rowZ, ri) => {
   HOUSE_COLS.forEach((colX, ci) => {
     const jitter = ((ri * 4 + ci) * 37) % 10;
     HOUSE_SLOTS.push({
-      x: colX + (jitter - 5) * 0.08,
-      z: rowZ + (jitter - 5) * 0.05,
-      rot: ((jitter - 5) / 5) * 0.25,
+      x: colX,
+      z: rowZ,
+      rot: ((jitter - 5) / 5) * 0.2,
       alt: (ri + ci) % 2 === 1,
     });
   });
@@ -37,6 +40,45 @@ HOUSE_ROWS.forEach((rowZ, ri) => {
 HOUSE_SLOTS.sort((a, b) => a.z - b.z);
 
 const HOUSE_COUNT = HOUSE_SLOTS.length;
+
+// --- Straßen ------------------------------------------------------------------------
+// Ein einfaches Raster: drei Straßen längs (zwischen den vier Spalten hindurch), zwei
+// quer (zwischen den drei Reihen hindurch), dazu ein Ring rundherum - die Stadt liegt
+// komplett eingefasst, kein Haus ohne Anschluss. Von der Süd-Seite des Rings (Richtung
+// Campus, kleineres z) führt zusätzlich eine Zufahrt hinaus in Richtung Ofenhof.
+const TOWN_HALF_X = 6.2;
+const TOWN_HALF_Z = 4.4;
+const STREET_W = 1.1;
+// Straßen als Liste von Endpunktpaaren (lokale Koordinaten), gebaut wie der Fluss unten:
+// ein Kasten pro Segment, Rotation aus der Richtung.
+const STREETS = [
+  // Ring
+  { a: { x: -TOWN_HALF_X, z: -TOWN_HALF_Z }, b: { x: TOWN_HALF_X, z: -TOWN_HALF_Z } },
+  { a: { x: -TOWN_HALF_X, z: TOWN_HALF_Z }, b: { x: TOWN_HALF_X, z: TOWN_HALF_Z } },
+  { a: { x: -TOWN_HALF_X, z: -TOWN_HALF_Z }, b: { x: -TOWN_HALF_X, z: TOWN_HALF_Z } },
+  { a: { x: TOWN_HALF_X, z: -TOWN_HALF_Z }, b: { x: TOWN_HALF_X, z: TOWN_HALF_Z } },
+  // Drei Längsstraßen zwischen den Spalten (-4.8/-1.6/1.6/4.8 -> Lücken bei -3.2, 0, 3.2)
+  { a: { x: -3.2, z: -TOWN_HALF_Z }, b: { x: -3.2, z: TOWN_HALF_Z } },
+  { a: { x: 0, z: -TOWN_HALF_Z }, b: { x: 0, z: TOWN_HALF_Z } },
+  { a: { x: 3.2, z: -TOWN_HALF_Z }, b: { x: 3.2, z: TOWN_HALF_Z } },
+  // Zwei Querstraßen zwischen den Reihen (-3.1/0/3.1 -> Lücken bei -1.55, 1.55)
+  { a: { x: -TOWN_HALF_X, z: -1.55 }, b: { x: TOWN_HALF_X, z: -1.55 } },
+  { a: { x: -TOWN_HALF_X, z: 1.55 }, b: { x: TOWN_HALF_X, z: 1.55 } },
+];
+
+// Zufahrt: von der Hauptstraße (x = 0) am Südrand des Rings weiter hinaus Richtung
+// Ofenhof, mit einem Knick statt einer Beton-geraden Linie. Endpunkt bei lokal z = -8,6
+// (Weltkoordinate z = ENV_ANCHOR.z - 8,6 = 13,4) liegt ein Stück VOR der
+// Grundstücksgrenze (siehe buildCampus.js: deren Frontkante liegt unabhängig vom Ausbau
+// bei rund z = 15,4 Weltkoordinaten) - so bleibt die Zufahrt bei jeder Campusgröße als
+// eigenes Wegstück auf freiem Rasen sichtbar, statt in einer wachsenden Hecke zu
+// verschwinden.
+const ACCESS_ROAD_W = 1.7;
+const ACCESS_ROAD_POINTS = [
+  { x: 0, z: -TOWN_HALF_Z },
+  { x: 4, z: -6.4 },
+  { x: 7.5, z: -8.6 },
+];
 
 // See und Fluss liegen rechts neben der Stadt (positives lokales x), der Fluss zieht
 // von dort weiter nach außen ab.
@@ -178,6 +220,31 @@ export function buildEnvironment(palette) {
     [houseWalls, houseWallsAlt, houseRoofs, houseRoofsAlt, corpBody, corpFrame, corpSign].forEach((m) => {
       m.instanceMatrix.needsUpdate = true;
     });
+  }
+
+  // --- Straßen: Stadtraster plus Zufahrt zum Ofenhof -------------------------------
+  // Ein Kasten pro Segment, Position/Rotation aus den Endpunkten - dasselbe Prinzip
+  // wie die Wege in buildCampus.js und der Fluss weiter unten. Bleiben unverändert über
+  // `progress`: Straßen bleiben liegen, auch wenn ein Haus daneben zum Kubus wird.
+  const roadMat = lambert('path');
+  function addRoad(parent, a, b, width) {
+    const dx = b.x - a.x;
+    const dz = b.z - a.z;
+    const len = Math.hypot(dx, dz);
+    const road = new THREE.Mesh(new THREE.BoxGeometry(width, 0.07, len), roadMat);
+    road.position.set((a.x + b.x) / 2, 0.045, (a.z + b.z) / 2);
+    road.rotation.y = Math.atan2(dx, dz);
+    road.receiveShadow = true;
+    parent.add(road);
+    return road;
+  }
+  const streets = new THREE.Group();
+  group.add(streets);
+  STREETS.forEach(({ a, b }) => addRoad(streets, a, b, STREET_W));
+  const accessRoad = new THREE.Group();
+  group.add(accessRoad);
+  for (let i = 0; i < ACCESS_ROAD_POINTS.length - 1; i += 1) {
+    addRoad(accessRoad, ACCESS_ROAD_POINTS[i], ACCESS_ROAD_POINTS[i + 1], ACCESS_ROAD_W);
   }
 
   // --- See und Fluss: Wasser schrumpft und trübt sich -----------------------------
