@@ -23,69 +23,74 @@ import * as THREE from 'three';
 // Streng mathematisch gegen Fluss (dist >= 6.5) und See (dist >= 8.5) abgesichert -
 // kein einziges Haus, kein Baum und kein Auto steht mehr im Wasser.
 const LOTS = [
-  // === NORD-DORF (Oberhalb / -z, reicht bis z = -66) ==========================
-  // Reihe 1 (z = -20)
-  { id: 101, x: -16, z: -20, rot: 0.1, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
-  { id: 102, x: 16, z: -20, rot: -0.12, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: false, hasCar: false },
-  // Reihe 2 (z = -26)
-  { id: 103, x: -24, z: -26, rot: 0.15, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
-  { id: 104, x: -10, z: -26, rot: -0.05, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
-  { id: 105, x: 10, z: -26, rot: 0.08, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintB' },
-  { id: 106, x: 24, z: -26, rot: -0.15, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
-  // Reihe 3 (z = -33)
-  { id: 107, x: -32, z: -33, rot: 0.1, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
-  { id: 108, x: -16, z: -33, rot: -0.08, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: false, hasCar: true, carCol: 'carPaintB' },
-  { id: 109, x: 0, z: -33, rot: 0.05, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
-  { id: 110, x: 16, z: -33, rot: -0.1, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintA' },
-  { id: 111, x: 32, z: -33, rot: 0.18, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: false, hasCar: false },
-  // Reihe 4 (z = -41)
-  { id: 112, x: -24, z: -41, rot: -0.05, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintB' },
-  { id: 113, x: -8, z: -41, rot: 0.12, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
-  { id: 114, x: 8, z: -41, rot: -0.15, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: false, hasCar: true, carCol: 'carPaintA' },
-  { id: 115, x: 24, z: -41, rot: 0.08, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: false },
-  { id: 116, x: -40, z: -41, rot: 0.1, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
-  { id: 117, x: 40, z: -41, rot: -0.1, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: true, carCol: 'carPaintB' },
-  // Reihe 5 & 6 (Nord-Aussengrenze, z = -50 bis -66)
-  { id: 118, x: -32, z: -50, rot: 0.15, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintA' },
-  { id: 119, x: -16, z: -50, rot: -0.08, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: false, hasCar: false },
-  { id: 120, x: 0, z: -50, rot: 0.05, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintB' },
-  { id: 121, x: 16, z: -50, rot: -0.12, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
-  { id: 122, x: 32, z: -50, rot: 0.2, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
-  { id: 123, x: -24, z: -60, rot: -0.1, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
-  { id: 124, x: -8, z: -60, rot: 0.08, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintB' },
-  { id: 125, x: 8, z: -60, rot: -0.15, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: false, hasCar: true, carCol: 'carPaintA' },
-  { id: 126, x: 24, z: -60, rot: 0.1, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
-  { id: 127, x: -16, z: -66, rot: 0.05, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
-  { id: 128, x: 16, z: -66, rot: -0.08, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+  // === NORD-DORF (Oberhalb / -z, reicht bis z = -67) ==========================
+  // Zeile 1 (z = -19.5, suedlich von Strasse z = -23, Abstand 3.5m)
+  { id: 101, x: -16, z: -19.5, rot: 0.1, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 102, x: 16, z: -19.5, rot: -0.12, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: false, hasCar: false },
+
+  // Zeile 2 (z = -26.5, noerdlich von Strasse z = -23, Abstand 3.5m)
+  { id: 103, x: -24, z: -26.5, rot: 0.15, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+  { id: 104, x: -5, z: -26.5, rot: -0.05, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 105, x: 10, z: -26.5, rot: 0.08, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintB' },
+  { id: 106, x: 24, z: -26.5, rot: -0.15, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+
+  // Zeile 3 (z = -33.5, suedlich von Strasse z = -37, Abstand 3.5m)
+  { id: 107, x: -32, z: -33.5, rot: 0.1, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 108, x: -16, z: -33.5, rot: -0.08, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: false, hasCar: true, carCol: 'carPaintB' },
+  { id: 109, x: 0, z: -33.5, rot: 0.05, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 110, x: 16, z: -33.5, rot: -0.1, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintA' },
+  { id: 111, x: 32, z: -33.5, rot: 0.18, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: false, hasCar: false },
+
+  // Zeile 4 (z = -40.5, noerdlich von Strasse z = -37, Abstand 3.5m)
+  { id: 112, x: -24, z: -40.5, rot: -0.05, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintB' },
+  { id: 113, x: -5, z: -40.5, rot: 0.12, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 114, x: 8, z: -40.5, rot: -0.15, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+  { id: 115, x: 24, z: -40.5, rot: 0.08, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: false },
+  { id: 116, x: -40, z: -40.5, rot: 0.1, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 117, x: 40, z: -40.5, rot: -0.1, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: true, carCol: 'carPaintB' },
+
+  // Zeile 5 (z = -51.5, suedlich von Strasse z = -55, Abstand 3.5m)
+  { id: 118, x: -32, z: -51.5, rot: 0.15, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintA' },
+  { id: 119, x: -16, z: -51.5, rot: -0.08, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: false, hasCar: false },
+  { id: 120, x: 0, z: -51.5, rot: 0.05, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintB' },
+  { id: 121, x: 16, z: -51.5, rot: -0.12, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 122, x: 32, z: -51.5, rot: 0.2, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+
+  // Zeile 6 (z = -58.5, noerdlich von Strasse z = -55, Abstand 3.5m)
+  { id: 123, x: -24, z: -58.5, rot: -0.1, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 124, x: -5, z: -58.5, rot: 0.08, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintB' },
+  { id: 125, x: 8, z: -58.5, rot: -0.15, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+  { id: 126, x: 24, z: -58.5, rot: 0.1, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
+
+  // Zeile 7 (z = -67.0, noerdlich von Strasse z = -63.5, Abstand 3.5m)
+  { id: 127, x: -16, z: -67.0, rot: 0.05, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 128, x: 16, z: -67.0, rot: -0.08, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
 
   // === WEST-DORF (Links / -x, reicht bis x = -74) =============================
-  // Innenbereich West (x: -21 bis -46)
   { id: 201, x: -21, z: -10, rot: 0.1, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintB' },
   { id: 202, x: -21, z: 0, rot: -0.05, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
   { id: 203, x: -21, z: 10, rot: 0.15, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintA' },
   { id: 204, x: -29, z: -14, rot: -0.1, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: false, hasCar: false },
   { id: 205, x: -29, z: -4, rot: 0.08, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintB' },
   { id: 206, x: -29, z: 6, rot: -0.12, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
-  { id: 207, x: -31, z: 16, rot: 0.2, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+  { id: 207, x: -31, z: 14.5, rot: 0.2, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: false, hasCar: true, carCol: 'carPaintA' },
   { id: 208, x: -38, z: -10, rot: -0.08, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: false },
   { id: 209, x: -38, z: 0, rot: 0.05, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
   { id: 210, x: -38, z: 10, rot: -0.15, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintB' },
-  { id: 211, x: -46, z: -5, rot: 0.1, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
-  { id: 212, x: -46, z: 7, rot: -0.1, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintA' },
-  // Aussenbereich West (x: -54 bis -74)
-  { id: 213, x: -54, z: -14, rot: 0.12, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintA' },
-  { id: 214, x: -54, z: 0, rot: -0.08, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: false, hasCar: false },
-  { id: 215, x: -54, z: 14, rot: 0.15, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintB' },
+  { id: 211, x: -45, z: -5, rot: 0.1, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 212, x: -45, z: 7, rot: -0.1, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintA' },
+  { id: 213, x: -55, z: -14, rot: 0.12, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintA' },
+  { id: 214, x: -55, z: 0, rot: -0.08, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: false, hasCar: false },
+  { id: 215, x: -55, z: 14, rot: 0.15, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintB' },
   { id: 216, x: -62, z: -8, rot: -0.05, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: false },
   { id: 217, x: -62, z: 6, rot: 0.1, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: false, hasCar: true, carCol: 'carPaintA' },
-  { id: 218, x: -68, z: -16, rot: 0.18, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: false },
+  { id: 218, x: -68, z: -14.5, rot: 0.18, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: false },
   { id: 219, x: -68, z: 0, rot: -0.12, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: true, carCol: 'carPaintB' },
   { id: 220, x: -68, z: 12, rot: 0.08, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: false, hasCar: false },
   { id: 221, x: -74, z: -8, rot: 0.1, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
   { id: 222, x: -74, z: 6, rot: -0.15, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: false, hasCar: true, carCol: 'carPaintB' },
 
   // === OST-DORF (Rechts / +x, reicht bis x = 74) ==============================
-  // Innenbereich Ost (x: 21 bis 46)
   { id: 301, x: 21, z: -10, rot: -0.1, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintA' },
   { id: 302, x: 21, z: 0, rot: 0.08, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: false, hasCar: false },
   { id: 303, x: 21, z: 10, rot: -0.12, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintB' },
@@ -95,34 +100,34 @@ const LOTS = [
   { id: 307, x: 38, z: -10, rot: 0.05, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
   { id: 308, x: 38, z: 0, rot: -0.08, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
   { id: 309, x: 38, z: 10, rot: 0.12, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintB' },
-  { id: 310, x: 46, z: -5, rot: -0.15, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
-  { id: 311, x: 46, z: 7, rot: 0.1, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
-  // Aussenbereich Ost (x: 54 bis 74)
-  { id: 312, x: 54, z: -14, rot: -0.1, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintB' },
-  { id: 313, x: 54, z: 0, rot: 0.08, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
-  { id: 314, x: 54, z: 14, rot: -0.15, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+  { id: 310, x: 45, z: -5, rot: -0.15, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 311, x: 45, z: 7, rot: 0.1, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+  { id: 312, x: 55, z: -14, rot: -0.1, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintB' },
+  { id: 313, x: 55, z: 0, rot: 0.08, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 314, x: 55, z: 14, rot: -0.15, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
   { id: 315, x: 62, z: -8, rot: 0.12, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
   { id: 316, x: 62, z: 6, rot: -0.05, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintB' },
-  { id: 317, x: 68, z: -16, rot: 0.08, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+  { id: 317, x: 68, z: -14.5, rot: 0.08, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
   { id: 318, x: 68, z: 0, rot: -0.18, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
   { id: 319, x: 68, z: 12, rot: 0.1, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: false },
   { id: 320, x: 74, z: -8, rot: -0.05, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintA' },
   { id: 321, x: 74, z: 6, rot: 0.12, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
 
-  // === SÜD-DORF (Unterhalb / +z, vollkommen wasserfrei) =======================
+  // === SÜD-DORF (Unterhalb / +z, vollkommen wasserfrei & strassenfrei) =======
   // Nordufer-Bezirk (vor dem Flusslauf)
-  { id: 401, x: -23, z: 21, rot: 0.08, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
-  { id: 402, x: 15, z: 18, rot: -0.1, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: false, hasCar: false },
+  { id: 401, x: -23, z: 14.5, rot: 0.08, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 402, x: 15, z: 18.0, rot: -0.1, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: false, hasCar: false },
   { id: 403, x: -24, z: 28, rot: 0.15, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
-  { id: 404, x: -9, z: 23, rot: -0.05, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintB' },
-  { id: 405, x: 9, z: 22, rot: 0.1, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintA' },
-  { id: 406, x: -4, z: 30, rot: -0.12, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
-  { id: 407, x: 5, z: 30, rot: 0.08, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintB' },
+  { id: 404, x: -5, z: 26.0, rot: -0.05, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintB' },
+  { id: 405, x: 9, z: 26.0, rot: 0.1, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintA' },
+  { id: 406, x: -5, z: 33.0, rot: -0.12, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 407, x: 5, z: 33.0, rot: 0.08, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintB' },
   { id: 408, x: 15, z: 26, rot: -0.15, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: false },
-  // Südufer-Bezirk (hinter dem Fluss & jenseits der Brücke: z = 63 bis 70)
+
+  // Südufer-Bezirk (hinter dem Fluss & jenseits der Brücke: Zeilen bei z = 63 und z = 70)
   { id: 409, x: -28, z: 63, rot: 0.1, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
   { id: 410, x: -18, z: 63, rot: -0.08, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintA' },
-  { id: 411, x: -6, z: 63, rot: 0.05, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: false, hasCar: false },
+  { id: 411, x: -5, z: 63, rot: 0.05, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: false, hasCar: false },
   { id: 412, x: 6, z: 63, rot: -0.1, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintB' },
   { id: 413, x: 18, z: 63, rot: 0.18, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
   { id: 414, x: 28, z: 63, rot: -0.05, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
@@ -200,35 +205,32 @@ const ROAD_SEGMENTS = [
 
   // Nord-Süd Hauptverbindung (führt über die Brücke bei z: 50)
   { a: { x: -10, z: -64 }, b: { x: -10, z: 47 }, w: 1.8 },
-  { a: { x: -10, z: 53 }, b: { x: -10, z: 70 }, w: 1.8 },
+  { a: { x: -10, z: 53 }, b: { x: -10, z: 66.5 }, w: 1.8 },
 
-  // Norddorf-Netz (reicht bis z = -60)
-  { a: { x: -45, z: -26 }, b: { x: 45, z: -26 }, w: 1.6 },
-  { a: { x: -45, z: -33 }, b: { x: 45, z: -33 }, w: 1.5 },
-  { a: { x: -45, z: -41 }, b: { x: 45, z: -41 }, w: 1.5 },
-  { a: { x: -38, z: -50 }, b: { x: 38, z: -50 }, w: 1.5 },
-  { a: { x: -30, z: -60 }, b: { x: 30, z: -60 }, w: 1.4 },
+  // Norddorf-Netz (Straßen verlaufen harmonisch ZWISCHEN den Häuserzeilen)
+  { a: { x: -45, z: -23 }, b: { x: 45, z: -23 }, w: 1.5 },
+  { a: { x: -45, z: -37 }, b: { x: 45, z: -37 }, w: 1.5 },
+  { a: { x: -38, z: -55 }, b: { x: 38, z: -55 }, w: 1.5 },
+  { a: { x: -28, z: -63.5 }, b: { x: 28, z: -63.5 }, w: 1.4 },
 
-  // Westdorf-Netz (reicht bis x = -74)
-  { a: { x: -74, z: -18 }, b: { x: -21, z: -18 }, w: 1.6 },
-  { a: { x: -74, z: 0 }, b: { x: -21, z: 0 }, w: 1.5 },
+  // Westdorf-Netz (Ringstraßen oben und unten, Querverbindung bei x = -50)
+  { a: { x: -74, z: -18 }, b: { x: -21, z: -18 }, w: 1.5 },
   { a: { x: -74, z: 18 }, b: { x: -21, z: 18 }, w: 1.5 },
-  { a: { x: -54, z: -20 }, b: { x: -54, z: 20 }, w: 1.4 },
+  { a: { x: -50, z: -18 }, b: { x: -50, z: 18 }, w: 1.4 },
 
-  // Ostdorf-Netz (reicht bis x = 74)
-  { a: { x: 21, z: -18 }, b: { x: 74, z: -18 }, w: 1.6 },
-  { a: { x: 21, z: 0 }, b: { x: 74, z: 0 }, w: 1.5 },
+  // Ostdorf-Netz (Ringstraßen oben und unten, Querverbindung bei x = 50)
+  { a: { x: 21, z: -18 }, b: { x: 74, z: -18 }, w: 1.5 },
   { a: { x: 21, z: 18 }, b: { x: 74, z: 18 }, w: 1.5 },
-  { a: { x: 54, z: -20 }, b: { x: 54, z: 20 }, w: 1.4 },
+  { a: { x: 50, z: -18 }, b: { x: 50, z: 18 }, w: 1.4 },
 
   // Süddorf-Netz Nordufer (vor dem Fluss)
-  { a: { x: -30, z: 22 }, b: { x: 20, z: 22 }, w: 1.6 },
-  { a: { x: -16, z: 22 }, b: { x: -16, z: 30 }, w: 1.5 },
+  { a: { x: -30, z: 22 }, b: { x: -10, z: 22 }, w: 1.6 },
+  { a: { x: 0, z: 22 }, b: { x: 20, z: 22 }, w: 1.6 },
+  { a: { x: -16, z: 22 }, b: { x: -16, z: 23.5 }, w: 1.4 }, // Zufahrt zum Kirchplatz
   { a: { x: 18, z: 22 }, b: { x: LAKE_CENTER.x - 3.2, z: LAKE_CENTER.z - 2.8 }, w: 1.3 }, // Seeweg
 
-  // Süddorf-Netz Südufer (hinter dem Fluss, über die Brücke erreichbar)
-  { a: { x: -35, z: 63 }, b: { x: 35, z: 63 }, w: 1.6 },
-  { a: { x: -25, z: 70 }, b: { x: 25, z: 70 }, w: 1.4 },
+  // Süddorf-Netz Südufer (hinter dem Fluss: Straße bei z = 66.5 zwischen den beiden Häuserzeilen)
+  { a: { x: -35, z: 66.5 }, b: { x: 35, z: 66.5 }, w: 1.6 },
 ];
 
 // ===============================================================================

@@ -102,38 +102,11 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
     plaza.add(joint);
   });
 
-  // Pflanzkübel dort, wo die Hecken auf den Hof treffen: sie machen aus der Hecke und
-  // dem Hof ein Stück, statt zwei Dinge nebeneinander zu stellen.
-  const potMat = lambert('stoneDark');
-  const bushMat = lambert('crown');
-  HEDGE_AXES.forEach(({ dx, dz }) => {
-    const px = dx * (PLAZA_R - 0.8);
-    const pz = dz * (PLAZA_R - 0.8);
-    const pot = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.5, 1.1), potMat);
-    pot.position.set(px, 0.3, pz);
-    pot.castShadow = true;
-    plaza.add(pot);
-    const bush = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), bushMat);
-    bush.position.set(px, 0.85, pz);
-    plaza.add(bush);
-  });
-
-  // --- Hecken zwischen den Zonen ---------------------------------------------------
-  // Ab Stufe 2 sichtbar (zusammen mit den Wegen): vorher ist der Campus eine Garage auf
-  // der Wiese, da wäre eine gepflegte Hecke gelogen.
+  // --- Hecken am Kamin (entfernt gemäß Nutzeranforderung) ----------------------------
+  // Der Kamin- und Hofbereich bleibt dauerhaft frei von Hecken und Kübeln.
   const hedges = new THREE.Group();
   hedges.visible = false;
   group.add(hedges);
-  const hedgeMat = lambert('crownDark');
-  HEDGE_AXES.forEach(({ dx, dz }) => {
-    const mid = PLAZA_R + 0.4 + HEDGE_LEN / 2;
-    const h = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.9, HEDGE_LEN), hedgeMat);
-    h.position.set(dx * mid, 0.45, dz * mid);
-    h.rotation.y = Math.atan2(dx, dz);
-    h.castShadow = true;
-    h.receiveShadow = true;
-    hedges.add(h);
-  });
 
   // --- Wege ------------------------------------------------------------------------
   // Von jeder Zonenplatte zum Hofrand (nicht mehr bis an den Schranksockel: der Hof
@@ -187,7 +160,7 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
   // Äußere Reihe auf den Achsen, hinter den Hecken. Nur diese wandert mit dem Campus
   // nach außen - die Allee gehört zum Hof, und der wächst nicht.
   const OUTER_R = PLAZA_R + HEDGE_LEN + 2.4;
-  HEDGE_AXES.forEach(({ dx, dz }) => {
+  HEDGE_AXES.filter(({ dz }) => dz !== 1).forEach(({ dx, dz }) => {
     [-1.3, 1.3].forEach((side) => {
       TREE_SPOTS.push({
         x: dx * OUTER_R + -dz * side,
@@ -284,7 +257,8 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
       const step = alongX ? stepX : stepZ;
       for (let i = 0; i < FENCE_PER_SIDE; i += 1) {
         if (i === gapIndex) continue;
-        const t = (alongX ? rect.minX : rect.minZ) + step * (i + 0.5);
+        // Auf der Südseite (Zufahrts-Allee bei x = 0) Durchfahrt für Straße & LKW freihalten
+        if (alongX && sign > 0 && Math.abs(t) < 2.5) continue;
         const x = alongX ? t : (sign > 0 ? rect.maxX : rect.minX);
         const z = alongX ? (sign > 0 ? rect.maxZ : rect.minZ) : t;
         dummy.position.set(x, 0.35, z);
