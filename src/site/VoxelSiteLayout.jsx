@@ -52,10 +52,10 @@ export function VoxelSiteLayout({ path = '/voxel', wide = false, children }) {
         key={route.path}
         href={route.path}
         aria-current={active ? 'page' : undefined}
-        className={`px-3 py-1.5 text-xs font-mono font-bold rounded-xl transition-all ${
+        className={`h-8 px-2.5 sm:px-3 inline-flex items-center text-xs font-mono font-bold rounded-lg transition-all whitespace-nowrap ${
           active
-            ? 'text-[#2f855a] bg-[#f3ece0] border-2 border-[#c8bb9f] shadow-[0_2px_0_#c8bb9f]'
-            : 'text-[#22313f] hover:text-[#2f855a] hover:bg-[#f3ece0]/70'
+            ? 'text-[#1e6f47] bg-[#e8e0d0] border border-[#b8ab8e] font-black'
+            : 'text-[#334155] hover:text-[#1e6f47] hover:bg-[#f3ece0]/80 border border-transparent'
         } ${extra}`}
       >
         {route.nav}
@@ -81,40 +81,43 @@ export function VoxelSiteLayout({ path = '/voxel', wide = false, children }) {
       />
 
       {/* Kopfzeile im Papier-Stil der 3D-Insel (--game-paper & --game-line-strong) */}
-      <header className="border-b-2 border-[#c8bb9f] bg-[#fffdf6]/95 backdrop-blur sticky top-0 z-40 shadow-[0_3px_0_#c8bb9f,0_6px_20px_rgba(28,42,56,0.06)]">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-3 relative z-10">
-          <a href="/voxel" className="flex items-center gap-2">
-            <VoxelHeaderLogo />
-          </a>
-
-          <nav aria-label="Voxel Navigation" className="hidden lg:flex items-center gap-1.5">
+      <header className="border-b-2 border-[#c8bb9f] bg-[#fffdf6]/95 backdrop-blur sticky top-0 z-40 shadow-[0_2px_0_#c8bb9f,0_4px_16px_rgba(28,42,56,0.04)]">
+        <div className="max-w-6xl mx-auto px-4 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-3 relative z-10">
+          <div className="flex items-center gap-2.5 shrink-0">
+            <a href="/voxel" className="flex items-center gap-2">
+              <VoxelHeaderLogo />
+            </a>
             <a
               href={classicPath}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-bold text-[#22313f] bg-[#f3ece0] hover:bg-[#fffdf6] rounded-xl border-2 border-[#c8bb9f] shadow-[0_2px_0_#c8bb9f] active:translate-y-0.5 active:shadow-none transition-all"
+              className="hidden sm:inline-flex items-center gap-1.5 h-8 px-2.5 text-xs font-mono font-bold text-[#22313f] bg-[#f3ece0] hover:bg-[#fffdf6] rounded-lg border border-[#c8bb9f] shadow-[0_1.5px_0_#c8bb9f] hover:translate-y-[-0.5px] active:translate-y-[0.5px] active:shadow-none transition-all whitespace-nowrap shrink-0"
               title="Zurück zur 2D-Version dieser Seite"
             >
-              <ArrowLeft className="w-3.5 h-3.5 text-[#6d7f8e]" /> Classic 2D
+              <ArrowLeft className="w-3.5 h-3.5 text-[#6d7f8e] shrink-0" />
+              <span>Classic 2D</span>
             </a>
+          </div>
+
+          <nav aria-label="Voxel Navigation" className="hidden lg:flex items-center gap-0.5 xl:gap-1">
             {VOXEL_NAV_ROUTES.map((route) => navLink(route))}
           </nav>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 shrink-0">
             <a
               href={VOXEL_PLAY_URL}
-              className="voxel-btn px-4 py-2 text-xs sm:text-sm"
+              className="inline-flex items-center justify-center gap-2 h-9 px-3.5 sm:px-4 text-xs font-mono font-black uppercase tracking-wider text-white bg-gradient-to-b from-[#48bb78] to-[#38a169] hover:from-[#52cc82] hover:to-[#3ea86a] rounded-xl border border-[#236c47] shadow-[0_2px_0_#236c47,0_4px_12px_rgba(47,133,90,0.25)] hover:translate-y-[-1px] active:translate-y-[1px] active:shadow-none transition-all whitespace-nowrap shrink-0 select-none cursor-pointer"
               title="3D Voxel Spiel starten"
             >
-              <Play className="w-3.5 h-3.5 fill-white text-white" />
+              <Play className="w-3.5 h-3.5 fill-white text-white shrink-0" />
               <span>Voxel Spielen</span>
-              <span className="voxel-led-dot" />
+              <span className="voxel-led-dot shrink-0" />
             </a>
 
             <details className="lg:hidden relative">
               <summary
                 aria-label="Menü öffnen"
-                className="list-none [&::-webkit-details-marker]:hidden cursor-pointer p-2 rounded-xl border-2 border-[#c8bb9f] bg-[#fffdf6] text-[#22313f] shadow-[0_2px_0_#c8bb9f]"
+                className="list-none [&::-webkit-details-marker]:hidden cursor-pointer h-9 w-9 flex items-center justify-center rounded-xl border-2 border-[#c8bb9f] bg-[#fffdf6] text-[#22313f] shadow-[0_1.5px_0_#c8bb9f]"
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-4 h-4" />
               </summary>
               <nav
                 aria-label="Hauptnavigation (mobil)"
@@ -126,7 +129,7 @@ export function VoxelSiteLayout({ path = '/voxel', wide = false, children }) {
                 >
                   <ArrowLeft className="w-3.5 h-3.5 text-[#6d7f8e]" /> Zurück zu Classic 2D
                 </a>
-                {VOXEL_NAV_ROUTES.map((route) => navLink(route, 'block'))}
+                {VOXEL_NAV_ROUTES.map((route) => navLink(route, 'w-full justify-start'))}
               </nav>
             </details>
           </div>
