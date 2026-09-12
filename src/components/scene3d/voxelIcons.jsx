@@ -16,15 +16,20 @@ import { UPGRADES_PER_VISUAL_TIER, VISUAL_TIER_MAX } from '../../utils/sceneStat
 // Theme-Wechsel rechtfertigt.
 const P = PALETTES_3D.day;
 
-function hexNum(n) {
-  return `#${n.toString(16).padStart(6, '0')}`;
+function hexNum(n, fallback = '#666666') {
+  if (n === undefined || n === null) return fallback;
+  if (typeof n === 'string') return n.startsWith('#') ? n : `#${n}`;
+  return `#${(Number(n) & 0xffffff).toString(16).padStart(6, '0')}`;
 }
 function hexToRgb(hex) {
-  const n = parseInt(hex.slice(1), 16);
+  if (!hex || typeof hex !== 'string') return [128, 128, 128];
+  const clean = hex.replace('#', '');
+  const n = parseInt(clean, 16);
+  if (Number.isNaN(n)) return [128, 128, 128];
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 function rgbToHex([r, g, b]) {
-  const c = (v) => Math.round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, '0');
+  const c = (v) => Math.round(Math.min(255, Math.max(0, Number(v) || 0))).toString(16).padStart(2, '0');
   return `#${c(r)}${c(g)}${c(b)}`;
 }
 function shade(hex, amt) {
@@ -32,10 +37,11 @@ function shade(hex, amt) {
   const d = amt * 255;
   return rgbToHex([r + d, g + d, b + d]);
 }
-const GOLD = hexNum(P.gold);
+const GOLD = hexNum(P.gold, '#facc15');
 // Identische Formel wie tierMix() in tierVisuals.js (strength 0.55, Stufe 0..TIER_MAX).
 export function tierColor(baseHex, tier, strength = 0.55) {
-  const t = (Math.min(VISUAL_TIER_MAX, Math.max(0, tier)) / VISUAL_TIER_MAX) * strength;
+  if (!baseHex) return GOLD;
+  const t = (Math.min(VISUAL_TIER_MAX, Math.max(0, Number(tier) || 0)) / VISUAL_TIER_MAX) * strength;
   const a = hexToRgb(baseHex);
   const b = hexToRgb(GOLD);
   return rgbToHex(a.map((v, i) => v + (b[i] - v) * t));
@@ -253,7 +259,7 @@ const ICONS = {
       <>
         <Voxel x={7} y={28} w={24} h={4} d={3.0} color={hexNum(P.stageFloor)} />
         <VoxelPerson cx={17} y={11} shirtColor={hexNum(P.hoodieA)} tieColor={tie} />
-        <Voxel x={22} y={19} w={7} h={9} d={2.5} color={hexNum(P.woodDeck)} />
+        <Voxel x={22} y={19} w={7} h={9} d={2.5} color={hexNum(P.woodDeck || P.desk)} />
         <line x1={25} y1={19} x2={23.5} y2={15} stroke={hexNum(P.steelDark)} strokeWidth={1.2} />
         <circle cx={23.5} cy={14.5} r={1.2} fill={hexNum(P.steel)} />
       </>
@@ -423,7 +429,7 @@ const ICONS = {
 
   // 19. Excel-Tabelle
   excel_sheet: (tier) => {
-    const green = tierColor(hexNum(P.grassDark), tier, 0.8);
+    const green = tierColor(hexNum(P.grassDark || P.plant), tier, 0.8);
     return (
       <>
         <Voxel x={6} y={12} w={26} h={18} d={3.0} color={hexNum(P.paper)} />

@@ -6,6 +6,7 @@ export const PALETTES_3D = {
   day: {
     grass: 0x48bb78,
     grassEdge: 0x3ea86a,
+    grassDark: 0x2f855a,
     soil: 0x9c6b45,
     soilDeep: 0x5e3f2a,
     path: 0xe2e8f0,
@@ -54,6 +55,7 @@ export const PALETTES_3D = {
     tarp: 0x2f855a,
     // Bühne
     stageFloor: 0x2d3748,
+    woodDeck: 0x8c6239,
     spot: 0xfef3c7,
     tie: 0xe53e3e,
     camera: 0x1a202c,
@@ -111,6 +113,7 @@ export const PALETTES_3D = {
   blueprint: {
     grass: 0xede7d8,
     grassEdge: 0xded5c0,
+    grassDark: 0xb8a98a,
     soil: 0xd6ccb4,
     soilDeep: 0xbfb39a,
     path: 0xfbf9f5,
@@ -156,6 +159,7 @@ export const PALETTES_3D = {
     fence: 0x9c9585,
     tarp: 0xa89a7a,
     stageFloor: 0x5b5446,
+    woodDeck: 0x8c7d5e,
     spot: 0xfbf9f5,
     tie: 0x9f1239,
     camera: 0x2b2620,
