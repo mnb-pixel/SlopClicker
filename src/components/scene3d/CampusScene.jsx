@@ -643,7 +643,24 @@ export const CampusScene = forwardRef(function CampusScene(
       // Hype-Stufe (1 bis 10) gekoppelt wie die Campus-Ausbaustufen oben - keine eigene
       // Spielzahl nötig, und anders als die Inselgröße (campusLayout.js) tatsächlich bei
       // 1 erreichbar, statt an den Grundstücks-Obergrenzen der Zonen hängenzubleiben.
-      environment.update((s.hypeTier - 1) / 9, now / 1000, dt, s.reduced);
+      const activeLots = [];
+      const zoneRects = [];
+      if (s.zones) {
+        for (let zi = 0; zi < s.zones.length; zi += 1) {
+          const z = s.zones[zi];
+          if (z.unlocked) {
+            if (z.lots) {
+              for (let li = 0; li < z.lots.length; li += 1) {
+                activeLots.push(z.lots[li]);
+              }
+            }
+            if (z.rect) {
+              zoneRects.push(z.rect);
+            }
+          }
+        }
+      }
+      environment.update((s.hypeTier - 1) / 9, now / 1000, dt, s.reduced, activeLots, zoneRects);
       // Wächst die Insel, wird der eingepasste Ausschnitt neu gerechnet - bis zur
       // Obergrenze VIEW_FIT_MAX. Danach bleibt der Maßstab stehen und die Insel ragt
       // über den Bildrand hinaus; ab da ist Schieben und Zoomen dran.

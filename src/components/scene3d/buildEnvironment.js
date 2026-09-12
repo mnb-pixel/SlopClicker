@@ -680,118 +680,117 @@ export function buildEnvironment(palette) {
   algaeSpots.instanceMatrix.needsUpdate = true;
 
   // --- 10. GEOMETRIE-LAYOUT DER HAUSPLÄTZE ---------------------------------------
-  function layoutHouseSlot(slot, i, winOffset) {
+  function renderHouse(slot, counters) {
+    const rot = slot.rot || 0;
+    const chimneyCos = Math.cos(rot);
+    const chimneySin = Math.sin(rot);
+
+    // 1. Hauswand
     dummy.position.set(slot.x, 0.75, slot.z);
-    dummy.rotation.set(0, slot.rot, 0);
+    dummy.rotation.set(0, rot, 0);
     dummy.scale.setScalar(1);
     dummy.updateMatrix();
 
-    if (slot.wall === 'townWallAlt') houseWallsAlt.setMatrixAt(i, dummy.matrix);
-    else if (slot.wall === 'townWallC') houseWallsC.setMatrixAt(i, dummy.matrix);
-    else houseWalls.setMatrixAt(i, dummy.matrix);
+    if (slot.wall === 'townWallAlt') {
+      houseWallsAlt.setMatrixAt(counters.wallAlt++, dummy.matrix);
+    } else if (slot.wall === 'townWallC') {
+      houseWallsC.setMatrixAt(counters.wallC++, dummy.matrix);
+    } else {
+      houseWalls.setMatrixAt(counters.wallPlain++, dummy.matrix);
+    }
 
-    // Dach
+    // 2. Dach
     dummy.position.set(slot.x, 1.5 + 0.55, slot.z);
-    dummy.rotation.set(0, slot.rot + Math.PI / 4, 0);
+    dummy.rotation.set(0, rot + Math.PI / 4, 0);
     dummy.scale.set(1.15, 1.0, 0.95);
     dummy.updateMatrix();
 
-    if (slot.roof === 'townRoofAlt') houseRoofsAlt.setMatrixAt(i, dummy.matrix);
-    else if (slot.roof === 'townRoofSlate') houseRoofsSlate.setMatrixAt(i, dummy.matrix);
-    else houseRoofs.setMatrixAt(i, dummy.matrix);
+    if (slot.roof === 'townRoofAlt') {
+      houseRoofsAlt.setMatrixAt(counters.roofAlt++, dummy.matrix);
+    } else if (slot.roof === 'townRoofSlate') {
+      houseRoofsSlate.setMatrixAt(counters.roofSlate++, dummy.matrix);
+    } else {
+      houseRoofs.setMatrixAt(counters.roofPlain++, dummy.matrix);
+    }
 
-    // Kamin
-    const chimneyCos = Math.cos(slot.rot);
-    const chimneySin = Math.sin(slot.rot);
+    // 3. Kamin
     dummy.position.set(slot.x + chimneyCos * 0.5 - chimneySin * 0.3, 2.2, slot.z + chimneySin * 0.5 + chimneyCos * 0.3);
-    dummy.rotation.set(0, slot.rot, 0);
+    dummy.rotation.set(0, rot, 0);
     dummy.scale.setScalar(1);
     dummy.updateMatrix();
-    chimneys.setMatrixAt(i, dummy.matrix);
+    chimneys.setMatrixAt(counters.chimney++, dummy.matrix);
 
-    // Schornstein-Rauchpuff
+    // 4. Schornstein-Rauchpuff
     dummy.position.set(dummy.position.x, 2.7, dummy.position.z);
-    dummy.scale.setScalar(0.7 + (i % 3) * 0.15);
+    dummy.scale.setScalar(0.7 + (counters.chimneySmoke % 3) * 0.15);
     dummy.updateMatrix();
-    chimneySmokes.setMatrixAt(i, dummy.matrix);
+    chimneySmokes.setMatrixAt(counters.chimneySmoke++, dummy.matrix);
 
-    // Haustür
+    // 5. Haustür
     dummy.position.set(slot.x + chimneySin * 0.96, 0.4, slot.z + chimneyCos * 0.96);
-    dummy.rotation.set(0, slot.rot, 0);
+    dummy.rotation.set(0, rot, 0);
     dummy.scale.setScalar(1);
     dummy.updateMatrix();
-    doors.setMatrixAt(i, dummy.matrix);
+    doors.setMatrixAt(counters.door++, dummy.matrix);
 
-    // Fenster auf der Fassade
-    [-0.55, 0.55].forEach((wx, wi) => {
+    // 6. Fenster auf der Fassade
+    [-0.55, 0.55].forEach((wx) => {
       dummy.position.set(
         slot.x + chimneyCos * wx + chimneySin * 0.96,
         0.9,
         slot.z + chimneySin * wx + chimneyCos * 0.96
       );
-      dummy.rotation.set(0, slot.rot, 0);
+      dummy.rotation.set(0, rot, 0);
       dummy.scale.setScalar(1);
       dummy.updateMatrix();
-      windows.setMatrixAt(winOffset + wi, dummy.matrix);
+      windows.setMatrixAt(counters.window++, dummy.matrix);
     });
 
-    // Vorgartenzaun
+    // 7. Vorgartenzaun
     dummy.position.set(slot.x + chimneySin * 1.5, 0.18, slot.z + chimneyCos * 1.5);
-    dummy.rotation.set(0, slot.rot, 0);
+    dummy.rotation.set(0, rot, 0);
     dummy.scale.setScalar(1);
     dummy.updateMatrix();
-    fences.setMatrixAt(i, dummy.matrix);
+    fences.setMatrixAt(counters.fence++, dummy.matrix);
 
-    // Typ B: Garage & Auto
+    // 8. Typ B: Garage & Tor
     if (slot.type === 'B') {
       dummy.position.set(slot.x + chimneyCos * 1.6, 0.5, slot.z + chimneySin * 1.6);
-      dummy.rotation.set(0, slot.rot, 0);
+      dummy.rotation.set(0, rot, 0);
       dummy.scale.setScalar(1);
       dummy.updateMatrix();
-      garageWalls.setMatrixAt(i, dummy.matrix);
+      garageWalls.setMatrixAt(counters.garageWall++, dummy.matrix);
 
       dummy.position.set(slot.x + chimneyCos * 1.6 + chimneySin * 0.86, 0.45, slot.z + chimneySin * 1.6 + chimneyCos * 0.86);
       dummy.updateMatrix();
-      garageDoors.setMatrixAt(i, dummy.matrix);
-    } else {
-      dummy.position.set(0, -999, 0);
-      dummy.updateMatrix();
-      garageWalls.setMatrixAt(i, dummy.matrix);
-      garageDoors.setMatrixAt(i, dummy.matrix);
+      garageDoors.setMatrixAt(counters.garageDoor++, dummy.matrix);
     }
 
-    // Parkendes Auto
+    // 9. Parkendes Auto
     if (slot.hasCar) {
       dummy.position.set(slot.x + chimneyCos * 2.1 - chimneySin * 0.4, 0.25, slot.z + chimneySin * 2.1 + chimneyCos * 0.4);
-      dummy.rotation.set(0, slot.rot + 0.1, 0);
+      dummy.rotation.set(0, rot + 0.1, 0);
       dummy.scale.setScalar(1);
       dummy.updateMatrix();
-      if (slot.carCol === 'carPaintB') carsB.setMatrixAt(i, dummy.matrix);
-      else carsA.setMatrixAt(i, dummy.matrix);
-    } else {
-      dummy.position.set(0, -999, 0);
-      dummy.updateMatrix();
-      carsA.setMatrixAt(i, dummy.matrix);
-      carsB.setMatrixAt(i, dummy.matrix);
+      if (slot.carCol === 'carPaintB') {
+        carsB.setMatrixAt(counters.carB++, dummy.matrix);
+      } else {
+        carsA.setMatrixAt(counters.carA++, dummy.matrix);
+      }
     }
 
-    // Baum im Garten
+    // 10. Baum im Garten
     if (slot.hasTree) {
       dummy.position.set(slot.x - chimneyCos * 1.6, 0.3, slot.z - chimneySin * 1.6);
       dummy.rotation.set(0, 0, 0);
       dummy.scale.setScalar(1);
       dummy.updateMatrix();
-      gardenTrunks.setMatrixAt(i, dummy.matrix);
+      gardenTrunks.setMatrixAt(counters.treeTrunk++, dummy.matrix);
 
       dummy.position.set(slot.x - chimneyCos * 1.6, 0.95, slot.z - chimneySin * 1.6);
       dummy.scale.setScalar(1);
       dummy.updateMatrix();
-      gardenCrowns.setMatrixAt(i, dummy.matrix);
-    } else {
-      dummy.position.set(0, -999, 0);
-      dummy.updateMatrix();
-      gardenTrunks.setMatrixAt(i, dummy.matrix);
-      gardenCrowns.setMatrixAt(i, dummy.matrix);
+      gardenCrowns.setMatrixAt(counters.treeCrown++, dummy.matrix);
     }
   }
 
@@ -802,95 +801,143 @@ export function buildEnvironment(palette) {
     dummy.updateMatrix();
     mudPits.setMatrixAt(i, dummy.matrix);
 
-    dummy.position.set(slot.x + 0.8, 0.25, slot.z - 0.6);
-    dummy.rotation.set(0.2, slot.rot, 0);
-    dummy.scale.setScalar(1);
-    dummy.updateMatrix();
-    rubblePiles.setMatrixAt(i, dummy.matrix);
+    const activeConstructions = 5;
+    if (i < activeConstructions) {
+      dummy.position.set(slot.x - 0.4, 0.4, slot.z + 0.3);
+      dummy.rotation.set(0.1, i * 1.2, 0.05);
+      dummy.scale.set(1.4, 0.8, 1.2);
+      dummy.updateMatrix();
+      rubblePiles.setMatrixAt(i, dummy.matrix);
 
-    dummy.position.set(slot.x - 0.7, 0.45, slot.z + 0.6);
-    dummy.rotation.set(0, slot.rot + 0.5, 0);
-    dummy.scale.setScalar(1);
-    dummy.updateMatrix();
-    excavators.setMatrixAt(i, dummy.matrix);
+      dummy.position.set(slot.x + 0.9, 0.5, slot.z - 0.8);
+      dummy.rotation.set(0, (i * 1.5) % (Math.PI * 2), 0);
+      dummy.scale.setScalar(0.9);
+      dummy.updateMatrix();
+      excavators.setMatrixAt(i, dummy.matrix);
+    } else {
+      const ci = i - activeConstructions;
+      const h = 2.4 + (i % 3) * 0.8;
+      dummy.position.set(slot.x, h / 2, slot.z);
+      dummy.rotation.set(0, 0, 0);
+      dummy.scale.set(2.6, h, 2.6);
+      dummy.updateMatrix();
+      corpBody.setMatrixAt(ci, dummy.matrix);
 
-    dummy.position.set(slot.x, 1.6, slot.z);
-    dummy.rotation.set(0, slot.rot * 0.3, 0);
-    dummy.scale.setScalar(1);
-    dummy.updateMatrix();
-    corpBody.setMatrixAt(i, dummy.matrix);
+      dummy.scale.set(2.7, h + 0.1, 2.7);
+      dummy.updateMatrix();
+      corpFrame.setMatrixAt(ci, dummy.matrix);
 
-    dummy.position.set(slot.x, 3.25, slot.z);
-    dummy.updateMatrix();
-    corpFrame.setMatrixAt(i, dummy.matrix);
-
-    dummy.position.set(slot.x, 3.75, slot.z);
-    dummy.updateMatrix();
-    corpSign.setMatrixAt(i, dummy.matrix);
+      dummy.position.set(slot.x, h - 0.3, slot.z + 1.36);
+      dummy.scale.setScalar(1);
+      dummy.updateMatrix();
+      corpSign.setMatrixAt(ci, dummy.matrix);
+    }
   }
 
-  LOTS.forEach((slot, i) => {
-    layoutHouseSlot(slot, i, i * 2);
-    layoutCorpSlot(slot, i);
-  });
-
-  [...villageMeshes, mudPits, rubblePiles, excavators, corpBody, corpFrame, corpSign].forEach((m) => {
-    m.instanceMatrix.needsUpdate = true;
-  });
-
   // --- 11. 360°-VERDRÄNGUNGS-AKTUALISIERUNG ---------------------------------------
-  let currentProgress = -1;
+  let lastDisplacementKey = '';
 
-  function applyDisplacement(progress) {
-    if (Math.abs(progress - currentProgress) < 0.005) return;
-    currentProgress = progress;
+  function applyDisplacement(progress, activeLots = [], zoneRects = []) {
+    const progKey = Math.round(progress * 100);
+    const key = `${progKey}_${activeLots.length}_${zoneRects.length}`;
+    if (key === lastDisplacementKey) return;
+    lastDisplacementKey = key;
 
-    const convertedCount = Math.round(progress * LOT_COUNT);
-    const remainCount = LOT_COUNT - convertedCount;
+    const counters = {
+      wallPlain: 0,
+      wallAlt: 0,
+      wallC: 0,
+      roofPlain: 0,
+      roofAlt: 0,
+      roofSlate: 0,
+      chimney: 0,
+      chimneySmoke: 0,
+      door: 0,
+      window: 0,
+      fence: 0,
+      garageWall: 0,
+      garageDoor: 0,
+      carA: 0,
+      carB: 0,
+      treeTrunk: 0,
+      treeCrown: 0,
+    };
 
-    let vi = 0;
-    LOTS.forEach((slot, i) => {
-      if (i >= convertedCount) {
-        layoutHouseSlot(slot, vi, vi * 2);
-        vi += 1;
+    // 1. Grundstücke filtern: Häuser verschwinden sofort, wenn ein Campus-Objekt
+    // (Büro-Arbeitsplatz, Rechenzentrum, Bühne, Turm, Endgame) darauf platziert wird.
+    const nonCampusLots = [];
+    LOTS.forEach((slot) => {
+      let occupied = false;
+      // Kollision mit konkreten Gebäude-Grundstücken der Zonen (LOT_SIZE 3.6 -> Radius 4.2)
+      for (let i = 0; i < activeLots.length; i += 1) {
+        const dx = slot.x - activeLots[i].x;
+        const dz = slot.z - activeLots[i].z;
+        if (dx * dx + dz * dz < 18.0) {
+          occupied = true;
+          break;
+        }
+      }
+      // Kollision mit Zonen-Grundflächen
+      if (!occupied) {
+        for (let i = 0; i < zoneRects.length; i += 1) {
+          const r = zoneRects[i];
+          if (
+            slot.x >= r.minX - 1.2 &&
+            slot.x <= r.maxX + 1.2 &&
+            slot.z >= r.minZ - 1.2 &&
+            slot.z <= r.maxZ + 1.2
+          ) {
+            occupied = true;
+            break;
+          }
+        }
+      }
+      if (!occupied) {
+        nonCampusLots.push(slot);
       }
     });
 
-    for (let i = 0; i < convertedCount; i += 1) {
-      layoutCorpSlot(LOTS[i], i);
-    }
+    // 2. Verbleibende Dorfhäuser nach Hype-Progress stufenweise in Baustellen / Tech-Kuben umwandeln
+    const convertedCount = Math.round(progress * nonCampusLots.length);
 
-    const plainRemain = LOTS.filter((s, i) => i >= convertedCount && s.wall === 'townWall').length;
-    const altRemain = LOTS.filter((s, i) => i >= convertedCount && s.wall === 'townWallAlt').length;
-    const cRemain = LOTS.filter((s, i) => i >= convertedCount && s.wall === 'townWallC').length;
+    let corpIdx = 0;
+    nonCampusLots.forEach((slot, i) => {
+      if (i < convertedCount) {
+        layoutCorpSlot(slot, corpIdx);
+        corpIdx += 1;
+      } else {
+        renderHouse(slot, counters);
+      }
+    });
 
-    houseWalls.count = plainRemain;
-    houseWallsAlt.count = altRemain;
-    houseWallsC.count = cRemain;
+    // Exakte Instanzen-Anzahl für jedes Mesh setzen
+    houseWalls.count = counters.wallPlain;
+    houseWallsAlt.count = counters.wallAlt;
+    houseWallsC.count = counters.wallC;
 
-    houseRoofs.count = LOTS.filter((s, i) => i >= convertedCount && s.roof === 'townRoof').length;
-    houseRoofsAlt.count = LOTS.filter((s, i) => i >= convertedCount && s.roof === 'townRoofAlt').length;
-    houseRoofsSlate.count = LOTS.filter((s, i) => i >= convertedCount && s.roof === 'townRoofSlate').length;
+    houseRoofs.count = counters.roofPlain;
+    houseRoofsAlt.count = counters.roofAlt;
+    houseRoofsSlate.count = counters.roofSlate;
 
-    chimneys.count = remainCount;
-    chimneySmokes.count = remainCount;
-    doors.count = remainCount;
-    windows.count = remainCount * 2;
-    fences.count = remainCount;
-    garageWalls.count = remainCount;
-    garageDoors.count = remainCount;
-    carsA.count = remainCount;
-    carsB.count = remainCount;
-    gardenTrunks.count = remainCount;
-    gardenCrowns.count = remainCount;
+    chimneys.count = counters.chimney;
+    chimneySmokes.count = counters.chimneySmoke;
+    doors.count = counters.door;
+    windows.count = counters.window;
+    fences.count = counters.fence;
+    garageWalls.count = counters.garageWall;
+    garageDoors.count = counters.garageDoor;
+    carsA.count = counters.carA;
+    carsB.count = counters.carB;
+    gardenTrunks.count = counters.treeTrunk;
+    gardenCrowns.count = counters.treeCrown;
 
     // Baustellen & Tech-Kuben
-    mudPits.count = convertedCount;
-    const activeConstructions = Math.min(convertedCount, 5);
+    mudPits.count = corpIdx;
+    const activeConstructions = Math.min(corpIdx, 5);
     rubblePiles.count = activeConstructions;
     excavators.count = activeConstructions;
 
-    corpBody.count = Math.max(0, convertedCount - activeConstructions);
+    corpBody.count = Math.max(0, corpIdx - activeConstructions);
     corpFrame.count = corpBody.count;
     corpSign.count = corpBody.count;
 
@@ -907,13 +954,13 @@ export function buildEnvironment(palette) {
     lakeWater.scale.set(lakeShrink, 1, lakeShrink);
   }
 
-  applyDisplacement(0);
+  applyDisplacement(0, [], []);
 
   // --- 12. UPDATE & ANIMATION ---------------------------------------------------
   return {
     group,
-    update(progress, t = 0, dt = 0.016, reduced = false) {
-      applyDisplacement(Math.min(1, Math.max(0, progress)));
+    update(progress, t = 0, dt = 0.016, reduced = false, activeLots = [], zoneRects = []) {
+      applyDisplacement(Math.min(1, Math.max(0, progress)), activeLots, zoneRects);
 
       if (reduced) return;
 

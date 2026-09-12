@@ -15,11 +15,11 @@ import { tierMix } from './tierVisuals';
 // geänderter Anzahl neu gesetzt, pro Frame bewegen sich nur Arme, Köpfe, Blasen,
 // Tokens und das Deckenlicht.
 
-const INTERN_MAX = 160;
-const ENGINEER_MAX = 120;
-const INTERN_LOTS_MAX = 40;
-const ENGINEER_LOTS_MAX = 30;
-const WIDGET_MAX = 25;
+const INTERN_MAX = 200;
+const ENGINEER_MAX = 160;
+const INTERN_LOTS_MAX = 50;
+const ENGINEER_LOTS_MAX = 40;
+const WIDGET_MAX = 40;
 const UNIT_YAW = Math.PI / 4; // Tische schauen zur offenen Hausecke (+x,+z) und damit zur Kamera
 // Arbeitsplätze sind kleiner als früher: sie stehen jetzt in einem Haus von 3,3
 // Einheiten Kantenlänge, in Originalgröße passte kein Vierer-Block hinein.

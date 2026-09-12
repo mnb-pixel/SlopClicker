@@ -11,11 +11,11 @@ import { tierMix } from './tierVisuals';
 // wie schon vorher - eine Drohne braucht kein Grundstück. Dazu eine zweite
 // Datenleitung zum Ofen.
 
-const RACK_MAX = 100;
-const BURNER_MAX = 60;
-const SILO_MAX = 40;
-const GRAY_MAX = 24;
-const DRONE_MAX = 28;
+const RACK_MAX = 120;
+const BURNER_MAX = 80;
+const SILO_MAX = 50;
+const GRAY_MAX = 40;
+const DRONE_MAX = 40;
 
 function hash01(i) {
   const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453;

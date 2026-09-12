@@ -13,10 +13,10 @@ import { tierMix } from './tierVisuals';
 const REACTOR_LOTS_MAX = 16;
 const REACTOR_PER_LOT = 2;
 const REACTOR_MAX = REACTOR_LOTS_MAX * REACTOR_PER_LOT;
-const CITY_LOTS_MAX = 15;
+const CITY_LOTS_MAX = 20;
 const CITY_PER_LOT = 3;
 const CITY_MAX = CITY_LOTS_MAX * CITY_PER_LOT;
-const SHEET_MAX = 36;
+const SHEET_MAX = 48;
 const STEAM_PER_TOWER = 5;
 
 function hash01(i) {

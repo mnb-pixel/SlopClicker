@@ -12,11 +12,11 @@ import { tierMix } from './tierVisuals';
 // Deck-Blätter bleiben frei über der ganzen Zone kreisende Requisiten ohne eigenes
 // Grundstück, wie zuvor.
 
-const STAGE_MAX = 18;
-const LEADER_MAX = 80;
-const JOURNALIST_MAX = 80;
-const PAPER_MAX = 32;
-const LOBBY_MAX = 18;
+const STAGE_MAX = 25;
+const LEADER_MAX = 120;
+const JOURNALIST_MAX = 120;
+const PAPER_MAX = 40;
+const LOBBY_MAX = 25;
 
 function hash01(i) {
   const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
