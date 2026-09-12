@@ -313,6 +313,11 @@ export function buildEnvironment(palette) {
   const stoneMat = lambert('stone');
   const woodDarkMat = lambert('woodDark');
   const woodLightMat = lambert('woodLight');
+  const roadMat = lambert('path');
+  const curbMat = lambert('stoneDark');
+  const dashMat = basic('facade');
+  const lampPoleMat = lambert('steelDark');
+  const lampLightMat = basic('fireCore');
 
   const bridgeGroup = new THREE.Group();
   bridgeGroup.position.set(BRIDGE_POS.x, 0, BRIDGE_POS.z);
@@ -463,12 +468,6 @@ export function buildEnvironment(palette) {
   });
 
   // --- 6. STRASSENNETZ DES DORFES ------------------------------------------------
-  const roadMat = lambert('path');
-  const curbMat = lambert('stoneDark');
-  const dashMat = basic('facade');
-  const lampPoleMat = lambert('steelDark');
-  const lampLightMat = basic('fireCore');
-
   ROAD_SEGMENTS.forEach((seg) => {
     const dx = seg.b.x - seg.a.x;
     const dz = seg.b.z - seg.a.z;
