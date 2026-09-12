@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Flame, ShoppingBag, BarChart2, Settings, Tv, Gift } from 'lucide-react';
 import { TAB_ROUTES } from '../../routes';
 import { formatCurrency } from '../../utils/formatters';
+import { getOverheatRemainingSeconds } from '../../hooks/useGameStore';
 
 // Unteres Overlay der Vollbild-Shell. Ersetzt die Tab-Leiste (NavBar.jsx): zwei große
 // Buttons (Feuern, Shop), zwei kleine (Statistik, Optionen), wie im Referenzbild.
@@ -16,6 +17,8 @@ import { formatCurrency } from '../../utils/formatters';
 export function HudBottom({
   onFire,
   isOverheated,
+  overheatedAt = 0,
+  coolingRate = 4,
   gpuTemp,
   clickValue,
   activeTab,
@@ -30,6 +33,19 @@ export function HudBottom({
   t,
 }) {
   const tr = t || ((k) => k);
+
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!isOverheated) return;
+    setNow(Date.now());
+    const interval = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(interval);
+  }, [isOverheated]);
+
+  const overheatRemainingSec = isOverheated
+    ? getOverheatRemainingSeconds(overheatedAt, gpuTemp, coolingRate, now)
+    : 0;
 
   const navButton = (tabId, label, Icon, extraClass, badge) => {
     const isActive = activeTab === tabId;
@@ -58,24 +74,44 @@ export function HudBottom({
   // Werbespot an - genau der Moment, in dem der Spieler blockiert ist (vorher rote
   // Warnbox in SlopTab.jsx).
   let fireContent;
+  const adRunning = adState?.type === 'nitrogen';
+  const onCooldown = isAdReady && !isAdReady('nitrogen');
+  const adCooldownSec = getAdCooldownRemaining ? getAdCooldownRemaining('nitrogen') : 0;
+
+  const handleCoolNow = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!adRunning && !onCooldown && requestBonus) {
+      requestBonus('nitrogen');
+    }
+  };
+
   if (isOverheated) {
-    const adRunning = adState?.type === 'nitrogen';
-    const onCooldown = isAdReady && !isAdReady('nitrogen');
     fireContent = (
       <span className="hud-fire-overheat">
-        <span className="hud-nav-label">{tr('gpuOverheated')}</span>
+        <div className="flex items-center justify-center gap-1 max-w-full">
+          <span className="hud-nav-label">{tr('gpuOverheated')}</span>
+          {overheatRemainingSec > 0 && (
+            <span
+              className="hud-countdown-pill"
+              title={tr('hudCoolingCountdown') ? tr('hudCoolingCountdown').replace('{sec}', overheatRemainingSec) : `${overheatRemainingSec}s`}
+            >
+              ⏳ {overheatRemainingSec}s
+            </span>
+          )}
+        </div>
         {adRunning ? (
           <span className="text-[10px] font-mono animate-pulse opacity-90">{tr('adPlaying')} ({adState.timer}s)</span>
         ) : onCooldown ? (
-          <span className="text-[10px] font-mono opacity-80">
-            {tr('hudCoolingShort')} {gpuTemp.toFixed(0)}°C · {tr('instantCoolingCooldown').replace('{sec}', getAdCooldownRemaining ? getAdCooldownRemaining('nitrogen') : 0)}
+          <span className="text-[9px] font-mono opacity-80 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+            {tr('hudCoolingShort')} {gpuTemp.toFixed(0)}°C · Ad: {adCooldownSec}s
           </span>
         ) : requestBonus ? (
-          <span
-            role="button"
-            tabIndex={0}
-            onClick={(e) => { e.stopPropagation(); requestBonus('nitrogen'); }}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); requestBonus('nitrogen'); } }}
+          <button
+            type="button"
+            onClick={handleCoolNow}
             className="hud-cool-chip"
             title={adFree ? tr('claimInstantCooling') : tr('watchAdInstantCooling')}
             aria-label={adFree ? tr('claimInstantCooling') : tr('watchAdInstantCooling')}
@@ -85,9 +121,13 @@ export function HudBottom({
                 Schneeflocken-Zusatz fiel raus - "kühlen" steht daneben. Der
                 ausgeschriebene Satz steht im title/aria-label. */}
             {adFree ? <Gift className="hud-cool-chip__icon" /> : <Tv className="hud-cool-chip__icon" />}
-            {tr('hudCoolNow')}
+            <span>{tr('hudCoolNow')}</span>
+          </button>
+        ) : (
+          <span className="text-[10px] font-mono opacity-80">
+            {tr('hudCoolingShort')} {gpuTemp.toFixed(0)}°C
           </span>
-        ) : null}
+        )}
       </span>
     );
   } else {
@@ -105,13 +145,30 @@ export function HudBottom({
   return (
     <div className="hud-bottom hud-safe-bottom">
       <div className="hud-bottom__row">
-        <button
-          onClick={onFire}
-          disabled={isOverheated}
-          className={`hud-nav-btn hud-nav-btn--fire ${isOverheated ? 'is-locked' : ''}`}
-        >
-          {fireContent}
-        </button>
+        {isOverheated ? (
+          <div
+            onClick={handleCoolNow}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                handleCoolNow(e);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            className="hud-nav-btn hud-nav-btn--fire is-locked"
+            aria-label={`${tr('gpuOverheated')} (${overheatRemainingSec}s)`}
+            title={!adRunning && !onCooldown && requestBonus ? (adFree ? tr('claimInstantCooling') : tr('watchAdInstantCooling')) : undefined}
+          >
+            {fireContent}
+          </div>
+        ) : (
+          <button
+            onClick={onFire}
+            className="hud-nav-btn hud-nav-btn--fire"
+          >
+            {fireContent}
+          </button>
+        )}
         {navButton(2, tr('tabStore'), ShoppingBag, 'hud-nav-btn--shop', affordableUpgradesCount)}
         {navButton(3, tr('tabStats'), BarChart2, 'hud-nav-btn--small')}
         {navButton(4, tr('hudOptions'), Settings, 'hud-nav-btn--small')}

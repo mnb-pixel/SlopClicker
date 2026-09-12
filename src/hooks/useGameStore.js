@@ -134,7 +134,22 @@ const BLACK_SWAN_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 // Overheat: nach Erreichen von 100°C bleibt die GPU für diese Zeit ungekühlt liegen, bevor
 // die passive Kühlung (coolingRate) überhaupt einsetzt - macht die Sofort-Kühlung per
 // Nitrogen-Ad in dieser Zeit spürbar attraktiver, statt dass passives Abwarten reicht.
-const OVERHEAT_COOLDOWN_DELAY_SEC = 45;
+export const OVERHEAT_COOLDOWN_DELAY_SEC = 45;
+
+/**
+ * Berechnet die verbleibenden Sekunden bis zum Ende der Überhitzung (Temperatur < 50°C).
+ * Berücksichtigt die anfängliche Pause (OVERHEAT_COOLDOWN_DELAY_SEC) und danach das Absinken
+ * mit coolingRate °C/s bis unter 50°C.
+ */
+export function getOverheatRemainingSeconds(overheatedAt, gpuTemp, coolingRate, now = Date.now()) {
+  if (!overheatedAt) return 0;
+  const elapsedSec = Math.max(0, (now - overheatedAt) / 1000);
+  const delayRemaining = Math.max(0, OVERHEAT_COOLDOWN_DELAY_SEC - elapsedSec);
+  const tempToCool = Math.max(0, (gpuTemp ?? 100) - 50);
+  const coolRate = Math.max(0.1, coolingRate || 4);
+  const coolDuration = delayRemaining > 0 ? (50 / coolRate) : (tempToCool / coolRate);
+  return Math.max(0, Math.ceil(delayRemaining + coolDuration));
+}
 const BLACK_SWAN_CHANCE_PER_200MS = 0.00000005;
 
 // Monetarisierung: Rewarded-Ad-Cooldowns pro Placement (Sekunden), damit dieselbe

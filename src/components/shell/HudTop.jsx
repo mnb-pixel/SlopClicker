@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit3, Sparkles, BookOpen, Share2, Flame, ShieldAlert, Zap } from 'lucide-react';
 import { formatCurrency, formatExactValuation } from '../../utils/formatters';
+import { getOverheatRemainingSeconds } from '../../hooks/useGameStore';
 
 // Oberes Overlay der Vollbild-Shell. Ersetzt die frühere Kopfzeile (Header.jsx) und
 // liegt über dem Himmel der Szene. Enthält alles, was der Header konnte, nur kompakter:
@@ -23,6 +24,8 @@ export function HudTop({
   netFlow,
   gpuTemp,
   isOverheated,
+  overheatedAt = 0,
+  coolingRate = 4,
   powerClickActive,
   themeMode,
   hypeTier,
@@ -37,6 +40,18 @@ export function HudTop({
   const isSecTheme = themeMode === 'sec_prospectus';
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(startupName);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!isOverheated) return;
+    setNow(Date.now());
+    const interval = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(interval);
+  }, [isOverheated]);
+
+  const overheatRemainingSec = isOverheated
+    ? getOverheatRemainingSeconds(overheatedAt, gpuTemp, coolingRate, now)
+    : 0;
 
   const handleSaveName = (e) => {
     e.preventDefault();
@@ -139,7 +154,7 @@ export function HudTop({
           </span>
           {isOverheated ? (
             <span className="hud-heat__alarm animate-pulse">
-              <ShieldAlert className="w-3 h-3" /> {tr('overheatedLabel')}
+              <ShieldAlert className="w-3 h-3" /> {tr('overheatedLabel')} {overheatRemainingSec > 0 ? `(${overheatRemainingSec}s)` : ''}
             </span>
           ) : (
             <span className="hud-heat__state">

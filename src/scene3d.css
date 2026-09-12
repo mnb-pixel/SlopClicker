@@ -381,12 +381,13 @@
   box-shadow: 0 4px 0 var(--btn-edge), 0 8px 22px rgba(184, 66, 13, 0.35);
 }
 
-/* Überhitzt: Taste tot, aber weiter lesbar - hier steht der Kühl-Status drin. */
+/* Überhitzt: Taste gesperrt fürs Feuern, aber klickbar für Sofort-Kühlung - Kühl-Status und Countdown. */
 .hud-nav-btn--fire.is-locked {
   --btn-edge: #5f2119;
   background: #93362a;
   color: #ffe4e0;
   box-shadow: 0 4px 0 var(--btn-edge), 0 8px 18px var(--game-shadow);
+  cursor: pointer;
 }
 
 .hud-nav-btn--shop {
@@ -448,8 +449,30 @@
   text-overflow: ellipsis;
 }
 
+button.hud-cool-chip {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  outline: none;
+  font-family: inherit;
+}
+
 .hud-cool-chip__icon { width: 12px; height: 12px; flex-shrink: 0; }
 .hud-cool-chip:active { transform: translateY(2px); box-shadow: none; }
+
+.hud-countdown-pill {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 900;
+  color: #fef08a;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(254, 240, 138, 0.45);
+  border-radius: 4px;
+  padding: 1px 4px;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 
 .hud-nav-icon { width: 20px; height: 20px; flex-shrink: 0; }
 .hud-nav-icon--big { width: 28px; height: 28px; }

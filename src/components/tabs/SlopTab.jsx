@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Zap, Flame, ShieldAlert, Sparkles, Tv, Gift, ThermometerSnowflake } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 import { BuildingVisualGrid } from '../BuildingVisualGrid';
 import gpuChipMeme from '../../assets/gpu_chip_meme.jpg';
+import { getOverheatRemainingSeconds } from '../../hooks/useGameStore';
 
 export function SlopTab({
   handleTapAGI,
   isOverheated,
+  overheatedAt = 0,
+  coolingRate = 4,
   gpuTemp,
   clickValue,
   activeEvent,
@@ -24,6 +27,19 @@ export function SlopTab({
 }) {
   const isSecTheme = themeMode === 'sec_prospectus';
   const tr = t || ((k) => k);
+
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!isOverheated) return;
+    setNow(Date.now());
+    const interval = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(interval);
+  }, [isOverheated]);
+
+  const overheatRemainingSec = isOverheated
+    ? getOverheatRemainingSeconds(overheatedAt, gpuTemp, coolingRate, now)
+    : 0;
 
   return (
     <div className="flex flex-col items-center justify-start gap-2 p-2 relative overflow-hidden">
@@ -51,7 +67,9 @@ export function SlopTab({
       {isOverheated && (
         <div className="bg-rose-950/90 border-2 border-rose-500 text-rose-200 p-4 rounded-xl text-center shadow-2xl overheat-pulse max-w-xs mb-4 z-10">
           <ShieldAlert className="w-8 h-8 text-rose-500 mx-auto mb-1 animate-bounce" />
-          <h3 className="font-black text-lg uppercase tracking-wide">{tr('gpuOverheated')}</h3>
+          <h3 className="font-black text-lg uppercase tracking-wide">
+            {tr('gpuOverheated')} {overheatRemainingSec > 0 ? `(${overheatRemainingSec}s)` : ''}
+          </h3>
           <p className="text-xs text-rose-300 mt-1">
             {tr('gpuCooling')}
           </p>

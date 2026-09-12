@@ -124,6 +124,8 @@ export function GameShell({
         netFlow={store.netFlow}
         gpuTemp={store.gpuTemp}
         isOverheated={store.isOverheated}
+        overheatedAt={store.overheatedAt}
+        coolingRate={store.coolingRate}
         powerClickActive={store.powerClickActive}
         themeMode={store.themeMode}
         hypeTier={store.hypeTier}
@@ -138,6 +140,8 @@ export function GameShell({
       <HudBottom
         onFire={fireFromFurnace}
         isOverheated={store.isOverheated}
+        overheatedAt={store.overheatedAt}
+        coolingRate={store.coolingRate}
         gpuTemp={store.gpuTemp}
         clickValue={store.clickValue}
         activeTab={store.activeTab}

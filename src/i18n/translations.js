@@ -219,6 +219,7 @@ export const TRANSLATIONS = {
     hudFire: 'FEUERN',
     hudOptions: 'Optionen',
     hudCoolingShort: 'Kühlt ab',
+    hudCoolingCountdown: 'Kühlt in {sec}s',
     // Kurzform für die Pille im überhitzten Feuer-Button - dort ist nur eine Zeile
     // Platz. Der ausgeschriebene Text (watchAdInstantCooling) bleibt als Tooltip.
     hudCoolNow: 'Sofort kühlen',
@@ -682,6 +683,7 @@ export const TRANSLATIONS = {
     hudFire: 'FIRE',
     hudOptions: 'Options',
     hudCoolingShort: 'Cooling',
+    hudCoolingCountdown: 'Cools in {sec}s',
     hudCoolNow: 'Cool now',
     hudDrawerShop: 'AI Infrastructure & Upgrades',
     hudDrawerStats: 'Stats, Logs & Achievements',

@@ -18,6 +18,8 @@ export function DesktopView({ store, onOpenLegal, useRoutes = false }) {
         <SlopTab
           handleTapAGI={store.handleTapAGI}
           isOverheated={store.isOverheated}
+          overheatedAt={store.overheatedAt}
+          coolingRate={store.coolingRate}
           gpuTemp={store.gpuTemp}
           clickValue={store.clickValue}
           activeEvent={store.activeEvent}
