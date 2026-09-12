@@ -105,11 +105,11 @@ export function VoxelHomePage() {
             <div className="w-12 h-12 rounded-xl bg-[#fff2eb] border-2 border-[#f3c9a0] flex items-center justify-center text-[#c05621] mb-4 shadow-sm">
               <Home className="w-6 h-6" />
             </div>
-            <h3 className="font-mono font-black text-lg text-[#22313f] mb-2">360° Vorortdorf & Fluss</h3>
+            <h3 className="font-mono font-black text-lg text-[#22313f] mb-2">Vorortdorf & Fluss-Ausbeutung</h3>
             <p className="text-sm text-[#4a5568] leading-relaxed">
-              89 lückenlos verifizierte Einfamilienhäuser mit Giebeldächern, Schornsteinen, Vorgartenzäunen
-              und parkenden Autos säumen den Campus. Keine hässlichen Riesenhochhäuser – eine harmonische
-              Miniaturwelt mit Bogenbrücke und See.
+              Verdränge das beschauliche Vorortdorf für dein wachsendes KI-Imperium: Schnapp dir Baufläche für
+              neue Server-Zonen, verbrauche und verschmutze das kühle Flusswasser für unersättliche GPU-Kühltürme
+              und dehne deinen Campus gnadenlos über die Landschaft aus.
             </p>
           </div>
 
