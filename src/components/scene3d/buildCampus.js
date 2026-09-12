@@ -257,6 +257,7 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
       const step = alongX ? stepX : stepZ;
       for (let i = 0; i < FENCE_PER_SIDE; i += 1) {
         if (i === gapIndex) continue;
+        const t = (alongX ? rect.minX : rect.minZ) + step * (i + 0.5);
         // Auf der Südseite (Zufahrts-Allee bei x = 0) Durchfahrt für Straße & LKW freihalten
         if (alongX && sign > 0 && Math.abs(t) < 2.5) continue;
         const x = alongX ? t : (sign > 0 ? rect.maxX : rect.minX);

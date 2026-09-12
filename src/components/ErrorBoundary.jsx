@@ -18,11 +18,11 @@ import React from 'react';
 export class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
   }
 
   componentDidCatch(error, info) {
@@ -51,6 +51,16 @@ export class ErrorBoundary extends React.Component {
           >
             Neu laden
           </button>
+          {this.state.error?.message && (
+            <details className="mt-4 text-left">
+              <summary className="text-[11px] text-slate-500 hover:text-slate-400 cursor-pointer text-center">
+                Fehlerdetails
+              </summary>
+              <pre className="mt-2 p-2 bg-slate-950 rounded border border-slate-800 text-[10px] text-rose-400 font-mono overflow-auto max-h-32 whitespace-pre-wrap">
+                {this.state.error.message}
+              </pre>
+            </details>
+          )}
         </div>
       </div>
     );
