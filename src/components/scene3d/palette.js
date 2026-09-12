@@ -85,6 +85,15 @@ export const PALETTES_3D = {
     hemiGround: 0x48bb78,
     sun: 0xfff7e6,
     skyCss: 'linear-gradient(180deg, #8fd3ff 0%, #c7ecff 55%, #e3f6ff 100%)',
+    // Stadt, See und Fluss am Feldrand (buildEnvironment.js)
+    water: 0x38bdf8,
+    waterDirty: 0x5b6b3f,
+    algae: 0x475428,
+    townWall: 0xfbe8c8,
+    townWallAlt: 0xf3c9a0,
+    townRoof: 0xc05621,
+    townRoofAlt: 0x9c4221,
+    corpSign: 0xfacc15,
   },
   blueprint: {
     grass: 0xede7d8,
@@ -162,6 +171,14 @@ export const PALETTES_3D = {
     hemiGround: 0xd6ccb4,
     sun: 0xfff8e8,
     skyCss: 'linear-gradient(180deg, #f4f1ea 0%, #ece5d3 100%)',
+    water: 0xdce6ef,
+    waterDirty: 0xb9ae8f,
+    algae: 0x9c8c6b,
+    townWall: 0xf7f2e6,
+    townWallAlt: 0xefe3cf,
+    townRoof: 0xb8a98a,
+    townRoofAlt: 0x9c8c6b,
+    corpSign: 0x8a6a1f,
   },
 };
 

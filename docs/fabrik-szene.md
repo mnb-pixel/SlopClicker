@@ -317,6 +317,29 @@ den Bauern, müsste die Insel raten, wie weit die Zonen inzwischen gewachsen sin
   einen Skalierungsfaktor auf Bäumen und Lichtdrohnen (`layoutTrees()` in
   `buildCampus.js`) sowie über die Kamera-Einpassung, nicht über neue Bodengeometrie.
 
+## Kulisse am Feldrand: Stadt, See und Fluss
+
+Weit vorne, jenseits von Großraumbüro und Bühne (`buildEnvironment.js`, Anker bei
+x = -15, z = 22): eine kleine Kleinstadt an einem See mit Fluss, rein satirische
+Kulisse ohne eigene Spielzahl. Die vier Zonen wachsen nur in x, nie in z (siehe oben) -
+der Streifen davor bleibt also unabhängig vom Ausbau für immer frei, die Kulisse
+bekommt nie Besuch von der wachsenden Grundstücksgrenze.
+
+Gesteuert von einem einzigen `progress`-Wert (0 bis 1) aus der Hype-Stufe (1 bis 10) -
+derselben Stufe, die auch Wege, Bäume und Lichtdrohnen des Campus schaltet (siehe
+"Ausbaustufen" oben), damit keine eigene Fortschrittszahl nötig ist:
+
+* **Stadt.** Zwölf Hausplätze in einem Raster. Mit steigendem `progress` weichen die
+  campusnächsten Plätze zuerst - dieselben Plätze, die dem Ofen am nächsten liegen -
+  grauen Glaskuben mit Antenne, die hintersten Häuser bleiben am längsten stehen. Beide
+  Varianten sind InstancedMeshes, umgeschichtet wird nur die COUNT-Grenze zwischen
+  ihnen, genau wie bei den Bäumen in `buildCampus.js`.
+* **See und Fluss.** Wasser schrumpft um bis zu 45% und trübt sich von Klarblau
+  Richtung Moosgrün; darunter liegt ein permanent sichtbares braunes Flussbett/Seebett,
+  das mit dem Schrumpfen mehr freigibt - ein trockener Rand statt eines unsichtbaren
+  Randes. Ab steigendem `progress` treiben zusätzlich dunkle Algenflecken auf, wieder
+  über die COUNT-Grenze eines InstancedMesh.
+
 ## Kamera: einpassen, schieben, zoomen
 
 Bis zu einer Inselkante von 40 Einheiten (`VIEW_FIT_MAX` in `CampusScene.jsx`) passt die
@@ -438,6 +461,7 @@ ohne stundenlanges Spielen; kein Cheat, weil nichts davon in den Store zurückfl
 | `src/utils/campusLayout.js` | Grundstücks-Raster, Zonen-Rechteck, Inselgröße - reine Geometrie |
 | `src/components/scene3d/buildOffice.js`, `buildBasement.js`, `buildStage.js`, `buildTower.js`, `buildEndgame.js` | Die fünf Zonen, je mit eigenen Grundstücken pro Engine und Tier-Einfärbung über `tierVisuals.js` |
 | `src/components/scene3d/buildZones.js` | Platten, Klickziele, Nadel-Anker, Zonen-Effekte, hostet die Zonen-Bauer |
+| `src/components/scene3d/buildEnvironment.js` | Kulisse am Feldrand: Kleinstadt, See und Fluss, verdrängt/verschmutzt sich mit der Hype-Stufe |
 | `src/components/scene3d/buildDataLine.js`, `buildPeople.js` | Gemeinsame Bausteine: Datenleitung, Personen |
 | `src/components/scene3d/ZoneBuyPanel.jsx` | Kaufen aus der Szene: Engines, Upgrades und Corporate Actions der angeklickten Zone in drei Reitern mit Icon je Zeile (`utils/iconMap.js`), Preise/Filterung über dieselben Helfer wie der Shop |
 | `src/utils/storeCopy.js` | Anzeigetexte für Upgrades und Corporate Actions (Name, Zitat, Effektbeschreibung) - eine Quelle für StoreTab und ZoneBuyPanel |
