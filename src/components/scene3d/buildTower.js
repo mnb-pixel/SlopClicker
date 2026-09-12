@@ -34,6 +34,9 @@ function hash01(i) {
 
 // Canvas-Tafel: liefert Textur und eine draw()-Funktion.
 function makeBoard(width, height) {
+  if (typeof document === 'undefined') {
+    return { canvas: null, ctx: null, texture: new THREE.Texture() };
+  }
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -127,6 +130,7 @@ export function buildTower(palette, zoneDef) {
 
   function drawTicker(text, offset, p) {
     const { ctx, canvas } = tickerBoard;
+    if (!ctx || !canvas) return;
     ctx.fillStyle = p.ledBgCss;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.font = 'bold 72px ui-monospace, Menlo, monospace';
@@ -143,6 +147,8 @@ export function buildTower(palette, zoneDef) {
   }
 
   function drawClock(t, p) {
+    const { ctx, canvas } = clockBoard;
+    if (!ctx || !canvas) return;
     // Countdown, der alle ~25 Sekunden wieder nach oben springt.
     const cycle = 25;
     const phase = t % cycle;
@@ -157,7 +163,6 @@ export function buildTower(palette, zoneDef) {
     const m = Math.floor((sec % 3600) / 60);
     const s = sec % 60;
     const pad = (n) => String(n).padStart(2, '0');
-    const { ctx, canvas } = clockBoard;
     ctx.fillStyle = p.ledBgCss;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.font = 'bold 40px ui-monospace, Menlo, monospace';

@@ -75,6 +75,11 @@ export function buildServerRack(palette) {
     (mats[key] = mats[key] || []).push(m);
     return m;
   };
+  const basic = (key, extra = {}) => {
+    const m = new THREE.MeshBasicMaterial({ color: palette[key], ...extra });
+    (mats[key] = mats[key] || []).push(m);
+    return m;
+  };
   const addHit = (mesh) => {
     mesh.castShadow = true;
     mesh.receiveShadow = true;

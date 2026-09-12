@@ -255,7 +255,7 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
 
   return {
     group,
-    update({ isOverheated, overheatedAt, now, dt = 0.016, reduced = false, palette: curPal }) {
+    update({ isOverheated, overheatedAt, now, dt = 0.016, reduced = false }) {
       if (!isOverheated) {
         group.visible = false;
         internalStartTime = null;
@@ -270,7 +270,6 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
 
       // Sekunden seit Überhitzungsstart (0 bis 45)
       const elapsed = Math.max(0, (now - internalStartTime) / 1000);
-      const progress = Math.min(1, elapsed / 45);
 
       // Rundumleuchten rotieren lassen
       if (!reduced) {
