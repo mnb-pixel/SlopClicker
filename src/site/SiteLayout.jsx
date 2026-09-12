@@ -14,7 +14,7 @@ export function SiteLayout({ path, wide = false, children }) {
     initKlaro();
   }, []);
 
-  const navItems = SITE_ROUTES.filter((route) => route.nav);
+  const navItems = SITE_ROUTES.filter((route) => route.nav && !route.path.startsWith('/voxel'));
 
   const navLink = (route, extra = '') => {
     const active = route.path === path;

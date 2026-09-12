@@ -94,7 +94,6 @@ export const SITE_ROUTES = [
   {
     path: '/voxel/anleitung',
     file: 'voxel/anleitung',
-    nav: 'Anleitung',
     title: 'Spielanleitung (3D Voxel) – Token Furnace',
     description:
       'Wie Token Furnace in der 3D-Voxel-Edition funktioniert: 3D-Campus, Vorortdorf, Serverkeller, Kamin, GPU-Express, alle 20 Micro-Voxel Engines, Upgrades und Erfolge erklärt.',
@@ -103,7 +102,6 @@ export const SITE_ROUTES = [
   {
     path: '/voxel/strategie',
     file: 'voxel/strategie',
-    nav: 'Strategie',
     title: 'Strategie & Tipps (3D Voxel) – Token Furnace',
     description:
       'Strategien für Token Furnace Voxel 3D: Early, Mid und Late Game, Campus-Ausbau, Kamin-Kühlung, GPU-Laster und maximale Bewertung.',
@@ -112,7 +110,6 @@ export const SITE_ROUTES = [
   {
     path: '/voxel/glossar',
     file: 'voxel/glossar',
-    nav: 'Glossar',
     title: 'Buzzword-Glossar (3D Voxel) – Token Furnace',
     description:
       'Alle Spielbegriffe und Branchen-Buzzwords aus Token Furnace Voxel 3D erklärt – von AGI über Burn Rate bis Unicorn.',
@@ -121,7 +118,6 @@ export const SITE_ROUTES = [
   {
     path: '/voxel/faq',
     file: 'voxel/faq',
-    nav: 'FAQ',
     title: 'Häufige Fragen (FAQ) (3D Voxel) – Token Furnace',
     description:
       'Antworten auf die häufigsten Fragen zu Token Furnace Voxel 3D: Spielstand-Sync mit der 2D-Version, WebGL-Anforderungen, Steuerung und Features.',
@@ -130,7 +126,6 @@ export const SITE_ROUTES = [
   {
     path: '/voxel/ios-app',
     file: 'voxel/ios-app',
-    nav: 'iOS-App',
     title: 'Tokenkamin: AI Clicker – die iOS-App – Token Furnace Voxel 3D',
     description:
       'Token Furnace als native iOS-App „Tokenkamin: AI Clicker“: Funktionen, Unterschiede zur Web-Version und Werbefrei-Option.',
@@ -139,7 +134,6 @@ export const SITE_ROUTES = [
   {
     path: '/voxel/ueber',
     file: 'voxel/ueber',
-    nav: 'Über uns',
     title: 'Über uns & Kontakt (3D Voxel) – Token Furnace',
     description:
       'Wer hinter Token Furnace und der Voxel 3D Edition steckt, warum es das Spiel gibt und wie du uns erreichst.',
