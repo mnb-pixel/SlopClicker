@@ -1,6 +1,7 @@
 import { Play } from 'lucide-react';
 import { SiteLayout } from '../SiteLayout.jsx';
 import { AdBanner } from '../../components/AdBanner';
+import { VoxelButton } from '../components/VoxelButton.jsx';
 import { HOME } from '../content/home.content.js';
 import {
   Kicker,
@@ -38,6 +39,7 @@ export function HomePage() {
             <a href={PLAY_URL} className={`${BTN_PRIMARY} text-base px-6 py-3`}>
               <Play className="w-5 h-5" /> Im Browser spielen
             </a>
+            <VoxelButton variant="hero" />
             <AppStoreBadge />
           </div>
           <p className="mt-3 text-xs text-slate-500">
