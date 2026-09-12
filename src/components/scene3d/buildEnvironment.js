@@ -1,175 +1,169 @@
 import * as THREE from 'three';
 
-// Die Kulisse am Feldrand: mehrere Dorf-Cluster verstreut über das ganze Spielfeld,
-// verbunden durch ein Straßennetz (Ortsraster je Cluster, eine durchgehende
-// Landstraße, die sie alle verbindet, und Stichstraßen weiter zum Ofenhof), dazu ein
-// einzelner großer Fluss, der quer über das ganze Feld zieht. Alles in
-// Weltkoordinaten - anders als die erste Fassung (ein Cluster hinter einem einzigen
-// Anker) braucht das keinen gemeinsamen Ursprung mehr.
-//
-// Rein satirisch, wie der Rest der Szene: je weiter der Campus ausgebaut wird, desto
-// mehr Häuser weichen grauen Unternehmens-Kuben - campusnahe Cluster zuerst, sortiert
-// nach Abstand zum Ofen -, hinter jedem Kubus bleibt ein aufgerissener Schlammfleck
-// zurück, und der Fluss wird kleiner und trüber. Straßen bleiben liegen, auch wenn
-// die Häuser daneben verschwinden. Spielzahlen und Punktesystem bleiben unberührt -
-// gesteuert über einen einzigen `progress`-Wert (0..1) aus der Hype-Stufe (1 bis 10,
-// siehe CampusScene.jsx und buildCampus.js: dieselbe Stufe steuert dort schon Wege,
-// Bäume und Lichtdrohnen).
-//
-// Sicherheitsabstand zur Grundstücksgrenze (buildCampus.js: campusRect). NICHT
-// geschätzt, sondern nachgerechnet: mit jeder Engine aller 20 Gebäude auf ihrem
-// harten `maxProps`-Deckel (zonesData.js) - dem tatsächlich größtmöglichen Campus -
-// kommt campusRect() auf { minX: -37.5, maxX: 30.3, minZ: -29.4, maxZ: 23.1 }. Die
-// Grenze wächst in x sehr viel weiter als in z (die vier Zonen wachsen fast nur dort),
-// deshalb liegen alle vier Cluster auf derselben, deutlich jenseits von maxZ liegenden
-// Zeile z = 32 - die beiden mittleren (x nah an 0) wären bei z = 22 (der ersten
-// Fassung dieser Datei) noch TEILWEISE innerhalb der Grenze gelegen, die äußeren zwei
-// sind ohnehin schon per x weit draußen (x < -37.5 bzw. x > 30.3).
-const CLUSTER_Z = 32;
-const CLUSTERS = [
-  // Hauptdorf: das ursprüngliche Zwölf-Häuser-Raster mit vollem Ring.
-  { cx: -15, cz: CLUSTER_Z, cols: [-4.8, -1.6, 1.6, 4.8], rows: [-3.1, 0, 3.1], ring: true },
-  // Drei kleinere Weiler links, rechts und ganz außen - weit genug in x, dass selbst
-  // maximal ausgebaute Nachbarzonen sie nicht erreichen.
-  { cx: -50, cz: CLUSTER_Z, cols: [-3.2, 0, 3.2], rows: [-1.55, 1.55], ring: true },
-  { cx: 20, cz: CLUSTER_Z, cols: [-3.2, 0, 3.2], rows: [-1.55, 1.55], ring: true },
-  { cx: 52, cz: CLUSTER_Z, cols: [-3.2, 0, 3.2], rows: [-1.55, 1.55], ring: true },
+// ===============================================================================
+// Token-Furnace: Detailliertes Dorf (NORD, SÜD, WEST, OST), Fluss quer & Verdrängung
+// ===============================================================================
+// Ein ganzes, lebendiges isometrisches Miniaturdorf, das das Startup VOLLSTÄNDIG
+// umgibt: nördlich (oben), südlich (unten), westlich (links) und östlich (rechts).
+// - 48 detaillierte Einfamilienhäuser mit Giebeldächern, Kaminen, Fenstern, Türen,
+//   Gartenzäunen, Bäumen und parkenden Autos in allen vier Himmelsrichtungen.
+// - Eine Dorfkirche mit Glockenturm und Kirchturmuhr als malerischer Mittelpunkt.
+// - Ein natürlich geschwungener Fluss, der diagonal über das gesamte Spielfeld zieht,
+//   überspannt von einer soliden Bogenbrücke für die Dorfstraße.
+// - Ein malerischer See mit Sandstrand, hölzernem Bootssteg, sanft schaukelndem
+//   Ruderboot, Seerosenblättern und Schilf.
+// - PROGRESSIVE 360°-VERDRÄNGUNG: Mit wachsender Größe des Startups (progress 0..1)
+//   expandiert der Konzern von der Mitte aus in ALLE Richtungen: Die campusnächsten
+//   Grundstücke (N, S, W, O) werden zuerst zu aufgerissenen Baustellen (Matsch, Bagger,
+//   Bauzäune, Schutt) und anschließend zu kalten Unternehmens-Kuben.
+//   Eine industrielle Kühlleitung pumpt Abwärme in den Fluss, der See trübt sich ein
+//   und Algen breiten sich aus.
+
+// --- 1. DORFLAYOUT & 48 GRUNDSTÜCKE (RUND UM DEN CAMPUS) -----------------------
+const LOTS = [
+  // === NORD-DORF (Oberhalb / -z) ==============================================
+  { id: 101, x: -16, z: -20, rot: 0.1, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 102, x: 16, z: -20, rot: -0.12, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: false, hasCar: false },
+  { id: 103, x: -24, z: -26, rot: 0.15, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+  { id: 104, x: -10, z: -26, rot: -0.05, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 105, x: 10, z: -26, rot: 0.08, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintB' },
+  { id: 106, x: 24, z: -26, rot: -0.15, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+  { id: 107, x: -30, z: -33, rot: 0.1, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 108, x: -16, z: -33, rot: -0.08, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: false, hasCar: true, carCol: 'carPaintB' },
+  { id: 109, x: 0, z: -33, rot: 0.05, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 110, x: 16, z: -33, rot: -0.1, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintA' },
+  { id: 111, x: 30, z: -33, rot: 0.18, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: false, hasCar: false },
+  { id: 112, x: -22, z: -40, rot: -0.05, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintB' },
+  { id: 113, x: -8, z: -40, rot: 0.12, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 114, x: 8, z: -40, rot: -0.15, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+  { id: 115, x: 22, z: -40, rot: 0.08, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: false },
+
+  // === WEST-DORF (Links / -x) =================================================
+  { id: 201, x: -21, z: -10, rot: 0.1, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintB' },
+  { id: 202, x: -21, z: 0, rot: -0.05, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 203, x: -21, z: 10, rot: 0.15, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintA' },
+  { id: 204, x: -29, z: -14, rot: -0.1, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: false, hasCar: false },
+  { id: 205, x: -29, z: -5, rot: 0.08, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintB' },
+  { id: 206, x: -29, z: 5, rot: -0.12, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 207, x: -29, z: 14, rot: 0.2, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+  { id: 208, x: -38, z: -10, rot: -0.08, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: false },
+  { id: 209, x: -38, z: 0, rot: 0.05, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 210, x: -38, z: 10, rot: -0.15, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintB' },
+  { id: 211, x: -46, z: 0, rot: 0.1, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
+
+  // === OST-DORF (Rechts / +x) =================================================
+  { id: 301, x: 21, z: -10, rot: -0.1, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintA' },
+  { id: 302, x: 21, z: 0, rot: 0.08, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: false, hasCar: false },
+  { id: 303, x: 21, z: 10, rot: -0.12, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintB' },
+  { id: 304, x: 29, z: -14, rot: 0.15, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+  { id: 305, x: 29, z: -5, rot: -0.05, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 306, x: 29, z: 5, rot: 0.1, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: false, hasCar: true, carCol: 'carPaintB' },
+  { id: 307, x: 29, z: 14, rot: -0.18, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: false },
+  { id: 308, x: 38, z: -10, rot: 0.05, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 309, x: 38, z: 0, rot: -0.08, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+  { id: 310, x: 38, z: 10, rot: 0.12, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintB' },
+  { id: 311, x: 46, z: 0, rot: -0.15, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
+
+  // === SÜD-DORF (Unterhalb / +z) ==============================================
+  { id: 401, x: -16, z: 19, rot: 0.08, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 402, x: 16, z: 19, rot: -0.1, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: false, hasCar: false },
+  { id: 403, x: -24, z: 25, rot: 0.15, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+  { id: 404, x: -8, z: 25, rot: -0.05, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintB' },
+  { id: 405, x: 8, z: 25, rot: 0.1, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintA' },
+  // Kirche bei x = -15, z = 28
+  { id: 406, x: -4, z: 29, rot: -0.12, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 407, x: 5, z: 29, rot: 0.08, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintB' },
+  { id: 408, x: 15, z: 29, rot: -0.15, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: false },
+  { id: 409, x: -28, z: 41, rot: 0.1, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
+  { id: 410, x: -18, z: 41, rot: -0.08, type: 'B', wall: 'townWallAlt', roof: 'townRoofAlt', hasTree: true, hasCar: true, carCol: 'carPaintA' },
+  { id: 411, x: -8, z: 42, rot: 0.05, type: 'A', wall: 'townWallAlt', roof: 'townRoof', hasTree: false, hasCar: false },
+  { id: 412, x: 8, z: 42, rot: -0.1, type: 'C', wall: 'townWallC', roof: 'townRoofSlate', hasTree: true, hasCar: true, carCol: 'carPaintB' },
+  { id: 413, x: 18, z: 41, rot: 0.18, type: 'B', wall: 'townWall', roof: 'townRoofAlt', hasTree: false, hasCar: true, carCol: 'carPaintA' },
+  { id: 414, x: 30, z: 40, rot: -0.05, type: 'A', wall: 'townWall', roof: 'townRoof', hasTree: true, hasCar: false },
 ];
 
-function span(arr) {
-  return arr[arr.length - 1] - arr[0];
-}
-function midpoints(arr) {
-  const out = [];
-  for (let i = 0; i < arr.length - 1; i += 1) out.push((arr[i] + arr[i + 1]) / 2);
-  return out;
-}
-// Rand um die äußerste Haus-Achse, bis zu dem Ring/Straßen reichen - Platz für die
-// Straße selbst plus etwas Luft zum Haus (siehe STREET_W unten).
-const HALF_MARGIN_X = 1.4;
-const HALF_MARGIN_Z = 1.3;
-function clusterHalfX(cluster) {
-  return span(cluster.cols) / 2 + HALF_MARGIN_X;
-}
-function clusterHalfZ(cluster) {
-  return span(cluster.rows) / 2 + HALF_MARGIN_Z;
-}
-// Campusseitige Kante des Clusters (kleineres z) - hier docken Zufahrt/Landstraße an.
-function clusterNearZ(cluster) {
-  return cluster.cz - clusterHalfZ(cluster);
-}
+// Grundstücke nach Abstand zum Zentrum (0, 0) sortieren (360° Verdrängung)
+LOTS.sort((a, b) => Math.hypot(a.x, a.z) - Math.hypot(b.x, b.z));
+const LOT_COUNT = LOTS.length;
 
-// Alle Hausplätze aller Cluster, in Weltkoordinaten. Nach Abstand zum Ofen (Ursprung)
-// sortiert: der campusnächste Platz weicht bei wachsendem `progress` zuerst dem
-// Unternehmens-Kubus - "der nächste Ort zuerst", ganz gleich in welchem Cluster er liegt.
-const HOUSE_SLOTS = [];
-CLUSTERS.forEach((cluster, clusterIdx) => {
-  cluster.rows.forEach((rowZ, ri) => {
-    cluster.cols.forEach((colX, ci) => {
-      const jitter = ((ri * 4 + ci + clusterIdx * 11) * 37) % 10;
-      HOUSE_SLOTS.push({
-        x: cluster.cx + colX,
-        z: cluster.cz + rowZ,
-        rot: ((jitter - 5) / 5) * 0.2,
-        alt: (ri + ci + clusterIdx) % 2 === 1,
-      });
-    });
-  });
-});
-HOUSE_SLOTS.sort((a, b) => Math.hypot(a.x, a.z) - Math.hypot(b.x, b.z));
-const HOUSE_COUNT = HOUSE_SLOTS.length;
+// Kirche / Dorfmittelpunkt am Südrand des Zentrums
+const CHURCH_POS = { x: -16, z: 27 };
 
-// --- Straßennetz ---------------------------------------------------------------
-// Drei Ebenen: das Ortsraster JEDES Clusters (Ring plus Längs-/Querstraßen in den
-// Lücken zwischen den Häusern), eine durchgehende Landstraße, die alle Cluster an
-// ihrer campusseitigen Kante verbindet, und zwei Stichstraßen, die von der Landstraße
-// weiter zum Ofenhof abzweigen.
-const STREET_W = 1.1;
-function clusterStreetSegments(cluster) {
-  const halfX = clusterHalfX(cluster);
-  const halfZ = clusterHalfZ(cluster);
-  const segs = [];
-  if (cluster.ring) {
-    segs.push([-halfX, -halfZ, halfX, -halfZ]);
-    segs.push([-halfX, halfZ, halfX, halfZ]);
-    segs.push([-halfX, -halfZ, -halfX, halfZ]);
-    segs.push([halfX, -halfZ, halfX, halfZ]);
-  }
-  midpoints(cluster.cols).forEach((gx) => segs.push([gx, -halfZ, gx, halfZ]));
-  midpoints(cluster.rows).forEach((gz) => segs.push([-halfX, gz, halfX, gz]));
-  return segs.map(([ax, az, bx, bz]) => ({
-    a: { x: cluster.cx + ax, z: cluster.cz + az },
-    b: { x: cluster.cx + bx, z: cluster.cz + bz },
-  }));
-}
+// --- 2. SEE & FLUSS GEOMETRIE-DATEN ---------------------------------------------
+const LAKE_CENTER = { x: 26, z: 24 };
+const LAKE_RADIUS = 5.8;
 
-// Landstraße: verbindet die campusseitige Kante jedes Clusters zu einer durchgehenden
-// Linie, die über das ganze Feld zieht (kein Cluster bleibt isoliert).
-const HIGHWAY_W = 1.6;
-const HIGHWAY_POINTS = [
-  { x: CLUSTERS[1].cx - 15, z: clusterNearZ(CLUSTERS[1]) },
-  { x: CLUSTERS[1].cx, z: clusterNearZ(CLUSTERS[1]) },
-  { x: CLUSTERS[0].cx, z: clusterNearZ(CLUSTERS[0]) },
-  { x: CLUSTERS[2].cx, z: clusterNearZ(CLUSTERS[2]) },
-  { x: CLUSTERS[3].cx, z: clusterNearZ(CLUSTERS[3]) },
-  { x: CLUSTERS[3].cx + 13, z: clusterNearZ(CLUSTERS[3]) },
-];
-
-// Stichstraßen: von der Landstraße beim Hauptdorf und beim rechten Weiler weiter
-// Richtung Ofenhof, mit einem Knick statt einer Beton-geraden Linie. Enden bewusst ein
-// Stück VOR der Grundstücksgrenze (siehe docs/fabrik-szene.md: deren Frontkante bleibt
-// bei realistischem Ausbau unterhalb von etwa z = 15-16) - so bleiben sie bei jeder
-// Campusgröße als eigenes Wegstück auf freiem Rasen sichtbar, statt in der wachsenden
-// Hecke zu verschwinden.
-const SPUR_W = 1.7;
-const SPURS = [
-  [
-    { x: CLUSTERS[0].cx, z: clusterNearZ(CLUSTERS[0]) },
-    { x: CLUSTERS[0].cx + 4, z: clusterNearZ(CLUSTERS[0]) - 2 },
-    { x: CLUSTERS[0].cx + 7.5, z: clusterNearZ(CLUSTERS[0]) - 4.2 },
-  ],
-  [
-    { x: CLUSTERS[2].cx, z: clusterNearZ(CLUSTERS[2]) },
-    { x: CLUSTERS[2].cx - 4, z: clusterNearZ(CLUSTERS[2]) - 2.6 },
-    { x: CLUSTERS[2].cx - 8, z: clusterNearZ(CLUSTERS[2]) - 5.1 },
-  ],
-];
-
-// --- Fluss: EIN Lauf über das ganze Spielfeld, mit einer Seeausbuchtung beim Hauptdorf
-const LAKE_WORLD = { x: CLUSTERS[0].cx + 9.5, z: CLUSTERS[0].cz + 0.5 };
-const LAKE_R = 4.2;
-const RIVER_WIDTH = 1.7;
-// Polylinie von weit links nach weit rechts, mit einer Ausbuchtung, die beim Hauptdorf
-// vorbeiführt - dieselbe Kurve wie in der ersten Fassung, nur eingebettet in einen viel
-// längeren Lauf statt als kurzer Abfluss.
+// Der Fluss fließt quer über das gesamte Spielfeld
 const RIVER_POINTS = [
-  { x: -75, z: 44 },
-  { x: -50, z: 39 },
-  { x: -15, z: 36 },
-  { x: LAKE_WORLD.x + LAKE_R * 0.6, z: LAKE_WORLD.z + LAKE_R * 0.5 },
-  { x: LAKE_WORLD.x + 6.5, z: LAKE_WORLD.z + 4.5 },
-  { x: LAKE_WORLD.x + 9.5, z: LAKE_WORLD.z + 9.5 },
-  { x: 20, z: 38 },
-  { x: 52, z: 41 },
-  { x: 75, z: 39 },
+  { x: -80, z: 35 },
+  { x: -55, z: 34 },
+  { x: -32, z: 35.5 },
+  { x: -10, z: 35 }, // Hier kreuzt die Bogenbrücke!
+  { x: 8, z: 34.5 },
+  { x: LAKE_CENTER.x - LAKE_RADIUS * 0.75, z: LAKE_CENTER.z + LAKE_RADIUS * 0.75 }, // fließt nah am See vorbei
+  { x: 42, z: 36 },
+  { x: 62, z: 35 },
+  { x: 80, z: 36.5 },
+];
+const RIVER_WIDTH = 2.4;
+
+// Brückenposition bei x = -10, z = 35
+const BRIDGE_POS = { x: -10, z: 35 };
+
+// Bootssteg am See
+const PIER_START = { x: LAKE_CENTER.x - 3.2, z: LAKE_CENTER.z - 2.8 };
+const PIER_END = { x: LAKE_CENTER.x - 1.0, z: LAKE_CENTER.z - 0.4 };
+const BOAT_POS = { x: PIER_END.x + 0.8, z: PIER_END.z + 0.5 };
+
+// Seerosen auf dem See (5 Blütenpads)
+const LILY_PADS = [
+  { x: LAKE_CENTER.x + 1.0, z: LAKE_CENTER.z + 1.4, r: 0.45 },
+  { x: LAKE_CENTER.x + 2.2, z: LAKE_CENTER.z - 0.8, r: 0.55 },
+  { x: LAKE_CENTER.x - 0.6, z: LAKE_CENTER.z + 2.5, r: 0.4 },
+  { x: LAKE_CENTER.x + 3.0, z: LAKE_CENTER.z + 1.6, r: 0.5 },
+  { x: LAKE_CENTER.x - 1.5, z: LAKE_CENTER.z + 1.1, r: 0.48 },
 ];
 
-// Wie viele Algenflecken der trübste Zustand zeigt: sechs feste rund um den See, dazu
-// einer je Flussabschnitt.
-const ALGAE_LAKE = 6;
-const ALGAE_MAX = ALGAE_LAKE + (RIVER_POINTS.length - 1);
-const ALGAE_SPOTS = [];
-for (let i = 0; i < ALGAE_LAKE; i += 1) {
-  const a = (i / ALGAE_LAKE) * Math.PI * 2;
-  const r = LAKE_R * 0.55;
-  ALGAE_SPOTS.push({ x: LAKE_WORLD.x + Math.cos(a) * r, z: LAKE_WORLD.z + Math.sin(a) * r, s: 0.4 + (i % 3) * 0.15 });
-}
-for (let i = 0; i < RIVER_POINTS.length - 1; i += 1) {
-  const a = RIVER_POINTS[i];
-  const b = RIVER_POINTS[i + 1];
-  ALGAE_SPOTS.push({ x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, s: 0.45 + (i % 3) * 0.12 });
-}
+// Schilfhalme an See- und Flussufern
+const REED_SPOTS = [
+  { x: LAKE_CENTER.x + 4.2, z: LAKE_CENTER.z - 2.8 },
+  { x: LAKE_CENTER.x + 4.8, z: LAKE_CENTER.z + 0.5 },
+  { x: LAKE_CENTER.x + 3.5, z: LAKE_CENTER.z + 3.6 },
+  { x: LAKE_CENTER.x - 3.5, z: LAKE_CENTER.z + 3.2 },
+  { x: -22, z: 34.2 },
+  { x: 2, z: 33.5 },
+  { x: 45, z: 34.5 },
+  { x: -44, z: 33.8 },
+];
 
+// Straßennetz: Verbindungsstraßen rund um den Campus (N, S, W, O)
+const ROAD_SEGMENTS = [
+  // Nord-Süd Hauptverbindung (führt über die Brücke)
+  { a: { x: -10, z: -38 }, b: { x: -10, z: 32 }, w: 1.8 },
+  { a: { x: -10, z: 38 }, b: { x: -10, z: 46 }, w: 1.8 },
+
+  // Norddorf-Allee
+  { a: { x: -35, z: -26 }, b: { x: 35, z: -26 }, w: 1.6 },
+  { a: { x: -25, z: -33 }, b: { x: 25, z: -33 }, w: 1.5 },
+
+  // Westdorf-Allee
+  { a: { x: -29, z: -18 }, b: { x: -29, z: 18 }, w: 1.6 },
+  { a: { x: -21, z: 0 }, b: { x: -42, z: 0 }, w: 1.5 },
+
+  // Ostdorf-Allee
+  { a: { x: 29, z: -18 }, b: { x: 29, z: 18 }, w: 1.6 },
+  { a: { x: 21, z: 0 }, b: { x: 42, z: 0 }, w: 1.5 },
+
+  // Süddorf-Allee & Kirchweg
+  { a: { x: -30, z: 22 }, b: { x: 22, z: 22 }, w: 1.6 },
+  { a: { x: -16, z: 22 }, b: { x: -16, z: 30 }, w: 1.5 },
+  { a: { x: 18, z: 22 }, b: { x: LAKE_CENTER.x - 3.2, z: LAKE_CENTER.z - 2.8 }, w: 1.3 }, // Seeweg
+  { a: { x: -35, z: 41 }, b: { x: 35, z: 41 }, w: 1.6 }, // Südstraße jenseits der Brücke
+];
+
+// ===============================================================================
+// MAIN BUILDER FUNCTION
+// ===============================================================================
 export function buildEnvironment(palette) {
   const group = new THREE.Group();
   const mats = {};
@@ -178,22 +172,319 @@ export function buildEnvironment(palette) {
     (mats[key] = mats[key] || []).push(m);
     return m;
   };
+  const basic = (key, extra = {}) => {
+    const m = new THREE.MeshBasicMaterial({ color: palette[key], ...extra });
+    (mats[key] = mats[key] || []).push(m);
+    return m;
+  };
+
   const dummy = new THREE.Object3D();
 
-  // --- Dörfer: Häuser vs. Unternehmens-Kuben, dazwischen aufgerissener Schlamm -----
-  // Alle Instanced-Meshes teilen sich dieselben Hausplätze aus allen Clustern. Pro
-  // Update wird nur die COUNT-Grenze verschoben (wie bei den Bäumen in
-  // buildCampus.js): die campusnächsten `converted` Plätze bekommen Kubus plus
-  // Schlammfleck, der Rest bleibt Haus.
+  // --- 3. GEWÄSSER: SEE & FLUSS --------------------------------------------------
+  const bedMat = lambert('soilDeep');
+  const sandMat = lambert('sand');
+  const waterMat = lambert('water', { transparent: true, opacity: 0.90 });
+
+  // See-Boden & Sandstrand (organisches 14-Eck)
+  const lakeBedGeo = new THREE.CylinderGeometry(LAKE_RADIUS + 0.8, LAKE_RADIUS + 0.8, 0.15, 14);
+  const lakeBedMesh = new THREE.Mesh(lakeBedGeo, bedMat);
+  lakeBedMesh.position.set(LAKE_CENTER.x, 0.02, LAKE_CENTER.z);
+  lakeBedMesh.receiveShadow = true;
+  group.add(lakeBedMesh);
+
+  // Sandstrand-Ring um den See
+  const beachGeo = new THREE.RingGeometry(LAKE_RADIUS - 0.2, LAKE_RADIUS + 0.9, 14);
+  const beachMesh = new THREE.Mesh(beachGeo, sandMat);
+  beachMesh.rotation.x = -Math.PI / 2;
+  beachMesh.position.set(LAKE_CENTER.x, 0.035, LAKE_CENTER.z);
+  beachMesh.receiveShadow = true;
+  group.add(beachMesh);
+
+  // See-Wasserfläche
+  const lakeWaterGeo = new THREE.CylinderGeometry(LAKE_RADIUS, LAKE_RADIUS, 0.16, 14);
+  const lakeWater = new THREE.Mesh(lakeWaterGeo, waterMat);
+  lakeWater.position.set(LAKE_CENTER.x, 0.08, LAKE_CENTER.z);
+  group.add(lakeWater);
+
+  // Flussbett und Flusswasser-Segmente
+  const riverGroup = new THREE.Group();
+  const riverWaterGroup = new THREE.Group();
+  group.add(riverGroup);
+  group.add(riverWaterGroup);
+
+  for (let i = 0; i < RIVER_POINTS.length - 1; i += 1) {
+    const p1 = RIVER_POINTS[i];
+    const p2 = RIVER_POINTS[i + 1];
+    const dx = p2.x - p1.x;
+    const dz = p2.z - p1.z;
+    const len = Math.hypot(dx, dz);
+    const rot = Math.atan2(dx, dz);
+    const midX = (p1.x + p2.x) / 2;
+    const midZ = (p1.z + p2.z) / 2;
+
+    // Sandiges / kiesiges Uferbett
+    const rBed = new THREE.Mesh(new THREE.BoxGeometry(RIVER_WIDTH + 1.2, 0.12, len + 0.6), sandMat);
+    rBed.position.set(midX, 0.02, midZ);
+    rBed.rotation.y = rot;
+    rBed.receiveShadow = true;
+    riverGroup.add(rBed);
+
+    // Wasserlauf
+    const rWater = new THREE.Mesh(new THREE.BoxGeometry(RIVER_WIDTH, 0.14, len), waterMat);
+    rWater.position.set(midX, 0.075, midZ);
+    rWater.rotation.y = rot;
+    riverWaterGroup.add(rWater);
+  }
+
+  // --- 4. BRÜCKE ÜBER DEN FLUSS ---------------------------------------------------
+  // Schöne Stein- & Holzbogenbrücke
+  const stoneMat = lambert('stone');
+  const woodDarkMat = lambert('woodDark');
+  const woodLightMat = lambert('woodLight');
+
+  const bridgeGroup = new THREE.Group();
+  bridgeGroup.position.set(BRIDGE_POS.x, 0, BRIDGE_POS.z);
+
+  // Pfeiler links & rechts des Flusses
+  [-1.5, 1.5].forEach((offsetSide) => {
+    const pillar = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.5, 0.9), stoneMat);
+    pillar.position.set(0, 0.25, offsetSide * 1.8);
+    pillar.castShadow = true;
+    pillar.receiveShadow = true;
+    bridgeGroup.add(pillar);
+  });
+
+  // Fahrbahndeck der Brücke
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.2, 4.4), woodLightMat);
+  deck.position.set(0, 0.38, 0);
+  deck.castShadow = true;
+  deck.receiveShadow = true;
+  bridgeGroup.add(deck);
+
+  // Geländer der Brücke (links und rechts)
+  [-1.0, 1.0].forEach((side) => {
+    const railBeam = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 4.4), woodDarkMat);
+    railBeam.position.set(side, 0.72, 0);
+    bridgeGroup.add(railBeam);
+
+    [-1.8, -0.9, 0, 0.9, 1.8].forEach((postZ) => {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.45, 0.12), woodDarkMat);
+      post.position.set(side, 0.55, postZ);
+      post.castShadow = true;
+      bridgeGroup.add(post);
+    });
+  });
+  group.add(bridgeGroup);
+
+  // --- 5. BOOTSSTEG & SCHAUKELNDES RUDERBOOT -------------------------------------
+  const pierGroup = new THREE.Group();
+  const pDx = PIER_END.x - PIER_START.x;
+  const pDz = PIER_END.z - PIER_START.z;
+  const pLen = Math.hypot(pDx, pDz);
+  const pRot = Math.atan2(pDx, pDz);
+
+  const pierDeck = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.08, pLen), woodLightMat);
+  pierDeck.position.set((PIER_START.x + PIER_END.x) / 2, 0.22, (PIER_START.z + PIER_END.z) / 2);
+  pierDeck.rotation.y = pRot;
+  pierDeck.castShadow = true;
+  pierGroup.add(pierDeck);
+
+  // Pfähle im Wasser
+  [0.1, 0.5, 0.9].forEach((f) => {
+    const px = PIER_START.x + pDx * f;
+    const pz = PIER_START.z + pDz * f;
+    [-0.38, 0.38].forEach((s) => {
+      const pile = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.4, 5), woodDarkMat);
+      pile.position.set(px + -Math.cos(pRot) * s, 0.14, pz + Math.sin(pRot) * s);
+      pierGroup.add(pile);
+    });
+  });
+  group.add(pierGroup);
+
+  // Ruderboot am Stegende (animiert)
+  const boatGroup = new THREE.Group();
+  boatGroup.position.set(BOAT_POS.x, 0.12, BOAT_POS.z);
+  boatGroup.rotation.y = pRot + 0.35;
+
+  const boatHull = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.24, 1.4), woodDarkMat);
+  boatHull.castShadow = true;
+  boatGroup.add(boatHull);
+
+  const boatSeat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.06, 0.25), woodLightMat);
+  boatSeat.position.set(0, 0.08, 0);
+  boatGroup.add(boatSeat);
+
+  // Ruder
+  const oar = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.04, 0.06), woodLightMat);
+  oar.position.set(0, 0.16, -0.1);
+  oar.rotation.z = 0.15;
+  boatGroup.add(oar);
+  group.add(boatGroup);
+
+  // Seerosen & Blüten
+  const lilyPadMat = lambert('lilyPad');
+  const lilyFlowerMat = lambert('lilyFlower');
+  LILY_PADS.forEach((lp) => {
+    const pad = new THREE.Mesh(new THREE.CylinderGeometry(lp.r, lp.r, 0.02, 7), lilyPadMat);
+    pad.position.set(lp.x, 0.14, lp.z);
+    group.add(pad);
+
+    const flower = new THREE.Mesh(new THREE.SphereGeometry(0.12, 5, 4), lilyFlowerMat);
+    flower.position.set(lp.x + 0.08, 0.20, lp.z);
+    group.add(flower);
+  });
+
+  // Schilf-Pflanzen (Zylinder mit bräunlichen Spitzen)
+  const reedMat = lambert('reed');
+  const reedHeadMat = lambert('woodDark');
+  REED_SPOTS.forEach((spot, si) => {
+    for (let k = 0; k < 4; k += 1) {
+      const rx = spot.x + ((k % 2) - 0.5) * 0.4;
+      const rz = spot.z + (Math.floor(k / 2) - 0.5) * 0.4;
+      const h = 0.65 + ((si + k) % 3) * 0.15;
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, h, 4), reedMat);
+      stem.position.set(rx, h / 2, rz);
+      stem.rotation.z = (((k * 13) % 7) - 3) * 0.04;
+      group.add(stem);
+
+      const head = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.2, 4), reedHeadMat);
+      head.position.set(rx, h + 0.02, rz);
+      group.add(head);
+    }
+  });
+
+  // --- 6. STRASSENNETZ DES DORFES ------------------------------------------------
+  const roadMat = lambert('path');
+  ROAD_SEGMENTS.forEach((seg) => {
+    const dx = seg.b.x - seg.a.x;
+    const dz = seg.b.z - seg.a.z;
+    const len = Math.hypot(dx, dz);
+    const rot = Math.atan2(dx, dz);
+    const midX = (seg.a.x + seg.b.x) / 2;
+    const midZ = (seg.a.z + seg.b.z) / 2;
+
+    const r = new THREE.Mesh(new THREE.BoxGeometry(seg.w, 0.06, len), roadMat);
+    r.position.set(midX, 0.04, midZ);
+    r.rotation.y = rot;
+    r.receiveShadow = true;
+    group.add(r);
+  });
+
+  // --- 7. DORFKIRCHE & DORFPLATZ -------------------------------------------------
+  const churchGroup = new THREE.Group();
+  churchGroup.position.set(CHURCH_POS.x, 0, CHURCH_POS.z);
+
+  // Kirchplatz-Pflaster
+  const plazaMat = lambert('stoneDark');
+  const plaza = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.07, 7.0), plazaMat);
+  plaza.position.set(0, 0.035, 0);
+  plaza.receiveShadow = true;
+  churchGroup.add(plaza);
+
+  // Kirchenschiff
+  const churchWallMat = lambert('townWall');
+  const churchRoofMat = lambert('townRoofSlate');
+  const nave = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.4, 2.6), churchWallMat);
+  nave.position.set(0.6, 1.2, 0);
+  nave.castShadow = true;
+  nave.receiveShadow = true;
+  churchGroup.add(nave);
+
+  // Satteldach Kirchenschiff
+  const naveRoof = new THREE.Mesh(new THREE.ConeGeometry(2.3, 1.3, 4), churchRoofMat);
+  naveRoof.position.set(0.6, 2.85, 0);
+  naveRoof.rotation.y = Math.PI / 4;
+  naveRoof.scale.set(1.1, 1, 0.85);
+  naveRoof.castShadow = true;
+  churchGroup.add(naveRoof);
+
+  // Glockenturm
+  const tower = new THREE.Mesh(new THREE.BoxGeometry(1.4, 4.8, 1.4), churchWallMat);
+  tower.position.set(-1.7, 2.4, 0);
+  tower.castShadow = true;
+  churchGroup.add(tower);
+
+  // Kirchturm-Spitzdach
+  const spire = new THREE.Mesh(new THREE.ConeGeometry(1.2, 2.6, 4), churchRoofMat);
+  spire.position.set(-1.7, 5.8, 0);
+  spire.rotation.y = Math.PI / 4;
+  spire.castShadow = true;
+  churchGroup.add(spire);
+
+  // Kirchturmuhr (goldenes Zifferblatt)
+  const clockMat = lambert('gold');
+  const clockMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.06, 8), clockMat);
+  clockMesh.position.set(-1.7, 4.1, 0.72);
+  clockMesh.rotation.x = Math.PI / 2;
+  churchGroup.add(clockMesh);
+
+  // Kirchentür
+  const doorMat = lambert('woodDark');
+  const churchDoor = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.3, 0.1), doorMat);
+  churchDoor.position.set(0.6, 0.65, 1.32);
+  churchGroup.add(churchDoor);
+
+  group.add(churchGroup);
+
+  // --- 8. DORFHÄUSER (INSTANCED MESHES FÜR HOHE PERFORMANCE) --------------------
   const wallMat = lambert('townWall');
   const wallAltMat = lambert('townWallAlt');
+  const wallCMat = lambert('townWallC');
   const roofMat = lambert('townRoof');
   const roofAltMat = lambert('townRoofAlt');
-  const houseWalls = new THREE.InstancedMesh(new THREE.BoxGeometry(1.5, 1.1, 1.3), wallMat, HOUSE_COUNT);
-  const houseWallsAlt = new THREE.InstancedMesh(new THREE.BoxGeometry(1.5, 1.1, 1.3), wallAltMat, HOUSE_COUNT);
-  const houseRoofs = new THREE.InstancedMesh(new THREE.ConeGeometry(1.15, 0.8, 4), roofMat, HOUSE_COUNT);
-  const houseRoofsAlt = new THREE.InstancedMesh(new THREE.ConeGeometry(1.15, 0.8, 4), roofAltMat, HOUSE_COUNT);
-  [houseWalls, houseWallsAlt, houseRoofs, houseRoofsAlt].forEach((m) => {
+  const roofSlateMat = lambert('townRoofSlate');
+
+  const chimneyMat = lambert('brickDark');
+  const windowGlassMat = basic('windowGlass');
+  const carMatA = lambert('carPaintA');
+  const carMatB = lambert('carPaintB');
+  const trunkMat = lambert('trunk');
+  const crownMat = lambert('crown');
+  const smokeMat = basic('smoke', { transparent: true, opacity: 0.75 });
+
+  // Instanced Meshes je Hausteil
+  const houseWalls = new THREE.InstancedMesh(new THREE.BoxGeometry(2.3, 1.5, 1.9), wallMat, LOT_COUNT);
+  const houseWallsAlt = new THREE.InstancedMesh(new THREE.BoxGeometry(2.3, 1.5, 1.9), wallAltMat, LOT_COUNT);
+  const houseWallsC = new THREE.InstancedMesh(new THREE.BoxGeometry(2.3, 1.5, 1.9), wallCMat, LOT_COUNT);
+
+  // Garagenflügel für Typ B
+  const garageWalls = new THREE.InstancedMesh(new THREE.BoxGeometry(1.4, 1.0, 1.7), wallAltMat, LOT_COUNT);
+  const garageDoors = new THREE.InstancedMesh(new THREE.BoxGeometry(1.0, 0.8, 0.08), woodLightMat, LOT_COUNT);
+
+  // Dächer
+  const houseRoofs = new THREE.InstancedMesh(new THREE.ConeGeometry(1.8, 1.1, 4), roofMat, LOT_COUNT);
+  const houseRoofsAlt = new THREE.InstancedMesh(new THREE.ConeGeometry(1.8, 1.1, 4), roofAltMat, LOT_COUNT);
+  const houseRoofsSlate = new THREE.InstancedMesh(new THREE.ConeGeometry(1.8, 1.1, 4), roofSlateMat, LOT_COUNT);
+
+  // Kamin auf dem Dach
+  const chimneys = new THREE.InstancedMesh(new THREE.BoxGeometry(0.28, 0.7, 0.28), chimneyMat, LOT_COUNT);
+  // Rauch-Puff aus Kamin
+  const chimneySmokes = new THREE.InstancedMesh(new THREE.SphereGeometry(0.18, 5, 4), smokeMat, LOT_COUNT);
+
+  // Türen & Fenster
+  const doors = new THREE.InstancedMesh(new THREE.BoxGeometry(0.42, 0.75, 0.06), woodLightMat, LOT_COUNT);
+  const windows = new THREE.InstancedMesh(new THREE.BoxGeometry(0.45, 0.45, 0.05), windowGlassMat, LOT_COUNT * 4);
+
+  // Gartenzäune (Holzzaun vor dem Vorgarten)
+  const fences = new THREE.InstancedMesh(new THREE.BoxGeometry(2.6, 0.35, 0.06), woodLightMat, LOT_COUNT);
+
+  // Vorgarten-Bäume
+  const gardenTrunks = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.08, 0.1, 0.6, 5), trunkMat, LOT_COUNT);
+  const gardenCrowns = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(0.65, 0), crownMat, LOT_COUNT);
+
+  // Parkende Autos
+  const carsA = new THREE.InstancedMesh(new THREE.BoxGeometry(0.9, 0.45, 1.6), carMatA, LOT_COUNT);
+  const carsB = new THREE.InstancedMesh(new THREE.BoxGeometry(0.9, 0.45, 1.6), carMatB, LOT_COUNT);
+
+  const villageMeshes = [
+    houseWalls, houseWallsAlt, houseWallsC,
+    garageWalls, garageDoors,
+    houseRoofs, houseRoofsAlt, houseRoofsSlate,
+    chimneys, chimneySmokes, doors, windows,
+    fences, gardenTrunks, gardenCrowns, carsA, carsB,
+  ];
+
+  villageMeshes.forEach((m) => {
     m.castShadow = true;
     m.receiveShadow = true;
     m.frustumCulled = false;
@@ -201,12 +492,31 @@ export function buildEnvironment(palette) {
     group.add(m);
   });
 
+  // --- 9. VERDRÄNGUNGS-OBJEKTE: BAUSTELLEN & UNTERNEHMENS-KUBEN ------------------
+  // Phase 1 der Verdrängung: Baustelle mit Matsch, Absperrzaun und Bagger
+  const mudMat = lambert('soilDeep');
+  const mudPits = new THREE.InstancedMesh(new THREE.BoxGeometry(3.0, 0.06, 3.0), mudMat, LOT_COUNT);
+  mudPits.receiveShadow = true;
+  group.add(mudPits);
+
+  const rubbleMat = lambert('rubble');
+  const rubblePiles = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(0.55, 0), rubbleMat, LOT_COUNT);
+  rubblePiles.castShadow = true;
+  group.add(rubblePiles);
+
+  const warnOrangeMat = lambert('constructionOrange');
+  const excavators = new THREE.InstancedMesh(new THREE.BoxGeometry(1.2, 0.9, 1.4), warnOrangeMat, LOT_COUNT);
+  excavators.castShadow = true;
+  group.add(excavators);
+
+  // Phase 2 der Verdrängung: Vollendeter Unternehmens-Kubus
   const corpGlassMat = lambert('facade');
   const corpFrameMat = lambert('steelDark');
   const corpSignMat = lambert('corpSign');
-  const corpBody = new THREE.InstancedMesh(new THREE.BoxGeometry(1.7, 2.6, 1.7), corpGlassMat, HOUSE_COUNT);
-  const corpFrame = new THREE.InstancedMesh(new THREE.BoxGeometry(1.8, 0.14, 1.8), corpFrameMat, HOUSE_COUNT);
-  const corpSign = new THREE.InstancedMesh(new THREE.BoxGeometry(0.22, 0.55, 0.22), corpSignMat, HOUSE_COUNT);
+  const corpBody = new THREE.InstancedMesh(new THREE.BoxGeometry(2.4, 3.2, 2.4), corpGlassMat, LOT_COUNT);
+  const corpFrame = new THREE.InstancedMesh(new THREE.BoxGeometry(2.5, 0.16, 2.5), corpFrameMat, LOT_COUNT);
+  const corpSign = new THREE.InstancedMesh(new THREE.BoxGeometry(0.35, 0.7, 0.35), corpSignMat, LOT_COUNT);
+
   [corpBody, corpFrame, corpSign].forEach((m) => {
     m.castShadow = true;
     m.receiveShadow = true;
@@ -215,207 +525,309 @@ export function buildEnvironment(palette) {
     group.add(m);
   });
 
-  // Schlammfleck: bleibt für immer liegen, sobald ein Platz einmal umgewandelt wurde -
-  // "abgerissen" statt "einfach ausgetauscht". Teilt sich die Erdfarbe mit dem
-  // Fluss-/Seebett weiter unten (bedMat), damit nicht noch ein Materialset entsteht.
-  const bedMat = lambert('soilDeep');
-  const mudPatches = new THREE.InstancedMesh(new THREE.CylinderGeometry(1.5, 1.5, 0.05, 8), bedMat, HOUSE_COUNT);
-  mudPatches.receiveShadow = true;
-  mudPatches.frustumCulled = false;
-  mudPatches.count = 0;
-  group.add(mudPatches);
+  // Industrielle Kühlrohre (vom Campus zum Fluss, wachsen mit Verdrängung)
+  const pipeMat = lambert('steel');
+  const coolingPipe = new THREE.Group();
+  coolingPipe.position.set(-2, 0, 18);
 
-  function layoutHouseSlot(mesh, i, slot, roofMode) {
-    dummy.position.set(slot.x, roofMode ? 1.1 + 0.4 : 0.55, slot.z);
-    dummy.rotation.set(0, slot.rot + (roofMode ? Math.PI / 4 : 0), 0);
+  const pipeStraight = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 17, 8), pipeMat);
+  pipeStraight.position.set(0, 0.45, 8.5);
+  pipeStraight.rotation.x = Math.PI / 2;
+  pipeStraight.castShadow = true;
+  coolingPipe.add(pipeStraight);
+
+  // Kühlrohr-Mündung am Fluss
+  const pipeNozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 1.0, 8), pipeMat);
+  pipeNozzle.position.set(0, 0.4, 17.2);
+  pipeNozzle.rotation.x = Math.PI / 2;
+  coolingPipe.add(pipeNozzle);
+
+  // Aufsteigender Dampf am Auslauf
+  const steamMesh = new THREE.Mesh(new THREE.SphereGeometry(0.7, 6, 5), smokeMat);
+  steamMesh.position.set(0, 0.9, 17.7);
+  coolingPipe.add(steamMesh);
+
+  coolingPipe.visible = false;
+  group.add(coolingPipe);
+
+  // Algenflecken auf See und Fluss bei hoher Verschmutzung
+  const algaeMat = lambert('algae');
+  const algaeSpots = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.55, 0), algaeMat, 16);
+  algaeSpots.count = 0;
+  group.add(algaeSpots);
+
+  for (let i = 0; i < 16; i += 1) {
+    const a = (i / 16) * Math.PI * 2;
+    const isLake = i < 8;
+    const ax = isLake ? LAKE_CENTER.x + Math.cos(a) * (LAKE_RADIUS * 0.5) : RIVER_POINTS[i - 8].x;
+    const az = isLake ? LAKE_CENTER.z + Math.sin(a) * (LAKE_RADIUS * 0.5) : RIVER_POINTS[i - 8].z;
+    dummy.position.set(ax, 0.13, az);
+    dummy.rotation.set(0, i, 0);
+    dummy.scale.set(0.7, 0.2, 0.7);
+    dummy.updateMatrix();
+    algaeSpots.setMatrixAt(i, dummy.matrix);
+  }
+  algaeSpots.instanceMatrix.needsUpdate = true;
+
+  // --- 10. GEOMETRIE-LAYOUT DER HAUSPLÄTZE ---------------------------------------
+  function layoutHouseSlot(slot, i, winOffset) {
+    dummy.position.set(slot.x, 0.75, slot.z);
+    dummy.rotation.set(0, slot.rot, 0);
     dummy.scale.setScalar(1);
     dummy.updateMatrix();
-    mesh.setMatrixAt(i, dummy.matrix);
+
+    if (slot.wall === 'townWallAlt') houseWallsAlt.setMatrixAt(i, dummy.matrix);
+    else if (slot.wall === 'townWallC') houseWallsC.setMatrixAt(i, dummy.matrix);
+    else houseWalls.setMatrixAt(i, dummy.matrix);
+
+    // Dach
+    dummy.position.set(slot.x, 1.5 + 0.55, slot.z);
+    dummy.rotation.set(0, slot.rot + Math.PI / 4, 0);
+    dummy.scale.set(1.15, 1.0, 0.95);
+    dummy.updateMatrix();
+
+    if (slot.roof === 'townRoofAlt') houseRoofsAlt.setMatrixAt(i, dummy.matrix);
+    else if (slot.roof === 'townRoofSlate') houseRoofsSlate.setMatrixAt(i, dummy.matrix);
+    else houseRoofs.setMatrixAt(i, dummy.matrix);
+
+    // Kamin
+    const chimneyCos = Math.cos(slot.rot);
+    const chimneySin = Math.sin(slot.rot);
+    dummy.position.set(slot.x + chimneyCos * 0.5 - chimneySin * 0.3, 2.2, slot.z + chimneySin * 0.5 + chimneyCos * 0.3);
+    dummy.rotation.set(0, slot.rot, 0);
+    dummy.scale.setScalar(1);
+    dummy.updateMatrix();
+    chimneys.setMatrixAt(i, dummy.matrix);
+
+    // Schornstein-Rauchpuff
+    dummy.position.set(dummy.position.x, 2.7, dummy.position.z);
+    dummy.scale.setScalar(0.7 + (i % 3) * 0.15);
+    dummy.updateMatrix();
+    chimneySmokes.setMatrixAt(i, dummy.matrix);
+
+    // Haustür
+    dummy.position.set(slot.x + chimneySin * 0.96, 0.4, slot.z + chimneyCos * 0.96);
+    dummy.rotation.set(0, slot.rot, 0);
+    dummy.scale.setScalar(1);
+    dummy.updateMatrix();
+    doors.setMatrixAt(i, dummy.matrix);
+
+    // Fenster auf der Fassade
+    [-0.55, 0.55].forEach((wx, wi) => {
+      dummy.position.set(
+        slot.x + chimneyCos * wx + chimneySin * 0.96,
+        0.9,
+        slot.z + chimneySin * wx + chimneyCos * 0.96
+      );
+      dummy.rotation.set(0, slot.rot, 0);
+      dummy.scale.setScalar(1);
+      dummy.updateMatrix();
+      windows.setMatrixAt(winOffset + wi, dummy.matrix);
+    });
+
+    // Vorgartenzaun
+    dummy.position.set(slot.x + chimneySin * 1.5, 0.18, slot.z + chimneyCos * 1.5);
+    dummy.rotation.set(0, slot.rot, 0);
+    dummy.scale.setScalar(1);
+    dummy.updateMatrix();
+    fences.setMatrixAt(i, dummy.matrix);
+
+    // Typ B: Garage & Auto
+    if (slot.type === 'B') {
+      dummy.position.set(slot.x + chimneyCos * 1.6, 0.5, slot.z + chimneySin * 1.6);
+      dummy.rotation.set(0, slot.rot, 0);
+      dummy.scale.setScalar(1);
+      dummy.updateMatrix();
+      garageWalls.setMatrixAt(i, dummy.matrix);
+
+      dummy.position.set(slot.x + chimneyCos * 1.6 + chimneySin * 0.86, 0.45, slot.z + chimneySin * 1.6 + chimneyCos * 0.86);
+      dummy.updateMatrix();
+      garageDoors.setMatrixAt(i, dummy.matrix);
+    } else {
+      dummy.position.set(0, -999, 0);
+      dummy.updateMatrix();
+      garageWalls.setMatrixAt(i, dummy.matrix);
+      garageDoors.setMatrixAt(i, dummy.matrix);
+    }
+
+    // Parkendes Auto
+    if (slot.hasCar) {
+      dummy.position.set(slot.x + chimneyCos * 2.1 - chimneySin * 0.4, 0.25, slot.z + chimneySin * 2.1 + chimneyCos * 0.4);
+      dummy.rotation.set(0, slot.rot + 0.1, 0);
+      dummy.scale.setScalar(1);
+      dummy.updateMatrix();
+      if (slot.carCol === 'carPaintB') carsB.setMatrixAt(i, dummy.matrix);
+      else carsA.setMatrixAt(i, dummy.matrix);
+    } else {
+      dummy.position.set(0, -999, 0);
+      dummy.updateMatrix();
+      carsA.setMatrixAt(i, dummy.matrix);
+      carsB.setMatrixAt(i, dummy.matrix);
+    }
+
+    // Baum im Garten
+    if (slot.hasTree) {
+      dummy.position.set(slot.x - chimneyCos * 1.6, 0.3, slot.z - chimneySin * 1.6);
+      dummy.rotation.set(0, 0, 0);
+      dummy.scale.setScalar(1);
+      dummy.updateMatrix();
+      gardenTrunks.setMatrixAt(i, dummy.matrix);
+
+      dummy.position.set(slot.x - chimneyCos * 1.6, 0.95, slot.z - chimneySin * 1.6);
+      dummy.scale.setScalar(1);
+      dummy.updateMatrix();
+      gardenCrowns.setMatrixAt(i, dummy.matrix);
+    } else {
+      dummy.position.set(0, -999, 0);
+      dummy.updateMatrix();
+      gardenTrunks.setMatrixAt(i, dummy.matrix);
+      gardenCrowns.setMatrixAt(i, dummy.matrix);
+    }
   }
 
   function layoutCorpSlot(slot, i) {
-    dummy.rotation.set(0, slot.rot * 0.4, 0);
+    dummy.position.set(slot.x, 0.03, slot.z);
+    dummy.rotation.set(0, 0, 0);
     dummy.scale.setScalar(1);
-    dummy.position.set(slot.x, 1.3, slot.z);
+    dummy.updateMatrix();
+    mudPits.setMatrixAt(i, dummy.matrix);
+
+    dummy.position.set(slot.x + 0.8, 0.25, slot.z - 0.6);
+    dummy.rotation.set(0.2, slot.rot, 0);
+    dummy.scale.setScalar(1);
+    dummy.updateMatrix();
+    rubblePiles.setMatrixAt(i, dummy.matrix);
+
+    dummy.position.set(slot.x - 0.7, 0.45, slot.z + 0.6);
+    dummy.rotation.set(0, slot.rot + 0.5, 0);
+    dummy.scale.setScalar(1);
+    dummy.updateMatrix();
+    excavators.setMatrixAt(i, dummy.matrix);
+
+    dummy.position.set(slot.x, 1.6, slot.z);
+    dummy.rotation.set(0, slot.rot * 0.3, 0);
+    dummy.scale.setScalar(1);
     dummy.updateMatrix();
     corpBody.setMatrixAt(i, dummy.matrix);
-    dummy.position.set(slot.x, 2.67, slot.z);
+
+    dummy.position.set(slot.x, 3.25, slot.z);
     dummy.updateMatrix();
     corpFrame.setMatrixAt(i, dummy.matrix);
-    dummy.position.set(slot.x, 3.02, slot.z);
+
+    dummy.position.set(slot.x, 3.75, slot.z);
     dummy.updateMatrix();
     corpSign.setMatrixAt(i, dummy.matrix);
-    dummy.rotation.set(0, 0, 0);
-    dummy.position.set(slot.x, 0.025, slot.z);
-    dummy.updateMatrix();
-    mudPatches.setMatrixAt(i, dummy.matrix);
   }
 
-  // Reine Geometrie einmal aufgebaut - welcher Platz Haus oder Kubus ist, entscheidet
-  // nur noch die COUNT-Grenze in update().
-  HOUSE_SLOTS.forEach((slot, i) => {
-    layoutHouseSlot(slot.alt ? houseWallsAlt : houseWalls, i, slot, false);
-    layoutHouseSlot(slot.alt ? houseRoofsAlt : houseRoofs, i, slot, true);
+  LOTS.forEach((slot, i) => {
+    layoutHouseSlot(slot, i, i * 2);
     layoutCorpSlot(slot, i);
   });
-  [houseWalls, houseWallsAlt, houseRoofs, houseRoofsAlt, corpBody, corpFrame, corpSign, mudPatches].forEach((m) => {
+
+  [...villageMeshes, mudPits, rubblePiles, excavators, corpBody, corpFrame, corpSign].forEach((m) => {
     m.instanceMatrix.needsUpdate = true;
   });
 
-  let convertedCount = -1;
-  function applyConversion(converted) {
-    if (converted === convertedCount) return;
-    convertedCount = converted;
-    const remain = HOUSE_COUNT - converted;
-    // Die HINTEREN (weiter vom Ofen entfernten) `remain` Plätze bleiben Haus, die
-    // NÄHEREN `converted` Plätze werden zu Kubus plus Schlammfleck. Da alle
-    // Instanz-Gruppen dieselbe Reihenfolge benutzen, reicht ein Offset in
-    // setMatrixAt statt neu zu bauen.
-    let hi = 0;
-    let hai = 0;
-    HOUSE_SLOTS.forEach((slot, i) => {
-      if (i < converted) return;
-      if (slot.alt) {
-        layoutHouseSlot(houseWallsAlt, hai, slot, false);
-        layoutHouseSlot(houseRoofsAlt, hai, slot, true);
-        hai += 1;
-      } else {
-        layoutHouseSlot(houseWalls, hi, slot, false);
-        layoutHouseSlot(houseRoofs, hi, slot, true);
-        hi += 1;
+  // --- 11. 360°-VERDRÄNGUNGS-AKTUALISIERUNG ---------------------------------------
+  let currentProgress = -1;
+
+  function applyDisplacement(progress) {
+    if (Math.abs(progress - currentProgress) < 0.005) return;
+    currentProgress = progress;
+
+    const convertedCount = Math.round(progress * LOT_COUNT);
+    const remainCount = LOT_COUNT - convertedCount;
+
+    let vi = 0;
+    LOTS.forEach((slot, i) => {
+      if (i >= convertedCount) {
+        layoutHouseSlot(slot, vi, vi * 2);
+        vi += 1;
       }
     });
-    HOUSE_SLOTS.forEach((slot, i) => {
-      if (i >= converted) return;
-      layoutCorpSlot(slot, i);
-    });
-    // Zählt getrennt nach den zwei Wandfarben, damit keine Instanz doppelt auftaucht.
-    const altRemain = HOUSE_SLOTS.filter((s, i) => i >= converted && s.alt).length;
-    const plainRemain = remain - altRemain;
+
+    for (let i = 0; i < convertedCount; i += 1) {
+      layoutCorpSlot(LOTS[i], i);
+    }
+
+    const plainRemain = LOTS.filter((s, i) => i >= convertedCount && s.wall === 'townWall').length;
+    const altRemain = LOTS.filter((s, i) => i >= convertedCount && s.wall === 'townWallAlt').length;
+    const cRemain = LOTS.filter((s, i) => i >= convertedCount && s.wall === 'townWallC').length;
+
     houseWalls.count = plainRemain;
-    houseRoofs.count = plainRemain;
     houseWallsAlt.count = altRemain;
-    houseRoofsAlt.count = altRemain;
-    corpBody.count = converted;
-    corpFrame.count = converted;
-    corpSign.count = converted;
-    mudPatches.count = converted;
-    [houseWalls, houseWallsAlt, houseRoofs, houseRoofsAlt, corpBody, corpFrame, corpSign, mudPatches].forEach((m) => {
+    houseWallsC.count = cRemain;
+
+    houseRoofs.count = LOTS.filter((s, i) => i >= convertedCount && s.roof === 'townRoof').length;
+    houseRoofsAlt.count = LOTS.filter((s, i) => i >= convertedCount && s.roof === 'townRoofAlt').length;
+    houseRoofsSlate.count = LOTS.filter((s, i) => i >= convertedCount && s.roof === 'townRoofSlate').length;
+
+    chimneys.count = remainCount;
+    chimneySmokes.count = remainCount;
+    doors.count = remainCount;
+    windows.count = remainCount * 2;
+    fences.count = remainCount;
+    garageWalls.count = remainCount;
+    garageDoors.count = remainCount;
+    carsA.count = remainCount;
+    carsB.count = remainCount;
+    gardenTrunks.count = remainCount;
+    gardenCrowns.count = remainCount;
+
+    // Baustellen & Tech-Kuben
+    mudPits.count = convertedCount;
+    const activeConstructions = Math.min(convertedCount, 5);
+    rubblePiles.count = activeConstructions;
+    excavators.count = activeConstructions;
+
+    corpBody.count = Math.max(0, convertedCount - activeConstructions);
+    corpFrame.count = corpBody.count;
+    corpSign.count = corpBody.count;
+
+    [...villageMeshes, mudPits, rubblePiles, excavators, corpBody, corpFrame, corpSign].forEach((m) => {
       m.instanceMatrix.needsUpdate = true;
     });
+
+    coolingPipe.visible = progress > 0.15;
+    algaeSpots.count = Math.round(progress * 16);
+
+    const targetWaterCol = new THREE.Color(palette.water).lerp(new THREE.Color(palette.waterDirty), progress);
+    waterMat.color.copy(targetWaterCol);
+    const lakeShrink = 1 - progress * 0.25;
+    lakeWater.scale.set(lakeShrink, 1, lakeShrink);
   }
 
-  // --- Straßennetz: Ortsraster je Cluster, Landstraße, zwei Stichstraßen zum Ofenhof
-  const roadMat = lambert('path');
-  function addRoad(a, b, width) {
-    const dx = b.x - a.x;
-    const dz = b.z - a.z;
-    const len = Math.hypot(dx, dz);
-    const road = new THREE.Mesh(new THREE.BoxGeometry(width, 0.07, len), roadMat);
-    road.position.set((a.x + b.x) / 2, 0.045, (a.z + b.z) / 2);
-    road.rotation.y = Math.atan2(dx, dz);
-    road.receiveShadow = true;
-    group.add(road);
-    return road;
-  }
-  CLUSTERS.forEach((cluster) => {
-    clusterStreetSegments(cluster).forEach(({ a, b }) => addRoad(a, b, STREET_W));
-  });
-  for (let i = 0; i < HIGHWAY_POINTS.length - 1; i += 1) {
-    addRoad(HIGHWAY_POINTS[i], HIGHWAY_POINTS[i + 1], HIGHWAY_W);
-  }
-  SPURS.forEach((points) => {
-    for (let i = 0; i < points.length - 1; i += 1) addRoad(points[i], points[i + 1], SPUR_W);
-  });
+  applyDisplacement(0);
 
-  // --- See und Fluss: EIN durchgehender Lauf, Wasser schrumpft und trübt sich -----
-  const waterMat = lambert('water', { transparent: true, opacity: 0.92 });
-
-  const lakeBed = new THREE.Mesh(new THREE.CylinderGeometry(LAKE_R + 0.6, LAKE_R + 0.6, 0.12, 10), bedMat);
-  lakeBed.position.set(LAKE_WORLD.x, 0.03, LAKE_WORLD.z);
-  lakeBed.receiveShadow = true;
-  group.add(lakeBed);
-  const lakeWater = new THREE.Mesh(new THREE.CylinderGeometry(LAKE_R, LAKE_R, 0.16, 10), waterMat);
-  lakeWater.position.set(LAKE_WORLD.x, 0.09, LAKE_WORLD.z);
-  group.add(lakeWater);
-
-  // Flussbett und Wasser als Kette von Kästen entlang der Polylinie, dasselbe Prinzip
-  // wie die Wege in buildCampus.js - nur mit deutlich mehr Abschnitten, weil der Lauf
-  // jetzt über das ganze Feld zieht statt nur ein kurzes Stück abzufließen.
-  const riverWater = new THREE.Group();
-  group.add(riverWater);
-  for (let i = 0; i < RIVER_POINTS.length - 1; i += 1) {
-    const a = RIVER_POINTS[i];
-    const b = RIVER_POINTS[i + 1];
-    const dx = b.x - a.x;
-    const dz = b.z - a.z;
-    const len = Math.hypot(dx, dz);
-    const rot = Math.atan2(dx, dz);
-    const midX = (a.x + b.x) / 2;
-    const midZ = (a.z + b.z) / 2;
-
-    const bed = new THREE.Mesh(new THREE.BoxGeometry(RIVER_WIDTH + 0.7, 0.1, len + 0.7), bedMat);
-    bed.position.set(midX, 0.03, midZ);
-    bed.rotation.y = rot;
-    bed.receiveShadow = true;
-    group.add(bed);
-
-    const water = new THREE.Mesh(new THREE.BoxGeometry(RIVER_WIDTH, 0.14, len), waterMat);
-    water.position.set(midX, 0.08, midZ);
-    water.rotation.y = rot;
-    riverWater.add(water);
-  }
-
-  // Algenflecken: dunkle, flachgedrückte Ikosaeder, die erst mit steigender
-  // Verschmutzung auftauchen (COUNT-Trick wie bei den Häusern).
-  const algaeMat = lambert('algae');
-  const algae = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.5, 0), algaeMat, ALGAE_MAX);
-  algae.frustumCulled = false;
-  algae.count = 0;
-  group.add(algae);
-  ALGAE_SPOTS.forEach((spot, i) => {
-    dummy.position.set(spot.x, 0.15, spot.z);
-    dummy.rotation.set(0, i, 0);
-    dummy.scale.set(spot.s, spot.s * 0.35, spot.s);
-    dummy.updateMatrix();
-    algae.setMatrixAt(i, dummy.matrix);
-  });
-  algae.instanceMatrix.needsUpdate = true;
-
-  let appliedProgress = -1;
-
+  // --- 12. UPDATE & ANIMATION ---------------------------------------------------
   return {
     group,
-    // progress: 0 (unberührte Dörfer, klarer Fluss) bis 1 (fast alles abgerissen und
-    // vermatscht, Fluss halb ausgetrocknet und trüb). Kommt aus der Hype-Stufe, siehe
-    // CampusScene.jsx.
-    update(progress) {
-      const p = Math.min(1, Math.max(0, progress));
-      if (Math.abs(p - appliedProgress) < 0.004) return;
-      appliedProgress = p;
+    update(progress, t = 0, dt = 0.016, reduced = false) {
+      applyDisplacement(Math.min(1, Math.max(0, progress)));
 
-      applyConversion(Math.round(p * HOUSE_COUNT));
+      if (reduced) return;
 
-      // Wasser schrumpft um bis zu 45% und trübt sich Richtung Moosgrün.
-      const shrink = 1 - p * 0.45;
-      lakeWater.scale.set(shrink, 1, shrink);
-      const waterColor = new THREE.Color(palette.water).lerp(new THREE.Color(palette.waterDirty), p);
-      waterMat.color.copy(waterColor);
-      riverWater.children.forEach((w) => {
-        w.scale.x = shrink;
-      });
+      // Sanftes Wippen des Ruderboots am See
+      boatGroup.rotation.z = Math.sin(t * 1.7) * 0.05;
+      boatGroup.position.y = 0.12 + Math.sin(t * 2.3) * 0.02;
 
-      algae.count = Math.round(p * ALGAE_MAX);
+      // Sanft pulsierender Kühlrohr-Dampf
+      if (coolingPipe.visible) {
+        const steamScale = 0.8 + Math.sin(t * 3.2) * 0.2;
+        steamMesh.scale.set(steamScale, steamScale * 1.3, steamScale);
+        steamMesh.position.y = 0.9 + (Math.sin(t * 2.5) + 1) * 0.15;
+      }
     },
-    applyPalette(pal) {
+
+    applyPalette(newPal) {
       Object.entries(mats).forEach(([key, list]) => {
-        if (key === 'water') return; // folgt dem Verschmutzungsgrad, nicht direkt der Palette
-        list.forEach((m) => m.color.setHex(pal[key]));
+        if (key === 'water') return;
+        list.forEach((m) => {
+          if (newPal[key] !== undefined) m.color.setHex(newPal[key]);
+        });
       });
-      // Beim Themenwechsel den Wasserton neu aus der aktuellen Verschmutzung mischen,
-      // sonst bliebe er auf der Farbe des vorigen Themes stehen.
-      const p = Math.max(0, appliedProgress);
-      waterMat.color.copy(new THREE.Color(pal.water).lerp(new THREE.Color(pal.waterDirty), p));
+      const p = Math.max(0, currentProgress);
+      waterMat.color.copy(new THREE.Color(newPal.water).lerp(new THREE.Color(newPal.waterDirty), p));
     },
   };
 }

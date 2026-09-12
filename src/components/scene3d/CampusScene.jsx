@@ -26,6 +26,7 @@ import { buildServerRack } from './buildServerRack';
 import { buildZones } from './buildZones';
 import { buildCampus } from './buildCampus';
 import { buildEnvironment } from './buildEnvironment';
+import { buildDeliveryTruck } from './buildDeliveryTruck';
 import { FURNACE_ANCHOR } from '../../data/zonesData';
 
 // Ränder, in denen der Ankerpunkt einer Zonen-Stecknadel noch liegen darf (Clientpixel).
@@ -64,6 +65,7 @@ export const CampusScene = forwardRef(function CampusScene(
     vps,
     gpuTemp,
     isOverheated,
+    overheatedAt = 0,
     activeEvent,
     powerClickActive,
     bubbleGlitchUntil,
@@ -130,7 +132,7 @@ export const CampusScene = forwardRef(function CampusScene(
     window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  stateRef.current = { zones, furnace, island: islandState, mood, theme, selectedZone, isOverheated, reduced, handleTapAGI, tickerText, hypeTier };
+  stateRef.current = { zones, furnace, island: islandState, mood, theme, selectedZone, isOverheated, overheatedAt, reduced, handleTapAGI, tickerText, hypeTier };
 
   // Ref-Setter je Zone, stabil über Renders hinweg - ein neuer Callback pro Render
   // würde React jedes Mal ab- und wieder anmelden lassen.
@@ -254,6 +256,8 @@ export const CampusScene = forwardRef(function CampusScene(
     scene.add(campus.group);
     const environment = buildEnvironment(palette);
     scene.add(environment.group);
+    const deliveryTruck = buildDeliveryTruck(palette, FURNACE_ANCHOR);
+    scene.add(deliveryTruck.group);
 
     // resetView() wird weiter unten definiert, deshalb der Umweg über den Aufruf -
     // der Knopf drückt erst, wenn längst alles steht.
@@ -613,6 +617,7 @@ export const CampusScene = forwardRef(function CampusScene(
         zonesObj.applyPalette(palette);
         campus.applyPalette(palette);
         environment.applyPalette(palette);
+        deliveryTruck.applyPalette(palette);
         hemi.color.setHex(palette.hemiSky);
         hemi.groundColor.setHex(palette.hemiGround);
         sun.color.setHex(palette.sun);
@@ -626,11 +631,19 @@ export const CampusScene = forwardRef(function CampusScene(
       furnaceObj.update(s, dt, now / 1000, palette);
       zonesObj.update(s.zones, s.selectedZone, palette, { dt, t: now / 1000, reduced: s.reduced, tickerText: s.tickerText });
       campus.update(s.hypeTier, now / 1000, s.reduced, s.zones, grown);
+      deliveryTruck.update({
+        isOverheated: s.isOverheated,
+        overheatedAt: s.overheatedAt,
+        now,
+        dt,
+        reduced: s.reduced,
+        palette,
+      });
       // Wie weit hat der Campus die Kulisse am Feldrand schon verdrängt: an dieselbe
       // Hype-Stufe (1 bis 10) gekoppelt wie die Campus-Ausbaustufen oben - keine eigene
       // Spielzahl nötig, und anders als die Inselgröße (campusLayout.js) tatsächlich bei
       // 1 erreichbar, statt an den Grundstücks-Obergrenzen der Zonen hängenzubleiben.
-      environment.update((s.hypeTier - 1) / 9);
+      environment.update((s.hypeTier - 1) / 9, now / 1000, dt, s.reduced);
       // Wächst die Insel, wird der eingepasste Ausschnitt neu gerechnet - bis zur
       // Obergrenze VIEW_FIT_MAX. Danach bleibt der Maßstab stehen und die Insel ragt
       // über den Bildrand hinaus; ab da ist Schieben und Zoomen dran.

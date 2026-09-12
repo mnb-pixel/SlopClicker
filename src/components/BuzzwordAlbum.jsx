@@ -5,6 +5,7 @@ import { getIcon } from '../utils/iconMap';
 import { BUZZWORDS_DATA, getBoosterPackCost } from '../data/buzzwordsData';
 import { formatCurrency } from '../utils/formatters';
 import { useSkin } from './skin';
+import { VoxelBuzzwordIcon } from './scene3d/voxelIcons';
 
 export function BuzzwordAlbum({
   valuation,
@@ -28,8 +29,12 @@ export function BuzzwordAlbum({
   const [openingState, setOpeningState] = useState('CLOSED'); // 'CLOSED' | 'SHAKING' | 'REVEALED'
   const [pulledCard, setPulledCard] = useState(null);
 
-  // Dynamic Lucide Icon Renderer
-  const renderCardIcon = (iconName, className = 'w-5 h-5') => {
+  // Dynamic Voxel & Lucide Icon Renderer
+  const renderCardIcon = (card, className = 'w-5 h-5') => {
+    if (card && card.noun) {
+      return <VoxelBuzzwordIcon noun={card.noun} rarity={card.rarity} className={className} />;
+    }
+    const iconName = typeof card === 'string' ? card : card?.icon;
     const IconComp = getIcon(iconName, 'Sparkles');
     return <IconComp className={className} />;
   };
@@ -414,7 +419,7 @@ export function BuzzwordAlbum({
                 'gs-card__art my-1'
               )}>
                 <div className={cx(`p-1.5 rounded-xl border ${iconBoxStyle} mb-1 shadow-inner`, `gs-medal ${rarityAcc(bw.rarity)} mb-1`)}>
-                  {renderCardIcon(bw.icon, cx('w-5 h-5', 'w-4 h-4'))}
+                  {renderCardIcon(bw, cx('w-6 h-6', 'w-5 h-5'))}
                 </div>
                 <div className={cx(
                   'text-xs font-extrabold text-center px-1 truncate w-full text-slate-100',
@@ -519,7 +524,7 @@ export function BuzzwordAlbum({
                     'p-3 rounded-2xl bg-slate-950/80 border border-current/50 my-1 text-amber-300',
                     `gs-medal gs-medal--lg ${rarityAcc(pulledCard.rarity)} my-1`
                   )}>
-                    {renderCardIcon(pulledCard.icon, cx('w-10 h-10', 'w-7 h-7'))}
+                    {renderCardIcon(pulledCard, cx('w-12 h-12', 'w-9 h-9'))}
                   </div>
 
                   <div className={cx('text-base font-black text-slate-100', 'gs-card__name text-base')}>{pulledCard.name}</div>
@@ -605,7 +610,7 @@ export function BuzzwordAlbum({
                     'p-3 rounded-2xl bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-400/50 shadow-xl',
                     'gs-medal gs-medal--lg'
                   )}>
-                    {renderCardIcon(bw.icon, cx('w-10 h-10', 'w-7 h-7'))}
+                    {renderCardIcon(bw, cx('w-12 h-12', 'w-9 h-9'))}
                   </div>
                   <div className={cx('text-base font-black text-center text-slate-100 mt-1', 'gs-card__name text-base text-center mt-1')}>
                     {bw.name}

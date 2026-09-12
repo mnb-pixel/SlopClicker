@@ -9,6 +9,7 @@ import { formatCurrency, formatNumber, getBuildingCost, getBuildingBulkCost, get
 import { buildingName, upgradeName, upgradeQuote, upgradeDescription, upgradeTargetBadge, gwName, gwQuote, gwEffectDesc } from '../../utils/storeCopy';
 import { BuzzwordAlbum } from '../BuzzwordAlbum';
 import { useSkin } from '../skin';
+import { VoxelIcon, VoxelUpgradeIcon, boughtUpgradeCount, tierAfterUpgrade } from '../scene3d/voxelIcons';
 
 export function StoreTab({
   valuation,
@@ -56,7 +57,7 @@ export function StoreTab({
     return <IconComp className={className} />;
   };
 
-  // Dynamic Meme Artwork Thumbnail Resolver helper
+  // Dynamic Voxel / Meme Artwork Thumbnail Resolver helper
   const renderItemArtwork = (item, defaultIcon = 'Zap') => {
     if (item && item.image) {
       return (
@@ -69,6 +70,31 @@ export function StoreTab({
           )}
         />
       );
+    }
+    // Wenn es ein Gebäude aus BUILDINGS_DATA ist:
+    if (item && item.baseCost !== undefined && item.baseCps !== undefined) {
+      const tier = Math.min(3, Math.floor(boughtUpgradeCount(boughtUpgrades, item.id) / 3));
+      return <VoxelIcon buildingId={item.id} tier={tier} className="w-7 h-7" />;
+    }
+    // Wenn es ein Gebäude-Upgrade ist:
+    if (item && item.type === 'building' && item.buildingId) {
+      const tier = tierAfterUpgrade(boughtUpgrades, item.buildingId);
+      return <VoxelIcon buildingId={item.buildingId} tier={tier} className="w-7 h-7" />;
+    }
+    // Wenn es Greenwashing oder Layoff mit Gebäude-Ziel ist:
+    if (item && (item.type === 'greenwashing' || item.type === 'layoff') && item.buildingId) {
+      return (
+        <div className="relative w-7 h-7">
+          <VoxelIcon buildingId={item.buildingId} tier={0} className="w-7 h-7 opacity-85" />
+          <div className="absolute -bottom-1 -right-1 w-4 h-4">
+            <VoxelUpgradeIcon type={item.type} className="w-4 h-4" />
+          </div>
+        </div>
+      );
+    }
+    // Sonstige Upgrades (Click, Global, Syndicate, Greenwashing/Layoffs allgemein):
+    if (item && item.type) {
+      return <VoxelUpgradeIcon type={item.type} subType={item.subType} className="w-7 h-7" />;
     }
     const iconColor = item?.type === 'building' ? 'text-cyan-400' : item?.type === 'click' ? 'text-amber-400' : item?.type === 'syndicate' ? 'text-fuchsia-400' : item?.type === 'global' ? 'text-emerald-400' : 'text-cyan-400';
     return renderIcon(item?.icon || defaultIcon, `w-4 h-4 ${iconColor}`);

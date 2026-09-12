@@ -5,6 +5,7 @@ import { BUILDINGS_DATA } from '../data/buildingsData';
 import { UPGRADES_DATA } from '../data/upgradesData';
 import { GREENWASHING_LAYOFFS_DATA } from '../data/greenwashingLayoffsData';
 import { formatCurrency, formatNumber } from '../utils/formatters';
+import { VoxelIcon, boughtUpgradeCount } from './scene3d/voxelIcons';
 
 export function BuildingVisualGrid({ buildings, boughtUpgrades = [], boughtGreenwashingLayoffs = [], t }) {
   const tr = t || ((k) => k);
@@ -18,6 +19,10 @@ export function BuildingVisualGrid({ buildings, boughtUpgrades = [], boughtGreen
           className={`${sizeClass} rounded-md object-cover border border-cyan-400/60 shadow-md`}
         />
       );
+    }
+    if (b && b.id) {
+      const tier = Math.min(3, Math.floor(boughtUpgradeCount(boughtUpgrades, b.id) / 3));
+      return <VoxelIcon buildingId={b.id} tier={tier} className={sizeClass} />;
     }
     const IconComp = getIcon(b?.icon, 'Server');
     return <IconComp className="w-3.5 h-3.5 text-cyan-400" />;

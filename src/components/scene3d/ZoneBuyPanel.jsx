@@ -71,22 +71,39 @@ export function ZoneBuyPanel({
     </span>
   );
 
+  // Map der Gebäude-Reihenfolge nach Output-Wertigkeit (Tier / baseCps in BUILDINGS_DATA)
+  const BUILDING_ORDER_MAP = new Map(BUILDINGS_DATA.map((b, idx) => [b.id, idx]));
+
   // zoneState.buildings trägt die Sichtbarkeits-Flags aus deriveZones. Fehlt es (die
   // Zone wurde noch nie abgeleitet), bleibt die Liste leer statt versehentlich alles zu
-  // zeigen.
-  const zoneEntries = (zoneState ? zoneState.buildings : []).filter(
-    (b) => b.unlocked || b.isTeaser
-  );
+  // zeigen. Sortiert nach Output-Wertigkeit, identisch zum Store:
+  const zoneEntries = (zoneState ? [...zoneState.buildings] : [])
+    .filter((b) => b.unlocked || b.isTeaser)
+    .sort((a, b) => {
+      const orderA = BUILDING_ORDER_MAP.has(a.id) ? BUILDING_ORDER_MAP.get(a.id) : 999;
+      const orderB = BUILDING_ORDER_MAP.has(b.id) ? BUILDING_ORDER_MAP.get(b.id) : 999;
+      return orderA - orderB;
+    });
 
   // Upgrades und Corporate Actions auf die Engines DIESER Zone eingegrenzt: beide
   // Helfer geben schon "nächste unbezahlte Stufe pro Gebäude" zurück (dieselbe Regel wie
   // im Shop), hier bleibt nur noch der Zonenfilter über ZONE_BY_BUILDING übrig.
-  const zoneUpgrades = getAvailableUpgrades(buildings, boughtUpgrades, valuation, totalValuation).filter(
-    (up) => up.type === 'building' && ZONE_BY_BUILDING[up.buildingId] === zoneDef.id
-  );
-  const zoneCorporate = getAvailableCorporateActions(buildings, boughtGreenwashingLayoffs).filter(
-    (item) => ZONE_BY_BUILDING[item.buildingId] === zoneDef.id
-  );
+  // Ebenfalls nach Output-Wertigkeit der Engines sortiert:
+  const zoneUpgrades = getAvailableUpgrades(buildings, boughtUpgrades, valuation, totalValuation)
+    .filter((up) => up.type === 'building' && ZONE_BY_BUILDING[up.buildingId] === zoneDef.id)
+    .sort((a, b) => {
+      const orderA = BUILDING_ORDER_MAP.has(a.buildingId) ? BUILDING_ORDER_MAP.get(a.buildingId) : 999;
+      const orderB = BUILDING_ORDER_MAP.has(b.buildingId) ? BUILDING_ORDER_MAP.get(b.buildingId) : 999;
+      return orderA - orderB;
+    });
+
+  const zoneCorporate = getAvailableCorporateActions(buildings, boughtGreenwashingLayoffs)
+    .filter((item) => ZONE_BY_BUILDING[item.buildingId] === zoneDef.id)
+    .sort((a, b) => {
+      const orderA = BUILDING_ORDER_MAP.has(a.buildingId) ? BUILDING_ORDER_MAP.get(a.buildingId) : 999;
+      const orderB = BUILDING_ORDER_MAP.has(b.buildingId) ? BUILDING_ORDER_MAP.get(b.buildingId) : 999;
+      return orderA - orderB;
+    });
 
   const costFor = (baseCost, count) => {
     if (buyMode === '1') return getBuildingCost(baseCost, count);
@@ -171,6 +188,7 @@ export function ZoneBuyPanel({
               const count = buildings[entry.id] || 0;
               const cost = costFor(meta.baseCost, count);
               const canAfford = cost > 0 && valuation >= cost;
+              const unitVps = meta.baseCps * (entry.mult || 1);
 
               return (
                 <button
@@ -187,7 +205,7 @@ export function ZoneBuyPanel({
                         <span className="campus-panel__new">{tr('sceneNewBadge')}</span>
                       )}
                     </span>
-                    <span className="campus-row__count">x{count}</span>
+                    <span className="campus-row__count">x{count} · +{formatCurrency(unitVps)}/s</span>
                   </span>
                   <span className="campus-row__price">{formatCurrency(cost)}</span>
                 </button>

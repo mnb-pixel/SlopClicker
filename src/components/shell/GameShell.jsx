@@ -89,6 +89,7 @@ export function GameShell({
             vps: store.vps,
             gpuTemp: store.gpuTemp,
             isOverheated: store.isOverheated,
+            overheatedAt: store.overheatedAt,
             activeEvent: store.activeEvent,
             powerClickActive: store.powerClickActive,
             bubbleGlitchUntil: store.bubbleGlitchUntil,

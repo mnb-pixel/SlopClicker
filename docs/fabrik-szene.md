@@ -317,50 +317,50 @@ den Bauern, müsste die Insel raten, wie weit die Zonen inzwischen gewachsen sin
   einen Skalierungsfaktor auf Bäumen und Lichtdrohnen (`layoutTrees()` in
   `buildCampus.js`) sowie über die Kamera-Einpassung, nicht über neue Bodengeometrie.
 
-## Kulisse am Feldrand: Dörfer, Straßennetz und ein Fluss übers ganze Feld
+### Kulisse am Feldrand: Lebendiges Dorf, Fluss quer übers Feld, See & Verdrängung
 
-Vier Dorf-Cluster verstreut über das ganze Spielfeld (`buildEnvironment.js`, alle auf
-z = 32, in Weltkoordinaten statt hinter einem einzelnen Anker): ein Hauptdorf (zwölf
-Hausplätze mit vollem Straßenring) bei x = -15, dazu drei kleinere Weiler bei
-x = -50, +20 und +52. Verbunden über ein durchgehendes Straßennetz, dazu EIN Fluss,
-der quer über das ganze Feld zieht und beim Hauptdorf eine Seeausbuchtung bildet. Rein
-satirische Kulisse ohne eigene Spielzahl.
+Ein vollständiges, lebendiges Miniaturdorf am Rand des Spielfelds (`buildEnvironment.js`,
+im Bereich z = 27 bis z = 54, x = -60 bis +60 in Weltkoordinaten). Verbunden über ein
+organisches Straßennetz, eine solide Stein- und Holzbogenbrücke, dazu EIN durchgehender
+geschwungener Fluss quer über die gesamte Spielfeldbreite sowie ein malerischer See mit
+Sandstrand, Holzsteg, schaukelndem Ruderboot und Seerosen.
 
-**Warum z = 32, nicht näher dran:** nachgerechnet statt geschätzt - mit jeder Engine
-aller 20 Gebäude auf ihrem harten `maxProps`-Deckel (zonesData.js, dem tatsächlich
-größtmöglichen Campus) kommt `campusRect()` aus buildCampus.js auf
-`{ minX: -37.5, maxX: 30.3, minZ: -29.4, maxZ: 23.1 }`. Die Grenze wächst in x sehr
-viel weiter als in z (die vier Zonen wachsen fast nur dort), deshalb reicht z = 32 mit
-klarem Abstand über `maxZ`, während die beiden äußeren Weiler ohnehin schon per x weit
-außerhalb liegen. Bei z = 22 (der ersten Fassung dieser Datei, mit nur einem Cluster)
-wären Haupt- und ein weiterer Ort noch teilweise INNERHALB der Grenze gelegen.
+**Warum z >= 27:** nachgerechnet statt geschätzt - mit jeder Engine aller 20 Gebäude auf
+ihrem harten `maxProps`-Deckel (zonesData.js, dem tatsächlich größtmöglichen Campus)
+kommt `campusRect()` aus buildCampus.js auf
+`{ minX: -37.5, maxX: 30.3, minZ: -29.4, maxZ: 23.1 }`. Der Campus wächst nach vorne bis
+maximal z ≈ 23.1. Das Dorf schließt ab z = 27 harmonisch an, sodass die ersten Grundstücke
+bei maximaler Campusgröße direkt an die Grundstücksgrenze stoßen und dort als Erste
+verdrängt werden.
 
 Gesteuert von einem einzigen `progress`-Wert (0 bis 1) aus der Hype-Stufe (1 bis 10) -
 derselben Stufe, die auch Wege, Bäume und Lichtdrohnen des Campus schaltet (siehe
-"Ausbaustufen" oben), damit keine eigene Fortschrittszahl nötig ist:
+"Ausbaustufen" oben), dynamisch animiert mit Renderzeit `t`:
 
-* **Dörfer.** Alle Hausplätze aller vier Cluster in EINER Liste, nach Abstand zum Ofen
-  sortiert. Mit steigendem `progress` weichen die campusnächsten Plätze zuerst - ganz
-  gleich in welchem Cluster - grauen Glaskuben mit Antenne; dahinter bleibt ein
-  aufgerissener Schlammfleck liegen (dieselbe Erdfarbe wie das Fluss-/Seebett) -
-  "abgerissen", nicht nur ausgetauscht. Häuser, Kuben und Schlammflecken sind je ein
-  InstancedMesh über ALLE Cluster hinweg, umgeschichtet wird nur die COUNT-Grenze,
-  genau wie bei den Bäumen in `buildCampus.js`.
-* **Fluss und See.** EIN Lauf von x = -75 bis x = +75, mit einer Ausbuchtung zum See
-  beim Hauptdorf. Wasser schrumpft um bis zu 45% und trübt sich von Klarblau Richtung
-  Moosgrün; darunter liegt ein permanent sichtbares braunes Flussbett/Seebett, das mit
-  dem Schrumpfen mehr freigibt. Ab steigendem `progress` treiben zusätzlich dunkle
-  Algenflecken auf (sechs feste um den See, dazu einer je Flussabschnitt).
-* **Straßennetz.** Drei Ebenen: das Ortsraster JEDES Clusters (Ring plus
-  Längs-/Querstraßen in den Lücken zwischen den Häusern, aus Spaltenzahl und
-  Zeilenzahl des Clusters abgeleitet statt von Hand gesetzt), eine durchgehende
-  Landstraße, die alle vier Cluster an ihrer campusseitigen Kante verbindet, und zwei
-  Stichstraßen, die von der Landstraße beim Hauptdorf und beim rechten Weiler weiter
-  Richtung Ofenhof abzweigen. Straßen bleiben unverändert liegen, auch wenn ein Haus
-  daneben zum Kubus wird. Die Stichstraßen dürfen - anders als die Cluster selbst -
-  durchaus nah an die Grundstücksgrenze heranreichen oder sie bei extremem Ausbau
-  sogar streifen: das liest sich als "die Zufahrt wird vom wachsenden Zaun eingeholt",
-  nicht als Fehler.
+* **Detaillierte Einfamilienhäuser & Dorfkern.** Drei differenzierte Haustypen:
+  - **Typ A (Klassisches Einfamilienhaus):** Sockel, Giebel-Satteldach, Schornstein mit
+    Rauchfahne, Haustür mit Vordach, mehrere Sprossenfenster, Vorgartenzaun und Apfelbaum.
+  - **Typ B (Familienhaus mit Garage):** Anbau-Garage mit Garagentor, gepflasterte Einfahrt
+    mit kleinem parkenden Auto (Rot oder Blau).
+  - **Typ C (Moderne Stadtvilla):** Versetzte Kuben, Schieferdach, Panoramafenster.
+  - **Dorfkirche:** Im Zentrum auf einem gepflasterten Kirchplatz mit Glockenturm,
+    goldener Turmuhr, spitzem Dach und Kirchentür.
+* **Fluss und Bogenbrücke.** Der Fluss schlängelt sich von x = -80 bis x = +80 über das
+  ganze Feld, eingebettet in ein sandig-kiesiges Uferbett mit Schilfpflanzen. An der
+  Hauptzufahrt (x = -10, z = 44) führt eine begehbare Bogenbrücke mit Steinpfeilern,
+  Holzdeck und Geländer über das Wasser.
+* **Malerischer See mit Steg & Ruderboot.** Ein naturnaher See (Radius ca. 6.2) mit
+  feinem Sandstrand-Ring, Schilfrohr, schwimmenden Seerosenpads mit pinken Blüten
+  sowie einem Holzsteg mit vertäutem Ruderboot, das sanft auf den Wellen schaukelt.
+* **Progressive Verdrängung (Wachstum 0 -> 1).** Alle 34 Grundstücke sind nach Abstand zum
+  Ofen sortiert. Bei wachsendem `progress`:
+  - Phase 1 (Baustelle): Das Haus wird abgerissen; an seiner Stelle entstehen eine
+    Matschgrube, Schutthaufen und orangefarbene Baufahrzeuge/Bagger.
+  - Phase 2 (Tech-Monolith): Kalter, hochmoderner Firmen-Kubus mit Stahlrahmen,
+    Dachaufbauten und leuchtendem "SlopCorp"-Schild.
+  - Umweltfolgen: Eine dicke industrielle Kühlleitung führt vom Campus zum Fluss und stößt
+    warme Dampfwolken aus; das Fluss- und Seewasser trübt sich grün-bräunlich ein und
+    Algenflecken breiten sich auf der Wasseroberfläche aus.
 
 ## Kamera: einpassen, schieben, zoomen
 

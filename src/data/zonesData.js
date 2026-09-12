@@ -65,10 +65,10 @@ export const ZONES_DATA = [
     labelAnchor3d: { x: -12.8, y: 0.5, z: 10.7 },
     buildings: [
       { id: 'prompt_intern', maxProps: 48, plot: { capacity: 4, max: 12, axis: 'x', lane: 0, perRow: 4 } },
+      { id: 'chatbot_widget', maxProps: 10 },
       // Eigene Spalten (offset 4) statt eigener Achse: so wächst jede Engine als
       // zusammenhängendes Viertel, und die beiden geraten sich nie ins Gehege.
       { id: 'prompt_engineer', maxProps: 36, plot: { capacity: 4, max: 9, axis: 'x', lane: 0, perRow: 3, offset: 4 } },
-      { id: 'chatbot_widget', maxProps: 10 },
     ],
   },
   {
@@ -80,10 +80,10 @@ export const ZONES_DATA = [
     labelAnchor3d: { x: -13.2, y: 0.5, z: -5.9 },
     buildings: [
       { id: 'gpu_rack', maxProps: 32, plot: { capacity: 4, max: 8, axis: 'x', lane: 0 } },
-      { id: 'token_burner', maxProps: 20, plot: { capacity: 4, max: 5, axis: 'x', lane: 1 } },
       { id: 'datacenter', maxProps: 12, plot: { capacity: 2, max: 6, axis: 'x', lane: 2 } },
-      { id: 'gray_market_dc', maxProps: 8, plot: { capacity: 2, max: 4, axis: 'x', lane: 3 } },
       { id: 'web_scraper', maxProps: 12 },
+      { id: 'token_burner', maxProps: 20, plot: { capacity: 4, max: 5, axis: 'x', lane: 1 } },
+      { id: 'gray_market_dc', maxProps: 8, plot: { capacity: 2, max: 4, axis: 'x', lane: 3 } },
     ],
   },
   {
@@ -92,11 +92,11 @@ export const ZONES_DATA = [
     footprint: { w: 8, d: 7 },
     labelAnchor3d: { x: 13.2, y: 0.5, z: 11.1 },
     buildings: [
-      { id: 'keynote_stage', maxProps: 6, plot: { capacity: 1, max: 6, axis: 'x', lane: 0 } },
       { id: 'thought_leader', maxProps: 24, plot: { capacity: 4, max: 6, axis: 'x', lane: 1 } },
       { id: 'hype_journalist', maxProps: 24, plot: { capacity: 4, max: 6, axis: 'x', lane: 2 } },
-      { id: 'lobbyist', maxProps: 6, plot: { capacity: 1, max: 6, axis: 'x', lane: 3 } },
+      { id: 'keynote_stage', maxProps: 6, plot: { capacity: 1, max: 6, axis: 'x', lane: 0 } },
       { id: 'pitch_deck', maxProps: 14 },
+      { id: 'lobbyist', maxProps: 6, plot: { capacity: 1, max: 6, axis: 'x', lane: 3 } },
     ],
   },
   {

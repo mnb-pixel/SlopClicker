@@ -2091,7 +2091,7 @@ export function useGameStore() {
     lang, setLang, t, tf,
     startupName, setStartupName, hasAiDomainBonus,
     valuation, totalValuation, totalBurned, slopCount,
-    gpuTemp, isOverheated, coolingRate,
+    gpuTemp, isOverheated, overheatedAt: isOverheated ? overheatedAtRef.current : 0, coolingRate,
     powerClickActive, powerClickSurgeTimer,
     prestigeLevel, heavenlyChips, ascend, pendingHeavenlyChips, buyHeavenlyUpgrade, boughtHeavenlyUpgrades,
     buildings, buyBuilding, buyMode, setBuyMode,

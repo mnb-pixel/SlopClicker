@@ -269,3 +269,235 @@ export function VoxelIcon({ buildingId, tier = 0, className }) {
     </svg>
   );
 }
+
+// --- 20 Buzzword-Icons im einheitlichen Voxel-Look -----------------------------
+const BUZZWORD_ICONS = {
+  Synergy: () => (
+    <>
+      <polygon points="22,6 10,22 19,22 17,34 30,17 21,17" fill={hexNum(P.fireCore)} stroke={shade(hexNum(P.fireCore), -0.2)} strokeWidth={1} />
+      <polygon points="21,10 13,21 19,21 18,28 26,18 21,18" fill={hexNum(P.gold)} />
+    </>
+  ),
+  Moat: () => (
+    <>
+      <rect x="7" y="27" width="26" height="5" fill={hexNum(P.water)} rx="1" />
+      <Block x={9} y={15} w={6} h={12} color={hexNum(P.stoneDark)} depth={2} skew={2} />
+      <Block x={25} y={15} w={6} h={12} color={hexNum(P.stoneDark)} depth={2} skew={2} />
+      <Block x={15} y={19} w={10} h={8} color={hexNum(P.stone)} depth={2} skew={2} />
+      <rect x="18" y="21" width="4" height="6" rx="2" fill={hexNum(P.steelDark)} />
+    </>
+  ),
+  Flywheel: () => (
+    <>
+      <circle cx="20" cy="20" r="12" fill="none" stroke={hexNum(P.steelDark)} strokeWidth="4" />
+      <circle cx="20" cy="20" r="4" fill={hexNum(P.neon)} />
+      {[0, 90, 180, 270].map((deg) => (
+        <rect key={deg} x="18.5" y="6" width="3" height="6" fill={hexNum(P.neon)} transform={`rotate(${deg} 20 20)`} />
+      ))}
+    </>
+  ),
+  'Paradigm Shift': () => (
+    <>
+      <polygon points="20,7 29,15 20,33 11,15" fill={hexNum(P.neon)} />
+      <polygon points="20,7 29,15 20,20" fill={shade(hexNum(P.neon), 0.25)} />
+      <polygon points="20,7 11,15 20,20" fill={shade(hexNum(P.neon), -0.2)} />
+      <polygon points="11,15 20,33 20,20" fill={shade(hexNum(P.neon), -0.35)} />
+      <polygon points="29,15 20,33 20,20" fill={shade(hexNum(P.neon), 0.1)} />
+    </>
+  ),
+  'Value Chain': () => (
+    <>
+      <Block x={6} y={26} w={7} h={7} color={hexNum(P.containerA)} depth={2} skew={2} />
+      <Block x={15} y={20} w={7} h={13} color={hexNum(P.containerB)} depth={2} skew={2} />
+      <Block x={24} y={13} w={7} h={20} color={hexNum(P.containerC)} depth={2} skew={2} />
+      <path d="M8,23 L18,17 L28,10" stroke={hexNum(P.gold)} strokeWidth="2.5" strokeLinecap="round" fill="none" />
+    </>
+  ),
+  Ecosystem: () => (
+    <>
+      <circle cx="20" cy="20" r="11" fill={hexNum(P.water)} />
+      <rect x="13" y="16" width="6" height="5" rx="1.5" fill={hexNum(P.plant)} />
+      <rect x="22" y="13" width="7" height="6" rx="1.5" fill={hexNum(P.plant)} />
+      <rect x="16" y="24" width="8" height="4" rx="1.5" fill={hexNum(P.plant)} />
+      <ellipse cx="20" cy="20" rx="15" ry="5" fill="none" stroke={hexNum(P.cloud)} strokeWidth="1.2" opacity="0.8" transform="rotate(-20 20 20)" />
+    </>
+  ),
+  Alpha: () => (
+    <>
+      <polygon points="9,26 12,13 17,20 23,13 26,20 31,13 34,26" fill={hexNum(P.gold)} stroke={shade(hexNum(P.gold), -0.25)} strokeWidth="0.8" />
+      <rect x="8" y="26" width="26" height="4" rx="1" fill={shade(hexNum(P.gold), -0.15)} />
+      <circle cx="12" cy="12" r="1.5" fill={hexNum(P.warnRed)} />
+      <circle cx="21.5" cy="12" r="1.8" fill={hexNum(P.neon)} />
+      <circle cx="31" cy="12" r="1.5" fill={hexNum(P.warnRed)} />
+    </>
+  ),
+  Runway: () => (
+    <>
+      <Block x={15} y={30} w={10} h={3} color={hexNum(P.steelDark)} depth={2} skew={2} />
+      <path d="M20,6 C23,11 24,20 24,25 L16,25 C16,20 17,11 20,6 Z" fill={hexNum(P.paper)} stroke={shade(hexNum(P.paper), -0.2)} strokeWidth="0.8" />
+      <polygon points="16,22 11,26 16,25" fill={hexNum(P.warnRed)} />
+      <polygon points="24,22 29,26 24,25" fill={hexNum(P.warnRed)} />
+      <circle cx="20" cy="15" r="2.2" fill={hexNum(P.neon)} />
+      <polygon points="18,25 20,32 22,25" fill={hexNum(P.fire)} />
+    </>
+  ),
+  'North Star': () => (
+    <>
+      <polygon points="20,6 23,17 34,20 23,23 20,34 17,23 6,20 17,17" fill={hexNum(P.gold)} />
+      <polygon points="20,10 22,18 30,20 22,22 20,30 18,22 10,20 18,18" fill={hexNum(P.fireCore)} />
+      <circle cx="20" cy="20" r="2" fill={hexNum(P.paper)} />
+    </>
+  ),
+  'Product-Market-Fit': () => (
+    <>
+      <circle cx="20" cy="20" r="12" fill={hexNum(P.paper)} stroke={hexNum(P.warnRed)} strokeWidth="2.5" />
+      <circle cx="20" cy="20" r="7" fill={hexNum(P.warnRed)} />
+      <circle cx="20" cy="20" r="3" fill={hexNum(P.gold)} />
+      <line x1="8" y1="8" x2="19" y2="19" stroke={hexNum(P.steelDark)} strokeWidth="2" strokeLinecap="round" />
+      <polygon points="17,19 19,19 19,17" fill={hexNum(P.steelDark)} />
+    </>
+  ),
+  'Network Effect': () => (
+    <>
+      <line x1="12" y1="12" x2="28" y2="12" stroke={hexNum(P.neon)} strokeWidth="1.5" />
+      <line x1="12" y1="12" x2="12" y2="28" stroke={hexNum(P.neon)} strokeWidth="1.5" />
+      <line x1="28" y1="12" x2="28" y2="28" stroke={hexNum(P.neon)} strokeWidth="1.5" />
+      <line x1="12" y1="28" x2="28" y2="28" stroke={hexNum(P.neon)} strokeWidth="1.5" />
+      <line x1="12" y1="12" x2="28" y2="28" stroke={hexNum(P.neon)} strokeWidth="1.2" strokeDasharray="2,2" />
+      <Block x={8} y={8} w={7} h={7} color={hexNum(P.neon)} depth={2} skew={2} />
+      <Block x={24} y={8} w={7} h={7} color={hexNum(P.gold)} depth={2} skew={2} />
+      <Block x={8} y={24} w={7} h={7} color={hexNum(P.containerB)} depth={2} skew={2} />
+      <Block x={24} y={24} w={7} h={7} color={hexNum(P.containerA)} depth={2} skew={2} />
+    </>
+  ),
+  'First-Mover Advantage': () => (
+    <>
+      <polygon points="17,21 23,21 21,34 19,34" fill={hexNum(P.woodDark || P.desk)} />
+      <path d="M15,22 C12,17 15,12 20,8 C25,12 28,17 25,22 Z" fill={hexNum(P.fire)} />
+      <path d="M17,21 C15,18 17,14 20,11 C23,14 25,18 23,21 Z" fill={hexNum(P.fireCore)} />
+      <circle cx="20" cy="18" r="2" fill={hexNum(P.paper)} />
+    </>
+  ),
+  'Deep Tech': () => (
+    <>
+      <Block x={11} y={11} w={18} h={18} color={hexNum(P.steelDark)} depth={2.5} skew={2.5} />
+      <rect x="15" y="15" width="10" height="10" rx="1.5" fill={hexNum(P.neon)} />
+      {[-1, 1].map((dir, i) => (
+        <g key={i}>
+          <line x1="7" y1={16 + i * 8} x2="11" y2={16 + i * 8} stroke={hexNum(P.gold)} strokeWidth="1.5" />
+          <line x1="29" y1={16 + i * 8} x2="33" y2={16 + i * 8} stroke={hexNum(P.gold)} strokeWidth="1.5" />
+        </g>
+      ))}
+      <circle cx="20" cy="20" r="2.2" fill={hexNum(P.gold)} />
+    </>
+  ),
+  'Category Creation': () => (
+    <>
+      <line x1="10" y1="30" x2="26" y2="14" stroke={hexNum(P.desk)} strokeWidth="3" strokeLinecap="round" />
+      <rect x="23" y="11" width="4" height="4" fill={hexNum(P.gold)} transform="rotate(45 25 13)" />
+      <polygon points="29,7 30,10 33,11 30,12 29,15 28,12 25,11 28,10" fill={hexNum(P.neon)} />
+      <polygon points="17,7 18,9 20,10 18,11 17,13 16,11 14,10 16,9" fill={hexNum(P.fireCore)} />
+    </>
+  ),
+  'Land Grab': () => (
+    <>
+      <Block x={8} y={25} w={24} h={6} color={hexNum(P.grass)} depth={2} skew={2} />
+      <line x1="15" y1="9" x2="15" y2="25" stroke={hexNum(P.steelDark)} strokeWidth="1.8" />
+      <polygon points="15,9 27,13 15,17" fill={hexNum(P.warnRed)} />
+    </>
+  ),
+  'Compute Layer': () => (
+    <>
+      {[0, 1, 2].map((i) => (
+        <g key={i}>
+          <Block x={10} y={10 + i * 7} w={20} h={5} color={hexNum(P.rack)} depth={2} skew={2} />
+          <circle cx="14" cy={12.5 + i * 7} r="1" fill={hexNum(P.neon)} />
+          <circle cx="18" cy={12.5 + i * 7} r="1" fill={hexNum(P.neon)} />
+        </g>
+      ))}
+    </>
+  ),
+  'Data Moat': () => (
+    <>
+      <Silo cx={20} topY={10} rx={9} ry={3} h={18} color={hexNum(P.steel)} />
+      <rect x="15" y="16" width="10" height="8" rx="2" fill={hexNum(P.steelDark)} />
+      <circle cx="20" cy="19" r="1.5" fill={hexNum(P.neon)} />
+    </>
+  ),
+  'Talent Density': () => (
+    <>
+      <Person cx={14} y={15} shirt={hexNum(P.hoodieA)} small />
+      <Person cx={26} y={15} shirt={hexNum(P.hoodieB)} small />
+      <Person cx={20} y={13} shirt={hexNum(P.hoodieC)} />
+    </>
+  ),
+  'Vertical Integration': () => (
+    <>
+      <Block x={12} y={24} w={16} h={6} color={hexNum(P.containerA)} depth={2} skew={2} />
+      <Block x={12} y={17} w={16} h={6} color={hexNum(P.containerB)} depth={2} skew={2} />
+      <Block x={12} y={10} w={16} h={6} color={hexNum(P.containerC)} depth={2} skew={2} />
+    </>
+  ),
+  'Platform Shift': () => (
+    <>
+      <Block x={6} y={21} w={16} h={6} color={hexNum(P.steelDark)} depth={2.5} skew={2.5} />
+      <Block x={18} y={14} w={16} h={6} color={hexNum(P.neon)} depth={2.5} skew={2.5} />
+      <polygon points="17,16 23,20 17,24" fill={hexNum(P.fireCore)} />
+    </>
+  ),
+};
+
+export function VoxelBuzzwordIcon({ noun, rarity = 'Common', className }) {
+  const render = BUZZWORD_ICONS[noun];
+  return (
+    <svg viewBox="0 0 40 40" className={className} aria-hidden="true">
+      {render ? render() : <circle cx={20} cy={20} r={10} fill={hexNum(P.neon)} />}
+    </svg>
+  );
+}
+
+// --- Icons für Nicht-Gebäude-Upgrades & Aktionen -------------------------------
+export function VoxelUpgradeIcon({ type, subType, className }) {
+  let content = null;
+  if (type === 'click') {
+    content = (
+      <>
+        <polygon points="12,8 12,28 17,23 21,31 25,29 21,21 27,21" fill={hexNum(P.gold)} stroke={shade(hexNum(P.gold), -0.3)} strokeWidth={1} />
+        <circle cx="28" cy="11" r="1.5" fill={hexNum(P.fireCore)} />
+        <circle cx="32" cy="15" r="1.2" fill={hexNum(P.neon)} />
+      </>
+    );
+  } else if (type === 'greenwashing') {
+    content = (
+      <>
+        <Silo cx={20} topY={16} rx={8} ry={2.5} h={14} color={hexNum(P.steelDark)} />
+        <circle cx="20" cy="12" r="5" fill={hexNum(P.plant)} />
+        <path d="M17,12 Q20,6 23,12 Q20,18 17,12 Z" fill={hexNum(P.crown)} />
+      </>
+    );
+  } else if (type === 'layoff') {
+    content = (
+      <>
+        <rect x="11" y="9" width="18" height="23" rx="1.5" fill={hexNum(P.paper)} stroke={shade(hexNum(P.paper), -0.25)} />
+        <line x1="14" y1="14" x2="26" y2="14" stroke={hexNum(P.steelDark)} strokeWidth="1.2" />
+        <line x1="14" y1="18" x2="26" y2="18" stroke={hexNum(P.steelDark)} strokeWidth="1.2" />
+        <rect x="15" y="22" width="10" height="5" rx="1" fill={hexNum(P.warnRed)} transform="rotate(-12 20 24)" />
+      </>
+    );
+  } else {
+    // Global / Syndicate / Multiplier
+    content = (
+      <>
+        <circle cx="20" cy="20" r="12" fill={hexNum(P.gold)} stroke={shade(hexNum(P.gold), -0.25)} strokeWidth="1.2" />
+        <text x="20" y="26" textAnchor="middle" fontSize="16" fontWeight="900" fill={shade(hexNum(P.gold), -0.4)} fontFamily="monospace">$</text>
+      </>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 40 40" className={className} aria-hidden="true">
+      {content}
+    </svg>
+  );
+}
+
