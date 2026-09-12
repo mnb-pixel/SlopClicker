@@ -485,7 +485,8 @@ ohne stundenlanges Spielen; kein Cheat, weil nichts davon in den Store zurückfl
 | `src/components/scene3d/buildZones.js` | Platten, Klickziele, Nadel-Anker, Zonen-Effekte, hostet die Zonen-Bauer |
 | `src/components/scene3d/buildEnvironment.js` | Kulisse am Feldrand: vier Dorf-Cluster, Straßennetz und ein Fluss übers ganze Feld, verdrängt/verschmutzt sich mit der Hype-Stufe |
 | `src/components/scene3d/buildDataLine.js`, `buildPeople.js` | Gemeinsame Bausteine: Datenleitung, Personen |
-| `src/components/scene3d/ZoneBuyPanel.jsx` | Kaufen aus der Szene: Engines, Upgrades und Corporate Actions der angeklickten Zone in drei Reitern mit Icon je Zeile (`utils/iconMap.js`), Preise/Filterung über dieselben Helfer wie der Shop |
+| `src/components/scene3d/ZoneBuyPanel.jsx` | Kaufen aus der Szene: Engines, Upgrades und Corporate Actions der angeklickten Zone in drei Reitern mit Voxel-Icon je Zeile (`voxelIcons.jsx`), Preise/Filterung über dieselben Helfer wie der Shop |
+| `src/components/scene3d/voxelIcons.jsx` | Gezeichnetes Mini-Icon je Engine im Kaufpanel, Sichtstufe (0-3) färbt es Richtung Gold wie das Prop in der Szene selbst |
 | `src/utils/storeCopy.js` | Anzeigetexte für Upgrades und Corporate Actions (Name, Zitat, Effektbeschreibung) - eine Quelle für StoreTab und ZoneBuyPanel |
 | `src/utils/iconMap.js` | Icon-Name (String aus den Datendateien) zu Lucide-Komponente, für Shop UND ZoneBuyPanel |
 | `src/components/scene3d/palette.js` | Materialfarben je Theme, Himmel als CSS-Verlauf |

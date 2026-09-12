@@ -104,8 +104,8 @@ const EMPTY_MOD = { mult: 1.0, greenwashed: false, laidOff: false, upgradeCount:
 // vier Stufen (0..VISUAL_TIER_MAX) sind spürbar genug, ohne bei jedem einzelnen Kauf
 // die Optik neu zu zeichnen. VISUAL_TIER_MAX muss zu tierVisuals.js (TIER_MAX) passen -
 // bewusst nicht von dort importiert, damit diese Datei ohne three.js auskommt.
-const UPGRADES_PER_VISUAL_TIER = 4;
-const VISUAL_TIER_MAX = 3;
+export const UPGRADES_PER_VISUAL_TIER = 4;
+export const VISUAL_TIER_MAX = 3;
 
 // --- Zwei getrennte Ableitungen, absichtlich ---------------------------------------
 //
