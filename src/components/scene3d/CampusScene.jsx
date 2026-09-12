@@ -632,6 +632,7 @@ export const CampusScene = forwardRef(function CampusScene(
       zonesObj.update(s.zones, s.selectedZone, palette, { dt, t: now / 1000, reduced: s.reduced, tickerText: s.tickerText });
       campus.update(s.hypeTier, now / 1000, s.reduced, s.zones, grown);
       deliveryTruck.update({
+        camera,
         isOverheated: s.isOverheated,
         overheatedAt: s.overheatedAt,
         now,

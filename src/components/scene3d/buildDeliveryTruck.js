@@ -246,18 +246,63 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
 
   // --- TIMELINE & BEWEGUNGSPFAD ------------------------------------------------
   // Dauer: 45 Sekunden
-  // Start: direkt auf der neuen Ofen-Allee im Süden (x: 0, z: 48, Blickrichtung Norden)
-  // Zielhalteplatz: Direkt vor dem Serverkamin auf dem Ofenhof (x: -1.5, z: 4.2)
-  const START_POS = { x: 0, z: 48, rot: Math.PI };
+  // Parkposition: Direkt vor dem Serverkamin auf dem Ofenhof (x: -1.5, z: 4.2)
   const PARK_POS = { x: -1.5, z: 4.2, rot: Math.PI - 0.25 };
 
+  // Berechnet die maximale sichtbare Entfernung der Ofen-Allee (x = 0, y = 0, z >= 0) im aktuellen
+  // Kamera-Bildausschnitt (unter Berücksichtigung von Zoom, Seitenverhältnis und Pan).
+  // Der Laster startet und endet genau außerhalb des aktuell sichtbaren Bildrandes.
+  const tempVecA = new THREE.Vector3();
+  const tempVecB = new THREE.Vector3();
+
+  function getViewportMaxRoadZ(camera, margin = 1.18) {
+    if (!camera) return 80;
+    tempVecA.set(0, 0, 0).project(camera);
+    tempVecB.set(0, 0, 100).project(camera);
+    const dx = (tempVecB.x - tempVecA.x) / 100;
+    const dy = (tempVecB.y - tempVecA.y) / 100;
+
+    let minExitZ = Infinity;
+    if (dx < -1e-6) {
+      const zLeft = (-margin - tempVecA.x) / dx;
+      if (zLeft > 0 && zLeft < minExitZ) minExitZ = zLeft;
+    } else if (dx > 1e-6) {
+      const zRight = (margin - tempVecA.x) / dx;
+      if (zRight > 0 && zRight < minExitZ) minExitZ = zRight;
+    }
+
+    if (dy < -1e-6) {
+      const zBottom = (-margin - tempVecA.y) / dy;
+      if (zBottom > 0 && zBottom < minExitZ) minExitZ = zBottom;
+    } else if (dy > 1e-6) {
+      const zTop = (margin - tempVecA.y) / dy;
+      if (zTop > 0 && zTop < minExitZ) minExitZ = zTop;
+    }
+
+    if (!Number.isFinite(minExitZ)) {
+      minExitZ = 80;
+    }
+    // Mindestens hinter Flussbrücke & Süddorf (z >= 68), maximal bis an das Ende der Straße (z = 370)
+    return Math.min(370, Math.max(minExitZ, 68));
+  }
+
+  // Brückenerhebung: Über der Flussbrücke (z = 54.2 bis 59.8) hebt sich der LKW sanft um bis zu 18cm an
+  function getRoadElevation(z) {
+    if (z >= 54.2 && z <= 59.8) {
+      return 0.18 * Math.sin(((z - 54.2) / 5.6) * Math.PI);
+    }
+    return 0;
+  }
+
+  let startZRef = null;
   let internalStartTime = null;
 
   return {
     group,
-    update({ isOverheated, overheatedAt, dt = 0.016, reduced = false }) {
+    update({ camera, isOverheated, overheatedAt, dt = 0.016, reduced = false }) {
       if (!isOverheated) {
         group.visible = false;
+        startZRef = null;
         internalStartTime = null;
         truckRoot.visible = true;
         deliveredRack.visible = false;
@@ -268,9 +313,12 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
 
       group.visible = true;
 
+      // Startposition: ermittelt den maximalen sichtbaren Bildausschnitt der Straße
+      if (startZRef === null && camera) {
+        startZRef = getViewportMaxRoadZ(camera);
+      }
+
       // Robuste Zeitbasis in Sekunden:
-      // Im Spiel ist overheatedAt = Date.now(). Falls im Debug-Modus 0 oder nicht gesetzt,
-      // puffern wir internalStartTime ebenfalls mit Date.now().
       let elapsed = 0;
       if (overheatedAt && overheatedAt > 0) {
         elapsed = Math.max(0, (Date.now() - overheatedAt) / 1000);
@@ -279,32 +327,40 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
         elapsed = Math.max(0, (Date.now() - internalStartTime) / 1000);
       }
 
+      // Falls die Kamera in den ersten Sekunden noch herauszoomt, Startpunkt dynamisch nach außen anpassen
+      if (elapsed < 1.2 && camera) {
+        startZRef = Math.max(startZRef || 68, getViewportMaxRoadZ(camera));
+      }
+      const startZ = startZRef || 80;
+
       // Rundumleuchten rotieren lassen
       if (!reduced) {
         beaconBar.rotation.y += dt * 9.0;
       }
 
       // --- PHASE 1: ANFAHRT (0s bis 7.5s) ---------------------------------------
-      // Fährt von Süden (z = 48) auf der Allee (x = 0) heran und bremst vor dem Kamin (x = -1.5, z = 4.2)
+      // Fährt von maximaler Bildrandentfernung (startZ) auf der Allee (x = 0) heran und bremst vor dem Kamin (x = -1.5, z = 4.2)
       if (elapsed < 7.5) {
         truckRoot.visible = true;
         const tDrive = Math.min(1, elapsed / 7.0);
         // Geschmeidiges Abbremsen (Cubic Ease-Out)
         const ease = 1 - Math.pow(1 - tDrive, 2.5);
 
-        // Bis kurz vor dem Kamin geradeaus, im letzten Drittel sanft nach x = -1.5 einlenken
-        const zCurrent = START_POS.z + (PARK_POS.z - START_POS.z) * ease;
-        const tCurve = Math.max(0, (ease - 0.65) / 0.35);
+        // Bis kurz vor dem Kamin geradeaus auf der Allee (x = 0),
+        // im letzten Drittel sanft nach x = -1.5 vor den Kamin einlenken
+        const zCurrent = startZ + (PARK_POS.z - startZ) * ease;
+        const tCurve = Math.max(0, (ease - 0.72) / 0.28);
         const smoothCurve = tCurve * tCurve * (3 - 2 * tCurve);
-        const xCurrent = START_POS.x + (PARK_POS.x - START_POS.x) * smoothCurve;
-        const rotCurrent = START_POS.rot + (PARK_POS.rot - START_POS.rot) * smoothCurve;
+        const xCurrent = 0 + (PARK_POS.x - 0) * smoothCurve;
+        const rotCurrent = Math.PI + (PARK_POS.rot - Math.PI) * smoothCurve;
 
-        truckRoot.position.set(xCurrent, 0, zCurrent);
+        truckRoot.position.set(xCurrent, getRoadElevation(zCurrent), zCurrent);
         truckRoot.rotation.y = rotCurrent;
 
-        // Räder drehen sich beim Fahren passend zur Geschwindigkeit
+        // Räder drehen sich beim Fahren passend zur tatsächlichen Geschwindigkeit
         if (!reduced) {
-          const speed = Math.max(0, (1 - ease) * 24.0);
+          const driveDist = startZ - PARK_POS.z;
+          const speed = Math.max(0, (1 - ease) * (driveDist * 0.55));
           wheels.forEach((w) => {
             w.children[0].rotation.x += dt * speed;
           });
@@ -397,24 +453,30 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
             });
           }
         }
-        // Fahrt nach Süden die Allee hinunter (36.5s bis 43.5s)
+        // Fahrt nach Süden die Allee hinunter bis aus dem Bild (36.5s bis 43.5s)
         else if (elapsed >= 36.5 && elapsed < 43.5) {
-          truckRoot.visible = true;
-          const tDriveOut = (elapsed - 36.5) / 7.0;
+          const exitZ = Math.max(startZ, camera ? getViewportMaxRoadZ(camera) : 80);
+          const tDriveOut = (elapsed - 36.5) / 6.5;
           const easeOut = Math.pow(tDriveOut, 1.8);
-          const zOut = PARK_POS.z + (START_POS.z - PARK_POS.z) * easeOut;
+          const zOut = PARK_POS.z + (exitZ - PARK_POS.z) * easeOut;
 
-          truckRoot.position.set(0, 0, zOut);
-          truckRoot.rotation.y = 0; // Geradewegs nach Süden
+          // Sobald der Laster den Bildausschnitt verlassen hat (zOut >= exitZ oder tDriveOut >= 1.0), ausblenden
+          if (zOut >= exitZ || tDriveOut >= 1.0) {
+            truckRoot.visible = false;
+          } else {
+            truckRoot.visible = true;
+            truckRoot.position.set(0, getRoadElevation(zOut), zOut);
+            truckRoot.rotation.y = 0; // Geradewegs nach Süden
 
-          if (!reduced) {
-            const speedOut = 8.0 + easeOut * 24.0;
-            wheels.forEach((w) => {
-              w.children[0].rotation.x += dt * speedOut;
-            });
+            if (!reduced) {
+              const speedOut = 4.0 + easeOut * ((exitZ - PARK_POS.z) * 0.45);
+              wheels.forEach((w) => {
+                w.children[0].rotation.x += dt * speedOut;
+              });
+            }
           }
         }
-        // Ab 43.5s: Laster hat den Bildrand erreicht
+        // Ab 43.5s: Laster hat den Bildrand verlassen
         else if (elapsed >= 43.5) {
           truckRoot.visible = false;
         }

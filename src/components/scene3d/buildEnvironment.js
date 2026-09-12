@@ -198,8 +198,8 @@ const REED_SPOTS = [
 
 // Straßennetz: Verbindungsstraßen bis an die Ränder des Spielfelds
 const ROAD_SEGMENTS = [
-  // ZENTRALE OFEN-HAUPTSTRASSE (Permanente, unblockierte Zufahrts-Allee direkt zum Serverkamin bei x: 0, z: 0)
-  { a: { x: 0, z: 48 }, b: { x: 0, z: 2.2 }, w: 2.5 },
+  // ZENTRALE OFEN-HAUPTSTRASSE (Permanente, unblockierte Zufahrts-Allee bis an den Spielfeldrand bei z = 380)
+  { a: { x: 0, z: 380 }, b: { x: 0, z: 2.2 }, w: 2.5 },
   { a: { x: -3.6, z: 3.6 }, b: { x: 3.6, z: 3.6 }, w: 3.2 },
   { a: { x: -10, z: 22 }, b: { x: 0, z: 22 }, w: 2.2 },
 
@@ -348,6 +348,43 @@ export function buildEnvironment(palette) {
   });
   group.add(bridgeGroup);
 
+  // --- 4b. HAUPTBRÜCKE DER OFEN-ALLEE (x: 0, z: 57) -----------------------------
+  // Führt die zentrale Zufahrtsstraße über den Fluss in den südlichen Dorfteil
+  const avenueBridgeGroup = new THREE.Group();
+  avenueBridgeGroup.position.set(0, 0, 57);
+
+  // Massive Steinpfeiler an den Ufern
+  [-2.3, 2.3].forEach((offsetSide) => {
+    const pillar = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.45, 1.1), stoneMat);
+    pillar.position.set(0, 0.22, offsetSide);
+    pillar.castShadow = true;
+    pillar.receiveShadow = true;
+    avenueBridgeGroup.add(pillar);
+  });
+
+  // Breites Fahrbahndeck
+  const avenueDeck = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.18, 5.2), roadMat);
+  avenueDeck.position.set(0, 0.22, 0);
+  avenueDeck.castShadow = true;
+  avenueDeck.receiveShadow = true;
+  avenueBridgeGroup.add(avenueDeck);
+
+  // Steingeländer mit Voxel-Brüstung links und rechts
+  [-1.45, 1.45].forEach((side) => {
+    const railBeam = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.22, 5.2), curbMat);
+    railBeam.position.set(side, 0.42, 0);
+    railBeam.castShadow = true;
+    avenueBridgeGroup.add(railBeam);
+
+    [-2.2, -1.1, 0, 1.1, 2.2].forEach((postZ) => {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.35, 0.24), stoneMat);
+      post.position.set(side, 0.45, postZ);
+      post.castShadow = true;
+      avenueBridgeGroup.add(post);
+    });
+  });
+  group.add(avenueBridgeGroup);
+
   // --- 5. BOOTSSTEG & SCHAUKELNDES RUDERBOOT -------------------------------------
   const pierGroup = new THREE.Group();
   const pDx = PIER_END.x - PIER_START.x;
@@ -457,15 +494,16 @@ export function buildEnvironment(palette) {
     }
   });
 
-  // Fahrbahn-Mittelstreifen auf der Ofen-Allee (x = 0 von z = 5 bis z = 47)
-  for (let z = 6; z <= 47; z += 3.2) {
+  // Fahrbahn-Mittelstreifen auf der Ofen-Allee bis an den Spielfeldrand (x = 0 von z = 6 bis z = 378)
+  for (let z = 6; z <= 378; z += 3.2) {
+    const isBridge = z >= 54.5 && z <= 59.5;
     const dash = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.065, 1.4), dashMat);
-    dash.position.set(0, 0.045, z);
+    dash.position.set(0, isBridge ? 0.32 : 0.045, z);
     group.add(dash);
   }
 
-  // Straßenlaternen entlang der Hauptzufahrt zum Serverkamin
-  [8, 16, 24, 32, 40, 48].forEach((lz) => {
+  // Straßenlaternen entlang der Hauptzufahrt zum Serverkamin bis ins Süddorf
+  [8, 16, 24, 32, 40, 48, 64, 72, 80, 96, 112, 128].forEach((lz) => {
     [-1.7, 1.7].forEach((lx) => {
       const pole = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.2, 0.12), lampPoleMat);
       pole.position.set(lx, 1.1, lz);
