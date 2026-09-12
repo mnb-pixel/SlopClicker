@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Sparkles, Truck, Home, Cpu, Layers, ArrowRight } from 'lucide-react';
+import { Play, Sparkles, Home, ArrowRight } from 'lucide-react';
 import { VoxelSiteLayout } from '../VoxelSiteLayout.jsx';
 import { VOXEL_PLAY_URL, PLAY_URL } from '../ui.jsx';
 import { VoxelIcon } from '../../components/scene3d/voxelIcons.jsx';
@@ -68,10 +68,9 @@ export function VoxelHomePage() {
       </section>
 
       {/* 2. STATS / FACTS BANNER */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 my-10 font-mono">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-10 font-mono max-w-4xl mx-auto">
         {[
           { val: '20', label: 'Micro-Voxel Engines', color: 'text-[#12694a]' },
-          { val: '89', label: 'Gemütliche Dorfhäuser', color: 'text-[#c05621]' },
           { val: '100%', label: 'Synchroner Spielstand', color: 'text-[#0e7490]' },
           { val: '0 €', label: 'Kostenlos im Browser', color: 'text-[#f59e0b]' },
         ].map((item) => (
@@ -100,7 +99,7 @@ export function VoxelHomePage() {
           </h2>
         </div>
 
-        <div className="grid sm:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
           <div className="rounded-2xl border-2 border-[#c8bb9f] bg-[#fffdf6] p-6 flex flex-col items-start shadow-[0_4px_0_#c8bb9f,0_10px_24px_rgba(28,42,56,0.08)]">
             <div className="w-12 h-12 rounded-xl bg-[#fff2eb] border-2 border-[#f3c9a0] flex items-center justify-center text-[#c05621] mb-4 shadow-sm">
               <Home className="w-6 h-6" />
@@ -110,18 +109,6 @@ export function VoxelHomePage() {
               Verdränge das beschauliche Vorortdorf für dein wachsendes KI-Imperium: Schnapp dir Baufläche für
               neue Server-Zonen, verbrauche und verschmutze das kühle Flusswasser für unersättliche GPU-Kühltürme
               und dehne deinen Campus gnadenlos über die Landschaft aus.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border-2 border-[#c8bb9f] bg-[#fffdf6] p-6 flex flex-col items-start shadow-[0_4px_0_#c8bb9f,0_10px_24px_rgba(28,42,56,0.08)]">
-            <div className="w-12 h-12 rounded-xl bg-[#fef9ed] border-2 border-[#fde047] flex items-center justify-center text-[#b45309] mb-4 shadow-sm">
-              <Truck className="w-6 h-6" />
-            </div>
-            <h3 className="font-mono font-black text-lg text-[#22313f] mb-2">GPU-Express-Einsatz</h3>
-            <p className="text-sm text-[#4a5568] leading-relaxed">
-              Läuft der Server-Kamin heiß (100°C Meltdown), fährt ein animierter Lieferwagen mit
-              Warnleuchten die freie Kamin-Allee hinauf, entlädt frische GPU-Racks und kühlt den Schlot
-              in einer 45-Sekunden-Rettungssequenz ab.
             </p>
           </div>
 
