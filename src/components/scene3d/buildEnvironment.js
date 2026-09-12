@@ -602,38 +602,7 @@ export function buildEnvironment(palette) {
     group.add(m);
   });
 
-  // --- 9. VERDRÄNGUNGS-OBJEKTE: BAUSTELLEN & UNTERNEHMENS-KUBEN ------------------
-  // Phase 1 der Verdrängung: Baustelle mit Matsch, Absperrzaun und Bagger
-  const mudMat = lambert('soilDeep');
-  const mudPits = new THREE.InstancedMesh(new THREE.BoxGeometry(3.0, 0.06, 3.0), mudMat, LOT_COUNT);
-  mudPits.receiveShadow = true;
-  group.add(mudPits);
-
-  const rubbleMat = lambert('rubble');
-  const rubblePiles = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(0.55, 0), rubbleMat, LOT_COUNT);
-  rubblePiles.castShadow = true;
-  group.add(rubblePiles);
-
-  const warnOrangeMat = lambert('constructionOrange');
-  const excavators = new THREE.InstancedMesh(new THREE.BoxGeometry(1.2, 0.9, 1.4), warnOrangeMat, LOT_COUNT);
-  excavators.castShadow = true;
-  group.add(excavators);
-
-  // Phase 2 der Verdrängung: Vollendeter Unternehmens-Kubus
-  const corpGlassMat = lambert('facade');
-  const corpFrameMat = lambert('steelDark');
-  const corpSignMat = lambert('corpSign');
-  const corpBody = new THREE.InstancedMesh(new THREE.BoxGeometry(2.4, 3.2, 2.4), corpGlassMat, LOT_COUNT);
-  const corpFrame = new THREE.InstancedMesh(new THREE.BoxGeometry(2.5, 0.16, 2.5), corpFrameMat, LOT_COUNT);
-  const corpSign = new THREE.InstancedMesh(new THREE.BoxGeometry(0.35, 0.7, 0.35), corpSignMat, LOT_COUNT);
-
-  [corpBody, corpFrame, corpSign].forEach((m) => {
-    m.castShadow = true;
-    m.receiveShadow = true;
-    m.frustumCulled = false;
-    m.count = 0;
-    group.add(m);
-  });
+  // --- 9. GEWÄSSER-EFFEKTE --------------------------------------------------------
 
   // Industrielle Kühlrohre (vom Campus zum Fluss, wachsen mit Verdrängung)
   const pipeMat = lambert('steel');
@@ -794,47 +763,7 @@ export function buildEnvironment(palette) {
     }
   }
 
-  function layoutCorpSlot(slot, i) {
-    dummy.position.set(slot.x, 0.03, slot.z);
-    dummy.rotation.set(0, 0, 0);
-    dummy.scale.setScalar(1);
-    dummy.updateMatrix();
-    mudPits.setMatrixAt(i, dummy.matrix);
-
-    const activeConstructions = 5;
-    if (i < activeConstructions) {
-      dummy.position.set(slot.x - 0.4, 0.4, slot.z + 0.3);
-      dummy.rotation.set(0.1, i * 1.2, 0.05);
-      dummy.scale.set(1.4, 0.8, 1.2);
-      dummy.updateMatrix();
-      rubblePiles.setMatrixAt(i, dummy.matrix);
-
-      dummy.position.set(slot.x + 0.9, 0.5, slot.z - 0.8);
-      dummy.rotation.set(0, (i * 1.5) % (Math.PI * 2), 0);
-      dummy.scale.setScalar(0.9);
-      dummy.updateMatrix();
-      excavators.setMatrixAt(i, dummy.matrix);
-    } else {
-      const ci = i - activeConstructions;
-      const h = 2.4 + (i % 3) * 0.8;
-      dummy.position.set(slot.x, h / 2, slot.z);
-      dummy.rotation.set(0, 0, 0);
-      dummy.scale.set(2.6, h, 2.6);
-      dummy.updateMatrix();
-      corpBody.setMatrixAt(ci, dummy.matrix);
-
-      dummy.scale.set(2.7, h + 0.1, 2.7);
-      dummy.updateMatrix();
-      corpFrame.setMatrixAt(ci, dummy.matrix);
-
-      dummy.position.set(slot.x, h - 0.3, slot.z + 1.36);
-      dummy.scale.setScalar(1);
-      dummy.updateMatrix();
-      corpSign.setMatrixAt(ci, dummy.matrix);
-    }
-  }
-
-  // --- 11. 360°-VERDRÄNGUNGS-AKTUALISIERUNG ---------------------------------------
+  // --- 11. 360°-DORF-AKTUALISIERUNG ---------------------------------------------
   let lastDisplacementKey = '';
 
   function applyDisplacement(progress, activeLots = [], zoneRects = []) {
@@ -865,6 +794,7 @@ export function buildEnvironment(palette) {
 
     // 1. Grundstücke filtern: Häuser verschwinden sofort, wenn ein Campus-Objekt
     // (Büro-Arbeitsplatz, Rechenzentrum, Bühne, Turm, Endgame) darauf platziert wird.
+    // Das gesamte Vorortdorf besteht dauerhaft aus den gemütlichen kleinen Häusern (keine fetten Hochhäuser).
     const nonCampusLots = [];
     LOTS.forEach((slot) => {
       let occupied = false;
@@ -897,20 +827,12 @@ export function buildEnvironment(palette) {
       }
     });
 
-    // 2. Verbleibende Dorfhäuser nach Hype-Progress stufenweise in Baustellen / Tech-Kuben umwandeln
-    const convertedCount = Math.round(progress * nonCampusLots.length);
-
-    let corpIdx = 0;
-    nonCampusLots.forEach((slot, i) => {
-      if (i < convertedCount) {
-        layoutCorpSlot(slot, corpIdx);
-        corpIdx += 1;
-      } else {
-        renderHouse(slot, counters);
-      }
+    // 2. Alle verbleibenden Parzellen als gemütliche kleine Vororthäuser rendern
+    nonCampusLots.forEach((slot) => {
+      renderHouse(slot, counters);
     });
 
-    // Exakte Instanzen-Anzahl für jedes Mesh setzen
+    // Exakte Instanzen-Anzahl für jedes Bauteil-Mesh setzen
     houseWalls.count = counters.wallPlain;
     houseWallsAlt.count = counters.wallAlt;
     houseWallsC.count = counters.wallC;
@@ -931,17 +853,7 @@ export function buildEnvironment(palette) {
     gardenTrunks.count = counters.treeTrunk;
     gardenCrowns.count = counters.treeCrown;
 
-    // Baustellen & Tech-Kuben
-    mudPits.count = corpIdx;
-    const activeConstructions = Math.min(corpIdx, 5);
-    rubblePiles.count = activeConstructions;
-    excavators.count = activeConstructions;
-
-    corpBody.count = Math.max(0, corpIdx - activeConstructions);
-    corpFrame.count = corpBody.count;
-    corpSign.count = corpBody.count;
-
-    [...villageMeshes, mudPits, rubblePiles, excavators, corpBody, corpFrame, corpSign].forEach((m) => {
+    villageMeshes.forEach((m) => {
       m.instanceMatrix.needsUpdate = true;
     });
 

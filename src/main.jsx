@@ -29,15 +29,15 @@ const rootEl = document.getElementById('root')
 const isNativePlatform = !!window.Capacitor?.isNativePlatform?.()
 const siteRoute = isNativePlatform || isCrazyGamesBuild() ? null : findSiteRoute(window.location.pathname)
 
-// Versteckte Testseite für die neue 3D-Ansicht (siehe VoxelApp.jsx). Weder in
-// siteRoutes.js noch in routes.js eingetragen: sie ist nirgends verlinkt, steht nicht in
-// der Sitemap und ist per robots.txt vom Index ausgeschlossen - erreichbar nur, wer die
-// URL kennt. Nur im reinen Web-Build: die iOS-App und CrazyGames laden das Bundle unter
-// "/" und haben mit dieser Testseite nichts zu tun.
+// 3D-Voxel-Spiel: läuft unter /voxel/play (sowie Fallback-Aliase /play/voxel und /play-voxel).
+// Die vorgeschaltete Startseite /voxel ist eine reguläre Website-Content-Route (VoxelHomePage.jsx).
 const normalizedPath = window.location.pathname.replace(/\/+$/, '') || '/'
-const isVoxelRoute = !isNativePlatform && !isCrazyGamesBuild() && normalizedPath === '/voxel'
+const isVoxelGameRoute =
+  !isNativePlatform &&
+  !isCrazyGamesBuild() &&
+  (normalizedPath === '/voxel/play' || normalizedPath === '/play/voxel' || normalizedPath === '/play-voxel')
 
-if (isVoxelRoute) {
+if (isVoxelGameRoute) {
   mountVoxel()
 } else if (siteRoute) {
   siteRoute.load().then((Page) => {

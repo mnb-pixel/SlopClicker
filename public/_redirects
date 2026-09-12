@@ -23,9 +23,8 @@
 # braucht keine Regel: play.html wird direkt unter /play ausgeliefert.
 /play/*         /play                200
 
-# Versteckte 3D-Testansicht (siehe src/main.jsx / VoxelApp.jsx): /voxel selbst wird direkt
-# aus dist/voxel.html ausgeliefert (leere Hülle, noindex - siehe scripts/prerender.mjs),
-# etwaige Unterpfade fallen per Rewrite auf dieselbe Hülle zurück, damit ein Reload dort
-# nicht auf der vorgerenderten Startseite landet. 200 statt 301: die URL soll erhalten
-# bleiben.
-/voxel/*        /voxel               200
+# 3D-Voxel-Spielansicht (siehe src/main.jsx / VoxelApp.jsx): /voxel ist die vorgerenderte
+# Voxel-Landingpage. /voxel/play liefert dist/voxel/play.html (leere Hülle, WebGL).
+# Unterpfade für das 3D-Spiel werden auf /voxel/play umgeschrieben.
+/voxel/play/*   /voxel/play          200
+

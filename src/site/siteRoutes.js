@@ -83,6 +83,14 @@ export const SITE_ROUTES = [
     description: 'Datenschutzerklärung für token-furnace.com und die iOS-App Tokenkamin: AI Clicker.',
     load: () => import('./pages/DatenschutzPage.jsx').then((m) => m.DatenschutzPage),
   },
+  {
+    path: '/voxel',
+    file: 'voxel',
+    title: 'Token Furnace Voxel 3D – Der AI-Bubble Idle Clicker in 3D',
+    description:
+      'Erlebe Token Furnace in voller 3D-Voxel-Grafik: 3D-Campus, gemütliches Vorortdorf am Fluss, überhitzter Server-Kamin, GPU-Express-Laster und 20 handgefertigte Micro-Voxel-Engines.',
+    load: () => import('./pages/VoxelHomePage.jsx').then((m) => m.VoxelHomePage),
+  },
 ];
 
 export function findSiteRoute(pathname) {

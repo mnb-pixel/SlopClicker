@@ -3,7 +3,7 @@
 // Ablauf: SSR-Bundle bauen -> jede Route rendern -> in das fertige dist/index.html-Template
 // (mit den gehashten Asset-Tags) einsetzen -> dist/index.html bzw. dist/<file>.html schreiben.
 import { execSync } from 'node:child_process';
-import { readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, rmSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -65,16 +65,16 @@ writeFileSync(
 );
 console.log('prerender: /play/* -> dist/play.html (leere Spiel-Hülle)');
 
-// Versteckte 3D-Testansicht unter /voxel (siehe src/main.jsx, src/VoxelApp.jsx): dieselbe
-// leere Hülle wie /play, zusätzlich auf noindex gesetzt. Bewusst NICHT in siteRoutes.js:
-// die Seite hat keinen Content, keine Sitemap-Zeile und keinen Link von irgendwo - sie ist
-// eine reine Testadresse. robots.txt sperrt sie zusätzlich aus.
-writeFileSync(
-  resolve(distDir, 'voxel.html'),
-  template
-    .replace(/<!--site-html-->/, '')
-    .replace(/<!--site-head-->/, '<meta name="robots" content="noindex, nofollow" />'),
-);
-console.log('prerender: /voxel -> dist/voxel.html (leere 3D-Hülle, noindex)');
+// 3D Voxel Spiel-Hülle unter /voxel/play (und Fallback /play-voxel): leere Hülle
+// mit noindex (das Spiel läuft clientseitig via WebGL/Three.js).
+// dist/voxel.html selbst wurde oben über SITE_ROUTES als Voxel-Startseite vorgerendert!
+mkdirSync(resolve(distDir, 'voxel'), { recursive: true });
+const voxelGameShell = template
+  .replace(/<!--site-html-->/, '')
+  .replace(/<!--site-head-->/, '<meta name="robots" content="noindex, nofollow" />');
+
+writeFileSync(resolve(distDir, 'voxel', 'play.html'), voxelGameShell);
+writeFileSync(resolve(distDir, 'play-voxel.html'), voxelGameShell);
+console.log('prerender: /voxel/play -> dist/voxel/play.html (leere 3D-Spielhülle, noindex)');
 
 rmSync(ssrDir, { recursive: true, force: true });

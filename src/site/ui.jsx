@@ -3,6 +3,7 @@ import { Play, Smartphone, ArrowRight } from 'lucide-react';
 
 export const PLAY_URL = '/play';
 export const VOXEL_URL = '/voxel';
+export const VOXEL_PLAY_URL = '/voxel/play';
 
 // iOS-App im App Store (eigener App-Name "Tokenkamin: AI Clicker", deutsche Übersetzung von
 // "Token Furnace") - gleiches Spiel wie die Web-Version.

@@ -1,8 +1,7 @@
 User-agent: *
 Allow: /
-# Versteckte 3D-Testansicht (siehe src/VoxelApp.jsx) - nirgends verlinkt, nicht in der
-# Sitemap, soll auch nicht im Index landen. Zusätzlich trägt dist/voxel.html ein
-# <meta name="robots" content="noindex, nofollow"> (siehe scripts/prerender.mjs).
-Disallow: /voxel
+# 3D-Voxel-Spielansicht (WebGL-Canvas) - Landingpage /voxel ist indexierbar
+Disallow: /voxel/play
+Disallow: /play-voxel
 
 Sitemap: https://token-furnace.com/sitemap.xml
