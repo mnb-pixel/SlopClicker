@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Lock, X } from 'lucide-react';
 import { BUILDINGS_DATA } from '../../data/buildingsData';
 import { ZONE_BY_BUILDING } from '../../data/zonesData';
-import { getAvailableUpgrades } from '../../data/upgradesData';
-import { getCorporateActionCost, getAvailableCorporateActions } from '../../data/greenwashingLayoffsData';
+import { UPGRADES_DATA, getAvailableUpgrades } from '../../data/upgradesData';
+import { GREENWASHING_LAYOFFS_DATA, getCorporateActionCost, getAvailableCorporateActions } from '../../data/greenwashingLayoffsData';
 import { getZoneVisual } from './zoneVisuals';
 import { VoxelIcon, tierAfterUpgrade } from './voxelIcons';
 import { upgradeName, upgradeQuote, upgradeDescription, gwName, gwQuote, gwEffectDesc } from '../../utils/storeCopy';
@@ -105,12 +105,28 @@ export function ZoneBuyPanel({
       return orderA - orderB;
     });
 
-  const costFor = (baseCost, count) => {
-    if (buyMode === '1') return getBuildingCost(baseCost, count);
-    if (buyMode === '10') return getBuildingBulkCost(baseCost, count, 10);
-    if (buyMode === '100') return getBuildingBulkCost(baseCost, count, 100);
-    return getMaxAffordableBuildings(baseCost, count, valuation).totalCost;
-  };
+  // Gesamt-Brutto-VPS über alle Gebäude für Prozentanteil-Berechnung
+  const totalGrossCpsSum = BUILDINGS_DATA.reduce((acc, b) => {
+    const count = buildings[b.id] || 0;
+    if (count <= 0) return acc;
+    let bMult = 1.0;
+    boughtUpgrades.forEach((upId) => {
+      const up = UPGRADES_DATA.find((u) => u.id === upId);
+      if (up && up.type === 'building' && up.buildingId === b.id) {
+        bMult *= up.effect.value;
+      }
+    });
+    boughtGreenwashingLayoffs.forEach((itemId) => {
+      const gw = GREENWASHING_LAYOFFS_DATA.find((g) => g.id === itemId);
+      if (gw && gw.buildingId === b.id) {
+        if (gw.type === 'greenwashing' && gw.tier === 2) bMult *= 1.10;
+        if (gw.type === 'layoff' && gw.tier === 1) bMult *= 1.20;
+        if (gw.type === 'layoff' && gw.tier === 2) bMult *= 1.15;
+      }
+    });
+    return acc + count * b.baseCps * bMult;
+  }, 0);
+
 
   return (
     <div className="campus-panel" style={{ '--zone-accent': accent }}>
@@ -186,29 +202,94 @@ export function ZoneBuyPanel({
               }
 
               const count = buildings[entry.id] || 0;
-              const cost = costFor(meta.baseCost, count);
+
+              let cost = 0;
+              let buyText = `+1`;
+              if (buyMode === '1') {
+                cost = getBuildingCost(meta.baseCost, count);
+                buyText = `+1`;
+              } else if (buyMode === '10') {
+                cost = getBuildingBulkCost(meta.baseCost, count, 10);
+                buyText = `+10`;
+              } else if (buyMode === '100') {
+                cost = getBuildingBulkCost(meta.baseCost, count, 100);
+                buyText = `+100`;
+              } else if (buyMode === 'MAX') {
+                const res = getMaxAffordableBuildings(meta.baseCost, count, valuation);
+                cost = res.totalCost;
+                buyText = res.count > 0 ? `+${res.count}` : `+0`;
+              }
+
               const canAfford = cost > 0 && valuation >= cost;
-              const unitVps = meta.baseCps * (entry.mult || 1);
+
+              // Exakte Produktionsrate & Multiplikator dieser Engine berechnen
+              let bMult = 1.0;
+              boughtUpgrades.forEach((upId) => {
+                const up = UPGRADES_DATA.find((u) => u.id === upId);
+                if (up && up.type === 'building' && up.buildingId === entry.id) {
+                  bMult *= up.effect.value;
+                }
+              });
+              boughtGreenwashingLayoffs.forEach((itemId) => {
+                const gw = GREENWASHING_LAYOFFS_DATA.find((g) => g.id === itemId);
+                if (gw && gw.buildingId === entry.id) {
+                  if (gw.type === 'greenwashing' && gw.tier === 2) bMult *= 1.10;
+                  if (gw.type === 'layoff' && gw.tier === 1) bMult *= 1.20;
+                  if (gw.type === 'layoff' && gw.tier === 2) bMult *= 1.15;
+                }
+              });
+
+              const unitVps = meta.baseCps * bMult;
+              const buildingTotalVps = count * unitVps;
+              const vpsSharePct = totalGrossCpsSum > 0 ? ((buildingTotalVps / totalGrossCpsSum) * 100).toFixed(1) : '0.0';
 
               return (
-                <button
-                  key={entry.id}
-                  onClick={() => buyBuilding(entry.id)}
-                  disabled={!canAfford}
-                  className={`campus-row ${canAfford ? 'is-affordable' : 'is-broke'}`}
-                >
-                  <RowIcon buildingId={entry.id} tier={entry.tier} />
-                  <span className="campus-row__texts">
-                    <span className="campus-row__name">
-                      {tr(`building_${entry.id}_name`)}
-                      {count === 0 && (
-                        <span className="campus-panel__new">{tr('sceneNewBadge')}</span>
-                      )}
+                <div key={entry.id} className="relative group">
+                  {/* Hover-Infokarte wie im Store */}
+                  <div className="campus-row-tooltip">
+                    <div className="campus-row-tooltip__head">
+                      <span>{tr(`building_${entry.id}_name`)}</span>
+                      <span>Basis: {formatCurrency(meta.baseCost)}</span>
+                    </div>
+                    <div className="campus-row-tooltip__body">
+                      <span>1 Stk: +{formatCurrency(unitVps)}/s {bMult > 1 && `(${bMult.toFixed(1)}x)`}</span>
+                      <span>Gesamt: +{formatCurrency(buildingTotalVps)}/s ({vpsSharePct}%)</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => buyBuilding(entry.id)}
+                    disabled={!canAfford}
+                    className={`campus-row ${canAfford ? 'is-affordable' : 'is-broke'}`}
+                  >
+                    <RowIcon buildingId={entry.id} tier={entry.tier} />
+                    <span className="campus-row__texts">
+                      <span className="campus-row__name-line">
+                        <span className="campus-row__name">{tr(`building_${entry.id}_name`)}</span>
+                        {count > 0 ? (
+                          <span className="campus-row__count-pill">x{count}</span>
+                        ) : (
+                          <span className="campus-panel__new">{tr('sceneNewBadge')}</span>
+                        )}
+                      </span>
+                      <span className="campus-row__stats">
+                        <span className="campus-row__vps">
+                          +{formatCurrency(count > 0 ? buildingTotalVps : unitVps)}/s
+                        </span>
+                        <span className="campus-row__sub-stats">
+                          {count > 0
+                            ? `(1x: +${formatCurrency(unitVps)}/s · ${vpsSharePct}%)`
+                            : `(Basis: +${formatCurrency(unitVps)}/s)`}
+                        </span>
+                      </span>
                     </span>
-                    <span className="campus-row__count">x{count} · +{formatCurrency(unitVps)}/s</span>
-                  </span>
-                  <span className="campus-row__price">{formatCurrency(cost)}</span>
-                </button>
+
+                    <span className="campus-row__buy-col">
+                      <span className="campus-row__buy-amount">{buyText}</span>
+                      <span className="campus-row__price">{formatCurrency(cost)}</span>
+                    </span>
+                  </button>
+                </div>
               );
             })}
           </div>

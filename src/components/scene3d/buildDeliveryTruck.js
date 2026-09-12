@@ -82,6 +82,24 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
   bumper.position.set(0, 0.2, 0.75);
   cabGroup.add(bumper);
 
+  // Kühlergrill (Voxel-Rippen)
+  const grille = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.35, 0.05), chassisMat);
+  grille.position.set(0, 0.38, 0.73);
+  cabGroup.add(grille);
+
+  // Sonnenblende über der Windschutzscheibe
+  const visor = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.1, 0.2), chassisMat);
+  visor.position.set(0, 1.05, 0.78);
+  visor.rotation.x = 0.2;
+  cabGroup.add(visor);
+
+  // Seitenspiegel links & rechts
+  [-0.92, 0.92].forEach((mx) => {
+    const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.25, 0.1), chassisMat);
+    mirror.position.set(mx, 0.75, 0.6);
+    cabGroup.add(mirror);
+  });
+
   // Rundumleuchten auf dem Dach (Amber Beacons)
   const beaconBar = new THREE.Group();
   beaconBar.position.set(0, 1.18, 0.2);
@@ -207,10 +225,10 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
 
   // --- TIMELINE & BEWEGUNGSPFAD ------------------------------------------------
   // Dauer: 45 Sekunden
-  // Start: an der Zufahrtsstraße im Süden (x: -10, z: 24)
-  // Zielhalteplatz: Vor dem Kamin auf dem Ofenhof (x: -3.8, z: 3.8)
-  const START_POS = { x: -10, z: 24, rot: 0 };
-  const PARK_POS = { x: -3.6, z: 4.4, rot: -0.45 };
+  // Start: direkt auf der neuen Ofen-Allee im Süden (x: 0, z: 42, Blickrichtung Norden)
+  // Zielhalteplatz: Direkt vor dem Serverkamin auf dem Ofenhof (x: -1.5, z: 4.2)
+  const START_POS = { x: 0, z: 42, rot: Math.PI };
+  const PARK_POS = { x: -1.5, z: 4.2, rot: Math.PI - 0.25 };
 
   let internalStartTime = null;
 
@@ -327,10 +345,10 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
           const tLeave = Math.min(1, (elapsed - 34.5) / 9.5);
           const easeLeave = Math.pow(tLeave, 1.8);
 
-          // LKW dreht um und fährt die Straße hinunter
-          truckRoot.position.x = PARK_POS.x + (START_POS.x - PARK_POS.x) * easeLeave;
-          truckRoot.position.z = PARK_POS.z + (START_POS.z + 10 - PARK_POS.z) * easeLeave;
-          truckRoot.rotation.y = PARK_POS.rot + Math.PI * 0.9 * easeLeave;
+          // LKW wendet und fährt die Allee hinunter nach Süden (+z)
+          truckRoot.position.x = PARK_POS.x + (0 - PARK_POS.x) * easeLeave;
+          truckRoot.position.z = PARK_POS.z + (44 - PARK_POS.z) * easeLeave;
+          truckRoot.rotation.y = PARK_POS.rot - Math.PI * 0.9 * Math.min(1, tLeave * 2.0);
 
           if (!reduced) {
             wheels.forEach((w) => {

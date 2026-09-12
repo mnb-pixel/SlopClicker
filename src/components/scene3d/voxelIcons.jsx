@@ -56,209 +56,399 @@ export function tierAfterUpgrade(boughtUpgrades, buildingId) {
   return Math.min(VISUAL_TIER_MAX, Math.floor(countAfter / UPGRADES_PER_VISUAL_TIER));
 }
 
-// --- Bausteine -----------------------------------------------------------------------
-// Extrudierter Block: Frontfläche plus angeschrägte Deck- und Seitenfläche, heller bzw.
-// dunkler getönt - der Trick hinter fast jedem "3D"-Icon in flachem Stil. Deckt Racks,
-// Türme, Container, Silos, Podeste, Kuben ab.
-function Block({ x, y, w, h, color, depth = 5, skew = 5 }) {
-  const top = shade(color, 0.16);
-  const side = shade(color, -0.2);
+// --- ECHTER ISOMETRISCHER VOXEL-PRIMITIV ----------------------------------------
+// Kleiner Stein mit Top-, Front- und Schatten-Seite für echte Voxel-Ästhetik
+function Voxel({ x, y, w = 3, h = 3, d = 2.2, color, stroke = true, opacity = 1 }) {
+  const topColor = shade(color, 0.24);
+  const sideColor = shade(color, -0.24);
+  const strokeColor = shade(color, -0.36);
+  const sw = stroke ? 0.35 : 0;
+
   return (
-    <g>
-      <polygon points={`${x},${y} ${x + w + skew},${y - depth} ${x + w + skew},${y - depth + h} ${x},${y + h}`} fill={side} />
-      <polygon points={`${x},${y} ${x + skew},${y - depth} ${x + w + skew},${y - depth} ${x + w},${y}`} fill={top} />
-      <rect x={x} y={y} width={w} height={h} fill={color} />
-    </g>
-  );
-}
-// Liegender Zylinder-Look (Silo/Reaktor): Ellipse oben, Rumpf, Ellipse unten.
-function Silo({ cx, topY, rx, ry, h, color }) {
-  const top = shade(color, 0.16);
-  const bodyColor = color;
-  return (
-    <g>
-      <rect x={cx - rx} y={topY} width={rx * 2} height={h} fill={bodyColor} />
-      <ellipse cx={cx} cy={topY + h} rx={rx} ry={ry} fill={shade(color, -0.15)} />
-      <ellipse cx={cx} cy={topY} rx={rx} ry={ry} fill={top} />
-    </g>
-  );
-}
-function Person({ cx, y, shirt, tie, small }) {
-  const s = small ? 0.82 : 1;
-  return (
-    <g>
-      <rect x={cx - 5 * s} y={y} width={10 * s} height={13 * s} rx={3} fill={shirt} />
-      {tie && <rect x={cx - 1 * s} y={y + 1} width={2 * s} height={9 * s} fill={tie} />}
-      <circle cx={cx} cy={y - 4 * s} r={4.6 * s} fill={hexNum(P.skin)} />
-      <path d={`M${cx - 4.6 * s},${y - 6.5 * s} a${4.6 * s},${4.6 * s} 0 0 1 ${9.2 * s},0 z`} fill={hexNum(P.hair)} />
+    <g opacity={opacity}>
+      {/* Deckfläche (hell beleuchtet) */}
+      <polygon
+        points={`${x},${y} ${x + d},${y - d * 0.65} ${x + w + d},${y - d * 0.65} ${x + w},${y}`}
+        fill={topColor}
+        stroke={strokeColor}
+        strokeWidth={sw}
+        strokeLinejoin="round"
+      />
+      {/* Schattenfläche rechts */}
+      <polygon
+        points={`${x + w},${y} ${x + w + d},${y - d * 0.65} ${x + w + d},${y - d * 0.65 + h} ${x + w},${y + h}`}
+        fill={sideColor}
+        stroke={strokeColor}
+        strokeWidth={sw}
+        strokeLinejoin="round"
+      />
+      {/* Frontfläche */}
+      <polygon
+        points={`${x},${y} ${x + w},${y} ${x + w},${y + h} ${x},${y + h}`}
+        fill={color}
+        stroke={strokeColor}
+        strokeWidth={sw}
+        strokeLinejoin="round"
+      />
     </g>
   );
 }
 
-// --- Die 20 Engines --------------------------------------------------------------------
-// Jede Funktion bekommt die Sichtstufe (0..3) und liefert den Inhalt eines
-// 40x40-viewBox-SVGs. Farben kommen möglichst aus derselben Palette wie die echte Szene.
+// Person aus Voxel-Clustern (Kopf, Haare, Hoodie, Arme)
+function VoxelPerson({ cx, y, shirtColor, hairColor = hexNum(P.hair), skinColor = hexNum(P.skin), tieColor = null, small = false }) {
+  const s = small ? 0.8 : 1.0;
+  const hw = 5.0 * s;
+  const hh = 4.2 * s;
+  const hd = 2.0 * s;
+  const tw = 7.0 * s;
+  const th = 6.0 * s;
+  const td = 2.4 * s;
+
+  return (
+    <g>
+      {/* Haare oben */}
+      <Voxel x={cx - hw / 2} y={y} w={hw} h={1.8 * s} d={hd} color={hairColor} />
+      {/* Kopf */}
+      <Voxel x={cx - hw / 2 + 0.3} y={y + 1.8 * s} w={hw - 0.6} h={hh} d={hd} color={skinColor} />
+      {/* Augen-Pixel */}
+      <rect x={cx - 1.2 * s} y={y + 3.2 * s} width={0.8 * s} height={0.8 * s} fill="#1c2a38" />
+      <rect x={cx + 0.6 * s} y={y + 3.2 * s} width={0.8 * s} height={0.8 * s} fill="#1c2a38" />
+      {/* Oberkörper / Hoodie */}
+      <Voxel x={cx - tw / 2} y={y + 1.8 * s + hh} w={tw} h={th} d={td} color={shirtColor} />
+      {/* Krawatte falls vorhanden */}
+      {tieColor && (
+        <rect x={cx - 0.7 * s} y={y + 2.0 * s + hh} width={1.4 * s} height={4.2 * s} fill={tieColor} />
+      )}
+      {/* Arme links & rechts */}
+      <Voxel x={cx - tw / 2 - 1.8 * s} y={y + 2.5 * s + hh} w={1.6 * s} h={5.0 * s} d={1.8 * s} color={shirtColor} />
+      <Voxel x={cx + tw / 2 + 0.2 * s} y={y + 2.5 * s + hh} w={1.6 * s} h={5.0 * s} d={1.8 * s} color={shirtColor} />
+    </g>
+  );
+}
+
+function Block({ x, y, w, h, color, depth = 3.5, skew = 3.5 }) {
+  return <Voxel x={x} y={y} w={w} h={h} d={depth} color={color} />;
+}
+function Silo({ cx, topY, rx, ry, h, color }) {
+  const top = shade(color, 0.24);
+  const side = shade(color, -0.22);
+  return (
+    <g>
+      <rect x={cx - rx} y={topY} width={rx * 2} height={h} fill={color} stroke={shade(color, -0.3)} strokeWidth={0.4} />
+      <ellipse cx={cx} cy={topY + h} rx={rx} ry={ry} fill={side} />
+      <ellipse cx={cx} cy={topY} rx={rx} ry={ry} fill={top} stroke={shade(color, -0.3)} strokeWidth={0.4} />
+    </g>
+  );
+}
+function Person(props) {
+  return <VoxelPerson {...props} shirtColor={props.shirt} tieColor={props.tie} />;
+}
+
+// --- DIE 20 ENGINES: DETAILLIERTE VOXEL-GRAFIKEN -------------------------------
 const ICONS = {
-  // Monitor(e) NACH der Person gezeichnet und seitlich versetzt, statt mittig hinter ihr
-  // zu verschwinden - sonst deckt der breite Oberkörper den Bildschirm komplett zu.
-  prompt_intern: (tier) => (
-    <>
-      <Block x={9} y={27} w={20} h={5} color={hexNum(P.desk)} depth={3} skew={3} />
-      <Person cx={18} y={13} shirt={tierColor(hexNum(P.hoodieA), tier)} small />
-      <Block x={25} y={20} w={6} h={6} color={tierColor(hexNum(P.screen), tier, 0.7)} depth={2} skew={2} />
-    </>
-  ),
-  prompt_engineer: (tier) => (
-    <>
-      <Block x={7} y={27} w={26} h={5} color={hexNum(P.desk)} depth={3} skew={3} />
-      <Person cx={20} y={12} shirt={tierColor(hexNum(P.hoodieB), tier)} />
-      <Block x={8} y={19} w={6} h={6} color={tierColor(hexNum(P.screen), tier, 0.7)} depth={2} skew={2} />
-      <Block x={27} y={19} w={6} h={6} color={tierColor(hexNum(P.screen), tier, 0.7)} depth={2} skew={2} />
-    </>
-  ),
-  chatbot_widget: (tier) => {
-    const c = tierColor(hexNum(P.token), tier, 0.7);
+  // 1. Prompt Praktikant
+  prompt_intern: (tier) => {
+    const shirt = tierColor(hexNum(P.hoodieA), tier);
+    const screen = tierColor(hexNum(P.screen), tier, 0.7);
     return (
       <>
-        <rect x={7} y={11} width={26} height={16} rx={7} fill={hexNum(P.bubble)} stroke={shade(hexNum(P.bubble), -0.15)} strokeWidth={1.5} />
-        <polygon points="14,26 10,33 19,27" fill={hexNum(P.bubble)} />
+        <Voxel x={6} y={26} w={24} h={3.2} d={3.0} color={hexNum(P.desk)} />
+        <Voxel x={8} y={29.2} w={2} h={6} d={1.5} color={hexNum(P.deskLeg)} />
+        <Voxel x={26} y={29.2} w={2} h={6} d={1.5} color={hexNum(P.deskLeg)} />
+        <VoxelPerson cx={15} y={11} shirtColor={shirt} small />
+        <Voxel x={23} y={24} w={1.8} h={2} d={1.2} color={hexNum(P.deskLeg)} />
+        <Voxel x={20.5} y={16.5} w={7} h={7.5} d={1.8} color={hexNum(P.monitor)} />
+        <rect x={21.2} y={17.2} width={5.4} height={5.8} fill={screen} />
+        <Voxel x={10.5} y={23.5} w={2.2} h={2.5} d={1.4} color={hexNum(P.cup)} />
+      </>
+    );
+  },
+
+  // 2. Chatbot Widget
+  chatbot_widget: (tier) => {
+    const bubbleCol = hexNum(P.bubble);
+    const tokenCol = tierColor(hexNum(P.token), tier, 0.85);
+    return (
+      <>
+        <Voxel x={8} y={10} w={22} h={15} d={3.2} color={bubbleCol} />
+        <Voxel x={12} y={25} w={4} h={4} d={2.5} color={bubbleCol} />
+        <Voxel x={10} y={28} w={3} h={3} d={2.0} color={bubbleCol} />
         {[0, 1, 2].map((i) => (
-          <circle key={i} cx={15 + i * 5} cy={19} r={2.1} fill={c} />
+          <Voxel key={i} x={12 + i * 5.5} y={16} w={3.2} h={3.2} d={1.5} color={tokenCol} />
         ))}
       </>
     );
   },
-  gpu_rack: (tier) => (
-    <>
-      <Block x={13} y={10} w={12} h={23} color={hexNum(P.rack)} depth={4} skew={4} />
-      {[0, 1, 2, 3].map((i) => (
-        <rect key={i} x={15} y={14 + i * 4.5} width={8} height={1.6} fill={tierColor(hexNum(P.neon), tier, 0.8)} />
-      ))}
-    </>
-  ),
-  token_burner: (tier) => (
-    <>
-      <Block x={9} y={16} w={20} h={17} color={hexNum(P.burner)} depth={4} skew={4} />
-      <circle cx={19} cy={25} r={5} fill={tierColor(hexNum(P.fire), tier, 0.9)} />
-      <circle cx={19} cy={25} r={2.4} fill={hexNum(P.fireCore)} />
-    </>
-  ),
-  datacenter: (tier) => (
-    <>
-      <Silo cx={20} topY={11} rx={9} ry={3} h={20} color={hexNum(P.facade)} />
-      <rect x={11} y={22} width={18} height={3} fill={tierColor(hexNum(P.neon), tier, 0.85)} />
-    </>
-  ),
-  gray_market_dc: (tier) => (
-    <>
-      <Silo cx={20} topY={14} rx={8} ry={2.6} h={16} color={hexNum(P.steelDark)} />
-      <polygon points="12,14 20,7 28,14" fill={tierColor(hexNum(P.tarp), tier, 0.4)} />
-    </>
-  ),
-  web_scraper: (tier) => (
-    <>
-      {[[-9, -6], [9, -6], [-9, 6], [9, 6]].map(([dx, dy], i) => (
-        <line key={i} x1={20} y1={20} x2={20 + dx} y2={20 + dy} stroke={hexNum(P.steel)} strokeWidth={1.6} />
-      ))}
-      <ellipse cx={20} cy={20} rx={7.5} ry={4.5} fill={hexNum(P.steelDark)} />
-      <circle cx={24.5} cy={18.5} r={2.2} fill={tierColor(hexNum(P.warnRed), tier, 0.4)} />
-    </>
-  ),
-  keynote_stage: (tier) => (
-    <>
-      <rect x={8} y={22} width={24} height={3} fill={tierColor(hexNum(P.spot), tier, 0.5)} opacity={0.55} />
-      <Block x={10} y={25} w={20} h={5} color={hexNum(P.stageFloor)} depth={3} skew={3} />
-      <rect x={17} y={17} width={6} height={8} fill={hexNum(P.stageFloor)} />
-    </>
-  ),
-  thought_leader: (tier) => <Person cx={20} y={16} shirt={hexNum(P.hoodieA)} tie={tierColor(hexNum(P.tie), tier, 0.6)} />,
-  hype_journalist: (tier) => (
-    <>
-      <Person cx={20} y={16} shirt={hexNum(P.hoodieC)} />
-      <rect x={24} y={20} width={7} height={5} rx={1} fill={tierColor(hexNum(P.camera), tier, 0.5)} />
-      <circle cx={27.5} cy={22.5} r={1.4} fill={hexNum(P.screen)} />
-    </>
-  ),
-  lobbyist: (tier) => (
-    <>
-      <line x1={30} y1={30} x2={30} y2={11} stroke={hexNum(P.steel)} strokeWidth={1.6} />
-      <circle cx={30} cy={10} r={2.2} fill={tierColor(hexNum(P.warnRed), tier, 0.5)} />
-      <Person cx={15} y={17} shirt={hexNum(P.hoodieA)} />
-      <rect x={19} y={23} width={6} height={5} rx={1} fill={hexNum(P.steelDark)} />
-    </>
-  ),
-  pitch_deck: () => (
-    <>
-      <rect x={11} y={13} width={16} height={20} rx={1.5} fill={hexNum(P.paper)} stroke={shade(hexNum(P.paper), -0.2)} strokeWidth={1} transform="rotate(-8 19 23)" />
-      <rect x={14} y={10} width={16} height={20} rx={1.5} fill={hexNum(P.paper)} stroke={shade(hexNum(P.paper), -0.2)} strokeWidth={1} transform="rotate(6 22 20)" />
-    </>
-  ),
-  vc_firm: (tier) => (
-    <>
-      <Block x={12} y={8} w={14} h={25} color={tierColor(hexNum(P.glass), tier, 0.45)} depth={4} skew={4} />
-      {[0, 1, 2, 3].map((i) => (
-        <rect key={i} x={13.5} y={11 + i * 5.5} width={11} height={1.3} fill={shade(hexNum(P.glass), -0.25)} />
-      ))}
-    </>
-  ),
-  pivot_startup: () => (
-    <>
-      <Block x={6} y={22} w={9} h={9} color={hexNum(P.containerA)} depth={2.5} skew={2.5} />
-      <Block x={16} y={19} w={9} h={12} color={hexNum(P.containerB)} depth={2.5} skew={2.5} />
-      <Block x={26} y={23} w={8} h={8} color={hexNum(P.containerC)} depth={2.5} skew={2.5} />
-    </>
-  ),
-  agi_clock: (tier) => (
-    <>
-      <rect x={8} y={13} width={24} height={13} rx={2} fill={hexNum(P.ledBoard)} />
-      {[0, 1, 3, 4].map((i) => (
-        <rect key={i} x={11 + i * 4.4} y={17} width={3} height={5} fill={tierColor(P.ledTextCss, tier, 0.7)} />
-      ))}
-      <circle cx={20} cy={19.5} r={0.9} fill={tierColor(P.ledTextCss, tier, 0.7)} />
-    </>
-  ),
-  nuclear_reactor: (tier) => (
-    <>
-      {[13, 27].map((cx, i) => (
-        <path
-          key={i}
-          d={`M${cx - 6},31 C${cx - 6},31 ${cx - 3},20 ${cx},20 C${cx + 3},20 ${cx + 6},31 ${cx + 6},31 Z`}
-          fill={hexNum(P.stone)}
-          stroke={shade(hexNum(P.stone), -0.2)}
-          strokeWidth={0.6}
-        />
-      ))}
-      <circle cx={13} cy={13} r={3} fill={tierColor(hexNum(P.mist), tier, 0.3)} opacity={0.85} />
-      <circle cx={27} cy={11} r={3.6} fill={tierColor(hexNum(P.mist), tier, 0.3)} opacity={0.85} />
-    </>
-  ),
-  metaverse_city: (tier) => (
-    <>
-      <Block x={9} y={28} w={22} h={4} color={hexNum(P.steelDark)} depth={2} skew={2} />
-      <Block x={13} y={17} w={6} h={11} color={tierColor(hexNum(P.rim), tier, 0.5)} depth={2} skew={2} />
-      <Block x={21} y={13} w={6} h={15} color={tierColor(hexNum(P.rim), tier, 0.5)} depth={2} skew={2} />
-    </>
-  ),
-  excel_sheet: (tier) => (
-    <>
-      <rect x={9} y={11} width={22} height={18} rx={1.5} fill={hexNum(P.paper)} stroke={shade(hexNum(P.paper), -0.25)} />
-      {[1, 2, 3].map((i) => (
-        <line key={`h${i}`} x1={9} y1={11 + i * 4.5} x2={31} y2={11 + i * 4.5} stroke={shade(hexNum(P.paper), -0.15)} strokeWidth={0.6} />
-      ))}
-      {[1, 2, 3].map((i) => (
-        <line key={`v${i}`} x1={9 + i * 5.5} y1={11} x2={9 + i * 5.5} y2={29} stroke={shade(hexNum(P.paper), -0.15)} strokeWidth={0.6} />
-      ))}
-      <circle cx={16} cy={19} r={1.3} fill={hexNum(P.hair)} />
-      <circle cx={24} cy={19} r={1.3} fill={hexNum(P.hair)} />
-      {tier >= 2 && <path d="M15,25 Q20,29 25,25" stroke={hexNum(P.hair)} strokeWidth={1} fill="none" />}
-    </>
-  ),
-  singularity: (tier) => (
-    <>
-      <circle cx={20} cy={20} r={8} fill={hexNum(P.void)} />
-      <ellipse cx={20} cy={20} rx={13} ry={4} fill="none" stroke={tierColor(hexNum(P.gold), tier, 1)} strokeWidth={1.6} transform="rotate(-18 20 20)" />
-    </>
-  ),
+
+  // 3. Prompt Engineer
+  prompt_engineer: (tier) => {
+    const shirt = tierColor(hexNum(P.hoodieB), tier);
+    const screen = tierColor(hexNum(P.screen), tier, 0.8);
+    return (
+      <>
+        <Voxel x={5} y={26} w={27} h={3.2} d={3.0} color={hexNum(P.desk)} />
+        <Voxel x={7} y={29.2} w={2.2} h={6} d={1.5} color={hexNum(P.deskLeg)} />
+        <Voxel x={28} y={29.2} w={2.2} h={6} d={1.5} color={hexNum(P.deskLeg)} />
+        <VoxelPerson cx={18.5} y={10} shirtColor={shirt} />
+        <Voxel x={7.5} y={16} w={6.5} h={7.5} d={1.8} color={hexNum(P.monitor)} />
+        <rect x={8.2} y={16.8} width={5.0} height={5.8} fill={screen} />
+        <Voxel x={23.5} y={16} w={6.5} h={7.5} d={1.8} color={hexNum(P.monitor)} />
+        <rect x={24.2} y={16.8} width={5.0} height={5.8} fill={screen} />
+        <Voxel x={14} y={25.2} w={9} h={1.2} d={2.2} color={hexNum(P.deskDark)} />
+      </>
+    );
+  },
+
+  // 4. GPU Server Rack
+  gpu_rack: (tier) => {
+    const neonCol = tierColor(hexNum(P.neon), tier, 0.9);
+    return (
+      <>
+        <Voxel x={11} y={8} w={16} h={26} d={4.0} color={hexNum(P.rack)} />
+        {[0, 1, 2, 3, 4].map((i) => (
+          <g key={i}>
+            <rect x={13} y={10.5 + i * 4.6} width={12} height={2.8} fill={shade(hexNum(P.rack), -0.2)} />
+            <rect x={14} y={11.2 + i * 4.6} width={7.5} height={1.2} fill={neonCol} />
+            <rect x={22.5} y={11.2 + i * 4.6} width={1.2} height={1.2} fill={tierColor(hexNum(P.gold), tier, 0.6)} />
+          </g>
+        ))}
+      </>
+    );
+  },
+
+  // 5. Rechenzentrum (Datacenter)
+  datacenter: (tier) => {
+    const neonCol = tierColor(hexNum(P.neon), tier, 0.85);
+    return (
+      <>
+        <Voxel x={8} y={28} w={22} h={4} d={3.5} color={hexNum(P.stoneDark)} />
+        <Voxel x={10} y={17} w={18} h={11} d={3.5} color={hexNum(P.facade)} />
+        <Voxel x={9.5} y={19.5} w={19} h={1.8} d={3.6} color={neonCol} />
+        <Voxel x={12} y={10} w={14} h={7} d={3.2} color={shade(hexNum(P.facade), 0.08)} />
+        <Voxel x={16} y={6.5} w={6} h={3.5} d={2.2} color={hexNum(P.steel)} />
+      </>
+    );
+  },
+
+  // 6. Web Scraper
+  web_scraper: (tier) => {
+    const redCol = tierColor(hexNum(P.warnRed), tier, 0.5);
+    return (
+      <>
+        <line x1={12} y1={14} x2={28} y2={26} stroke={hexNum(P.steel)} strokeWidth={2.4} />
+        <line x1={28} y1={14} x2={12} y2={26} stroke={hexNum(P.steel)} strokeWidth={2.4} />
+        {[[10, 12], [26, 12], [10, 24], [26, 24]].map(([rx, ry], i) => (
+          <ellipse key={i} cx={rx + 2} cy={ry + 2} rx={4.0} ry={1.8} fill={hexNum(P.cloud)} opacity={0.65} />
+        ))}
+        <Voxel x={15} y={16} w={8} h={7} d={2.8} color={hexNum(P.steelDark)} />
+        <Voxel x={17.5} y={20} w={3} h={3} d={1.5} color={redCol} />
+      </>
+    );
+  },
+
+  // 7. Thought Leader
+  thought_leader: (tier) => {
+    const tie = tierColor(hexNum(P.tie), tier, 0.8);
+    return (
+      <>
+        <Voxel x={7} y={28} w={24} h={4} d={3.0} color={hexNum(P.stageFloor)} />
+        <VoxelPerson cx={17} y={11} shirtColor={hexNum(P.hoodieA)} tieColor={tie} />
+        <Voxel x={22} y={19} w={7} h={9} d={2.5} color={hexNum(P.woodDeck)} />
+        <line x1={25} y1={19} x2={23.5} y2={15} stroke={hexNum(P.steelDark)} strokeWidth={1.2} />
+        <circle cx={23.5} cy={14.5} r={1.2} fill={hexNum(P.steel)} />
+      </>
+    );
+  },
+
+  // 8. VC-Firma
+  vc_firm: (tier) => {
+    const glass = tierColor(hexNum(P.glass), tier, 0.5);
+    return (
+      <>
+        <Voxel x={10} y={29} w={18} h={3.5} d={3.5} color={hexNum(P.steelDark)} />
+        {[0, 1, 2, 3].map((i) => (
+          <g key={i}>
+            <Voxel x={11} y={12 + i * 4.2} w={16} h={3.6} d={3.5} color={glass} />
+            <rect x={12} y={14 + i * 4.2} width={14} height={0.7} fill={shade(glass, -0.3)} />
+          </g>
+        ))}
+        <Voxel x={13} y={7.5} w={12} h={4.5} d={2.8} color={tierColor(hexNum(P.gold), tier, 0.7)} />
+      </>
+    );
+  },
+
+  // 9. Hype-Journalist
+  hype_journalist: (tier) => {
+    const cam = tierColor(hexNum(P.camera), tier, 0.6);
+    return (
+      <>
+        <VoxelPerson cx={18} y={12} shirtColor={hexNum(P.hoodieC)} />
+        <Voxel x={22} y={19} w={7.5} h={5.5} d={2.5} color={cam} />
+        <circle cx={25.5} cy={22} r={1.6} fill={hexNum(P.screen)} />
+        <polygon points="28,18 33,14 30,19" fill={hexNum(P.gold)} />
+      </>
+    );
+  },
+
+  // 10. Keynote-Bühne
+  keynote_stage: (tier) => {
+    const spot = tierColor(hexNum(P.spot), tier, 0.6);
+    return (
+      <>
+        <polygon points="8,8 30,8 33,26 5,26" fill={spot} opacity={0.3} />
+        <Voxel x={6} y={27} w={26} h={3.5} d={3.2} color={shade(hexNum(P.stageFloor), -0.15)} />
+        <Voxel x={9} y={23} w={20} h={4.0} d={3.0} color={hexNum(P.stageFloor)} />
+        <Voxel x={14} y={12} w={10} h={11} d={1.8} color={hexNum(P.screen)} />
+        <rect x={15} y={13.5} width={8} height={8} fill={tierColor(hexNum(P.neon), tier, 0.6)} />
+      </>
+    );
+  },
+
+  // 11. Pivot-Startup
+  pivot_startup: (tier) => {
+    const fireCol = tierColor(hexNum(P.fireCore), tier, 0.8);
+    return (
+      <>
+        <Voxel x={8} y={10} w={3.5} h={21} d={2.2} color={hexNum(P.steelDark)} />
+        <rect x={11.5} y={15} width={4} height={1.6} fill={hexNum(P.steel)} />
+        <rect x={11.5} y={22} width={4} height={1.6} fill={hexNum(P.steel)} />
+        <Voxel x={16} y={11} w={7.5} h={15} d={3.0} color={hexNum(P.facade)} />
+        <polygon points="19.7,4 16,11 23.5,11" fill={tierColor(hexNum(P.warnRed), tier, 0.5)} />
+        <polygon points="16,22 12,26 16,26" fill={hexNum(P.warnRed)} />
+        <polygon points="23.5,22 27.5,26 23.5,26" fill={hexNum(P.warnRed)} />
+        <polygon points="17,26 19.7,33 22.5,26" fill={fireCol} />
+      </>
+    );
+  },
+
+  // 12. Token Burner
+  token_burner: (tier) => {
+    const fire = tierColor(hexNum(P.fire), tier, 0.9);
+    return (
+      <>
+        <Voxel x={15} y={7} w={8} h={8} d={3.0} color={shade(hexNum(P.burner), 0.1)} />
+        <Voxel x={9} y={15} w={20} h={16} d={4.0} color={hexNum(P.burner)} />
+        <Voxel x={14} y={20} w={10} h={9} d={2.0} color="#150a06" />
+        <polygon points="19,21 16,27 22,27" fill={fire} />
+        <polygon points="19,23 17,27 21,27" fill={hexNum(P.fireCore)} />
+      </>
+    );
+  },
+
+  // 13. Pitch Deck
+  pitch_deck: (tier) => {
+    const stamp = tierColor(hexNum(P.gold), tier, 0.85);
+    return (
+      <>
+        <Voxel x={8} y={12} w={15} h={19} d={1.5} color={shade(hexNum(P.paper), -0.15)} />
+        <Voxel x={13} y={8} w={16} h={20} d={1.8} color={hexNum(P.paper)} />
+        {[0, 1, 2, 3].map((i) => (
+          <rect key={i} x={16} y={13 + i * 3.5} width={10} height={1.2} fill={hexNum(P.steelDark)} />
+        ))}
+        <circle cx={23} cy={22} r={2.5} fill={stamp} />
+      </>
+    );
+  },
+
+  // 14. Lobbyist
+  lobbyist: (tier) => {
+    const goldCol = tierColor(hexNum(P.gold), tier, 0.8);
+    return (
+      <>
+        <VoxelPerson cx={16} y={12} shirtColor={hexNum(P.hoodieA)} />
+        <Voxel x={8} y={21} w={6} h={6} d={2.2} color={hexNum(P.steelDark)} />
+        <line x1={26} y1={12} x2={26} y2={28} stroke={goldCol} strokeWidth={1.5} />
+        <line x1={22} y1={15} x2={30} y2={15} stroke={goldCol} strokeWidth={1.5} />
+        <circle cx={22} cy={19} r={1.6} fill={goldCol} />
+        <circle cx={30} cy={19} r={1.6} fill={goldCol} />
+      </>
+    );
+  },
+
+  // 15. AGI-Countdown
+  agi_clock: (tier) => {
+    const led = tierColor(P.ledTextCss, tier, 0.8);
+    return (
+      <>
+        <Voxel x={7} y={11} w={24} h={18} d={3.5} color={hexNum(P.ledBoard)} />
+        {[0, 1, 3, 4].map((i) => (
+          <rect key={i} x={10 + i * 4.5} y={16} width={3.2} height={6.5} fill={led} rx={0.5} />
+        ))}
+        <circle cx={19.5} cy={17.5} r={0.8} fill={led} />
+        <circle cx={19.5} cy={21.0} r={0.8} fill={led} />
+      </>
+    );
+  },
+
+  // 16. Schwarzmarkt-DC
+  gray_market_dc: (tier) => {
+    const tarp = tierColor(hexNum(P.tarp), tier, 0.6);
+    return (
+      <>
+        <Voxel x={10} y={13} w={18} h={17} d={3.5} color={hexNum(P.steelDark)} />
+        <polygon points="8,13 19,6 30,13" fill={tarp} />
+        <line x1={12} y1={17} x2={26} y2={27} stroke={hexNum(P.tapeYellow)} strokeWidth={1.8} />
+        <line x1={12} y1={23} x2={26} y2={13} stroke={hexNum(P.tapeYellow)} strokeWidth={1.8} />
+      </>
+    );
+  },
+
+  // 17. Fusionsreaktor
+  nuclear_reactor: (tier) => {
+    const core = tierColor(hexNum(P.neon), tier, 0.85);
+    return (
+      <>
+        <Voxel x={6} y={15} w={11} h={15} d={3.0} color={hexNum(P.stone)} />
+        <circle cx={11.5} cy={11} r={3.2} fill={hexNum(P.mist)} opacity={0.8} />
+        <Voxel x={19} y={12} w={13} h={18} d={3.5} color={hexNum(P.stone)} />
+        <circle cx={25.5} cy={8} r={3.8} fill={hexNum(P.mist)} opacity={0.8} />
+        <circle cx={18} cy={23} r={2.5} fill={core} />
+      </>
+    );
+  },
+
+  // 18. Metaverse City
+  metaverse_city: (tier) => {
+    const neon = tierColor(hexNum(P.rim), tier, 0.85);
+    return (
+      <>
+        <Voxel x={6} y={26} w={13} h={4} d={2.5} color={hexNum(P.steelDark)} />
+        <Voxel x={9} y={16} w={6} h={10} d={2.0} color={neon} />
+        <Voxel x={18} y={21} w={14} h={4} d={2.5} color={hexNum(P.steelDark)} />
+        <Voxel x={22} y={11} w={6} h={10} d={2.0} color={neon} />
+        <line x1={12} y1={17} x2={22} y2={13} stroke={hexNum(P.neon)} strokeWidth={1.5} strokeDasharray="2,2" />
+      </>
+    );
+  },
+
+  // 19. Excel-Tabelle
+  excel_sheet: (tier) => {
+    const green = tierColor(hexNum(P.grassDark), tier, 0.8);
+    return (
+      <>
+        <Voxel x={6} y={12} w={26} h={18} d={3.0} color={hexNum(P.paper)} />
+        {[0, 1, 2].map((i) => (
+          <line key={`h${i}`} x1={8} y1={16 + i * 5} x2={30} y2={16 + i * 5} stroke={shade(hexNum(P.paper), -0.2)} strokeWidth={0.8} />
+        ))}
+        <Voxel x={10} y={20} w={3.5} h={7} d={1.8} color={green} />
+        <Voxel x={16} y={16} w={3.5} h={11} d={1.8} color={green} />
+        <Voxel x={22} y={11} w={3.5} h={16} d={1.8} color={green} />
+      </>
+    );
+  },
+
+  // 20. Technologische Singularität
+  singularity: (tier) => {
+    const gold = tierColor(hexNum(P.gold), tier, 1.0);
+    return (
+      <>
+        <ellipse cx={20} cy={20} rx={14} ry={4.5} fill="none" stroke={gold} strokeWidth={2.0} transform="rotate(-25 20 20)" />
+        <ellipse cx={20} cy={20} rx={14} ry={4.5} fill="none" stroke={hexNum(P.neon)} strokeWidth={1.6} transform="rotate(35 20 20)" />
+        <Voxel x={14} y={14} w={10} h={10} d={3.2} color={hexNum(P.void)} />
+        <circle cx={19} cy={19} r={2.5} fill={hexNum(P.fireCore)} />
+      </>
+    );
+  },
 };
 
 export function VoxelIcon({ buildingId, tier = 0, className }) {

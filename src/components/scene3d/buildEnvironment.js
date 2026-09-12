@@ -138,6 +138,11 @@ const REED_SPOTS = [
 
 // Straßennetz: Verbindungsstraßen rund um den Campus (N, S, W, O)
 const ROAD_SEGMENTS = [
+  // ZENTRALE OFEN-HAUPTSTRASSE (Permanente, unblockierte Zufahrts-Allee direkt zum Serverkamin bei x: 0, z: 0)
+  { a: { x: 0, z: 46 }, b: { x: 0, z: 2.2 }, w: 2.5 }, // Direkte Allee zum Kamin
+  { a: { x: -3.6, z: 3.6 }, b: { x: 3.6, z: 3.6 }, w: 3.2 }, // Wendebucht & Ofenhof vor dem Serverkamin
+  { a: { x: -10, z: 22 }, b: { x: 0, z: 22 }, w: 2.2 }, // Verbindung zur Brückenstraße
+
   // Nord-Süd Hauptverbindung (führt über die Brücke)
   { a: { x: -10, z: -38 }, b: { x: -10, z: 32 }, w: 1.8 },
   { a: { x: -10, z: 38 }, b: { x: -10, z: 46 }, w: 1.8 },
@@ -355,6 +360,11 @@ export function buildEnvironment(palette) {
 
   // --- 6. STRASSENNETZ DES DORFES ------------------------------------------------
   const roadMat = lambert('path');
+  const curbMat = lambert('stoneDark');
+  const dashMat = basic('facade');
+  const lampPoleMat = lambert('steelDark');
+  const lampLightMat = basic('fireCore');
+
   ROAD_SEGMENTS.forEach((seg) => {
     const dx = seg.b.x - seg.a.x;
     const dz = seg.b.z - seg.a.z;
@@ -368,6 +378,41 @@ export function buildEnvironment(palette) {
     r.rotation.y = rot;
     r.receiveShadow = true;
     group.add(r);
+
+    // Bordsteine links & rechts für Hauptzufahrtsstraßen
+    if (seg.w >= 2.0) {
+      [-seg.w / 2 - 0.08, seg.w / 2 + 0.08].forEach((cx) => {
+        const curb = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.09, len), curbMat);
+        curb.position.set(midX + Math.cos(rot) * cx, 0.05, midZ - Math.sin(rot) * cx);
+        curb.rotation.y = rot;
+        group.add(curb);
+      });
+    }
+  });
+
+  // Fahrbahn-Mittelstreifen auf der Ofen-Allee (x = 0 von z = 5 bis z = 44)
+  for (let z = 6; z <= 44; z += 3.2) {
+    const dash = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.065, 1.4), dashMat);
+    dash.position.set(0, 0.045, z);
+    group.add(dash);
+  }
+
+  // Straßenlaternen entlang der Hauptzufahrt zum Serverkamin
+  [8, 16, 24, 32, 40].forEach((lz) => {
+    [-1.7, 1.7].forEach((lx) => {
+      const pole = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.2, 0.12), lampPoleMat);
+      pole.position.set(lx, 1.1, lz);
+      pole.castShadow = true;
+      group.add(pole);
+
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.35, 0.3), lampLightMat);
+      head.position.set(lx, 2.25, lz);
+      group.add(head);
+
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.08, 0.42), lampPoleMat);
+      cap.position.set(lx, 2.45, lz);
+      group.add(cap);
+    });
   });
 
   // --- 7. DORFKIRCHE & DORFPLATZ -------------------------------------------------
