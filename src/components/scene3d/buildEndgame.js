@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { tierMix } from './tierVisuals';
+import { createVoxelKit } from './voxelModel';
 
 // Singularitäts-Horizont (Zone "endgame") an der hinteren Inselkante: Kühltürme des
 // Atomreaktors mit Dampf und die Hologramm-Geisterstadt aus flimmernden Glasquadern -
@@ -9,6 +10,11 @@ import { tierMix } from './tierVisuals';
 // frei über der ganzen (gewachsenen) Zone, wie zuvor. Die Singularität - eine schwarze
 // Kugel mit Akkretionsringen hoch über dem Ofen - bleibt der einmalige Endgegner ohne
 // Grundstück.
+//
+// Kühltürme (Hyperboloid mit Betonfugen und Kranz), Projektoren, Hologramm-Gebäude
+// (mit Fensterraster, halbtransparent) und Excel-Tabellen (Gitter und Augen eingebaut)
+// sind Voxel-Modelle (voxelModel.js); die Singularität bleibt rund - ein Schwarzes
+// Loch aus Würfeln wäre das Falsche.
 
 const REACTOR_LOTS_MAX = 16;
 const REACTOR_PER_LOT = 2;
@@ -66,27 +72,81 @@ export function buildEndgame(palette, zoneDef, furnaceAnchor) {
   const color = new THREE.Color();
   const WHITE = new THREE.Color(0xffffff);
 
+  const kit = createVoxelKit(palette);
+
   // --- Kühltürme (verkleinert, zwei je Grundstück) ----------------------------------
-  const towerBody = inst(new THREE.CylinderGeometry(0.55, 0.88, 2.4, 12), lambert('facade'), REACTOR_MAX);
-  const towerLip = inst(new THREE.CylinderGeometry(0.68, 0.55, 0.4, 12), lambert('stone'), REACTOR_MAX);
-  const towerBase = inst(new THREE.CylinderGeometry(0.95, 1.0, 0.24, 12), lambert('stoneDark'), REACTOR_MAX);
+  // Hyperboloid: Radius 8,8 unten, 5,5 oben (0,1er-Raster), Betonfugen alle 6 Lagen,
+  // Kranz mit Öffnung, Sockelplatte.
+  const towerGeo = kit.geo((m) => {
+    m.cylinder(0, 0, 0, 2, 10, 'stoneDark');
+    for (let y = 0; y < 24; y += 1) {
+      const t = y / 23;
+      const r = 5.5 + 3.3 * Math.pow(1 - t, 1.5);
+      m.cylinder(0, 0, y + 2, 1, r, 'facade', { noise: 0.03, seed: y });
+      if (y % 6 === 5) m.cylinder(0, 0, y + 2, 1, r + 0.01, 'stone');
+    }
+    m.cylinder(0, 0, 26, 3, 6.4, 'stone', { hollow: 1.6 });
+    m.set(0, 26, 6, 'warnRed');
+  }, { unit: 0.1, faceShade: 0.05, unlit: new Set(['warnRed']) });
+  const towerBody = inst(towerGeo, kit.mats, REACTOR_MAX);
   const steamMat = lambert('cloud', { transparent: true, opacity: 0.85 });
   const steam = inst(new THREE.IcosahedronGeometry(0.3, 0), steamMat, REACTOR_MAX * STEAM_PER_TOWER, false);
   const steamPhase = Float32Array.from({ length: REACTOR_MAX * STEAM_PER_TOWER }, (_, i) => hash01(i + 500));
   const steamSeed = Float32Array.from({ length: REACTOR_MAX * STEAM_PER_TOWER }, (_, i) => hash01(i + 700) * Math.PI * 2);
 
   // --- Hologramm-Städte (ein kleiner Projektor je Grundstück) -----------------------
-  const projector = inst(new THREE.CylinderGeometry(1.3, 1.45, 0.16, 12), lambert('steelDark'), CITY_LOTS_MAX);
-  const projectorRing = inst(new THREE.CylinderGeometry(1.32, 1.32, 0.06, 12), basic('token'), CITY_LOTS_MAX, false);
-  const holoMat = basic('token', { transparent: true, opacity: 0.35, depthWrite: false });
-  const holo = inst(new THREE.BoxGeometry(0.55, 1, 0.55), holoMat, CITY_MAX, false);
-  const holoEdge = inst(new THREE.BoxGeometry(0.58, 0.05, 0.58), basic('token'), CITY_MAX * 2, false);
+  const projectorGeo = kit.geo((m) => {
+    m.cylinder(0, 0, 0, 2, 14, 'steelDark');
+    m.cylinder(0, 0, 2, 1, 13.4, 'token', { hollow: 1.2 });
+    m.cylinder(0, 0, 2, 1, 3, 'token');
+    for (let a = 0; a < 8; a += 1) {
+      const x = Math.round(Math.cos((a / 8) * Math.PI * 2) * 9);
+      const z = Math.round(Math.sin((a / 8) * Math.PI * 2) * 9);
+      m.set(x, 2, z, 'steel');
+    }
+  }, { unit: 0.1, unlit: new Set(['token']) });
+  const projector = inst(projectorGeo, kit.mats, CITY_LOTS_MAX);
+  // Hologramme: Voxel-Hochhäuser mit Fensterraster, ein Modell je Bauplatz (Höhe
+  // aus CITY_OFFSETS), halbtransparent und flimmernd über ein eigenes Material.
+  const holoMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.58, depthWrite: false });
+  const holoGeos = CITY_OFFSETS.map((o, s) =>
+    kit.geo((m) => {
+      const h = Math.round(o.h * 10);
+      const w = 5 + (s % 2);
+      m.box(-w + 1, 0, -w + 1, w * 2 - 1, h, w * 2 - 1, 'token', { noise: 0 });
+      for (let y = 1; y < h - 1; y += 1) {
+        for (let i = -w + 1; i < w; i += 1) {
+          const lit = (i * 3 + y * 5 + s) % 4 === 0;
+          const shade = lit ? 1.6 : y % 3 === 0 ? 0.55 : 0.85;
+          m.set(i, y, w - 1, 'token', shade);
+          m.set(i, y, -w + 1, 'token', shade);
+          m.set(w - 1, y, i, 'token', shade);
+          m.set(-w + 1, y, i, 'token', shade);
+        }
+      }
+      m.box(-w + 2, h, -w + 2, w * 2 - 3, 1, w * 2 - 3, 'token', { noise: 0 });
+      m.box(-1, h + 1, -1, 2, 3, 2, 'token', { noise: 0 });
+    }, { unit: 0.1, unlit: () => true })
+  );
+  const holos = holoGeos.map((g) => inst(g, [kit.lambert, holoMat], CITY_LOTS_MAX, false));
 
   // --- Excel-Tabellen: frei über der ganzen Zone, kein Grundstück -------------------
-  const sheet = inst(new THREE.BoxGeometry(1.2, 0.9, 0.03), lambert('paper'), SHEET_MAX, false);
-  const gridLine = inst(new THREE.BoxGeometry(1.16, 0.02, 0.035), lambert('deskLeg'), SHEET_MAX * 8, false);
-  const eyeWhite = inst(new THREE.SphereGeometry(0.11, 7, 6), lambert('paper'), SHEET_MAX * 2, false);
-  const pupil = inst(new THREE.SphereGeometry(0.05, 5, 4), basic('camera'), SHEET_MAX * 2, false);
+  // Blatt mit eingebautem Gitter, Kopfzeile und Augenweiß; nur die Pupillen bewegen sich.
+  const sheetGeo = kit.geo((m) => {
+    m.box(-12, -9, 0, 24, 18, 1, 'paper');
+    for (let y = -9; y < 9; y += 4) for (let x = -12; x < 12; x += 1) m.set(x, y, 0, 'deskLeg', 0.9);
+    for (let x = -12; x < 12; x += 5) for (let y = -9; y < 9; y += 1) m.set(x, y, 0, 'deskLeg', 0.9);
+    m.box(-12, 7, 0, 24, 2, 1, 'screen');
+    [[-5, 3], [4, 3]].forEach(([x, y]) => {
+      m.box(x - 1, y - 1, 1, 4, 4, 1, 'paper');
+      m.set(x - 1, y - 1, 1, 'deskLeg', 0.9);
+      m.set(x + 2, y - 1, 1, 'deskLeg', 0.9);
+      m.set(x - 1, y + 2, 1, 'deskLeg', 0.9);
+      m.set(x + 2, y + 2, 1, 'deskLeg', 0.9);
+    });
+  }, { unit: 0.05, origin: [0, 0, 0.5], unlit: new Set(['screen']) });
+  const sheet = inst(sheetGeo, kit.mats, SHEET_MAX, false);
+  const pupil = inst(new THREE.BoxGeometry(0.1, 0.1, 0.05), basic('camera'), SHEET_MAX * 2, false);
 
   // --- Singularität -----------------------------------------------------------------
   const singGroup = new THREE.Group();
@@ -124,24 +184,14 @@ export function buildEndgame(palette, zoneDef, furnaceAnchor) {
         reactorLots.push({ x, z });
         dummy.rotation.set(0, 0, 0);
         dummy.scale.setScalar(1);
-        dummy.position.set(x, 1.2, z);
+        dummy.position.set(x, 0, z);
         dummy.updateMatrix();
         towerBody.setMatrixAt(idx, dummy.matrix);
-        dummy.position.set(x, 2.6, z);
-        dummy.updateMatrix();
-        towerLip.setMatrixAt(idx, dummy.matrix);
-        dummy.position.set(x, 0.12, z);
-        dummy.updateMatrix();
-        towerBase.setMatrixAt(idx, dummy.matrix);
       }
     }
     towerBody.count = n;
-    towerLip.count = n;
-    towerBase.count = n;
     steam.count = n * STEAM_PER_TOWER;
-    [towerBody, towerLip, towerBase].forEach((m) => {
-      m.instanceMatrix.needsUpdate = true;
-    });
+    towerBody.instanceMatrix.needsUpdate = true;
   }
 
   function layoutCities(lots, n) {
@@ -150,44 +200,33 @@ export function buildEndgame(palette, zoneDef, furnaceAnchor) {
     for (let li = 0; li < lotCount; li += 1) {
       const lot = lots[li];
       cityLots.push({ x: lot.lx, z: lot.lz });
-      dummy.position.set(lot.lx, 0.08, lot.lz);
+      dummy.position.set(lot.lx, 0, lot.lz);
       dummy.rotation.set(0, 0, 0);
       dummy.scale.setScalar(1);
       dummy.updateMatrix();
       projector.setMatrixAt(li, dummy.matrix);
-      dummy.position.set(lot.lx, 0.17, lot.lz);
-      dummy.updateMatrix();
-      projectorRing.setMatrixAt(li, dummy.matrix);
     }
     projector.count = lotCount;
-    projectorRing.count = lotCount;
 
+    const counts = CITY_OFFSETS.map(() => 0);
     let idx = 0;
     for (let li = 0; li < lotCount && idx < n; li += 1) {
       const lot = lots[li];
       for (let s = 0; s < CITY_OFFSETS.length && idx < n; s += 1, idx += 1) {
         const o = CITY_OFFSETS[s];
-        const x = lot.lx + o.x;
-        const z = lot.lz + o.z;
         dummy.rotation.set(0, 0, 0);
-        dummy.position.set(x, 0.2 + o.h / 2, z);
-        dummy.scale.set(1, o.h, 1);
-        dummy.updateMatrix();
-        holo.setMatrixAt(idx, dummy.matrix);
         dummy.scale.setScalar(1);
-        dummy.position.set(x, 0.2 + o.h, z);
+        dummy.position.set(lot.lx + o.x, 0.3, lot.lz + o.z);
         dummy.updateMatrix();
-        holoEdge.setMatrixAt(idx * 2, dummy.matrix);
-        dummy.position.set(x, 0.2 + o.h * 0.5, z);
-        dummy.updateMatrix();
-        holoEdge.setMatrixAt(idx * 2 + 1, dummy.matrix);
+        holos[s].setMatrixAt(counts[s], dummy.matrix);
+        counts[s] += 1;
       }
     }
-    holo.count = n;
-    holoEdge.count = n * 2;
-    [projector, projectorRing, holo, holoEdge].forEach((m) => {
+    holos.forEach((m, s) => {
+      m.count = counts[s];
       m.instanceMatrix.needsUpdate = true;
     });
+    projector.instanceMatrix.needsUpdate = true;
   }
 
   return {
@@ -218,7 +257,8 @@ export function buildEndgame(palette, zoneDef, furnaceAnchor) {
         // Reaktor mit mehr Upgrades dampft heißer/heller statt schlicht weiß; Hologramme
         // wirken "premium" (Gold statt reinem Türkis) mit mehr Metaverse-Upgrades.
         steamMat.color.setHex(tierMix(p.cloud, p.gold, reactorTier, 0.5));
-        holoMat.color.setHex(tierMix(p.token, p.gold, cityTier, 0.6));
+        const holoHex = tierMix(p.token, p.gold, cityTier, 0.6);
+        holoGeos.forEach((g) => kit.recolor(g, (k) => (k === 'token' ? holoHex : undefined)));
       }
       const lots = zone.lots || [];
       const key = `${counts.reactor}|${counts.city}|${counts.sheet}|${counts.singularity}|${lots.length}`;
@@ -249,7 +289,7 @@ export function buildEndgame(palette, zoneDef, furnaceAnchor) {
 
       // Hologramme flimmern, jede Stadt für sich leicht phasenversetzt.
       if (counts.city > 0 && !reduced) {
-        const flick = hash01(Math.floor(t * 12)) > 0.9 ? 0.12 : 0.35 + Math.sin(t * 2) * 0.06;
+        const flick = hash01(Math.floor(t * 12)) > 0.9 ? 0.2 : 0.58 + Math.sin(t * 2) * 0.08;
         holoMat.opacity = flick;
       }
 
@@ -265,32 +305,16 @@ export function buildEndgame(palette, zoneDef, furnaceAnchor) {
         sheet.setMatrixAt(i, dummy.matrix);
         const base = dummy.matrix.clone();
         const tmp = new THREE.Object3D();
-        for (let l = 0; l < 8; l += 1) {
-          if (l < 4) {
-            tmp.position.set(0, -0.3 + l * 0.2, 0);
-            tmp.rotation.set(0, 0, 0);
-            tmp.scale.set(1, 1, 1);
-          } else {
-            tmp.position.set(-0.36 + (l - 4) * 0.24, 0, 0);
-            tmp.rotation.set(0, 0, Math.PI / 2);
-            tmp.scale.set(0.75, 1, 1);
-          }
-          tmp.updateMatrix();
-          gridLine.setMatrixAt(i * 8 + l, tmp.matrix.premultiply(base));
-        }
         for (let e = 0; e < 2; e += 1) {
-          tmp.position.set(-0.22 + e * 0.44, 0.15, 0.06);
+          tmp.position.set(-0.22 + e * 0.44 + (reduced ? 0 : Math.sin(t * 0.7 + i) * 0.04), 0.15, 0.1);
           tmp.rotation.set(0, 0, 0);
           tmp.scale.set(1, 1, 1);
-          tmp.updateMatrix();
-          eyeWhite.setMatrixAt(i * 2 + e, tmp.matrix.premultiply(base));
-          tmp.position.set(-0.22 + e * 0.44 + (reduced ? 0 : Math.sin(t * 0.7 + i) * 0.04), 0.15, 0.15);
           tmp.updateMatrix();
           pupil.setMatrixAt(i * 2 + e, tmp.matrix.premultiply(base));
         }
       }
       if (counts.sheet > 0) {
-        [sheet, gridLine, eyeWhite, pupil].forEach((m) => {
+        [sheet, pupil].forEach((m) => {
           m.instanceMatrix.needsUpdate = true;
         });
       }
@@ -318,6 +342,7 @@ export function buildEndgame(palette, zoneDef, furnaceAnchor) {
     },
     applyPalette(p) {
       Object.entries(mats).forEach(([key, list]) => list.forEach((m) => m.color.setHex(p[key])));
+      kit.applyPalette(p);
       placedKey = null;
       lastTiers = '';
     },

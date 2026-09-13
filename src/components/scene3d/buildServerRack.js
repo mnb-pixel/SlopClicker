@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { HEAT_FIRE_COLORS, HEAT_LIGHT_INTENSITY } from './palette';
+import { createVoxelKit } from './voxelModel';
 
 // Der Server-Schrank in der Inselmitte: das Klickziel und der Hitze-Anzeiger des
 // Spiels (im Code weiterhin "furnace" - der Spielzustand heißt so, siehe
@@ -127,12 +128,39 @@ export function buildServerRack(palette) {
 
   // Zwei halbhohe Nachbarschränke, damit die Mitte als Rack-Reihe liest. Gemeinsames
   // Material: im Meltdown werden sie zusammen mit dem Hauptschrank rußig.
-  const sideCabMat = lambert('steel');
+  // Voxel-Modelle (Raster 0,1): Nachbarschränke mit Einschüben, Griffen und LED-Reihen,
+  // Kaminhaube mit Gitter.
+  const kit = createVoxelKit(palette);
+  const SIDE_H = SIDE_CAB_TOP_Y - PAD_TOP_Y;
+  const sideCabGeo = kit.geo((m) => {
+    const w = Math.round(SIDE_CAB_W * 10);
+    const h = Math.round(SIDE_H * 10);
+    const d = Math.round((CAB_D - 0.3) * 10);
+    const hw = Math.floor(w / 2);
+    const hd = Math.floor(d / 2);
+    m.shell(-hw, 0, -hd, w, h, d, 'steel', 1, { noise: 0.03, seed: 8 });
+    m.box(-hw, 0, -hd, w, 1, d, 'steelDark');
+    m.box(-hw, h - 1, -hd, w, 1, d, 'steelDark');
+    for (let y = 3; y < h - 3; y += 4) {
+      m.box(-hw + 1, y, hd, w - 2, 2, 1, 'steelDark');
+      m.box(-hw + 2, y + 1, hd, w - 4, 1, 1, 'steel', { noise: 0 });
+      m.set(-hw + 2, y, hd + 1, 'neon');
+      m.set(hw - 2, y, hd + 1, 'steel');
+    }
+    for (let y = 2; y < h - 2; y += 2) {
+      for (let z = -hd + 2; z < hd - 1; z += 2) m.set(hw - 1, y, z, 'steel', 0.6);
+    }
+  }, { unit: 0.1, unlit: new Set(['neon']) });
+  let sideCabMeltdown = null;
+  const setSideCabMeltdown = (meltdown, p) => {
+    if (sideCabMeltdown === meltdown) return;
+    sideCabMeltdown = meltdown;
+    kit.recolor(sideCabGeo, meltdown ? (k) => (k === 'steel' ? 0x3a3436 : k === 'neon' ? 0x5a2020 : undefined) : null);
+    if (!meltdown) kit.applyPalette(p);
+  };
   [-1, 1].forEach((sgn) => {
-    const cab = addHit(
-      new THREE.Mesh(new THREE.BoxGeometry(SIDE_CAB_W, SIDE_CAB_TOP_Y - PAD_TOP_Y, CAB_D - 0.3), sideCabMat)
-    );
-    cab.position.set(sgn * SIDE_CAB_X, (SIDE_CAB_TOP_Y + PAD_TOP_Y) / 2, 0);
+    const cab = addHit(new THREE.Mesh(sideCabGeo, kit.mats));
+    cab.position.set(sgn * SIDE_CAB_X, PAD_TOP_Y, 0);
   });
 
   // Türrahmen und Glastür vorne: dahinter sieht man die Blades.
@@ -477,7 +505,7 @@ export function buildServerRack(palette) {
 
     // Verrußtes Gehäuse im Meltdown, sonst normale Blechfarbe.
     caseMat.color.setHex(meltdown ? 0x1b1b1f : p.steelDark);
-    sideCabMat.color.setHex(meltdown ? 0x3a3436 : p.steel);
+    setSideCabMeltdown(meltdown, p);
     bladeMat.color.setHex(meltdown ? 0x3a2f2f : p.steel);
 
     fanSpeed = meltdown ? 0 : stage === 'cold' ? 0.8 : stage === 'warm' ? 3.5 : stage === 'hot' ? 8 : 14;
@@ -712,6 +740,7 @@ export function buildServerRack(palette) {
     },
     applyPalette(p) {
       Object.entries(mats).forEach(([key, list]) => list.forEach((m) => m.color.setHex(p[key])));
+      kit.applyPalette(p);
       coinMat.color.setHex(p.gold);
       boltMat.color.setHex(p.neon);
       emberMat.color.setHex(p.ember);

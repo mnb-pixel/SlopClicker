@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createRoofProps } from './voxelDetail';
 
 // Gebäudehüllen auf den Grundstücken einer Zone (siehe utils/campusLayout.js).
 //
@@ -9,10 +10,16 @@ import * as THREE from 'three';
 // wurde. Lagerhallen (`roof: 'closed'`) haben dagegen ein volles Dach, da ist innen
 // nichts zu sehen.
 //
-// Alles ist instanziert: drei bis vier Draw Calls für beliebig viele Häuser. Jede
+// Fensterbänder bekommen zusätzlich schmale Sprossen (mullion) - kleine Voxel-Streifen,
+// die aus der glatten Glasfläche ein echtes Fensterraster machen - und jedes Haus ein
+// zufälliges, aber stabiles Dach-Requisit (Klimagerät, Lüfter, Schüssel oder Antenne,
+// siehe voxelDetail.js) zusätzlich zum vorhandenen Lüfterkasten: zwei Aufbauten pro
+// Dach statt einem lassen eine Häuserreihe aus der Nähe erst wie echte Gebäude wirken.
+//
+// Alles ist instanziert: eine Handvoll Draw Calls für beliebig viele Häuser. Jede
 // Teilesorte benutzt denselben Einheitswürfel und wird pro Instanz skaliert.
 
-const PARTS_PER_LOT = { struct: 4, trim: 8, glass: 2, accent: 2 };
+const PARTS_PER_LOT = { struct: 4, trim: 8, glass: 2, accent: 2, mullion: 6 };
 
 export function buildLotShells(palette, opts = {}) {
   const {
@@ -55,6 +62,8 @@ export function buildLotShells(palette, opts = {}) {
   const trim = inst(lambert(trimKey), PARTS_PER_LOT.trim, true);
   const glass = inst(basic(glassKey), PARTS_PER_LOT.glass, false);
   const accent = inst(basic(accentKey), PARTS_PER_LOT.accent, false);
+  const mullion = inst(lambert(trimKey), PARTS_PER_LOT.mullion, false);
+  const roofProps = createRoofProps(group, lambert, basic, max);
 
   const dummy = new THREE.Object3D();
   const half = size / 2;
@@ -103,12 +112,30 @@ export function buildLotShells(palette, opts = {}) {
     put(trim, tIdx + 7, -half + 0.75, railY + 0.3, -half + 0.75, 0.7, 0.45, 0.7);
 
     // Fensterbänder in den beiden Wänden.
-    put(glass, gIdx, 0, height * 0.62, -half + 0.06, size * 0.72, 0.46, 0.08);
-    put(glass, gIdx + 1, -half + 0.06, height * 0.62, 0, 0.08, 0.46, size * 0.72);
+    const bandW = size * 0.72;
+    const bandY = height * 0.62;
+    put(glass, gIdx, 0, bandY, -half + 0.06, bandW, 0.46, 0.08);
+    put(glass, gIdx + 1, -half + 0.06, bandY, 0, 0.08, 0.46, bandW);
+
+    // Sprossen: drei senkrechte Streifen je Band, die das Glas in vier Scheiben teilen.
+    // Sie liegen einen Hauch VOR der Glasfläche, damit nichts z-fightet.
+    let mIdx = idx * PARTS_PER_LOT.mullion;
+    for (let k = 1; k <= 3; k += 1) {
+      const along = -bandW / 2 + (bandW / 4) * k;
+      put(mullion, mIdx, along, bandY, -half + 0.105, 0.05, 0.5, 0.03);
+      put(mullion, mIdx + 1, -half + 0.105, bandY, along, 0.03, 0.5, 0.05);
+      mIdx += 2;
+    }
 
     // Akzent: Schild über dem offenen Eingang plus schmaler Streifen an der Sockelkante.
     put(accent, aIdx, half - 0.02, height * 0.78, half - 0.9, 0.1, 0.34, 1.1);
     put(accent, aIdx + 1, 0, 0.19, half - 0.04, size * 0.8, 0.06, 0.1);
+
+    // Dach-Requisit an der dem Lüfterkasten gegenüberliegenden Attika-Ecke (+x, -z),
+    // damit beide Aufbauten nicht auf einem Haufen stehen. Der Hash aus dem Lot-Index
+    // wählt die Sorte - jedes Haus anders, aber bei jedem Neuaufbau gleich.
+    const propY = roof === 'closed' ? height + 0.4 : height + 0.41;
+    roofProps.place(x + half - 0.55, propY, z - half + 0.55, 0, idx * 7 + 3);
   }
 
   return {
@@ -116,12 +143,15 @@ export function buildLotShells(palette, opts = {}) {
     // lots: [{ x, z }] in Zonen-lokalen Koordinaten.
     layout(lots) {
       const n = Math.min(max, lots.length);
+      roofProps.reset();
       for (let i = 0; i < n; i += 1) placeLot(lots[i], i);
+      roofProps.finish();
       struct.count = n * PARTS_PER_LOT.struct;
       trim.count = n * PARTS_PER_LOT.trim;
       glass.count = n * PARTS_PER_LOT.glass;
       accent.count = n * PARTS_PER_LOT.accent;
-      [struct, trim, glass, accent].forEach((m) => {
+      mullion.count = n * PARTS_PER_LOT.mullion;
+      [struct, trim, glass, accent, mullion].forEach((m) => {
         m.instanceMatrix.needsUpdate = true;
       });
       return n;

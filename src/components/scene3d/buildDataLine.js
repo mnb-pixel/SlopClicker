@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createVoxelKit } from './voxelModel';
 
 // Datenleitung von einer Zone zum Ofen: ein Kabelkanal, der AUF DEM BODEN liegt.
 //
@@ -29,11 +30,6 @@ function hash01(i) {
 export function buildDataLine(palette, worldPoints, groupPosition, facingDir) {
   const group = new THREE.Group();
   const mats = {};
-  const lambert = (key, extra = {}) => {
-    const m = new THREE.MeshLambertMaterial({ color: palette[key], flatShading: true, ...extra });
-    (mats[key] = mats[key] || []).push(m);
-    return m;
-  };
   const basic = (key, extra = {}) => {
     const m = new THREE.MeshBasicMaterial({ color: palette[key], ...extra });
     (mats[key] = mats[key] || []).push(m);
@@ -48,11 +44,22 @@ export function buildDataLine(palette, worldPoints, groupPosition, facingDir) {
   // Die Platten überlappen sich leicht (Länge aus der tatsächlichen Kurvenlänge plus
   // Zuschlag), sonst klaffen in den Kurven Lücken zwischen ihnen.
   const slabLen = (curve.getLength() / SLAB_COUNT) * 1.35;
-  const slab = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(0.9, 0.14, slabLen),
-    lambert('path'),
-    SLAB_COUNT
-  );
+  const kit = createVoxelKit(palette);
+  // Deckelplatte als Voxel-Modell (Raster 0,05): Betonplatte mit Kantenfase, Gitterrost
+  // beidseits des Glasstreifens und zwei Hebeösen.
+  const slabVox = Math.max(4, Math.round(slabLen / 0.05));
+  const slabGeo = kit.geo((m) => {
+    m.box(-9, 0, 0, 18, 3, slabVox, 'path', { noise: 0.04, seed: 3 });
+    for (let z = 0; z < slabVox; z += 1) {
+      for (let x = -8; x < 8; x += 1) {
+        if (x >= -3 && x < 3) continue;
+        if ((x + z) % 2 === 0) m.set(x, 2, z, 'stoneDark', 0.9);
+      }
+    }
+    m.set(-6, 3, 1, 'steel');
+    m.set(5, 3, slabVox - 2, 'steel');
+  }, { unit: 0.05, origin: [0, 1.5, slabVox / 2] });
+  const slab = new THREE.InstancedMesh(slabGeo, kit.mats, SLAB_COUNT);
   slab.receiveShadow = true;
   slab.frustumCulled = false;
   group.add(slab);
@@ -87,20 +94,39 @@ export function buildDataLine(palette, worldPoints, groupPosition, facingDir) {
 
   // Verteilerkasten am Zonenende: steht weiterhin aufrecht, er ist ja ein Schrank.
   const jp = curve.getPointAt(0);
-  const junction = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.1, 0.5), lambert('junction'));
-  junction.position.set(jp.x, 0.55, jp.z);
+  // Verteilerkasten: Schrank mit Lüftungsschlitzen, Tür, Warnschild und Status-LED.
+  const junctionGeo = kit.geo((m) => {
+    m.box(-8, 0, -5, 16, 22, 10, 'junction', { noise: 0.03, seed: 5 });
+    m.box(-8, 0, -5, 16, 1, 10, 'steelDark');
+    m.box(-6, 3, 5, 12, 16, 1, 'junction', { noise: 0 });
+    for (let y = 5; y < 12; y += 2) for (let x = -5; x < 6; x += 1) m.set(x, y, 5, 'junction', 0.6);
+    m.box(-4, 14, 5, 8, 3, 1, 'tapeYellow');
+    m.set(-1, 15, 5, 'tapeBlack');
+    m.set(0, 15, 5, 'tapeBlack');
+    m.set(5, 9, 6, 'steel');
+    m.box(-8, 22, -5, 16, 1, 10, 'steelDark');
+  }, { unit: 0.05, unlit: new Set(['token', 'tapeYellow']) });
+  const junction = new THREE.Mesh(junctionGeo, kit.mats);
+  junction.position.set(jp.x, 0, jp.z);
   junction.rotation.y = yaw;
   junction.castShadow = true;
   group.add(junction);
-  const led = new THREE.Mesh(new THREE.SphereGeometry(0.07, 5, 4), basic('token'));
-  led.position.set(jp.x + Math.sin(yaw) * 0.28, 1.0, jp.z + Math.cos(yaw) * 0.28);
+  // Status-LED oben an der Tür, blinkt (siehe update).
+  const led = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.06), basic('token'));
+  led.position.set(jp.x + Math.sin(yaw) * 0.28 - Math.cos(yaw) * 0.25, 1.0, jp.z + Math.cos(yaw) * 0.28 + Math.sin(yaw) * 0.25);
   group.add(led);
 
   // Anschlusskasten am Ofensockel: flacher als vorher, die Leitung kommt jetzt von
   // unten statt von oben an.
   const pp = curve.getPointAt(1);
-  const port = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.45, 0.5), lambert('junction'));
-  port.position.set(pp.x, 0.22, pp.z);
+  const portGeo = kit.geo((m) => {
+    m.box(-7, 0, -5, 14, 9, 10, 'junction', { noise: 0.03, seed: 6 });
+    m.box(-7, 9, -5, 14, 1, 10, 'steelDark');
+    m.box(-5, 2, 5, 10, 5, 1, 'steelDark');
+    for (let x = -4; x < 5; x += 2) m.box(x, 3, 5, 1, 3, 1, 'token');
+  }, { unit: 0.05, unlit: new Set(['token']) });
+  const port = new THREE.Mesh(portGeo, kit.mats);
+  port.position.set(pp.x, 0, pp.z);
   port.rotation.y = yaw;
   group.add(port);
 
@@ -149,6 +175,7 @@ export function buildDataLine(palette, worldPoints, groupPosition, facingDir) {
       led.visible = reduced ? true : Math.sin(t * 5) > -0.2;
     },
     applyPalette(p) {
+      kit.applyPalette(p);
       Object.entries(mats).forEach(([key, list]) => list.forEach((m) => m.color.setHex(p[key])));
     },
   };

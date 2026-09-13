@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { createVoxelKit } from './voxelModel';
+import { tree, TREE_UNIT } from './voxelLibrary';
 
 // Campus-Stufen, campusweit, gekoppelt an die Hype-Stufe (1 bis 10):
 //   1 Garage (1-2):        nackte Wiese
@@ -31,7 +33,9 @@ import * as THREE from 'three';
 //     die Hecken zwischen den Zonen nach außen zeigen).
 //
 // Alles davon ist instanziert oder ein einzelnes Mesh - die Zahl der Draw Calls bleibt
-// wie vorher.
+// wie vorher. Bäume, Hecken und Zaunpfosten sind Voxel-Modelle (voxelModel.js): drei
+// Baumformen (Laubkugel, Nadelkegel, Schirm) statt zweier Kegel, Hecken mit unruhiger
+// Oberfläche statt glatter Kisten.
 
 export function campusStage(hypeTier) {
   if (hypeTier >= 9) return 4;
@@ -72,6 +76,7 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
     return m;
   };
   const dummy = new THREE.Object3D();
+  const kit = createVoxelKit(palette);
 
   // --- Ofenhof ------------------------------------------------------------------
   // Achteck statt Kreis: dieselbe kantige Sprache wie der Rest der Insel, und in der
@@ -170,36 +175,34 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
     });
   });
 
-  // Bäume: Stamm + zwei Kronen-Kegel, instanziert.
-  const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.12, 0.16, 0.7, 5), lambert('trunk'), TREE_SPOTS.length);
-  const crownA = new THREE.InstancedMesh(new THREE.ConeGeometry(0.75, 1.3, 6), lambert('crown'), TREE_SPOTS.length);
-  const crownB = new THREE.InstancedMesh(new THREE.ConeGeometry(0.55, 1.0, 6), lambert('crownDark'), TREE_SPOTS.length);
-  [trunk, crownA, crownB].forEach((m) => {
+  // Bäume: drei Voxel-Formen im Wechsel, jede ein InstancedMesh.
+  const TREE_VARIANTS = 3;
+  const treeGeos = [0, 1, 2].map((v) => kit.geo((m) => tree(m, v, 11 + v * 7), { unit: TREE_UNIT }));
+  const trees = treeGeos.map((g) => {
+    const m = new THREE.InstancedMesh(g, kit.mats, TREE_SPOTS.length);
     m.castShadow = true;
     m.frustumCulled = false;
     m.count = 0;
     group.add(m);
+    return m;
   });
+  let treeLimit = 0;
   function layoutTrees(campusScale) {
+    const counts = [0, 0, 0];
     TREE_SPOTS.forEach((s, i) => {
+      if (i >= treeLimit) return;
       const k = 0.85 + ((i * 7) % 5) * 0.08;
       const f = s.outer ? campusScale : 1;
-      const x = s.x * f;
-      const z = s.z * f;
-      dummy.position.set(x, 0.35, z);
-      dummy.rotation.set(0, 0, 0);
-      dummy.scale.setScalar(1);
-      dummy.updateMatrix();
-      trunk.setMatrixAt(i, dummy.matrix);
-      dummy.position.set(x, 1.1 * k + 0.3, z);
+      const v = i % TREE_VARIANTS;
+      dummy.position.set(s.x * f, 0, s.z * f);
+      dummy.rotation.set(0, (i * 1.7) % (Math.PI * 2), 0);
       dummy.scale.setScalar(k);
       dummy.updateMatrix();
-      crownA.setMatrixAt(i, dummy.matrix);
-      dummy.position.set(x, 1.9 * k + 0.3, z);
-      dummy.updateMatrix();
-      crownB.setMatrixAt(i, dummy.matrix);
+      trees[v].setMatrixAt(counts[v], dummy.matrix);
+      counts[v] += 1;
     });
-    [trunk, crownA, crownB].forEach((m) => {
+    trees.forEach((m, v) => {
+      m.count = counts[v];
       m.instanceMatrix.needsUpdate = true;
     });
   }
@@ -221,8 +224,19 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
   const FENCE_PER_SIDE = 15;
   const FENCE_MAX = FENCE_PER_SIDE * 4;
   // Basislänge 1 - die tatsächliche Länge setzt layoutFence über die Skalierung.
-  const fenceHedge = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 0.7, 0.55), lambert('crownDark'), FENCE_MAX);
-  const fencePost = new THREE.InstancedMesh(new THREE.BoxGeometry(0.22, 1.1, 0.22), lambert('fence'), FENCE_MAX);
+  // Hecke: 10 x 7 x 6 Voxel mit Farbnoise und Blattbuckeln obendrauf, Pfosten mit Kappe.
+  const hedgeGeo = kit.geo((m) => {
+    m.box(-5, 0, -3, 10, 7, 6, 'crownDark', { noise: 0.14, seed: 3 });
+    for (let x = -5; x < 5; x += 1) {
+      for (let z = -3; z < 3; z += 1) if ((x * 5 + z * 3) % 4 === 0) m.set(x, 7, z, 'crown', 0.95);
+    }
+  }, { unit: 0.1 });
+  const postGeo = kit.geo((m) => {
+    m.box(-1, 0, -1, 2, 11, 2, 'fence', { noise: 0.05, seed: 4 });
+    m.box(-1, 11, -1, 2, 1, 2, 'woodDark');
+  }, { unit: 0.1 });
+  const fenceHedge = new THREE.InstancedMesh(hedgeGeo, kit.mats, FENCE_MAX);
+  const fencePost = new THREE.InstancedMesh(postGeo, kit.mats, FENCE_MAX);
   [fenceHedge, fencePost].forEach((m) => {
     m.castShadow = true;
     m.receiveShadow = true;
@@ -262,7 +276,7 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
         if (alongX && sign > 0 && Math.abs(t) < 2.5) continue;
         const x = alongX ? t : (sign > 0 ? rect.maxX : rect.minX);
         const z = alongX ? (sign > 0 ? rect.maxZ : rect.minZ) : t;
-        dummy.position.set(x, 0.35, z);
+        dummy.position.set(x, 0, z);
         dummy.rotation.set(0, alongX ? 0 : Math.PI / 2, 0);
         // Fugenbreite 0.22, sonst wirkt die Hecke wie eine einzige lange Kiste.
         dummy.scale.set(Math.max(0.3, step - 0.22), 1, 1);
@@ -270,7 +284,7 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
         fenceHedge.setMatrixAt(n, dummy.matrix);
         // Pfosten in die Fuge, damit zwischen zwei Heckenstücken einer steht.
         const pt = t + step / 2;
-        dummy.position.set(alongX ? pt : x, 0.55, alongX ? z : pt);
+        dummy.position.set(alongX ? pt : x, 0, alongX ? z : pt);
         dummy.rotation.set(0, 0, 0);
         dummy.scale.set(1, 1, 1);
         dummy.updateMatrix();
@@ -329,10 +343,8 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
       });
       if (stage !== appliedStage) {
         appliedStage = stage;
-        const trees = TREES_BY_STAGE[stage];
-        trunk.count = trees;
-        crownA.count = trees;
-        crownB.count = trees;
+        treeLimit = TREES_BY_STAGE[stage];
+        layoutTrees(appliedScale);
         lights.count = stage >= 4 ? 8 : 0;
         hedges.visible = stage >= 2;
         // Die Grenze kommt eine Stufe später als die Wege: erst wenn der Campus ein
@@ -355,6 +367,7 @@ export function buildCampus(palette, zonesData, furnaceAnchor) {
     },
     applyPalette(p) {
       Object.entries(mats).forEach(([key, list]) => list.forEach((m) => m.color.setHex(p[key])));
+      kit.applyPalette(p);
     },
   };
 }

@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { createVoxelKit } from './voxelModel';
+import { PERSON, PERSON_UNIT, PERSON_ARM_ORIGIN, personPants, personTorso, personHead, personArm, hardHat, remapKeys } from './voxelLibrary';
 
 // ===============================================================================
 // GPU-Reparatur-Laster (Delivery Truck)
@@ -9,17 +11,15 @@ import * as THREE from 'three';
 // - Öffnet die Türen, entlädt neue Hardware, sprüht Kühlnebel auf den Kamin und
 //   führt Reparaturen durch.
 // - Schließt die Türen, wendet und fährt vor Ablauf der 45s wieder ab.
+//
+// Fahrzeug, Räder, Hecktüren, das gelieferte Rack und der Techniker (Voxel-Person mit
+// Warnweste, Helm und Stickstofflanze) sind Voxel-Modelle (voxelModel.js, Raster 0,05).
 
 export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
   const group = new THREE.Group();
   group.visible = false;
 
   const mats = {};
-  const lambert = (key, extra = {}) => {
-    const m = new THREE.MeshLambertMaterial({ color: palette[key], flatShading: true, ...extra });
-    (mats[key] = mats[key] || []).push(m);
-    return m;
-  };
   const basic = (key, extra = {}) => {
     const m = new THREE.MeshBasicMaterial({ color: palette[key], ...extra });
     (mats[key] = mats[key] || []).push(m);
@@ -29,211 +29,183 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
   // --- FAHRZEUG-GEOMETRIE ------------------------------------------------------
   const truckRoot = new THREE.Group();
   group.add(truckRoot);
-
-  const chassisMat = lambert('steelDark');
-  const cabMat = lambert('constructionOrange');
-  const boxMat = lambert('facade');
-  const windowMat = basic('windowGlass');
-  const tireMat = lambert('tapeBlack');
-  const wheelHubMat = lambert('steel');
+  const kit = createVoxelKit(palette);
+  const U = 0.05;
+  const UNLIT = new Set(['windowGlass', 'fireCore', 'warnRed', 'neon', 'tapeYellow']);
   const beaconMat = basic('tapeYellow');
-  const headlightMat = basic('fireCore');
-  const taillightMat = basic('warnRed');
-  const rackMat = lambert('rack');
-  const ledMat = basic('neon');
   const sprayMat = basic('cloud', { transparent: true, opacity: 0.65 });
 
-  // Chassis / Unterbau
-  const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.28, 4.4), chassisMat);
-  chassis.position.y = 0.42;
-  chassis.castShadow = true;
-  truckRoot.add(chassis);
+  // Aufbau in einem Modell: Fahrgestell, Kabine (vorn +z) mit Scheiben, Grill, Spiegeln,
+  // Stufen und Auspuff, Koffer mit Banner, Rücklichtern und Dachlüfter.
+  const bodyGeo = kit.geo((m) => {
+    m.box(-17, 6, -44, 34, 5, 88, 'steelDark');
+    // Kabine
+    m.box(-16, 11, 14, 33, 23, 28, 'constructionOrange', { noise: 0.02, seed: 1 });
+    m.box(-14, 24, 41, 29, 9, 1, 'windowGlass');
+    m.box(-17, 24, 22, 1, 8, 12, 'windowGlass');
+    m.box(16, 24, 22, 1, 8, 12, 'windowGlass');
+    for (let y = 12; y < 33; y += 1) {
+      m.set(-16, y, 27, 'constructionOrange', 0.8);
+      m.set(16, y, 27, 'constructionOrange', 0.8);
+    }
+    m.set(-16, 22, 24, 'steel');
+    m.set(16, 22, 24, 'steel');
+    m.box(-14, 15, 41, 5, 3, 1, 'fireCore');
+    m.box(10, 15, 41, 5, 3, 1, 'fireCore');
+    m.box(-17, 9, 40, 34, 4, 3, 'steelDark');
+    m.box(-9, 14, 41, 18, 7, 1, 'steelDark');
+    for (let y = 15; y < 21; y += 2) for (let x = -8; x < 9; x += 1) m.set(x, y, 41, 'steel', 0.7);
+    m.box(-15, 33, 40, 31, 2, 4, 'steelDark');
+    m.box(-19, 25, 34, 2, 5, 2, 'steelDark');
+    m.box(17, 25, 34, 2, 5, 2, 'steelDark');
+    m.box(-18, 9, 20, 3, 2, 8, 'steelDark');
+    m.box(15, 9, 20, 3, 2, 8, 'steelDark');
+    m.box(14, 11, 12, 2, 30, 2, 'steel');
+    m.box(13, 41, 11, 4, 1, 4, 'steelDark');
+    // Koffer
+    m.box(-17, 11, -46, 34, 30, 58, 'facade', { noise: 0.02, seed: 2 });
+    m.box(-18, 20, -40, 1, 9, 44, 'neon');
+    m.box(17, 20, -40, 1, 9, 44, 'neon');
+    for (let z = -38; z < 2; z += 4) {
+      m.box(-18, 22, z, 1, 5, 2, 'neon', { noise: 0 });
+      m.box(17, 22, z, 1, 5, 2, 'neon', { noise: 0 });
+      for (let y = 22; y < 27; y += 1) {
+        m.set(-18, y, z, 'facade');
+        m.set(17, y, z, 'facade');
+      }
+    }
+    for (let z = -44; z < 12; z += 6) m.box(-17, 11, z, 34, 1, 1, 'steel');
+    m.box(-14, 15, -47, 4, 5, 1, 'warnRed');
+    m.box(10, 15, -47, 4, 5, 1, 'warnRed');
+    m.box(-3, 41, -20, 6, 2, 6, 'steel');
+    m.box(-17, 41, -46, 34, 1, 1, 'steel');
+  }, { unit: U, unlit: UNLIT });
+  const body = new THREE.Mesh(bodyGeo, kit.mats);
+  body.castShadow = true;
+  truckRoot.add(body);
 
-  // Fahrerkabine (vorne: +z)
-  const cabGroup = new THREE.Group();
-  cabGroup.position.set(0, 0.56, 1.4);
-
-  const cabBody = new THREE.Mesh(new THREE.BoxGeometry(1.65, 1.15, 1.4), cabMat);
-  cabBody.position.y = 0.55;
-  cabBody.castShadow = true;
-  cabGroup.add(cabBody);
-
-  // Windschutzscheibe
-  const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.55, 0.05), windowMat);
-  windshield.position.set(0, 0.72, 0.71);
-  cabGroup.add(windshield);
-
-  // Seitenscheiben
-  [-0.83, 0.83].forEach((sx) => {
-    const sideWindow = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.45, 0.65), windowMat);
-    sideWindow.position.set(sx, 0.72, 0.2);
-    cabGroup.add(sideWindow);
-  });
-
-  // Scheinwerfer vorne
-  [-0.6, 0.6].forEach((hx) => {
-    const hl = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.16, 0.06), headlightMat);
-    hl.position.set(hx, 0.32, 0.72);
-    cabGroup.add(hl);
-  });
-
-  // Stoßstange
-  const bumper = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.22, 0.18), chassisMat);
-  bumper.position.set(0, 0.2, 0.75);
-  cabGroup.add(bumper);
-
-  // Kühlergrill (Voxel-Rippen)
-  const grille = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.35, 0.05), chassisMat);
-  grille.position.set(0, 0.38, 0.73);
-  cabGroup.add(grille);
-
-  // Sonnenblende über der Windschutzscheibe
-  const visor = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.1, 0.2), chassisMat);
-  visor.position.set(0, 1.05, 0.78);
-  visor.rotation.x = 0.2;
-  cabGroup.add(visor);
-
-  // Seitenspiegel links & rechts
-  [-0.92, 0.92].forEach((mx) => {
-    const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.25, 0.1), chassisMat);
-    mirror.position.set(mx, 0.75, 0.6);
-    cabGroup.add(mirror);
-  });
-
-  // Einstiegsstufen & Türgriffe
-  [-0.86, 0.86].forEach((sx) => {
-    const step = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.4), chassisMat);
-    step.position.set(sx, 0.22, 0.2);
-    cabGroup.add(step);
-
-    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.06, 0.18), wheelHubMat);
-    handle.position.set(sx * 0.98, 0.65, 0.1);
-    cabGroup.add(handle);
-  });
-
-  // Vertikales Chrom-Auspuffrohr hinter der Fahrerkabine
-  const exhaustPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.4, 6), wheelHubMat);
-  exhaustPipe.position.set(0.72, 0.95, -0.65);
-  exhaustPipe.castShadow = true;
-  cabGroup.add(exhaustPipe);
-  const exhaustCap = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.14), chassisMat);
-  exhaustCap.position.set(0.72, 1.68, -0.68);
-  exhaustCap.rotation.x = 0.3;
-  cabGroup.add(exhaustCap);
-
-  // Rundumleuchten auf dem Dach (Amber Beacons)
+  // Rundumleuchten auf dem Kabinendach (Amber Beacons)
   const beaconBar = new THREE.Group();
-  beaconBar.position.set(0, 1.18, 0.2);
+  beaconBar.position.set(0, 1.74, 1.6);
   [-0.55, 0.55].forEach((bx) => {
-    const bMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.14, 6), beaconMat);
+    const bMesh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, 0.18), beaconMat);
     bMesh.position.set(bx, 0.07, 0);
     beaconBar.add(bMesh);
   });
-  cabGroup.add(beaconBar);
-  truckRoot.add(cabGroup);
+  truckRoot.add(beaconBar);
 
-  // Räder (6 Räder: 2 vorne, 4 hinten)
-  const wheelGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.24, 8);
-  wheelGeo.rotateZ(Math.PI / 2);
-  const hubGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.26, 6);
-  hubGeo.rotateZ(Math.PI / 2);
-
+  // Räder (6 Räder: 2 vorne, 4 hinten): Voxel-Reifen mit Felge und Radbolzen.
+  const wheelGeo = kit.geo((m) => {
+    m.cylinder(0, 0, 0, 5, 6.4, 'tapeBlack', { noise: 0.06, seed: 3 });
+    m.cylinder(0, 0, -1, 7, 3.2, 'steel');
+    [[2, 0], [-3, 0], [0, 2], [0, -3]].forEach(([x, z]) => m.set(x, 6, z, 'steelDark'));
+  }, { unit: U, origin: [0, 2.5, 0] });
   const wheels = [];
   const WHEEL_POS = [
     [-0.88, 0.32, 1.4], [0.88, 0.32, 1.4], // Vorne
     [-0.88, 0.32, -0.6], [0.88, 0.32, -0.6], // Hinten 1
     [-0.88, 0.32, -1.5], [0.88, 0.32, -1.5], // Hinten 2
   ];
-
   WHEEL_POS.forEach(([wx, wy, wz]) => {
     const wGroup = new THREE.Group();
     wGroup.position.set(wx, wy, wz);
-    const tire = new THREE.Mesh(wheelGeo, tireMat);
+    const tire = new THREE.Mesh(wheelGeo, kit.mats);
+    tire.rotation.z = Math.PI / 2;
     tire.castShadow = true;
     wGroup.add(tire);
-    const hub = new THREE.Mesh(hubGeo, wheelHubMat);
-    wGroup.add(hub);
     truckRoot.add(wGroup);
     wheels.push(wGroup);
   });
 
-  // Kofferaufbau (Ladefläche)
-  const boxGroup = new THREE.Group();
-  boxGroup.position.set(0, 0.56, -0.85);
-
-  const boxBody = new THREE.Mesh(new THREE.BoxGeometry(1.72, 1.5, 2.9), boxMat);
-  boxBody.position.y = 0.75;
-  boxBody.castShadow = true;
-  boxGroup.add(boxBody);
-
-  // Corporate Banner an den Seiten ("GPU EXPRESS")
-  [-0.87, 0.87].forEach((bx) => {
-    const banner = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.45, 2.2), lambert('neon'));
-    banner.position.set(bx, 0.85, 0);
-    boxGroup.add(banner);
-  });
-
-  // Rückleuchten
-  [-0.7, 0.7].forEach((rx) => {
-    const tl = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.25, 0.05), taillightMat);
-    tl.position.set(rx, 0.28, -1.46);
-    boxGroup.add(tl);
-  });
-
-  // Hecktüren (öffnen sich bei der Entladung)
+  // Hecktüren (öffnen sich bei der Entladung): Drehpunkt an der Außenkante.
+  const doorGeo = (sign) =>
+    kit.geo((m) => {
+      m.box(sign > 0 ? 0 : -16, 0, 0, 16, 29, 1, 'steelDark', { noise: 0.03, seed: 4 });
+      m.box(sign > 0 ? 1 : -15, 4, 0, 14, 21, 1, 'steel', { noise: 0 });
+      m.box(sign > 0 ? 13 : -14, 12, -1, 1, 4, 1, 'steel');
+      for (let y = 6; y < 24; y += 5) m.box(sign > 0 ? 2 : -14, y, 0, 12, 1, 1, 'steelDark');
+    }, { unit: U, origin: [0, 0, 0.5] });
   const leftDoor = new THREE.Group();
-  leftDoor.position.set(-0.84, 0.75, -1.45);
-  const leftDoorMesh = new THREE.Mesh(new THREE.BoxGeometry(0.82, 1.45, 0.06), chassisMat);
-  leftDoorMesh.position.x = 0.41;
-  leftDoor.add(leftDoorMesh);
-  boxGroup.add(leftDoor);
-
+  leftDoor.position.set(-0.84, 0.58, -2.31);
+  leftDoor.add(new THREE.Mesh(doorGeo(1), kit.mats));
+  truckRoot.add(leftDoor);
   const rightDoor = new THREE.Group();
-  rightDoor.position.set(0.84, 0.75, -1.45);
-  const rightDoorMesh = new THREE.Mesh(new THREE.BoxGeometry(0.82, 1.45, 0.06), chassisMat);
-  rightDoorMesh.position.x = -0.41;
-  rightDoor.add(rightDoorMesh);
-  boxGroup.add(rightDoor);
+  rightDoor.position.set(0.84, 0.58, -2.31);
+  rightDoor.add(new THREE.Mesh(doorGeo(-1), kit.mats));
+  truckRoot.add(rightDoor);
 
-  truckRoot.add(boxGroup);
-
-  // Frische GPU-Server-Racks (werden entladen)
+  // Frische GPU-Server-Racks (werden entladen): Schrank mit Einschüben und LED-Reihen.
   const deliveredRack = new THREE.Group();
   deliveredRack.visible = false;
-  const rackBody = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.25, 0.65), rackMat);
-  rackBody.position.y = 0.62;
+  const rackGeo = kit.geo((m) => {
+    m.shell(-7, 0, -6, 14, 25, 13, 'rack', 1, { noise: 0.04, seed: 5 });
+    for (let l = 0; l < 4; l += 1) {
+      const y = 4 + l * 5;
+      m.box(-6, y, 6, 12, 3, 1, 'steel', { noise: 0.05, seed: 10 + l });
+      m.box(-5, y + 1, 7, 10, 1, 1, 'neon');
+    }
+    m.box(-5, 25, -4, 10, 1, 9, 'steelDark');
+  }, { unit: U, unlit: UNLIT });
+  const rackBody = new THREE.Mesh(rackGeo, kit.mats);
   rackBody.castShadow = true;
   deliveredRack.add(rackBody);
-
-  // Leuchtende Türkis-LEDs am neuen Rack
-  for (let li = 0; li < 4; li += 1) {
-    const led = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.06, 0.04), ledMat);
-    led.position.set(0, 0.28 + li * 0.26, 0.33);
-    deliveredRack.add(led);
-  }
   group.add(deliveredRack);
 
-  // Techniker / Reparateur (im High-Vis-Look)
+  // Techniker / Reparateur (im High-Vis-Look): Voxel-Person mit Warnweste, Helm und
+  // Stickstofflanze, etwas kleiner als die Zonen-Figuren.
   const techGroup = new THREE.Group();
   techGroup.visible = false;
-  const techBody = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.55, 0.25), lambert('constructionOrange'));
-  techBody.position.y = 0.48;
-  techBody.castShadow = true;
-  techGroup.add(techBody);
-
-  const techHead = new THREE.Mesh(new THREE.SphereGeometry(0.14, 6, 5), lambert('skin'));
-  techHead.position.y = 0.88;
-  techGroup.add(techHead);
-
-  const techHelmet = new THREE.Mesh(new THREE.SphereGeometry(0.16, 6, 4, 0, Math.PI * 2, 0, Math.PI * 0.55), basic('tapeYellow'));
-  techHelmet.position.y = 0.92;
-  techGroup.add(techHelmet);
-
-  // Sprühdüse / Stickstoff-Lanze in der Hand
-  const nozzle = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.45), chassisMat);
-  nozzle.position.set(0.2, 0.52, 0.25);
-  techGroup.add(nozzle);
-
+  const TECH_SCALE = 0.85;
+  const techParts = new THREE.Group();
+  techParts.scale.setScalar(TECH_SCALE);
+  techGroup.add(techParts);
+  const addPart = (geo, x, y, z, rx = 0) => {
+    const mesh = new THREE.Mesh(geo, kit.mats);
+    mesh.position.set(x, y, z);
+    mesh.rotation.x = rx;
+    mesh.castShadow = true;
+    techParts.add(mesh);
+    return mesh;
+  };
+  addPart(kit.geo(personPants, { unit: PERSON_UNIT }), 0, PERSON.pantsY, 0);
+  addPart(
+    kit.geo((m) => {
+      personTorso(m);
+      remapKeys(m, new Map([[0xffffff, 'constructionOrange'], [0xd9d9d9, 'tapeYellow'], [0xe4e4e4, 'constructionOrange'], [0xdddddd, 'tapeYellow']]));
+      // Reflexstreifen quer über Brust und Rücken
+      for (let x = -4; x < 4; x += 1) {
+        m.set(x, 6, 2, 'tapeYellow');
+        m.set(x, 6, -2, 'tapeYellow');
+      }
+    }, { unit: PERSON_UNIT, unlit: new Set(['tapeYellow']) }),
+    0, PERSON.torsoY, 0
+  );
+  addPart(kit.geo(personHead, { unit: PERSON_UNIT }), 0, PERSON.headY, 0);
+  addPart(kit.geo((m) => hardHat(m), { unit: PERSON_UNIT }), 0, PERSON.headY, 0);
+  const armGeo = kit.geo(personArm, { unit: PERSON_UNIT, origin: PERSON_ARM_ORIGIN });
+  addPart(armGeo, -PERSON.shoulderX, PERSON.shoulderY, 0, -0.3);
+  addPart(armGeo, PERSON.shoulderX, PERSON.shoulderY, 0, -1.3);
+  // Lanze in der rechten Hand, Tank auf dem Rücken
+  const nozzle = new THREE.Mesh(
+    kit.geo((m) => {
+      m.box(0, 0, -2, 1, 1, 10, 'steelDark');
+      m.box(-1, 0, 8, 3, 1, 1, 'steel');
+      m.box(-1, -1, -1, 3, 3, 2, 'steel');
+    }, { unit: U, origin: [0.5, 0.5, 0] }),
+    kit.mats
+  );
+  nozzle.position.set(PERSON.shoulderX, 0.62, 0.3);
+  techParts.add(nozzle);
+  const tank = new THREE.Mesh(
+    kit.geo((m) => {
+      m.cylinder(0, 0, 0, 9, 2.2, 'steel', { noise: 0.05, seed: 6 });
+      m.cylinder(0, 0, 9, 1, 1.2, 'steelDark');
+      m.box(-2, 3, -2, 5, 1, 1, 'warnRed');
+    }, { unit: U }),
+    kit.mats
+  );
+  tank.position.set(0, 0.45, -0.28);
+  techParts.add(tank);
   group.add(techGroup);
 
   // Kühlmittel-Sprühnebel (Cone/Partikel zum Ofen gerichtet)
@@ -489,6 +461,7 @@ export function buildDeliveryTruck(palette, furnaceAnchor = { x: 0, z: 0 }) {
     },
 
     applyPalette(p) {
+      kit.applyPalette(p);
       Object.entries(mats).forEach(([key, list]) => {
         list.forEach((m) => {
           if (p[key] !== undefined) m.color.setHex(p[key]);

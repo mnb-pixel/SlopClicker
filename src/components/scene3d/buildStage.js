@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { createPeople } from './buildPeople';
 import { tierMix } from './tierVisuals';
+import { createVoxelKit } from './voxelModel';
 
 // Bühne und Presse (Zone "stage"): Keynote-Podeste mit leuchtender Rückwand und Pult,
 // Scheinwerfer auf Traversen, Thought Leader mit Krawatte und Mikrofon, Journalisten
@@ -11,6 +12,10 @@ import { tierMix } from './tierVisuals';
 // Stufen bedeuten mehr eigene kleine Bühnen statt einer, die endlos wächst. Pitch-
 // Deck-Blätter bleiben frei über der ganzen Zone kreisende Requisiten ohne eigenes
 // Grundstück, wie zuvor.
+//
+// Podest (mit Vorderstufe und Rampenlichtern), Rückwand (Bildschirm, Balkendiagramm und
+// Traverse in einem Modell), Pult, Scheinwerferköpfe, Krawatte, Mikrofon, Kamera,
+// Aktenkoffer, Pitch-Deck-Blätter und Mastsockel sind Voxel-Modelle (voxelModel.js).
 
 const STAGE_MAX = 25;
 const LEADER_MAX = 120;
@@ -58,35 +63,104 @@ export function buildStage(palette, zoneDef) {
   const dummy = new THREE.Object3D();
   const partM = new THREE.Matrix4();
 
+  const kit = createVoxelKit(palette);
+  const vox = (build, opts) => kit.geo(build, opts);
+  const instV = (geo, count, shadow = true) => inst(geo, kit.mats, count, shadow);
+
   // --- Bühnen (eine pro Grundstück, verkleinert damit sie in ein Grundstück passt) ---
   // Platform 3.2 x 1.8 statt vormals 4.4 x 2.4 - etwa 25% kleiner, passt damit in
-  // LOT_SIZE 3.6 statt die ganze Zone zu belegen.
-  const stagePlatform = inst(new THREE.BoxGeometry(3.2, 0.4, 1.8), lambert('stageFloor'), STAGE_MAX);
-  const stageWall = inst(new THREE.BoxGeometry(3.0, 1.5, 0.14), lambert('monitor'), STAGE_MAX);
-  const stageScreenMat = basic('screen');
-  const stageScreen = inst(new THREE.PlaneGeometry(2.75, 1.25), stageScreenMat, STAGE_MAX, false);
-  const bars = inst(new THREE.BoxGeometry(0.22, 1, 0.05), lambert('gold'), STAGE_MAX * 5, false);
-  const lectern = inst(new THREE.BoxGeometry(0.38, 0.75, 0.32), lambert('desk'), STAGE_MAX);
+  // LOT_SIZE 3.6 statt die ganze Zone zu belegen. Raster 0,1: 32 x 4 x 18 Voxel.
+  const platformGeo = vox((m) => {
+    m.box(-16, 0, -9, 32, 4, 18, 'stageFloor', { noise: 0.03, seed: 2 });
+    m.box(-16, 0, -9, 32, 1, 18, 'steelDark');
+    m.box(-16, 3, -9, 32, 1, 1, 'steelDark');
+    m.box(-16, 3, 8, 32, 1, 1, 'steelDark');
+    // Vorderstufe und Rampenlichter
+    m.box(-8, 0, 9, 16, 2, 2, 'stageFloor', { noise: 0.03, seed: 3 });
+    for (let x = -14; x <= 14; x += 4) m.set(x, 4, 8, 'spot');
+  }, { unit: 0.1, unlit: new Set(['spot']) });
+  // Rückwand mit Bildschirm, Gold-Balkendiagramm und Traverse obendrauf (Raster 0,05).
+  const wallGeo = vox((m) => {
+    m.box(-30, 0, -17, 60, 30, 3, 'monitor');
+    m.box(-27, 3, -14, 55, 25, 1, 'screen');
+    for (let x = -27; x < 28; x += 1) m.set(x, 26, -14, 'screen', 0.7);
+    [5, 8, 11, 15, 18].forEach((h, b) => m.box(-20 + b * 8, 4, -13, 4, h, 1, 'gold'));
+    m.box(-31, 30, -18, 62, 2, 5, 'steelDark');
+    for (let x = -30; x < 31; x += 6) m.box(x, 32, -17, 1, 3, 3, 'steelDark');
+    m.box(-31, 35, -18, 62, 1, 5, 'steelDark');
+  }, { unit: 0.05, unlit: new Set(['screen']) });
+  const lecternGeo = vox((m) => {
+    m.box(-3, 0, -3, 7, 13, 6, 'desk', { noise: 0.04, seed: 4 });
+    m.box(-4, 13, -4, 9, 2, 7, 'deskDark');
+    m.box(-1, 5, 3, 3, 3, 1, 'gold');
+    m.box(0, 15, -2, 1, 4, 1, 'camera');
+    m.box(-1, 19, -2, 2, 1, 2, 'steel');
+  }, { unit: 0.05 });
+  const spotHeadGeo = vox((m) => {
+    m.box(-2, 0, -2, 5, 6, 5, 'steelDark');
+    m.box(-1, 0, -1, 3, 1, 3, 'spot');
+    m.box(-2, 6, -1, 5, 1, 3, 'steel');
+    m.set(0, 7, 0, 'steel');
+  }, { unit: 0.05, origin: [0.5, 3, 0.5], unlit: new Set(['spot']) });
+
+  const stagePlatform = instV(platformGeo, STAGE_MAX);
+  const stageWall = instV(wallGeo, STAGE_MAX);
+  const lectern = instV(lecternGeo, STAGE_MAX);
 
   // Scheinwerfer: ein Paar pro Bühnen-Grundstück (Mast, Kopf, Lichtkegel).
   const spotPole = inst(new THREE.CylinderGeometry(0.05, 0.06, 2.6, 5), lambert('steelDark'), STAGE_MAX * 2, false);
-  const spotHead = inst(new THREE.CylinderGeometry(0.1, 0.16, 0.24, 6), lambert('steelDark'), STAGE_MAX * 2, false);
+  const spotHead = instV(spotHeadGeo, STAGE_MAX * 2, false);
   const spotBeamMat = basic('spot', { transparent: true, opacity: 0.18, depthWrite: false, side: THREE.DoubleSide });
   const spotBeam = inst(new THREE.ConeGeometry(0.65, 2.3, 8, 1, true), spotBeamMat, STAGE_MAX * 2, false);
 
   // --- Personen ------------------------------------------------------------------------
   const people = createPeople(group, palette, LEADER_MAX + JOURNALIST_MAX + LOBBY_MAX);
-  const tie = inst(new THREE.BoxGeometry(0.07, 0.3, 0.03), lambert('tie'), LEADER_MAX, false);
-  const mic = inst(new THREE.CylinderGeometry(0.03, 0.03, 0.22, 5), lambert('camera'), LEADER_MAX, false);
-  const camera = inst(new THREE.BoxGeometry(0.22, 0.16, 0.26), lambert('camera'), JOURNALIST_MAX, false);
+  const tieGeo = vox((m) => {
+    m.box(0, 0, 0, 1, 6, 1, 'tie');
+    m.box(-1, 6, 0, 3, 1, 1, 'tie');
+    m.set(0, 0, 0, 'tie', 0.8);
+  }, { unit: 0.04, origin: [0.5, 3.5, 0.5] });
+  const micGeo = vox((m) => {
+    m.box(0, 0, 0, 1, 4, 1, 'camera');
+    m.box(-1, 4, -1, 3, 3, 3, 'steel', { noise: 0.15, seed: 7 });
+  }, { unit: 0.04, origin: [0.5, 3, 0.5] });
+  const cameraGeo = vox((m) => {
+    m.box(-2, 0, -2, 5, 3, 4, 'camera');
+    m.box(-1, 1, 2, 3, 2, 2, 'steel');
+    m.set(0, 1, 4, 'tapeBlack');
+    m.box(-2, 3, -2, 2, 1, 2, 'steel');
+    m.set(2, 3, -1, 'warnRed');
+  }, { unit: 0.05, origin: [0.5, 1.5, 0.5], unlit: new Set(['warnRed']) });
+  const briefcaseGeo = vox((m) => {
+    m.box(-3, 0, 0, 6, 5, 2, 'deskDark');
+    m.box(-1, 5, 0, 2, 1, 2, 'deskDark');
+    m.set(-2, 3, 2, 'gold');
+    m.set(1, 3, 2, 'gold');
+    m.box(-3, 2, 0, 6, 1, 2, 'deskLeg');
+  }, { unit: 0.05, origin: [0, 2.5, 1] });
+  const tie = instV(tieGeo, LEADER_MAX, false);
+  const mic = instV(micGeo, LEADER_MAX, false);
+  const camera = instV(cameraGeo, JOURNALIST_MAX, false);
   const flash = inst(new THREE.SphereGeometry(0.16, 6, 5), basic('paper'), JOURNALIST_MAX, false);
-  const briefcase = inst(new THREE.BoxGeometry(0.3, 0.24, 0.1), lambert('deskDark'), LOBBY_MAX, false);
+  const briefcase = instV(briefcaseGeo, LOBBY_MAX, false);
 
   // Pitch-Deck-Blätter: frei über der ganzen (gewachsenen) Zone, kein Grundstück.
-  const paper = inst(new THREE.BoxGeometry(0.34, 0.01, 0.46), lambert('paper'), PAPER_MAX, false);
+  const paperGeo = vox((m) => {
+    m.box(-3, 0, -4, 7, 1, 9, 'paper');
+    [-3, -1, 1, 3].forEach((z) => {
+      for (let x = -2; x <= 2; x += 1) m.set(x, 0, z, 'paper', 0.75);
+    });
+    m.box(-2, 0, -4, 3, 1, 1, 'screen', { noise: 0 });
+  }, { unit: 0.05, origin: [0.5, 0.5, 0.5] });
+  const paper = instV(paperGeo, PAPER_MAX, false);
 
   // --- Sendemast (ein Mast pro Lobbyisten-Grundstück) -----------------------------------
-  const mastBase = inst(new THREE.CylinderGeometry(0.4, 0.56, 0.32, 8), lambert('stoneDark'), LOBBY_MAX);
+  const mastBaseGeo = vox((m) => {
+    m.cylinder(0, 0, 0, 4, 10.5, 'stoneDark', { noise: 0.04, seed: 9 });
+    m.cylinder(0, 0, 4, 2, 8, 'stoneDark');
+    [[-6, 0], [6, 0], [0, -6], [0, 6]].forEach(([x, z]) => m.set(x, 6, z, 'steel'));
+  }, { unit: 0.05 });
+  const mastBase = instV(mastBaseGeo, LOBBY_MAX);
   const mastSeg = inst(new THREE.CylinderGeometry(0.1, 0.15, 1.0, 4), lambert('steel'), LOBBY_MAX * 3, false);
   const mastCross = inst(new THREE.BoxGeometry(0.6, 0.05, 0.05), lambert('steelDark'), LOBBY_MAX * 3, false);
   const dishMat = lambert('facade');
@@ -106,28 +180,17 @@ export function buildStage(palette, zoneDef) {
     for (let i = 0; i < n; i += 1) {
       const lot = lots[i];
       stageLots.push(lot);
-      dummy.position.set(lot.lx, 0.2, lot.lz);
+      dummy.position.set(lot.lx, 0, lot.lz);
       dummy.rotation.set(0, 0, 0);
       dummy.scale.setScalar(1);
       dummy.updateMatrix();
       stagePlatform.setMatrixAt(i, dummy.matrix);
-      dummy.position.set(lot.lx, 1.15, lot.lz - 0.8);
+      dummy.position.set(lot.lx, 0.4, lot.lz);
       dummy.updateMatrix();
       stageWall.setMatrixAt(i, dummy.matrix);
-      dummy.position.set(lot.lx, 1.18, lot.lz - 0.73);
-      dummy.updateMatrix();
-      stageScreen.setMatrixAt(i, dummy.matrix);
-      dummy.position.set(lot.lx + 0.15, 0.72, lot.lz + 0.35);
+      dummy.position.set(lot.lx + 0.15, 0.4, lot.lz + 0.35);
       dummy.updateMatrix();
       lectern.setMatrixAt(i, dummy.matrix);
-      for (let b = 0; b < 5; b += 1) {
-        const h = 0.25 + b * 0.16;
-        dummy.position.set(lot.lx - 1.0 + b * 0.4, 0.6 + h / 2, lot.lz - 0.72);
-        dummy.rotation.set(0, 0, 0);
-        dummy.scale.set(1, h, 1);
-        dummy.updateMatrix();
-        bars.setMatrixAt(i * 5 + b, dummy.matrix);
-      }
       [-1.1, 1.1].forEach((sx, si) => {
         const idx = i * 2 + si;
         dummy.position.set(lot.lx + sx, 1.3, lot.lz - 1.4);
@@ -139,9 +202,7 @@ export function buildStage(palette, zoneDef) {
     }
     stagePlatform.count = n;
     stageWall.count = n;
-    stageScreen.count = n;
     lectern.count = n;
-    bars.count = n * 5;
     spotPole.count = n * 2;
     spotHead.count = n * 2;
     spotBeam.count = n * 2;
@@ -168,7 +229,7 @@ export function buildStage(palette, zoneDef) {
     for (let i = 0; i < n; i += 1) {
       const lot = lots[i];
       mastLots.push(lot);
-      dummy.position.set(lot.lx, 0.16, lot.lz);
+      dummy.position.set(lot.lx, 0, lot.lz);
       dummy.rotation.set(0, 0, 0);
       dummy.scale.setScalar(1);
       dummy.updateMatrix();
@@ -232,7 +293,8 @@ export function buildStage(palette, zoneDef) {
       const tierKey = `${stageTier}|${leaderTier}|${journalistTier}|${lobbyTier}`;
       if (tierKey !== lastTiers) {
         lastTiers = tierKey;
-        stageScreenMat.color.setHex(tierMix(p.screen, p.gold, stageTier, 0.7));
+        const screenHex = tierMix(p.screen, p.gold, stageTier, 0.7);
+        kit.recolor(wallGeo, (k) => (k === 'screen' ? screenHex : undefined));
         spotBeamMat.color.setHex(tierMix(p.spot, p.gold, stageTier, 0.5));
         dishMat.color.setHex(tierMix(p.facade, p.gold, lobbyTier, 0.35));
       }
@@ -243,7 +305,7 @@ export function buildStage(palette, zoneDef) {
         leaderUnits = placeCrowd(lotsFor('thought_leader'), counts.leader, Math.PI * 0.5);
         journalistUnits = placeCrowd(lotsFor('hype_journalist'), counts.journalist, Math.PI);
         placeMasts(lotsFor('lobbyist'), counts.lobby);
-        [stagePlatform, stageWall, stageScreen, lectern, bars, mastBase, mastSeg, mastCross, dish, beacon].forEach((m) => {
+        [stagePlatform, stageWall, lectern, mastBase, mastSeg, mastCross, dish, beacon].forEach((m) => {
           m.instanceMatrix.needsUpdate = true;
         });
         placedKey = key;
@@ -358,6 +420,7 @@ export function buildStage(palette, zoneDef) {
     },
     applyPalette(p) {
       Object.entries(mats).forEach(([key, list]) => list.forEach((m) => m.color.setHex(p[key])));
+      kit.applyPalette(p);
       people.applyPalette(p);
       placedKey = null;
       lastTiers = '';

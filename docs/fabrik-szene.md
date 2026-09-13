@@ -263,7 +263,7 @@ Ausnahmen sind Singletons (AGI-Uhr, Singularität - es gibt nie ein zweites davo
 frei schwebende Requisiten ohne Grundstück (Sprechblasen, Drohnen, Pitch-Deck-Papiere,
 Excel-Tabelle), die einfach über der ganzen - gewachsenen - Zone weiterziehen.
 
-| Zone | Engine | Prop (Low-Poly) | Max. Objekte |
+| Zone | Engine | Prop (Voxel-Modell) | Max. Objekte |
 |---|---|---|---|
 | office | Prompt-Praktikant | Person am schiefen Tisch, Monitor, Tastatur, Tasse, tippende Arme, hängende Schultern - vier pro Haus, danach ein Haus nebenan, nach vier Häusern eine neue Reihe (bis 12 Häuser) | 48 |
 | office | Prompt Engineer | Person am breiteren Tisch mit zwei Monitoren, aufrechte Haltung, schnelleres Tippen - vier pro Haus, eigene Spalten neben den Praktikanten (bis 9 Häuser) | 36 |
@@ -458,6 +458,16 @@ ohne stundenlanges Spielen; kein Cheat, weil nichts davon in den Store zurückfl
   3D-Chunk warten. Budget: rund 150 KB gzip zusätzlich.
 - **Instancing** für Praktikanten, Rauch, Blätter, Drohnen. Alles Wuselnde ist ein
   InstancedMesh mit Matrix-Update pro Frame, nie einzelne Meshes.
+- **Voxel-Modelle** (`voxelModel.js`, seit 2026-09-13): jedes Prop ist ein echtes
+  Modell aus vielen kleinen Würfeln auf einem Ganzzahl-Raster (0,05 für Personen und
+  Möbel, 0,1 für Gebäude), nicht mehr eine Handvoll Zylinder und Quader. Ein Modell
+  wird EINMAL zu einer BufferGeometry mit Vertex-Farben verschmolzen (Innenflächen
+  fallen weg) und dann wie bisher instanziert - gleiche Draw Calls, mehr Dreiecke.
+  Theme-Wechsel und Sichtstufen färben über `kit.applyPalette()` / `kit.recolor()`
+  nur das Farb-Attribut um. Unbeleuchtete Teile (Bildschirme, LEDs, Glas) landen über
+  `unlit` in einer zweiten Materialgruppe. Gemeinsame Modelle (Person, Baum, Auto,
+  Helm) liegen in `voxelLibrary.js`; nur was sich pro Instanz bewegt oder umfärbt
+  (LEDs, Burner-Kern, Lüfterblätter, Pupillen) bleibt ein eigenes Mesh.
 - **Interaktion per Raycast**: der Schrank löst `handleTapAGI(event)` aus (Clientkoordinaten
   bleiben erhalten, die fliegenden Zahlen brauchen sie), Zonen öffnen `ZoneBuyPanel`.
 - **Render nur bei Bedarf**: Loop läuft mit 60 FPS, solange die Szene sichtbar und der
@@ -485,6 +495,9 @@ ohne stundenlanges Spielen; kein Cheat, weil nichts davon in den Store zurückfl
 | `src/components/scene3d/buildZones.js` | Platten, Klickziele, Nadel-Anker, Zonen-Effekte, hostet die Zonen-Bauer |
 | `src/components/scene3d/buildEnvironment.js` | Kulisse am Feldrand: vier Dorf-Cluster, Straßennetz und ein Fluss übers ganze Feld, verdrängt/verschmutzt sich mit der Hype-Stufe |
 | `src/components/scene3d/buildDataLine.js`, `buildPeople.js` | Gemeinsame Bausteine: Datenleitung, Personen |
+| `src/components/scene3d/voxelModel.js` | Voxel-Kern: `VoxelModel` (box/shell/cylinder/sphere/mirrorX), `buildVoxelGeometry()`, `createVoxelKit()` (Materialien, Umfärben je Palette/Sichtstufe) |
+| `src/components/scene3d/voxelLibrary.js` | Gemeinsame Voxel-Modelle: Personen-Teile (Hose, Pulli, Kopf, Frisuren, Arm), Baum (3 Formen), Auto, Schutzhelm |
+| `src/components/scene3d/voxelDetail.js` | Kleine instanzierte Dach-Requisiten für die Bürohäuser |
 | `src/components/scene3d/ZoneBuyPanel.jsx` | Kaufen aus der Szene: Engines, Upgrades und Corporate Actions der angeklickten Zone in drei Reitern mit Voxel-Icon je Zeile (`voxelIcons.jsx`), Preise/Filterung über dieselben Helfer wie der Shop |
 | `src/components/scene3d/voxelIcons.jsx` | Gezeichnetes Mini-Icon je Engine im Kaufpanel, Sichtstufe (0-3) färbt es Richtung Gold wie das Prop in der Szene selbst |
 | `src/utils/storeCopy.js` | Anzeigetexte für Upgrades und Corporate Actions (Name, Zitat, Effektbeschreibung) - eine Quelle für StoreTab und ZoneBuyPanel |

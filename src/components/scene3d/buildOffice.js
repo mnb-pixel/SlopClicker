@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { buildDataLine, defaultLineRoute } from './buildDataLine';
 import { buildLotShells } from './buildLotShells';
 import { tierMix } from './tierVisuals';
+import { createVoxelKit } from './voxelModel';
+import { PERSON_UNIT, PERSON_ARM_ORIGIN, personTorso, personHead, personHair, personArm } from './voxelLibrary';
 
 // Großraumbüro (Zone "office"): Praktikanten und Prompt Engineers sitzen an schäbigen
 // Schreibtischen und tippen - seit dem Grundstücks-Umbau nicht mehr frei auf der Wiese,
@@ -10,10 +12,12 @@ import { tierMix } from './tierVisuals';
 // Engine als eigenes Viertel wächst (siehe utils/campusLayout.js). Vom Büro führt weiter eine Datenleitung zum Ofen, durch die
 // Tokens rasen; Chatbot-Widgets schweben als Sprechblasen über den Dächern.
 //
-// Jede Teilesorte (Tischplatte, Böcke, Monitor, Tastatur, Stuhl, Körper, Kopf, Arme,
-// Tasse, Papier, Blase, Token) ist EIN InstancedMesh. Statische Teile werden nur bei
-// geänderter Anzahl neu gesetzt, pro Frame bewegen sich nur Arme, Köpfe, Blasen,
-// Tokens und das Deckenlicht.
+// Jede Teilesorte (Schreibtisch, Monitor, Tastatur, Maus, Rechner, Stuhl, Körper, Kopf,
+// Frisur, Arme, Tasse, Papier, Blase, Token) ist EIN InstancedMesh mit einem Voxel-
+// Modell als Geometrie (siehe voxelModel.js, Raster 0,05): Schubladen mit Griffen,
+// Monitore mit Bildschirminhalt und Logo auf der Rückseite, Tastaturen mit Tasten,
+// Bürostühle mit Fußkreuz. Statische Teile werden nur bei geänderter Anzahl neu gesetzt,
+// pro Frame bewegen sich nur Arme, Köpfe, Blasen, Tokens und das Deckenlicht.
 
 const INTERN_MAX = 200;
 const ENGINEER_MAX = 160;
@@ -47,11 +51,6 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
   group.position.set(anchor3d.x, 0.3, anchor3d.z);
 
   const mats = {};
-  const lambert = (key, extra = {}) => {
-    const m = new THREE.MeshLambertMaterial({ color: palette[key], flatShading: true, ...extra });
-    (mats[key] = mats[key] || []).push(m);
-    return m;
-  };
   const basic = (key, extra = {}) => {
     const m = new THREE.MeshBasicMaterial({ color: palette[key], ...extra });
     (mats[key] = mats[key] || []).push(m);
@@ -86,31 +85,124 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
   });
   group.add(engineerShells.group);
 
-  // --- Teile -------------------------------------------------------------------------
-  const deskTop = inst(new THREE.BoxGeometry(1.35, 0.08, 0.7), lambert('desk'), TOTAL);
-  const deskLeg = inst(new THREE.BoxGeometry(0.08, 0.7, 0.62), lambert('deskLeg'), TOTAL * 2);
-  const monitor = inst(new THREE.BoxGeometry(0.52, 0.4, 0.1), lambert('monitor'), TOTAL + ENGINEER_MAX);
-  const screenMat = basic('screen');
-  const screen = inst(new THREE.PlaneGeometry(0.44, 0.32), screenMat, TOTAL + ENGINEER_MAX, false);
-  const monitorStand = inst(new THREE.BoxGeometry(0.1, 0.16, 0.1), lambert('deskLeg'), TOTAL + ENGINEER_MAX, false);
-  const keyboard = inst(new THREE.BoxGeometry(0.5, 0.04, 0.2), lambert('deskDark'), TOTAL, false);
-  const mouse = inst(new THREE.BoxGeometry(0.08, 0.03, 0.12), lambert('deskDark'), TOTAL, false);
-  const pcTower = inst(new THREE.BoxGeometry(0.18, 0.42, 0.44), lambert('monitor'), TOTAL, false);
-  const pcLed = inst(new THREE.BoxGeometry(0.04, 0.04, 0.02), basic('neon'), TOTAL, false);
-  const chairSeat = inst(new THREE.BoxGeometry(0.5, 0.08, 0.5), lambert('chair'), TOTAL);
-  const chairBack = inst(new THREE.BoxGeometry(0.5, 0.5, 0.08), lambert('chair'), TOTAL);
-  const chairLeg = inst(new THREE.CylinderGeometry(0.04, 0.04, 0.42, 5), lambert('deskLeg'), TOTAL, false);
-  const chairArm = inst(new THREE.BoxGeometry(0.06, 0.22, 0.32), lambert('chair'), TOTAL * 2, false);
-  const bodyMat = new THREE.MeshLambertMaterial({ color: 0xffffff, flatShading: true });
-  const body = inst(new THREE.CylinderGeometry(0.2, 0.24, 0.5, 7), bodyMat, TOTAL);
-  const head = inst(new THREE.SphereGeometry(0.17, 7, 6), lambert('skin'), TOTAL);
-  const hair = inst(new THREE.SphereGeometry(0.18, 7, 5, 0, Math.PI * 2, 0, Math.PI * 0.55), lambert('hair'), TOTAL, false);
-  const arm = inst(new THREE.BoxGeometry(0.08, 0.08, 0.32), lambert('skin'), TOTAL * 2, false);
-  const cup = inst(new THREE.CylinderGeometry(0.06, 0.05, 0.12, 6), lambert('cup'), TOTAL, false);
-  const paper = inst(new THREE.BoxGeometry(0.28, 0.01, 0.36), lambert('paper'), TOTAL, false);
+  // --- Voxel-Modelle -------------------------------------------------------------------
+  // Lokales System je Arbeitsplatz: Person schaut nach +z, Tischplatte bei y = 0,8.
+  const kit = createVoxelKit(palette);
+  const U = 0.05;
+  const vox = (build, opts = {}) => kit.geo(build, { unit: U, ...opts });
+  const instV = (geo, count, shadow = true) => inst(geo, kit.mats, count, shadow);
 
-  const bubble = inst(new THREE.BoxGeometry(0.7, 0.45, 0.12), lambert('bubble'), WIDGET_MAX, false);
-  const bubbleDot = inst(new THREE.SphereGeometry(0.05, 5, 4), basic('token'), WIDGET_MAX * 3, false);
+  const deskGeo = vox((m) => {
+    m.box(-13, 14, -7, 27, 2, 14, 'desk', { noise: 0.05, seed: 3 });
+    // Schubladenblock rechts, Fronten zur Person (-z), Griffe aus Stahl
+    m.box(7, 0, -6, 6, 14, 12, 'deskDark');
+    [2, 6, 10].forEach((y) => {
+      m.box(8, y, -7, 4, 3, 1, 'desk');
+      m.set(9, y + 1, -8, 'steel');
+      m.set(10, y + 1, -8, 'steel');
+    });
+    // Seitenwange links, Rückwand zur Kamera mit hellem Streifen
+    m.box(-13, 0, -6, 2, 14, 12, 'deskLeg');
+    m.box(-11, 3, 6, 18, 11, 1, 'deskDark');
+    m.box(-11, 12, 6, 18, 1, 1, 'deskLeg');
+  });
+  const monitorGeo = vox((m) => {
+    m.box(-3, 0, -2, 6, 1, 4, 'deskLeg');
+    m.box(-1, 1, -1, 2, 3, 2, 'deskLeg');
+    m.box(-5, 4, 0, 11, 8, 1, 'monitor');
+    // Bildschirm zur Person (-z): Titelleiste dunkler, Textzeilen heller
+    m.box(-4, 5, -1, 9, 6, 1, 'screen');
+    for (let x = -4; x <= 4; x += 1) m.set(x, 10, -1, 'screen', 0.7);
+    for (let y = 6; y <= 9; y += 1) {
+      for (let x = -3; x <= 2; x += 1) if ((x + y * 2) % 3 !== 0) m.set(x, y, -1, 'screen', 1.18);
+    }
+    // Rückseite zur Kamera: Logo und Kabel
+    m.set(0, 8, 1, 'steel');
+    m.box(0, 4, 1, 1, 2, 1, 'tapeBlack');
+  }, { unlit: new Set(['screen']) });
+  const keyboardGeo = vox((m) => {
+    m.box(-5, 0, -2, 10, 1, 4, 'deskDark');
+    for (let x = -4; x <= 3; x += 1) {
+      for (let z = -1; z <= 0; z += 1) m.set(x, 1, z, 'steel', (x + z) % 2 ? 0.88 : 1.04);
+    }
+    m.box(-2, 1, 1, 4, 1, 1, 'steel', { noise: 0 });
+  });
+  const mouseGeo = vox((m) => {
+    m.box(-1, 0, -1, 2, 2, 3, 'deskDark');
+    m.set(-1, 1, 1, 'steel');
+    m.set(0, 1, 1, 'steel');
+  });
+  const pcGeo = vox((m) => {
+    m.box(-2, 0, -4, 4, 9, 9, 'monitor');
+    for (let y = 1; y <= 7; y += 2) {
+      for (let z = -3; z <= 3; z += 1) m.set(2, y, z, 'monitor', 0.55);
+    }
+    m.set(-1, 7, -5, 'neon');
+    m.set(0, 7, -5, 'steel');
+    m.set(1, 2, -5, 'steel', 0.7);
+  }, { unlit: new Set(['neon']) });
+  const chairGeo = vox((m) => {
+    // Fußkreuz mit Rollen, Säule, Sitz, Lehne (hinten, -z), Armlehnen
+    m.box(-4, 0, -1, 9, 1, 3, 'deskLeg');
+    m.box(-1, 0, -4, 3, 1, 9, 'deskLeg');
+    [[-4, 0], [4, 0], [0, -4], [0, 4]].forEach(([x, z]) => m.set(x, 0, z, 'tapeBlack'));
+    m.box(-1, 1, -1, 2, 7, 2, 'deskLeg');
+    m.box(-5, 8, -5, 10, 2, 10, 'chair');
+    for (let x = -5; x <= 4; x += 1) m.set(x, 9, -1, 'chair', 0.85);
+    m.box(-5, 10, -5, 10, 10, 2, 'chair');
+    for (let x = -5; x <= 4; x += 1) m.set(x, 14, -3, 'chair', 0.85);
+    m.box(-7, 12, -3, 2, 1, 6, 'chair', { noise: 0 });
+    m.box(5, 12, -3, 2, 1, 6, 'chair', { noise: 0 });
+    m.box(-7, 8, -1, 2, 4, 2, 'deskLeg');
+    m.box(5, 8, -1, 2, 4, 2, 'deskLeg');
+  });
+  const cupGeo = vox((m) => {
+    m.cylinder(0, 0, 0, 4, 1.6, 'cup');
+    m.set(2, 1, 0, 'cup');
+    m.set(2, 2, 0, 'cup');
+    [[0, 0], [-1, 0], [0, -1], [-1, -1]].forEach(([x, z]) => m.set(x, 3, z, 0x5b3a1e));
+  });
+  const paperGeo = vox((m) => {
+    m.box(-3, 0, -4, 6, 1, 8, 'paper');
+    [-2, 0, 2].forEach((z) => {
+      for (let x = -2; x <= 1; x += 1) m.set(x, 0, z, 'paper', 0.78);
+    });
+  });
+  const bubbleGeo = vox((m) => {
+    m.box(-7, 0, 0, 14, 9, 2, 'bubble');
+    [[-7, 0], [6, 0], [-7, 8], [6, 8]].forEach(([x, y]) => {
+      m.remove(x, y, 0);
+      m.remove(x, y, 1);
+    });
+    m.box(-4, -2, 0, 2, 2, 2, 'bubble');
+    m.set(-4, -3, 0, 'bubble');
+    m.set(-4, -3, 1, 'bubble');
+  }, { origin: [0, 4.5, 1] });
+
+  // --- Teile -------------------------------------------------------------------------
+  const desk = instV(deskGeo, TOTAL);
+  const monitor = instV(monitorGeo, TOTAL + ENGINEER_MAX);
+  const keyboard = instV(keyboardGeo, TOTAL, false);
+  const mouse = instV(mouseGeo, TOTAL, false);
+  const pcTower = instV(pcGeo, TOTAL, false);
+  const chair = instV(chairGeo, TOTAL);
+  const body = instV(kit.geo(personTorso, { unit: PERSON_UNIT }), TOTAL);
+  const head = instV(kit.geo(personHead, { unit: PERSON_UNIT }), TOTAL);
+  const hairA = instV(kit.geo((m) => personHair(m, 0), { unit: PERSON_UNIT }), TOTAL, false);
+  const hairB = instV(kit.geo((m) => personHair(m, 1), { unit: PERSON_UNIT }), TOTAL, false);
+  const arm = instV(kit.geo(personArm, { unit: PERSON_UNIT, origin: PERSON_ARM_ORIGIN }), TOTAL * 2, false);
+  const cup = instV(cupGeo, TOTAL, false);
+  const paper = instV(paperGeo, TOTAL, false);
+
+  const bubble = instV(bubbleGeo, WIDGET_MAX, false);
+  const bubbleDot = inst(new THREE.BoxGeometry(0.1, 0.1, 0.06), basic('token'), WIDGET_MAX * 3, false);
+
+  // Sitzende Person: Oberkörper auf dem Stuhl (Sitzfläche y 0,5), Kopf darüber. Die
+  // Hose entfällt - die Beine stecken unter dem Tisch.
+  const SIT_TORSO_Y = 0.55;
+  const SIT_HEAD_Y = 1.1;
+  const SIT_SHOULDER_Y = 1.02;
+  const SIT_Z = -0.7;
 
   // --- Deckenlicht je Haus ------------------------------------------------------------
   // Früher standen zwei freie Neonmasten auf der Wiese. Mit Häusern gehört das Licht
@@ -188,73 +280,61 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
     units.forEach((u, i) => {
       const { slot, isEngineer, seed } = u;
       const wobble = isEngineer ? 0 : (hash01(seed) - 0.5) * 0.06; // schiefe Praktikanten-Tische
-      place(deskTop, i, slot, 0, 0.75, 0, 0, 0, wobble, isEngineer ? 1.25 : 1, 1, 1);
-      place(deskLeg, i * 2, slot, -0.55 * (isEngineer ? 1.25 : 1), 0.36, 0);
-      place(deskLeg, i * 2 + 1, slot, 0.55 * (isEngineer ? 1.25 : 1), 0.36, 0);
-      place(keyboard, i, slot, 0, 0.81, -0.12);
-      place(mouse, i, slot, 0.32, 0.81, -0.12);
-      place(pcTower, i, slot, 0.48 * (isEngineer ? 1.2 : 1), 0.22, 0.05);
-      place(pcLed, i, slot, 0.48 * (isEngineer ? 1.2 : 1), 0.38, -0.16);
+      const wide = isEngineer ? 1.25 : 1;
+      place(desk, i, slot, 0, 0, 0, 0, 0, wobble, wide, 1, 1);
+      place(keyboard, i, slot, 0, 0.8, -0.14);
+      place(mouse, i, slot, 0.34, 0.8, -0.14);
+      place(pcTower, i, slot, 0.5 * wide + 0.14, 0, 0.05);
       const monitors = isEngineer ? 2 : 1;
       for (let m = 0; m < monitors; m += 1) {
         const mx = isEngineer ? (m === 0 ? -0.3 : 0.3) : 0;
         const yaw = isEngineer ? (m === 0 ? 0.35 : -0.35) : 0;
-        place(monitor, monitorIdx, slot, mx, 1.07, 0.2, 0, yaw);
-        place(monitorStand, monitorIdx, slot, mx, 0.86, 0.2, 0, yaw);
-        // Bildschirmfläche zeigt zur Person (-z), leicht vor dem Gehäuse.
-        place(screen, monitorIdx, slot, mx - Math.sin(yaw) * 0.06, 1.07, 0.2 - Math.cos(yaw) * 0.06, 0, Math.PI + yaw);
+        place(monitor, monitorIdx, slot, mx, 0.8, 0.2, 0, yaw);
         monitorIdx += 1;
       }
-      place(chairSeat, i, slot, 0, 0.5, -0.72);
-      place(chairBack, i, slot, 0, 0.78, -0.95);
-      place(chairLeg, i, slot, 0, 0.25, -0.72);
-      place(chairArm, i * 2, slot, -0.28, 0.65, -0.72);
-      place(chairArm, i * 2 + 1, slot, 0.28, 0.65, -0.72);
-      // Person: Körper sitzt auf dem Stuhl, Kopf darüber. Praktikanten hängen etwas.
+      place(chair, i, slot, 0, 0, SIT_Z);
+      // Person: Oberkörper sitzt auf dem Stuhl, Kopf darüber. Praktikanten hängen etwas
+      // (Neigung um den Sitz, Kopf rückt entsprechend nach vorn).
       const slump = isEngineer ? 0 : 0.12;
       const sc = u.absent ? 0.001 : 1;
-      place(body, i, slot, 0, 0.8, -0.7, slump, 0, 0, sc, sc, sc);
-      place(head, i, slot, 0, 1.2 - slump * 0.3, -0.62 + slump * 0.3, 0, 0, 0, sc, sc, sc);
-      place(hair, i, slot, 0, 1.24 - slump * 0.3, -0.62 + slump * 0.3, 0, 0, 0, sc, sc, sc);
+      place(body, i, slot, 0, SIT_TORSO_Y, SIT_Z, slump, 0, 0, sc, sc, sc);
+      const hy = SIT_HEAD_Y - slump * 0.05;
+      const hz = SIT_Z + slump * 0.55;
+      const variantB = seed % 2 === 1;
+      place(head, i, slot, 0, hy, hz, 0, 0, 0, sc, sc, sc);
+      place(hairA, i, slot, 0, hy, hz, 0, 0, 0, variantB ? 0.001 : sc, variantB ? 0.001 : sc, variantB ? 0.001 : sc);
+      place(hairB, i, slot, 0, hy, hz, 0, 0, 0, variantB ? sc : 0.001, variantB ? sc : 0.001, variantB ? sc : 0.001);
       const tier = isEngineer ? engineerTier : internTier;
       color.setHex(tierMix([p.hoodieA, p.hoodieB, p.hoodieC][seed % 3], p.gold, tier));
       body.setColorAt(i, color);
       // Ab Stufe 2 hat jeder Platz Tasse und Papier - besser ausgestattet statt
       // zufällig, das liest sich als sichtbarer Fortschritt.
       if (tier >= 2 || hash01(seed + 7) > 0.45) {
-        place(cup, cupIdx, slot, 0.45, 0.85, -0.1);
+        place(cup, cupIdx, slot, 0.42, 0.8, -0.06);
         cupIdx += 1;
       }
       if (tier >= 2 || hash01(seed + 13) > 0.5) {
-        place(paper, paperIdx, slot, -0.45, 0.8, 0.05, 0, hash01(seed) * 0.6);
+        place(paper, paperIdx, slot, -0.42, 0.8, 0.02, 0, hash01(seed) * 0.6);
         paperIdx += 1;
       }
     });
 
-    deskTop.count = n;
-    deskLeg.count = n * 2;
+    desk.count = n;
     keyboard.count = n;
     mouse.count = n;
     pcTower.count = n;
-    pcLed.count = n;
     monitor.count = monitorIdx;
-    monitorStand.count = monitorIdx;
-    screen.count = monitorIdx;
-    chairSeat.count = n;
-    chairBack.count = n;
-    chairLeg.count = n;
-    chairArm.count = n * 2;
+    chair.count = n;
     body.count = n;
     head.count = n;
-    hair.count = n;
+    hairA.count = n;
+    hairB.count = n;
     arm.count = n * 2;
     cup.count = cupIdx;
     paper.count = paperIdx;
-    [deskTop, deskLeg, keyboard, mouse, pcTower, pcLed, monitor, monitorStand, screen, chairSeat, chairBack, chairLeg, chairArm, body, head, hair, cup, paper].forEach(
-      (m) => {
-        m.instanceMatrix.needsUpdate = true;
-      }
-    );
+    [desk, keyboard, mouse, pcTower, monitor, chair, body, head, hairA, hairB, arm, cup, paper].forEach((m) => {
+      m.instanceMatrix.needsUpdate = true;
+    });
     if (body.instanceColor) body.instanceColor.needsUpdate = true;
 
     // Häuser und ihr Deckenlicht.
@@ -320,14 +400,16 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
       const screenTier = Math.max(internTier, engineerTier);
       if (screenTier !== lastScreenTier) {
         lastScreenTier = screenTier;
-        screenMat.color.setHex(tierMix(p.screen, p.gold, screenTier, 0.7));
+        const screenHex = tierMix(p.screen, p.gold, screenTier, 0.7);
+        kit.recolor(monitorGeo, (k) => (k === 'screen' ? screenHex : undefined));
       }
       if (widgetCount !== placedWidgets) {
         layoutWidgets(widgetCount, internLots.length ? internLots : engineerLots);
         placedWidgets = widgetCount;
       }
 
-      // Tippen: Arme wippen gegenläufig, Kopf nickt minimal.
+      // Tippen: Arme (Drehpunkt Schulter) pendeln gegenläufig über der Tastatur, Kopf
+      // nickt minimal.
       const n = units.length;
       for (let i = 0; i < n; i += 1) {
         const { slot, isEngineer, seed, absent } = units[i];
@@ -338,19 +420,26 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
         }
         const speed = isEngineer ? 14 : 9 + hash01(seed) * 4;
         const ph = reduced ? 0 : t * speed + seed;
-        const lift0 = Math.max(0, Math.sin(ph)) * 0.05;
-        const lift1 = Math.max(0, Math.sin(ph + Math.PI)) * 0.05;
+        const lift0 = Math.max(0, Math.sin(ph)) * 0.12;
+        const lift1 = Math.max(0, Math.sin(ph + Math.PI)) * 0.12;
         const slump = isEngineer ? 0 : 0.12;
-        place(arm, i * 2, slot, -0.14, 0.86 + lift0, -0.42 + slump * 0.2, -0.3);
-        place(arm, i * 2 + 1, slot, 0.14, 0.86 + lift1, -0.42 + slump * 0.2, -0.3);
+        const sy = SIT_SHOULDER_Y - slump * 0.05;
+        const sz = SIT_Z + slump * 0.5;
+        place(arm, i * 2, slot, -0.27, sy, sz, -(1.25 + lift0));
+        place(arm, i * 2 + 1, slot, 0.27, sy, sz, -(1.25 + lift1));
         const nod = reduced ? 0 : Math.sin(ph * 0.5) * 0.02;
-        place(head, i, slot, 0, 1.2 - slump * 0.3 + nod, -0.62 + slump * 0.3);
-        place(hair, i, slot, 0, 1.24 - slump * 0.3 + nod, -0.62 + slump * 0.3);
+        const hy = SIT_HEAD_Y - slump * 0.05 + nod;
+        const hz = SIT_Z + slump * 0.55;
+        const variantB = seed % 2 === 1;
+        place(head, i, slot, 0, hy, hz);
+        place(hairA, i, slot, 0, hy, hz, 0, 0, 0, variantB ? 0.001 : 1, variantB ? 0.001 : 1, variantB ? 0.001 : 1);
+        place(hairB, i, slot, 0, hy, hz, 0, 0, 0, variantB ? 1 : 0.001, variantB ? 1 : 0.001, variantB ? 1 : 0.001);
       }
       if (n > 0) {
         arm.instanceMatrix.needsUpdate = true;
         head.instanceMatrix.needsUpdate = true;
-        hair.instanceMatrix.needsUpdate = true;
+        hairA.instanceMatrix.needsUpdate = true;
+        hairB.instanceMatrix.needsUpdate = true;
       }
 
       // Sprechblasen wippen über den Dächern.
@@ -388,6 +477,7 @@ export function buildOffice(palette, zoneDef, furnaceAnchor) {
     },
     applyPalette(p) {
       Object.entries(mats).forEach(([key, list]) => list.forEach((m) => m.color.setHex(p[key])));
+      kit.applyPalette(p);
       line.applyPalette(p);
       internShells.applyPalette(p);
       engineerShells.applyPalette(p);

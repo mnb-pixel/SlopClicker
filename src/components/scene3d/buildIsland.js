@@ -1,11 +1,12 @@
 import * as THREE from 'three';
+import { createVoxelKit } from './voxelModel';
 
 // Das Spielfeld: eine einzige, flache Wiese statt der früheren schwebenden Insel -
 // im Stil von Egg Inc, wo der Hof einfach auf einer grünen Fläche steht statt auf
 // einem Felsbrocken zu schweben. Der Rasen ist bewusst riesig (FIELD_SIZE), damit sein
 // Rand bei keinem Zoomstand je ins Bild gerät; die Kamera kann höchstens so weit heraus,
 // wie VIEW_FIT_MAX/ZOOM_MAX in CampusScene.jsx erlauben, und das bleibt weit innerhalb
-// dieser Kante. Dazu drei Low-Poly-Wolken, die langsam driften.
+// dieser Kante. Dazu drei Voxel-Wolken (voxelModel.js), die langsam driften.
 //
 // Alles Flat Shading ohne Texturen. Materialien werden in einem Objekt gesammelt,
 // damit applyPalette() beim Theme-Wechsel nur Farben tauscht statt Geometrie neu zu bauen.
@@ -28,28 +29,29 @@ export function buildIsland(palette) {
   grass.receiveShadow = true;
   group.add(grass);
 
-  // Wolken: drei Klumpen aus je drei bis vier Ikosaedern.
+  // Wolken: drei Voxel-Klumpen aus überlappenden Kugeln, unten flach abgeschnitten -
+  // die klassische Blockwolke, dieselbe Sprache wie die Gebäude.
+  const kit = createVoxelKit(palette);
   const clouds = new THREE.Group();
-  const cloudMat = lambert('cloud');
+  const cloudGeos = [0, 1, 2].map((v) =>
+    kit.geo((m) => {
+      m.sphere(0, 4, 0, 6.5, 'cloud', { yMin: -3, seed: v });
+      m.sphere(7, 3, 1, 5, 'cloud', { yMin: -2, seed: v + 1 });
+      m.sphere(-7, 3, 2, 4.5, 'cloud', { yMin: -2, seed: v + 2 });
+      m.sphere(2, 8, -1, 4.2, 'cloud', { seed: v + 3 });
+      if (v === 1) m.sphere(12, 2, -2, 3.5, 'cloud', { yMin: -1, seed: v + 4 });
+      if (v === 2) m.sphere(-3, 9, 3, 3, 'cloud', { seed: v + 5 });
+    }, { unit: 0.28, faceShade: 0.08 })
+  );
   // Alle Wolken hinter bzw. seitlich des Campus, keine vor dem Schrank.
   const cloudSpecs = [
     { x: -18, y: 12, z: -8, s: 1.0, speed: 0.12 },
     { x: 16, y: 14, z: -15, s: 1.4, speed: 0.08 },
     { x: -5, y: 16, z: -20, s: 0.9, speed: 0.15 },
   ];
-  cloudSpecs.forEach((spec) => {
-    const c = new THREE.Group();
-    const parts = [
-      [0, 0, 0, 1.6],
-      [1.5, 0.3, 0.2, 1.2],
-      [-1.4, 0.2, 0.3, 1.1],
-      [0.4, 0.9, -0.2, 1.0],
-    ];
-    parts.forEach(([px, py, pz, r]) => {
-      const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r * spec.s, 0), cloudMat);
-      m.position.set(px * spec.s, py * spec.s, pz * spec.s);
-      c.add(m);
-    });
+  cloudSpecs.forEach((spec, i) => {
+    const c = new THREE.Mesh(cloudGeos[i % cloudGeos.length], kit.mats);
+    c.scale.setScalar(spec.s);
     c.position.set(spec.x, spec.y, spec.z);
     c.userData.baseX = spec.x;
     c.userData.baseZ = spec.z;
@@ -86,6 +88,7 @@ export function buildIsland(palette) {
       Object.entries(mats).forEach(([key, list]) => {
         list.forEach((m) => m.color.setHex(p[key]));
       });
+      kit.applyPalette(p);
     },
   };
 }

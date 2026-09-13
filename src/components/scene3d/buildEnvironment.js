@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { createVoxelKit } from './voxelModel';
+import { tree, car, TREE_UNIT, CAR_UNIT } from './voxelLibrary';
 
 // ===============================================================================
 // Token-Furnace: Detailliertes Dorf (NORD, SÜD, WEST, OST), Fluss quer & Verdrängung
@@ -530,108 +532,150 @@ export function buildEnvironment(palette) {
   plaza.receiveShadow = true;
   churchGroup.add(plaza);
 
-  // Kirchenschiff
-  const churchWallMat = lambert('townWall');
-  const churchRoofMat = lambert('townRoofSlate');
-  const nave = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.4, 2.6), churchWallMat);
-  nave.position.set(0.6, 1.2, 0);
-  nave.castShadow = true;
-  nave.receiveShadow = true;
-  churchGroup.add(nave);
-
-  // Satteldach Kirchenschiff
-  const naveRoof = new THREE.Mesh(new THREE.ConeGeometry(2.3, 1.3, 4), churchRoofMat);
-  naveRoof.position.set(0.6, 2.85, 0);
-  naveRoof.rotation.y = Math.PI / 4;
-  naveRoof.scale.set(1.1, 1, 0.85);
-  naveRoof.castShadow = true;
-  churchGroup.add(naveRoof);
-
-  // Glockenturm
-  const tower = new THREE.Mesh(new THREE.BoxGeometry(1.4, 4.8, 1.4), churchWallMat);
-  tower.position.set(-1.7, 2.4, 0);
-  tower.castShadow = true;
-  churchGroup.add(tower);
-
-  // Kirchturm-Spitzdach
-  const spire = new THREE.Mesh(new THREE.ConeGeometry(1.2, 2.6, 4), churchRoofMat);
-  spire.position.set(-1.7, 5.8, 0);
-  spire.rotation.y = Math.PI / 4;
-  spire.castShadow = true;
-  churchGroup.add(spire);
-
-  // Kirchturmuhr (goldenes Zifferblatt)
-  const clockMat = lambert('gold');
-  const clockMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.06, 8), clockMat);
-  clockMesh.position.set(-1.7, 4.1, 0.72);
-  clockMesh.rotation.x = Math.PI / 2;
-  churchGroup.add(clockMesh);
-
-  // Kirchentür
-  const doorMat = lambert('woodDark');
-  const churchDoor = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.3, 0.1), doorMat);
-  churchDoor.position.set(0.6, 0.65, 1.32);
-  churchGroup.add(churchDoor);
+  // Kirche als ein Voxel-Modell (Raster 0,1): Schiff mit Satteldach und Rundbogen-
+  // fenstern, Glockenturm mit Schallöffnungen, Uhr und Spitzhelm, Portal.
+  const churchKit = createVoxelKit(palette);
+  const churchGeo = churchKit.geo((m) => {
+    // Schiff: x -12..23, z -13..12, Höhe 24; Turm x -24..-10
+    m.box(-12, 0, -13, 36, 24, 26, 'townWall', { noise: 0.03, seed: 51 });
+    m.box(-12, 0, -13, 36, 1, 26, 'stoneDark');
+    for (let l = 0; l < 13; l += 1) {
+      m.box(-14, 24 + l, -14 + l, 40, 1, 28 - 2 * l, 'townRoofSlate', { noise: 0.06, seed: 60 + l });
+    }
+    // Rundbogenfenster an der Längsseite (+z) und Portal
+    [-6, 2, 10, 18].forEach((x) => {
+      m.box(x, 6, 12, 3, 9, 1, 'windowGlass');
+      m.box(x + 1, 15, 12, 1, 1, 1, 'windowGlass');
+      m.box(x - 1, 5, 12, 5, 1, 1, 'stone');
+    });
+    m.box(2, 0, 12, 6, 12, 1, 'stone');
+    m.box(3, 0, 12, 4, 10, 1, 'woodDark');
+    m.set(4, 10, 12, 'woodDark');
+    m.set(5, 10, 12, 'woodDark');
+    m.box(3, 0, 13, 4, 1, 2, 'stone');
+    // Turm
+    m.box(-24, 0, -7, 14, 48, 14, 'townWall', { noise: 0.03, seed: 52 });
+    m.box(-24, 0, -7, 14, 1, 14, 'stoneDark');
+    m.box(-25, 30, -8, 16, 1, 16, 'stone');
+    [[-17, 6], [-25, 0]].forEach(([x, z]) => {
+      m.box(x, 36, z, 2, 6, 1, 'tapeBlack');
+    });
+    m.box(-18, 36, 6, 4, 6, 1, 'tapeBlack');
+    m.box(-18, 38, 6, 4, 1, 1, 'woodDark');
+    m.box(-18, 40, 6, 4, 1, 1, 'woodDark');
+    m.box(-25, 36, -2, 1, 6, 4, 'tapeBlack');
+    m.box(-25, 38, -2, 1, 1, 4, 'woodDark');
+    m.box(-25, 40, -2, 1, 1, 4, 'woodDark');
+    // Uhr
+    m.cylinder(-17, 7, 43, 1, 3.2, 'gold');
+    m.set(-17, 43, 7, 'tapeBlack');
+    m.set(-17, 44, 7, 'tapeBlack');
+    m.set(-16, 43, 7, 'tapeBlack');
+    // Spitzhelm
+    for (let l = 0; l < 26; l += 1) {
+      const r = Math.max(1, 8 - Math.floor(l * 0.3));
+      m.box(-17 - r, 48 + l, -r, 2 * r, 1, 2 * r, 'townRoofSlate', { noise: 0.06, seed: 80 + l });
+    }
+    m.box(-18, 74, -1, 2, 5, 2, 'gold');
+    m.box(-19, 76, -1, 4, 1, 2, 'gold');
+  }, { unit: 0.1, unlit: new Set(['windowGlass']), faceShade: 0.04 });
+  const church = new THREE.Mesh(churchGeo, churchKit.mats);
+  church.castShadow = true;
+  church.receiveShadow = true;
+  church.position.set(0, 0, 0);
+  churchGroup.add(church);
 
   group.add(churchGroup);
 
   // --- 8. DORFHÄUSER (INSTANCED MESHES FÜR HOHE PERFORMANCE) --------------------
-  const wallMat = lambert('townWall');
-  const wallAltMat = lambert('townWallAlt');
-  const wallCMat = lambert('townWallC');
-  const roofMat = lambert('townRoof');
-  const roofAltMat = lambert('townRoofAlt');
-  const roofSlateMat = lambert('townRoofSlate');
 
-  const chimneyMat = lambert('brickDark');
-  const windowGlassMat = basic('windowGlass');
-  const carMatA = lambert('carPaintA');
-  const carMatB = lambert('carPaintB');
-  const trunkMat = lambert('trunk');
-  const crownMat = lambert('crown');
   const smokeMat = basic('smoke', { transparent: true, opacity: 0.75 });
+  const kit = createVoxelKit(palette);
 
-  // Instanced Meshes je Hausteil
-  const houseWalls = new THREE.InstancedMesh(new THREE.BoxGeometry(2.3, 1.5, 1.9), wallMat, LOT_COUNT);
-  const houseWallsAlt = new THREE.InstancedMesh(new THREE.BoxGeometry(2.3, 1.5, 1.9), wallAltMat, LOT_COUNT);
-  const houseWallsC = new THREE.InstancedMesh(new THREE.BoxGeometry(2.3, 1.5, 1.9), wallCMat, LOT_COUNT);
+  // --- Voxel-Häuser ----------------------------------------------------------------
+  // Ein Modell je Kombination aus Haustyp (A: Vordach, B: Garage, C: Gaube), Wand- und
+  // Dachfarbe - Farben stecken in den Vertizes, deshalb ein InstancedMesh je Kombination
+  // (fünf Stück für die 48 Parzellen). Raster 0,1; Front (Tür, Fenster, Zaun) zeigt +z.
+  function houseModel(m, type, wallKey, roofKey) {
+    m.box(-11, 0, -9, 23, 15, 19, wallKey, { noise: 0.03, seed: 1 });
+    m.box(-11, 0, -9, 23, 1, 19, 'stoneDark');
+    // Walmdach mit Überstand, Ziegelreihen leicht abgestuft
+    for (let l = 0; l <= 10; l += 1) {
+      m.box(-13 + l, 15 + l, -11 + l, 26 - 2 * l, 1, 22 - 2 * l, roofKey, { noise: 0.06, seed: 20 + l });
+    }
+    // Kamin
+    m.box(4, 15, 2, 3, 13, 3, 'brickDark');
+    m.box(4, 27, 2, 3, 1, 3, 'stoneDark');
+    // Tür mit Rahmen und Klinke, Weg zum Zaun
+    m.box(-3, 1, 9, 6, 8, 1, 'woodDark');
+    m.box(-2, 1, 9, 4, 7, 1, 'woodLight');
+    m.set(1, 4, 10, 'gold');
+    m.box(-2, 0, 10, 4, 1, 5, 'stone');
+    // Fenster vorn (zwei) und je eines an den Seiten, mit Rahmen und Fensterbank
+    [[-7, 9], [5, 9]].forEach(([x, z]) => {
+      m.box(x - 1, 5, z, 5, 6, 1, 'woodDark');
+      m.box(x, 6, z, 3, 4, 1, 'windowGlass');
+      m.box(x - 1, 5, z + 1, 5, 1, 1, 'woodDark');
+    });
+    [[-11, -2], [11, -2]].forEach(([x, z]) => {
+      m.box(x, 5, z - 1, 1, 6, 5, 'woodDark');
+      m.box(x, 6, z, 1, 4, 3, 'windowGlass');
+    });
+    // Gartenzaun mit Tor-Lücke
+    for (let x = -13; x <= 12; x += 2) {
+      if (x >= -2 && x <= 1) continue;
+      m.box(x, 0, 15, 1, 4, 1, 'woodLight');
+    }
+    m.box(-13, 1, 15, 11, 1, 1, 'woodLight');
+    m.box(2, 1, 15, 11, 1, 1, 'woodLight');
+    m.box(-13, 3, 15, 11, 1, 1, 'woodLight');
+    m.box(2, 3, 15, 11, 1, 1, 'woodLight');
+    if (type === 'A') {
+      // Vordach über der Tür auf zwei Pfosten
+      m.box(-4, 9, 10, 8, 1, 3, roofKey, { noise: 0.06, seed: 40 });
+      m.box(-4, 1, 12, 1, 8, 1, 'woodDark');
+      m.box(3, 1, 12, 1, 8, 1, 'woodDark');
+    } else if (type === 'B') {
+      // Garage mit Flachdach und Rolltor
+      m.box(9, 0, -8, 14, 10, 17, 'townWallAlt', { noise: 0.03, seed: 5 });
+      m.box(8, 10, -9, 16, 1, 19, 'townRoofSlate');
+      m.box(11, 1, 8, 10, 8, 1, 'woodLight');
+      for (let y = 2; y < 9; y += 2) for (let x = 11; x < 21; x += 1) m.set(x, y, 8, 'woodLight', 0.82);
+    } else {
+      // Gaube mit eigenem Fenster
+      m.box(-3, 17, 3, 6, 5, 7, wallKey, { noise: 0.03, seed: 6 });
+      m.box(-4, 22, 2, 8, 1, 9, roofKey, { noise: 0.06, seed: 41 });
+      m.box(-2, 18, 9, 4, 3, 1, 'windowGlass');
+    }
+  }
+  const HOUSE_UNLIT = new Set(['windowGlass']);
+  const houseMeshes = {};
+  LOTS.forEach((slot) => {
+    const key = `${slot.type}|${slot.wall}|${slot.roof}`;
+    if (houseMeshes[key]) return;
+    const geo = kit.geo((m) => houseModel(m, slot.type, slot.wall, slot.roof), { unit: 0.1, unlit: HOUSE_UNLIT, faceShade: 0.04 });
+    houseMeshes[key] = new THREE.InstancedMesh(geo, kit.mats, LOT_COUNT);
+  });
+  const houseKey = (slot) => `${slot.type}|${slot.wall}|${slot.roof}`;
 
-  // Garagenflügel für Typ B
-  const garageWalls = new THREE.InstancedMesh(new THREE.BoxGeometry(1.4, 1.0, 1.7), wallAltMat, LOT_COUNT);
-  const garageDoors = new THREE.InstancedMesh(new THREE.BoxGeometry(1.0, 0.8, 0.08), woodLightMat, LOT_COUNT);
+  // Rauch-Puff aus Kamin (Voxel-Wölkchen, halbtransparent)
+  const smokeVoxMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.75 });
+  const puffGeo = kit.geo((m) => {
+    m.sphere(0, 0, 0, 2.3, 'smoke');
+    m.sphere(2, 1, 0, 1.6, 'smoke', { seed: 2 });
+    m.sphere(-1, 2, 1, 1.5, 'smoke', { seed: 3 });
+  }, { unit: 0.08, origin: [0.5, 0.5, 0.5], unlit: () => true });
+  const chimneySmokes = new THREE.InstancedMesh(puffGeo, [kit.lambert, smokeVoxMat], LOT_COUNT);
 
-  // Dächer
-  const houseRoofs = new THREE.InstancedMesh(new THREE.ConeGeometry(1.8, 1.1, 4), roofMat, LOT_COUNT);
-  const houseRoofsAlt = new THREE.InstancedMesh(new THREE.ConeGeometry(1.8, 1.1, 4), roofAltMat, LOT_COUNT);
-  const houseRoofsSlate = new THREE.InstancedMesh(new THREE.ConeGeometry(1.8, 1.1, 4), roofSlateMat, LOT_COUNT);
+  // Vorgarten-Bäume (Schirmkrone, klein) und parkende Autos (zwei Lackfarben)
+  const gardenTreeGeo = kit.geo((m) => tree(m, 2, 31), { unit: TREE_UNIT });
+  const gardenTrees = new THREE.InstancedMesh(gardenTreeGeo, kit.mats, LOT_COUNT);
+  const carGeoA = kit.geo((m) => car(m, 'carPaintA'), { unit: CAR_UNIT, unlit: new Set(['fireCore', 'warnRed']) });
+  const carGeoB = kit.geo((m) => car(m, 'carPaintB'), { unit: CAR_UNIT, unlit: new Set(['fireCore', 'warnRed']) });
+  const carsA = new THREE.InstancedMesh(carGeoA, kit.mats, LOT_COUNT);
+  const carsB = new THREE.InstancedMesh(carGeoB, kit.mats, LOT_COUNT);
 
-  // Kamin auf dem Dach
-  const chimneys = new THREE.InstancedMesh(new THREE.BoxGeometry(0.28, 0.7, 0.28), chimneyMat, LOT_COUNT);
-  // Rauch-Puff aus Kamin
-  const chimneySmokes = new THREE.InstancedMesh(new THREE.SphereGeometry(0.18, 5, 4), smokeMat, LOT_COUNT);
-
-  // Türen & Fenster
-  const doors = new THREE.InstancedMesh(new THREE.BoxGeometry(0.42, 0.75, 0.06), woodLightMat, LOT_COUNT);
-  const windows = new THREE.InstancedMesh(new THREE.BoxGeometry(0.45, 0.45, 0.05), windowGlassMat, LOT_COUNT * 4);
-
-  // Gartenzäune (Holzzaun vor dem Vorgarten)
-  const fences = new THREE.InstancedMesh(new THREE.BoxGeometry(2.6, 0.35, 0.06), woodLightMat, LOT_COUNT);
-
-  // Vorgarten-Bäume
-  const gardenTrunks = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.08, 0.1, 0.6, 5), trunkMat, LOT_COUNT);
-  const gardenCrowns = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(0.65, 0), crownMat, LOT_COUNT);
-
-  // Parkende Autos
-  const carsA = new THREE.InstancedMesh(new THREE.BoxGeometry(0.9, 0.45, 1.6), carMatA, LOT_COUNT);
-  const carsB = new THREE.InstancedMesh(new THREE.BoxGeometry(0.9, 0.45, 1.6), carMatB, LOT_COUNT);
-
-  const villageMeshes = [
-    houseWalls, houseWallsAlt, houseWallsC,
-    garageWalls, garageDoors,
-    houseRoofs, houseRoofsAlt, houseRoofsSlate,
-    chimneys, chimneySmokes, doors, windows,
-    fences, gardenTrunks, gardenCrowns, carsA, carsB,
-  ];
+  const villageMeshes = [...Object.values(houseMeshes), chimneySmokes, gardenTrees, carsA, carsB];
 
   villageMeshes.forEach((m) => {
     m.castShadow = true;
@@ -690,93 +734,27 @@ export function buildEnvironment(palette) {
   // --- 10. GEOMETRIE-LAYOUT DER HAUSPLÄTZE ---------------------------------------
   function renderHouse(slot, counters) {
     const rot = slot.rot || 0;
-    const chimneyCos = Math.cos(rot);
-    const chimneySin = Math.sin(rot);
+    const c = Math.cos(rot);
+    const sn = Math.sin(rot);
 
-    // 1. Hauswand
-    dummy.position.set(slot.x, 0.75, slot.z);
+    // 1. Haus (Wände, Dach, Kamin, Tür, Fenster, Zaun, Anbau - alles ein Modell)
+    dummy.position.set(slot.x, 0, slot.z);
     dummy.rotation.set(0, rot, 0);
     dummy.scale.setScalar(1);
     dummy.updateMatrix();
+    const key = houseKey(slot);
+    houseMeshes[key].setMatrixAt(counters[key] || 0, dummy.matrix);
+    counters[key] = (counters[key] || 0) + 1;
 
-    if (slot.wall === 'townWallAlt') {
-      houseWallsAlt.setMatrixAt(counters.wallAlt++, dummy.matrix);
-    } else if (slot.wall === 'townWallC') {
-      houseWallsC.setMatrixAt(counters.wallC++, dummy.matrix);
-    } else {
-      houseWalls.setMatrixAt(counters.wallPlain++, dummy.matrix);
-    }
-
-    // 2. Dach
-    dummy.position.set(slot.x, 1.5 + 0.55, slot.z);
-    dummy.rotation.set(0, rot + Math.PI / 4, 0);
-    dummy.scale.set(1.15, 1.0, 0.95);
-    dummy.updateMatrix();
-
-    if (slot.roof === 'townRoofAlt') {
-      houseRoofsAlt.setMatrixAt(counters.roofAlt++, dummy.matrix);
-    } else if (slot.roof === 'townRoofSlate') {
-      houseRoofsSlate.setMatrixAt(counters.roofSlate++, dummy.matrix);
-    } else {
-      houseRoofs.setMatrixAt(counters.roofPlain++, dummy.matrix);
-    }
-
-    // 3. Kamin
-    dummy.position.set(slot.x + chimneyCos * 0.5 - chimneySin * 0.3, 2.2, slot.z + chimneySin * 0.5 + chimneyCos * 0.3);
-    dummy.rotation.set(0, rot, 0);
-    dummy.scale.setScalar(1);
-    dummy.updateMatrix();
-    chimneys.setMatrixAt(counters.chimney++, dummy.matrix);
-
-    // 4. Schornstein-Rauchpuff
-    dummy.position.set(dummy.position.x, 2.7, dummy.position.z);
+    // 2. Schornstein-Rauchpuff
+    dummy.position.set(slot.x + c * 0.55 - sn * 0.35, 2.85, slot.z + sn * 0.55 + c * 0.35);
     dummy.scale.setScalar(0.7 + (counters.chimneySmoke % 3) * 0.15);
     dummy.updateMatrix();
     chimneySmokes.setMatrixAt(counters.chimneySmoke++, dummy.matrix);
 
-    // 5. Haustür
-    dummy.position.set(slot.x + chimneySin * 0.96, 0.4, slot.z + chimneyCos * 0.96);
-    dummy.rotation.set(0, rot, 0);
-    dummy.scale.setScalar(1);
-    dummy.updateMatrix();
-    doors.setMatrixAt(counters.door++, dummy.matrix);
-
-    // 6. Fenster auf der Fassade
-    [-0.55, 0.55].forEach((wx) => {
-      dummy.position.set(
-        slot.x + chimneyCos * wx + chimneySin * 0.96,
-        0.9,
-        slot.z + chimneySin * wx + chimneyCos * 0.96
-      );
-      dummy.rotation.set(0, rot, 0);
-      dummy.scale.setScalar(1);
-      dummy.updateMatrix();
-      windows.setMatrixAt(counters.window++, dummy.matrix);
-    });
-
-    // 7. Vorgartenzaun
-    dummy.position.set(slot.x + chimneySin * 1.5, 0.18, slot.z + chimneyCos * 1.5);
-    dummy.rotation.set(0, rot, 0);
-    dummy.scale.setScalar(1);
-    dummy.updateMatrix();
-    fences.setMatrixAt(counters.fence++, dummy.matrix);
-
-    // 8. Typ B: Garage & Tor
-    if (slot.type === 'B') {
-      dummy.position.set(slot.x + chimneyCos * 1.6, 0.5, slot.z + chimneySin * 1.6);
-      dummy.rotation.set(0, rot, 0);
-      dummy.scale.setScalar(1);
-      dummy.updateMatrix();
-      garageWalls.setMatrixAt(counters.garageWall++, dummy.matrix);
-
-      dummy.position.set(slot.x + chimneyCos * 1.6 + chimneySin * 0.86, 0.45, slot.z + chimneySin * 1.6 + chimneyCos * 0.86);
-      dummy.updateMatrix();
-      garageDoors.setMatrixAt(counters.garageDoor++, dummy.matrix);
-    }
-
-    // 9. Parkendes Auto
+    // 3. Parkendes Auto
     if (slot.hasCar) {
-      dummy.position.set(slot.x + chimneyCos * 2.1 - chimneySin * 0.4, 0.25, slot.z + chimneySin * 2.1 + chimneyCos * 0.4);
+      dummy.position.set(slot.x + c * 2.1 - sn * 0.4, 0, slot.z + sn * 2.1 + c * 0.4);
       dummy.rotation.set(0, rot + 0.1, 0);
       dummy.scale.setScalar(1);
       dummy.updateMatrix();
@@ -787,18 +765,13 @@ export function buildEnvironment(palette) {
       }
     }
 
-    // 10. Baum im Garten
+    // 4. Baum im Garten
     if (slot.hasTree) {
-      dummy.position.set(slot.x - chimneyCos * 1.6, 0.3, slot.z - chimneySin * 1.6);
-      dummy.rotation.set(0, 0, 0);
-      dummy.scale.setScalar(1);
+      dummy.position.set(slot.x - c * 1.6, 0, slot.z - sn * 1.6);
+      dummy.rotation.set(0, slot.id * 0.7, 0);
+      dummy.scale.setScalar(0.55);
       dummy.updateMatrix();
-      gardenTrunks.setMatrixAt(counters.treeTrunk++, dummy.matrix);
-
-      dummy.position.set(slot.x - chimneyCos * 1.6, 0.95, slot.z - chimneySin * 1.6);
-      dummy.scale.setScalar(1);
-      dummy.updateMatrix();
-      gardenCrowns.setMatrixAt(counters.treeCrown++, dummy.matrix);
+      gardenTrees.setMatrixAt(counters.tree++, dummy.matrix);
     }
   }
 
@@ -811,25 +784,7 @@ export function buildEnvironment(palette) {
     if (key === lastDisplacementKey) return;
     lastDisplacementKey = key;
 
-    const counters = {
-      wallPlain: 0,
-      wallAlt: 0,
-      wallC: 0,
-      roofPlain: 0,
-      roofAlt: 0,
-      roofSlate: 0,
-      chimney: 0,
-      chimneySmoke: 0,
-      door: 0,
-      window: 0,
-      fence: 0,
-      garageWall: 0,
-      garageDoor: 0,
-      carA: 0,
-      carB: 0,
-      treeTrunk: 0,
-      treeCrown: 0,
-    };
+    const counters = { chimneySmoke: 0, carA: 0, carB: 0, tree: 0 };
 
     // 1. Grundstücke filtern: Häuser verschwinden sofort, wenn ein Campus-Objekt
     // (Büro-Arbeitsplatz, Rechenzentrum, Bühne, Turm, Endgame) darauf platziert wird.
@@ -872,25 +827,13 @@ export function buildEnvironment(palette) {
     });
 
     // Exakte Instanzen-Anzahl für jedes Bauteil-Mesh setzen
-    houseWalls.count = counters.wallPlain;
-    houseWallsAlt.count = counters.wallAlt;
-    houseWallsC.count = counters.wallC;
-
-    houseRoofs.count = counters.roofPlain;
-    houseRoofsAlt.count = counters.roofAlt;
-    houseRoofsSlate.count = counters.roofSlate;
-
-    chimneys.count = counters.chimney;
+    Object.entries(houseMeshes).forEach(([key, mesh]) => {
+      mesh.count = counters[key] || 0;
+    });
     chimneySmokes.count = counters.chimneySmoke;
-    doors.count = counters.door;
-    windows.count = counters.window;
-    fences.count = counters.fence;
-    garageWalls.count = counters.garageWall;
-    garageDoors.count = counters.garageDoor;
     carsA.count = counters.carA;
     carsB.count = counters.carB;
-    gardenTrunks.count = counters.treeTrunk;
-    gardenCrowns.count = counters.treeCrown;
+    gardenTrees.count = counters.tree;
 
     villageMeshes.forEach((m) => {
       m.instanceMatrix.needsUpdate = true;
@@ -928,6 +871,8 @@ export function buildEnvironment(palette) {
     },
 
     applyPalette(newPal) {
+      kit.applyPalette(newPal);
+      churchKit.applyPalette(newPal);
       Object.entries(mats).forEach(([key, list]) => {
         if (key === 'water') return;
         list.forEach((m) => {
