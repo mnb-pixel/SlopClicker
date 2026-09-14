@@ -61,8 +61,8 @@ export const IOS_APP = {
   },
 
   shots: [
-    { src: '/screenshots/core.webp', alt: 'Tokenkamin: AI Clicker auf dem iPhone – Slop Core mit AGI-Kern und Engines', caption: 'Slop Core' },
-    { src: '/screenshots/buzzwords.webp', alt: 'Buzzword-Bereich der App mit Booster-Pack und Sammelalbum', caption: 'Booster-Pack & Album' },
+    { src: '/screenshots/core.webp', alt: 'Tokenkamin: AI Clicker auf dem iPhone – 3D-Voxel-Dorfkarte mit Rechenzentren und Engines', caption: 'Voxel-Dorfkarte' },
+    { src: '/screenshots/buzzwords.webp', alt: 'Neu gezogene Buzzword-Karte „Bleeding-Edge Deep Tech“ (Rare) über dem Sammelalbum-Portfolio', caption: 'Neue Buzzword-Karte' },
     { src: '/screenshots/card.webp', alt: 'Neu gezogene Karte „Quantum-Ready Compute Layer“ mit +2 % globalem VPS-Bonus', caption: 'Neue Karte gezogen' },
     { src: '/screenshots/pitchdeck.webp', alt: 'VC-Pitch-Deck-Generator in der App mit Bewertungsgutachten', caption: 'Pitch-Deck-Generator' },
   ],

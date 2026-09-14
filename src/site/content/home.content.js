@@ -8,7 +8,7 @@ export const HOME = {
     lead:
       'Token Furnace ist ein satirischer Idle Clicker über den KI-Hype: Du klickst dich vom ersten Prompt-Praktikanten bis zur Milliardenbewertung – mit Buzzwords, GPU-Racks, Greenwashing und einem Pitch Deck, das niemand gelesen hat. Kostenlos, ohne Anmeldung, direkt im Browser.',
     shotAlt:
-      'Hauptbildschirm von Token Furnace: Bewertung von 2,78 Milliarden Dollar, Netto-VPS, Burn Rate, GPU-Hitze und der große AGI-generieren-Button',
+      'Hauptbildschirm von Token Furnace: Bewertung von 16,10 Milliarden Dollar, Netto-VPS, Burn Rate, GPU-Hitze und die 3D-Dorfkarte mit Rechenzentren, Häusern und Fluss',
   },
 
   facts: [
@@ -37,8 +37,8 @@ export const HOME = {
         'Darunter siehst du deine eingesetzten Engines in Echtzeit: wie viele du besitzt, was jede pro Sekunde beisteuert und wie sich dein Netto-VPS aus Produktion und Burn Rate zusammensetzt.',
       ],
       image: '/screenshots/core.webp',
-      alt: 'Slop-Core-Ansicht mit AGI-Kern-Button, GPU-Hitze-Anzeige und der Liste eingesetzter Engines',
-      caption: 'Slop Core: Bewertung, Burn Rate, GPU-Hitze und der AGI-Kern.',
+      alt: 'Voxel-Dorfkarte mit Bewertung, Netto-VPS, GPU-Hitze-Anzeige, Rechenzentren, Häusern, Fluss und den Buttons Feuern, Shop, Statistik, Optionen',
+      caption: 'Die 3D-Voxel-Karte: Bewertung, Burn Rate, GPU-Hitze und dein wachsender Campus.',
     },
     {
       id: 'engines',
@@ -49,7 +49,7 @@ export const HOME = {
         'Der Kaufmodus (1, 10, 100, MAX) erspart dir das Dauerklicken, und der Shop zeigt für jede Engine, welchen Anteil sie an deinem Gesamteinkommen hat.',
       ],
       image: '/screenshots/shop.webp',
-      alt: 'Shop-Ansicht mit den AI Engines Prompt-Praktikant, Chatbot-Widget, Prompt Engineer, GPU-Rack und Rechenzentrum samt Kaufmodus',
+      alt: 'KI-Infrastruktur-Modal über der Dorfkarte mit den AI Engines Prompt-Praktikant, Chatbot-Widget, Prompt Engineer, GPU-Rack und Rechenzentrum samt Kaufmodus',
       caption: 'Der Shop mit Kaufmodus 1 / 10 / 100 / MAX.',
       reverse: true,
     },
@@ -62,7 +62,7 @@ export const HOME = {
         'Dazu kommen Klick-Upgrades von der Ergonomischen Cyber-Maus bis zum Unterlichtgeschwindigkeits-Tap-Strahl, bessere GPU-Kühlung und globale Multiplikatoren wie die Föderale KI-Subventions-Lücke.',
       ],
       image: '/screenshots/upgrades.webp',
-      alt: 'Upgrade-Kacheln im Shop mit geöffneter Detailkarte „Notiz-Tool-Vorlage kopiert“ für 150 Dollar',
+      alt: 'Upgrade-Kacheln im Shop mit geöffneter Detailkarte „Praktikanten-Pipeline zur Uni“ für 457 Dollar',
       caption: 'Upgrades: Kachel antippen, Kommentar lesen, kaufen.',
     },
     {
@@ -87,8 +87,8 @@ export const HOME = {
         'Karten gibt es nur im Booster-Pack: Das erste kostet 600 Dollar, jedes weitere das Doppelte. Ein Duplikatschutz sorgt dafür, dass du nie eine Karte zweimal ziehst.',
       ],
       image: '/screenshots/buzzwords.webp',
-      alt: 'Buzzword-Bereich mit Trading Card Booster Pack, Sammelalbum-Fortschritt und den Seltenheitsstufen Common bis Legendary',
-      caption: 'Booster-Pack und Sammelalbum-Portfolio.',
+      alt: 'Neu gezogene Buzzword-Karte „Bleeding-Edge Deep Tech“ (Rare) mit +10 % globalem VPS-Bonus über dem Sammelalbum-Portfolio',
+      caption: 'Booster-Pack: eine neue Karte wird gezogen.',
     },
     {
       id: 'erfolge',
