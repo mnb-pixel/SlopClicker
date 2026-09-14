@@ -19,6 +19,7 @@ export function IosAppPage({ isVoxel = false }) {
   const Layout = isVoxel ? VoxelSiteLayout : SiteLayout;
   const path = isVoxel ? '/voxel/ios-app' : '/ios-app';
   const c = IOS_APP;
+  const shots = isVoxel ? c.voxelShots : c.shots;
   return (
     <Layout path={path} wide>
       <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_260px] md:items-center">
@@ -28,7 +29,7 @@ export function IosAppPage({ isVoxel = false }) {
             <span className="text-xs text-slate-500">{c.badgeNote}</span>
           </div>
         </PageIntro>
-        <PhoneShot src={c.shots[0].src} alt={c.shots[0].alt} priority className="justify-self-center" />
+        <PhoneShot src={shots[0].src} alt={shots[0].alt} priority className="justify-self-center" />
       </div>
 
       <div className="max-w-3xl">
@@ -44,7 +45,7 @@ export function IosAppPage({ isVoxel = false }) {
       </Section>
 
       <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 justify-items-center">
-        {c.shots.slice(1).map((shot) => (
+        {shots.slice(1).map((shot) => (
           <PhoneShot key={shot.src} src={shot.src} alt={shot.alt} caption={shot.caption} />
         ))}
       </div>

@@ -61,10 +61,18 @@ export const IOS_APP = {
   },
 
   shots: [
-    { src: '/screenshots/core.webp', alt: 'Tokenkamin: AI Clicker auf dem iPhone – 3D-Voxel-Dorfkarte mit Rechenzentren und Engines', caption: 'Voxel-Dorfkarte' },
-    { src: '/screenshots/buzzwords.webp', alt: 'Neu gezogene Buzzword-Karte „Bleeding-Edge Deep Tech“ (Rare) über dem Sammelalbum-Portfolio', caption: 'Neue Buzzword-Karte' },
+    { src: '/screenshots/core.webp', alt: 'Tokenkamin: AI Clicker auf dem iPhone – Slop Core mit AGI-Kern und Engines', caption: 'Slop Core' },
+    { src: '/screenshots/buzzwords.webp', alt: 'Buzzword-Bereich der App mit Booster-Pack und Sammelalbum', caption: 'Booster-Pack & Album' },
     { src: '/screenshots/card.webp', alt: 'Neu gezogene Karte „Quantum-Ready Compute Layer“ mit +2 % globalem VPS-Bonus', caption: 'Neue Karte gezogen' },
     { src: '/screenshots/pitchdeck.webp', alt: 'VC-Pitch-Deck-Generator in der App mit Bewertungsgutachten', caption: 'Pitch-Deck-Generator' },
+  ],
+
+  // Nur für die 3D-Voxel-Variante der Seite (/voxel/ios-app) – eigene Screenshots im hellen Voxel-UI.
+  voxelShots: [
+    { src: '/screenshots/voxel-village.webp', alt: 'Tokenkamin: AI Clicker auf dem iPhone – 3D-Voxel-Dorfkarte mit Rechenzentren, Häusern und Fluss', caption: 'Voxel-Dorfkarte' },
+    { src: '/screenshots/voxel-card-drawn.webp', alt: 'Neu gezogene Buzzword-Karte „Bleeding-Edge Deep Tech“ (Rare) mit +10 % globalem VPS-Bonus', caption: 'Neue Buzzword-Karte' },
+    { src: '/screenshots/voxel-engines.webp', alt: 'KI-Infrastruktur-Modal mit den AI Engines Prompt-Praktikant, Chatbot-Widget, Prompt Engineer, GPU-Rack und Rechenzentrum samt Kaufmodus', caption: 'AI Engines & Kaufmodus' },
+    { src: '/screenshots/voxel-upgrades.webp', alt: 'Upgrade-Kacheln im Shop mit geöffneter Detailkarte „Praktikanten-Pipeline zur Uni“ für 457 Dollar', caption: 'Upgrades' },
   ],
 
   next: [
