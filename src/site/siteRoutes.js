@@ -55,10 +55,10 @@ export const SITE_ROUTES = [
   {
     path: '/ios-app',
     file: 'ios-app',
-    nav: 'iOS-App',
-    title: 'Tokenkamin: AI Clicker – die iOS-App – Token Furnace',
+    nav: 'App',
+    title: 'Tokenkamin: AI Clicker – die App für iOS und Android – Token Furnace',
     description:
-      'Token Furnace als native iOS-App „Tokenkamin: AI Clicker“: Funktionen, Unterschiede zur Web-Version, Werbefrei-Option und Systemvoraussetzungen.',
+      'Token Furnace als native App „Tokenkamin: AI Clicker“ für iPhone und Android: Funktionen, Unterschiede zur Web-Version, Werbefrei-Option und Systemvoraussetzungen.',
     load: () => import('./pages/IosAppPage.jsx').then((m) => m.IosAppPage),
   },
   {
@@ -126,9 +126,9 @@ export const SITE_ROUTES = [
   {
     path: '/voxel/ios-app',
     file: 'voxel/ios-app',
-    title: 'Tokenkamin: AI Clicker – die iOS-App – Token Furnace Voxel 3D',
+    title: 'Tokenkamin: AI Clicker – die App für iOS und Android – Token Furnace Voxel 3D',
     description:
-      'Token Furnace als native iOS-App „Tokenkamin: AI Clicker“: Funktionen, Unterschiede zur Web-Version und Werbefrei-Option.',
+      'Token Furnace als native App „Tokenkamin: AI Clicker“ für iPhone und Android: Funktionen, Unterschiede zur Web-Version und Werbefrei-Option.',
     load: () => import('./pages/IosAppPage.jsx').then((m) => m.VoxelIosAppPage),
   },
   {

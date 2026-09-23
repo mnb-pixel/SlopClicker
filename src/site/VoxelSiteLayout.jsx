@@ -33,7 +33,7 @@ export const VOXEL_NAV_ROUTES = [
   { path: '/voxel/strategie', nav: 'Strategie', title: 'Strategie' },
   { path: '/voxel/glossar', nav: 'Glossar', title: 'Glossar' },
   { path: '/voxel/faq', nav: 'FAQ', title: 'FAQ' },
-  { path: '/voxel/ios-app', nav: 'iOS-App', title: 'iOS-App' },
+  { path: '/voxel/ios-app', nav: 'App', title: 'App' },
   { path: '/voxel/ueber', nav: 'Über uns', title: 'Über uns' },
 ];
 

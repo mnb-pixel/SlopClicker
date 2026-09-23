@@ -10,11 +10,13 @@ import {
   DataTable,
   PhoneShot,
   AppStoreBadge,
+  PlayStoreBadge,
   PageEnd,
 } from '../ui.jsx';
 
-// Einzige Seite neben der Startseite mit dem offiziellen App-Store-Badge (Apple: ein Badge
-// pro Layout, siehe ui.jsx). Die Screenshots hier zeigen die App im Simulator.
+// Seite neben der Startseite mit den offiziellen Store-Badges (je ein Badge pro Layout,
+// siehe ui.jsx). Deckt seit dem Android-Release beide Stores ab. Die Screenshots hier zeigen
+// die App im iOS-Simulator, gelten aber inhaltlich für beide Plattformen.
 export function IosAppPage({ isVoxel = false }) {
   const Layout = isVoxel ? VoxelSiteLayout : SiteLayout;
   const path = isVoxel ? '/voxel/ios-app' : '/ios-app';
@@ -26,8 +28,9 @@ export function IosAppPage({ isVoxel = false }) {
         <PageIntro kicker={c.kicker} title={c.title} lead={c.lead}>
           <div className="mt-6 flex flex-wrap items-center gap-4">
             <AppStoreBadge />
-            <span className="text-xs text-slate-500">{c.badgeNote}</span>
+            <PlayStoreBadge />
           </div>
+          <p className="mt-3 text-xs text-slate-500">{c.badgeNote}</p>
         </PageIntro>
         <PhoneShot src={shots[0].src} alt={shots[0].alt} priority className="justify-self-center" />
       </div>

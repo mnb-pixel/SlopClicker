@@ -1,7 +1,7 @@
 import React from 'react';
 import { Play, Sparkles, Home, ArrowRight } from 'lucide-react';
 import { VoxelSiteLayout } from '../VoxelSiteLayout.jsx';
-import { VOXEL_PLAY_URL, PLAY_URL } from '../ui.jsx';
+import { VOXEL_PLAY_URL, PLAY_URL, AppStoreBadge, PlayStoreBadge } from '../ui.jsx';
 import { VoxelIcon } from '../../components/scene3d/voxelIcons.jsx';
 
 // Die 8 markantesten Showcase-Engines für die Voxel-Galerie
@@ -64,6 +64,14 @@ export function VoxelHomePage() {
 
         <p className="mt-4 text-xs text-[#6d7f8e] font-mono font-bold">
           Kein Download, kein Account • Synchroner Spielstand mit der 2D-Version
+        </p>
+
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+          <AppStoreBadge />
+          <PlayStoreBadge />
+        </div>
+        <p className="mt-2 text-xs text-[#6d7f8e] font-mono font-bold">
+          Auch als App für iPhone und Android – unter dem Namen „Tokenkamin: AI Clicker“.
         </p>
       </section>
 

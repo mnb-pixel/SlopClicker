@@ -1,12 +1,14 @@
-// iOS-App-Seite (/ios-app). Fakten: Deployment Target iOS 15.0 (ios/App/App.xcodeproj),
+// App-Seite (/ios-app). Fakten: Deployment Target iOS 15.0 (ios/App/App.xcodeproj),
 // AdMob-Banner + Rewarded (nativeBanner.js/nativeAdBridge.js), Werbefrei-IAP (PurchaseBridge.js),
 // Haptik (platform/haptics.js), Export/Import auch nativ (MiscTab.jsx, nur CrazyGames ohne).
+// Seit dem Android-Release (com.tokenfurnace.app bei Google Play) deckt diese Seite beide
+// Plattformen ab statt nur iOS - Pfad/Datei heißen aus Kontinuitätsgründen weiter "ios-app".
 export const IOS_APP = {
-  kicker: 'iOS-App',
-  title: 'Tokenkamin: AI Clicker – Token Furnace fürs iPhone',
+  kicker: 'App',
+  title: 'Tokenkamin: AI Clicker – Token Furnace fürs Handy',
   lead:
-    'Dasselbe Spiel wie im Browser, als native App: mit haptischem Feedback, Bonus-Videos für Sofort-Boni und einem einmaligen Werbefrei-Kauf. Im App Store heißt es „Tokenkamin: AI Clicker“ – Tokenkamin ist schlicht die deutsche Übersetzung von Token Furnace.',
-  badgeNote: 'Kostenlos im App Store. Optionaler In-App-Kauf: Werbefrei.',
+    'Dasselbe Spiel wie im Browser, als native App für iPhone und Android: mit haptischem Feedback, Bonus-Videos für Sofort-Boni und einem einmaligen Werbefrei-Kauf. In den Stores heißt sie „Tokenkamin: AI Clicker“ – Tokenkamin ist schlicht die deutsche Übersetzung von Token Furnace.',
+  badgeNote: 'Kostenlos im App Store und bei Google Play. Optionaler In-App-Kauf: Werbefrei.',
 
   highlights: {
     title: 'Was die App bietet',
@@ -22,16 +24,16 @@ export const IOS_APP = {
 
   compare: {
     title: 'Web-Version oder App?',
-    head: ['', 'Web-Version', 'iOS-App'],
+    head: ['', 'Web-Version', 'iOS-App', 'Android-App'],
     rows: [
-      ['Installation', 'keine – läuft im Browser', 'aus dem App Store'],
-      ['Preis', 'kostenlos', 'kostenlos'],
-      ['Spielstand', 'lokal im Browser, Export/Import', 'lokal auf dem iPhone, Export/Import'],
-      ['Bonus-Videos', 'ja, nach Cookie-Zustimmung', 'ja'],
-      ['Werbefrei-Kauf', '–', 'einmalig, per In-App-Kauf'],
-      ['Haptisches Feedback', '–', 'ja'],
-      ['Eigene URLs für Shop, Statistik, Einstellungen', 'ja', '–'],
-      ['Sprachen', 'Deutsch, Englisch', 'Deutsch, Englisch'],
+      ['Installation', 'keine – läuft im Browser', 'aus dem App Store', 'aus Google Play'],
+      ['Preis', 'kostenlos', 'kostenlos', 'kostenlos'],
+      ['Spielstand', 'lokal im Browser, Export/Import', 'lokal auf dem Gerät, Export/Import', 'lokal auf dem Gerät, Export/Import'],
+      ['Bonus-Videos', 'ja, nach Cookie-Zustimmung', 'ja', 'ja'],
+      ['Werbefrei-Kauf', '–', 'einmalig, per In-App-Kauf', 'einmalig, per In-App-Kauf'],
+      ['Haptisches Feedback', '–', 'ja', 'ja'],
+      ['Eigene URLs für Shop, Statistik, Einstellungen', 'ja', '–', '–'],
+      ['Sprachen', 'Deutsch, Englisch', 'Deutsch, Englisch', 'Deutsch, Englisch'],
     ],
   },
 
@@ -39,14 +41,14 @@ export const IOS_APP = {
     title: 'Werbefrei',
     paragraphs: [
       'Die App finanziert sich über einen Banner am unteren Rand und über Bonus-Videos, die du freiwillig ansiehst, um Boni freizuschalten. Wer darauf verzichten möchte, kauft einmalig **Werbefrei** in den Einstellungen der App: Banner und Videos verschwinden dauerhaft, und jeder Bonus, der vorher ein Video verlangte, ist danach mit einem Tap abholbar – mit exakt demselben Wert und denselben Wartezeiten.',
-      'Der Kauf läuft vollständig über Apples In-App-Kauf-System. Auf einem neuen Gerät holst du ihn über „Käufe wiederherstellen“ zurück. Es gibt keine weiteren Käufe – nichts, was das Spiel schneller macht, und nichts, was sich abonnieren ließe.',
+      'Der Kauf läuft vollständig über das In-App-Kauf-System des jeweiligen Stores (Apple auf iOS, Google Play auf Android). Auf einem neuen Gerät holst du ihn über „Käufe wiederherstellen“ zurück. Es gibt keine weiteren Käufe – nichts, was das Spiel schneller macht, und nichts, was sich abonnieren ließe.',
     ],
   },
 
   requirements: {
     title: 'Voraussetzungen',
     items: [
-      'iPhone mit iOS 15 oder neuer.',
+      'iPhone mit iOS 15 oder neuer, oder ein Smartphone mit aktuellem Android.',
       'Für Bonus-Videos eine Internetverbindung; das Spiel selbst läuft auch ohne.',
       'Kein Konto, keine Anmeldung. Der Spielstand bleibt auf dem Gerät.',
     ],
@@ -55,8 +57,8 @@ export const IOS_APP = {
   support: {
     title: 'Support & Datenschutz',
     paragraphs: [
-      'Fragen, Fehler oder Anregungen zur App nimmt der [Kontakt](/ueber#kontakt) entgegen – am hilfreichsten mit iOS-Version, Gerät und einer kurzen Beschreibung. Was die App und ihre Werbepartner verarbeiten, steht in der [Datenschutzerklärung](/datenschutz); sie gilt für die App und die Website gleichermaßen.',
-      'Auf iOS fragt die App vor personalisierter Werbung über Apples App-Tracking-Transparenz nach deiner Erlaubnis. Ohne Zustimmung siehst du ausschließlich nicht personalisierte Anzeigen – oder mit Werbefrei gar keine.',
+      'Fragen, Fehler oder Anregungen zur App nimmt der [Kontakt](/ueber#kontakt) entgegen – am hilfreichsten mit Betriebssystem-Version, Gerät und einer kurzen Beschreibung. Was die App und ihre Werbepartner verarbeiten, steht in der [Datenschutzerklärung](/datenschutz); sie gilt für die App (iOS und Android) und die Website gleichermaßen.',
+      'Auf iOS fragt die App vor personalisierter Werbung über Apples App-Tracking-Transparenz nach deiner Erlaubnis. Auf Android greifen die Werbeeinstellungen deines Google-Kontos. Ohne Zustimmung siehst du ausschließlich nicht personalisierte Anzeigen – oder mit Werbefrei gar keine.',
     ],
   },
 
