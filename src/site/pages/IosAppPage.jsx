@@ -19,7 +19,7 @@ import {
 // die App im iOS-Simulator, gelten aber inhaltlich für beide Plattformen.
 export function IosAppPage({ isVoxel = false }) {
   const Layout = isVoxel ? VoxelSiteLayout : SiteLayout;
-  const path = isVoxel ? '/voxel/ios-app' : '/ios-app';
+  const path = isVoxel ? '/ios-app' : '/classic/ios-app';
   const c = IOS_APP;
   const shots = isVoxel ? c.voxelShots : c.shots;
   return (

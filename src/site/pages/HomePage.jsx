@@ -19,11 +19,13 @@ import {
   PLAY_URL,
 } from '../ui.jsx';
 
-// Startseite "/" (siehe siteRoutes.js): reine Content-Seite über das Spiel - das Spiel selbst
-// läuft unter /play und ist hier nur verlinkt, nicht eingebettet. Hintergrund: AdSense lehnte
-// die Seite mehrfach als "low value content" ab, solange "/" in erster Linie das Spiel-UI
-// zeigte (zuletzt als Iframe mit Text darunter). Jetzt ist "/" eine normale, textstarke Seite
-// mit Screenshots, Anleitung, FAQ und weiterführenden Unterseiten.
+// Classic-2D-Startseite, seit 2026-09-23 unter /classic statt "/" (siehe siteRoutes.js) -
+// die 3D-Voxel-Edition (VoxelHomePage.jsx) ist jetzt die "normale" Startseite an der
+// Domain-Wurzel. Reine Content-Seite über das Spiel - das Spiel selbst läuft unter /play und
+// ist hier nur verlinkt, nicht eingebettet. Hintergrund: AdSense lehnte die Seite mehrfach als
+// "low value content" ab, solange "/" in erster Linie das Spiel-UI zeigte (zuletzt als Iframe
+// mit Text darunter) - seitdem ist diese Seite textstark mit Screenshots, Anleitung, FAQ und
+// weiterführenden Unterseiten, und dieselben Anforderungen gelten jetzt für VoxelHomePage.jsx.
 export function HomePage() {
   const h = HOME;
   return (
@@ -84,7 +86,7 @@ export function HomePage() {
         <Section id="kurz-gefragt" title={h.faq.title}>
           <FaqItems items={h.faq.items} />
           <p className="mt-5 text-sm">
-            <a href="/faq" className="site-link">
+            <a href="/classic/faq" className="site-link">
               Alle häufigen Fragen und Antworten
             </a>
           </p>

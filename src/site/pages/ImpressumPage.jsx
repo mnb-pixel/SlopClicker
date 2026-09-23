@@ -49,7 +49,7 @@ export function ImpressumPage({ isVoxel = false }) {
   const doc = c.impressum;
   const isDraft = hasOpenTodos();
   const Layout = isVoxel ? VoxelSiteLayout : SiteLayout;
-  const path = isVoxel ? '/voxel/impressum' : '/impressum';
+  const path = isVoxel ? '/impressum' : '/classic/impressum';
 
   return (
     <Layout path={path}>

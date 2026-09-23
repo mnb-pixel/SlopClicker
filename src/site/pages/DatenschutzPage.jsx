@@ -12,7 +12,7 @@ export function DatenschutzPage({ isVoxel = false }) {
   const doc = c.datenschutz;
   const isDraft = hasOpenTodos();
   const Layout = isVoxel ? VoxelSiteLayout : SiteLayout;
-  const path = isVoxel ? '/voxel/datenschutz' : '/datenschutz';
+  const path = isVoxel ? '/datenschutz' : '/classic/datenschutz';
 
   return (
     <Layout path={path}>

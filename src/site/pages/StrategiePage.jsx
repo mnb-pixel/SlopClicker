@@ -6,7 +6,7 @@ import { STRATEGIE } from '../content/strategie.content.js';
 
 export function StrategiePage({ isVoxel = false }) {
   const Layout = isVoxel ? VoxelSiteLayout : SiteLayout;
-  const path = isVoxel ? '/voxel/strategie' : '/strategie';
+  const path = isVoxel ? '/strategie' : '/classic/strategie';
 
   return (
     <Layout path={path}>

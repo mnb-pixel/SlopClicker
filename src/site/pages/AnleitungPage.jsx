@@ -6,7 +6,7 @@ import { ANLEITUNG } from '../content/anleitung.content.js';
 
 export function AnleitungPage({ isVoxel = false }) {
   const Layout = isVoxel ? VoxelSiteLayout : SiteLayout;
-  const path = isVoxel ? '/voxel/anleitung' : '/anleitung';
+  const path = isVoxel ? '/anleitung' : '/classic/anleitung';
 
   return (
     <Layout path={path}>

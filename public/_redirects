@@ -23,8 +23,24 @@
 # braucht keine Regel: play.html wird direkt unter /play ausgeliefert.
 /play/*         /play                200
 
-# 3D-Voxel-Spielansicht (siehe src/main.jsx / VoxelApp.jsx): /voxel ist die vorgerenderte
-# Voxel-Landingpage. /voxel/play liefert dist/voxel/play.html (leere Hülle, WebGL).
-# Unterpfade für das 3D-Spiel werden auf /voxel/play umgeschrieben.
+# 3D-Voxel-Spielansicht (siehe src/main.jsx / VoxelApp.jsx): /voxel/play liefert
+# dist/voxel/play.html (leere Hülle, WebGL). Unterpfade für das 3D-Spiel werden auf
+# /voxel/play umgeschrieben. /voxel selbst (ohne /play) ist KEINE Spiel-Route mehr, siehe
+# unten - die frühere Voxel-Landingpage liegt seit 2026-09-23 an der Domain-Wurzel.
 /voxel/play/*   /voxel/play          200
+
+# Seiten-Tausch 2026-09-23 (siehe siteRoutes.js): die 3D-Voxel-Edition ist jetzt die
+# Startseite an der Domain-Wurzel, die bisherige 2D-Website liegt unter /classic. Die alten
+# /voxel-Content-Pfade existieren dadurch nicht mehr direkt - 301 statt SPA-Fallback, damit
+# bereits von Google gecrawlte/verlinkte /voxel-URLs sauber auf ihr neues Zuhause umziehen
+# statt client- oder serverseitig auf einer anderen (jetzt dort liegenden) Seite zu landen.
+/voxel                /                    301
+/voxel/anleitung      /anleitung           301
+/voxel/strategie      /strategie           301
+/voxel/glossar        /glossar             301
+/voxel/faq            /faq                 301
+/voxel/ios-app        /ios-app             301
+/voxel/ueber          /ueber               301
+/voxel/impressum      /impressum           301
+/voxel/datenschutz    /datenschutz         301
 

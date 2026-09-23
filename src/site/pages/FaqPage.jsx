@@ -7,7 +7,7 @@ import { FAQ } from '../content/faq.content.js';
 
 export function FaqPage({ isVoxel = false }) {
   const Layout = isVoxel ? VoxelSiteLayout : SiteLayout;
-  const path = isVoxel ? '/voxel/faq' : '/faq';
+  const path = isVoxel ? '/faq' : '/classic/faq';
 
   return (
     <Layout path={path}>

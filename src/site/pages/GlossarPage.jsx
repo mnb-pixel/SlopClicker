@@ -6,7 +6,7 @@ import { GLOSSAR } from '../content/glossar.content.js';
 
 export function GlossarPage({ isVoxel = false }) {
   const Layout = isVoxel ? VoxelSiteLayout : SiteLayout;
-  const path = isVoxel ? '/voxel/glossar' : '/glossar';
+  const path = isVoxel ? '/glossar' : '/classic/glossar';
 
   return (
     <Layout path={path}>

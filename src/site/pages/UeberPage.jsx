@@ -11,9 +11,9 @@ import { ContentSections } from '../blocks.jsx';
 // Kontakt-Sektion hier ist nur der schnelle Weg zur E-Mail, kein zweites Impressum.
 export function UeberPage({ isVoxel = false }) {
   const Layout = isVoxel ? VoxelSiteLayout : SiteLayout;
-  const path = isVoxel ? '/voxel/ueber' : '/ueber';
+  const path = isVoxel ? '/ueber' : '/classic/ueber';
   const k = UEBER.kontakt;
-  const impressumHref = isVoxel ? '/voxel/impressum' : '/impressum';
+  const impressumHref = isVoxel ? '/impressum' : '/classic/impressum';
 
   return (
     <Layout path={path}>

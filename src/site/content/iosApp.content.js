@@ -69,7 +69,7 @@ export const IOS_APP = {
     { src: '/screenshots/pitchdeck.webp', alt: 'VC-Pitch-Deck-Generator in der App mit Bewertungsgutachten', caption: 'Pitch-Deck-Generator' },
   ],
 
-  // Nur für die 3D-Voxel-Variante der Seite (/voxel/ios-app) – eigene Screenshots im hellen Voxel-UI.
+  // Nur für die 3D-Voxel-Variante der Seite (/ios-app) – eigene Screenshots im hellen Voxel-UI.
   voxelShots: [
     { src: '/screenshots/voxel-village.webp', alt: 'Tokenkamin: AI Clicker auf dem iPhone – 3D-Voxel-Dorfkarte mit Rechenzentren, Häusern und Fluss', caption: 'Voxel-Dorfkarte' },
     { src: '/screenshots/voxel-card-drawn.webp', alt: 'Neu gezogene Buzzword-Karte „Bleeding-Edge Deep Tech“ (Rare) mit +10 % globalem VPS-Bonus', caption: 'Neue Buzzword-Karte' },

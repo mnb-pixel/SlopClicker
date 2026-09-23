@@ -2,7 +2,7 @@ import React from 'react';
 import { Play, Smartphone, ArrowRight } from 'lucide-react';
 
 export const PLAY_URL = '/play';
-export const VOXEL_URL = '/voxel';
+export const VOXEL_URL = '/';
 export const VOXEL_PLAY_URL = '/voxel/play';
 
 // iOS-App im App Store (eigener App-Name "Tokenkamin: AI Clicker", deutsche Übersetzung von
@@ -265,7 +265,7 @@ export function PlayStoreBadge() {
 export function CtaBar({ title = 'Selbst ausprobieren', text, isVoxel = false }) {
   const playUrl = isVoxel ? VOXEL_PLAY_URL : PLAY_URL;
   const playLabel = isVoxel ? 'Im Browser spielen (3D Voxel)' : 'Im Browser spielen';
-  const iosUrl = isVoxel ? '/voxel/ios-app' : '/ios-app';
+  const iosUrl = isVoxel ? '/ios-app' : '/classic/ios-app';
 
   return (
     <div className="mt-14 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
@@ -276,7 +276,7 @@ export function CtaBar({ title = 'Selbst ausprobieren', text, isVoxel = false })
           <Play className="w-4 h-4 fill-current" /> {playLabel}
         </a>
         <a href={iosUrl} className={isVoxel ? 'voxel-btn-paper px-4 py-2.5 text-sm' : BTN_SECONDARY}>
-          <Smartphone className="w-4 h-4" /> Auch als iOS-App
+          <Smartphone className="w-4 h-4" /> Auch als App
         </a>
       </div>
     </div>
@@ -285,11 +285,11 @@ export function CtaBar({ title = 'Selbst ausprobieren', text, isVoxel = false })
 
 export function PageEnd({ next = [], ctaText, isVoxel = false }) {
   const adjustedNext = isVoxel
-    ? next.map((item) => ({
+    ? next
+    : next.map((item) => ({
         ...item,
-        href: item.href.startsWith('/voxel') ? item.href : `/voxel${item.href}`,
-      }))
-    : next;
+        href: item.href.startsWith('/classic') ? item.href : `/classic${item.href}`,
+      }));
 
   return (
     <>

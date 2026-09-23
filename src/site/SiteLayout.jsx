@@ -14,7 +14,7 @@ export function SiteLayout({ path, wide = false, children }) {
     initKlaro();
   }, []);
 
-  const navItems = SITE_ROUTES.filter((route) => route.nav && !route.path.startsWith('/voxel'));
+  const navItems = SITE_ROUTES.filter((route) => route.nav && route.path.startsWith('/classic'));
 
   const navLink = (route, extra = '') => {
     const active = route.path === path;
@@ -32,7 +32,7 @@ export function SiteLayout({ path, wide = false, children }) {
     );
   };
 
-  const voxelPath = path === '/' ? '/voxel' : `/voxel${path}`;
+  const voxelPath = path === '/classic' ? '/' : path.replace(/^\/classic/, '') || '/';
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -45,7 +45,7 @@ export function SiteLayout({ path, wide = false, children }) {
 
       <header className="border-b border-slate-800/80 bg-slate-950/90 backdrop-blur sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
-          <a href="/" className="flex items-center gap-2 font-black tracking-tight text-slate-100 shrink-0">
+          <a href="/classic" className="flex items-center gap-2 font-black tracking-tight text-slate-100 shrink-0">
             <img src="/icon/app-icon.webp" alt="" width={28} height={28} className="w-7 h-7 rounded-lg" />
             Token Furnace
           </a>
@@ -87,15 +87,15 @@ export function SiteLayout({ path, wide = false, children }) {
       <footer className="border-t border-slate-800/80 mt-12">
         <div className="max-w-5xl mx-auto px-4 py-8 text-[11px] text-slate-500 flex flex-col gap-3 text-center">
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            <a href="/impressum" className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors">
+            <a href="/classic/impressum" className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors">
               Impressum
             </a>
             <span className="text-slate-700">•</span>
-            <a href="/datenschutz" className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors">
+            <a href="/classic/datenschutz" className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors">
               Datenschutz
             </a>
             <span className="text-slate-700">•</span>
-            <a href="/ueber#kontakt" className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors">
+            <a href="/classic/ueber#kontakt" className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors">
               Kontakt
             </a>
             <span className="text-slate-700">•</span>

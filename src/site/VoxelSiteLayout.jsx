@@ -28,22 +28,22 @@ function VoxelHeaderLogo() {
 }
 
 export const VOXEL_NAV_ROUTES = [
-  { path: '/voxel', nav: 'Start', title: 'Start' },
-  { path: '/voxel/anleitung', nav: 'Anleitung', title: 'Anleitung' },
-  { path: '/voxel/strategie', nav: 'Strategie', title: 'Strategie' },
-  { path: '/voxel/glossar', nav: 'Glossar', title: 'Glossar' },
-  { path: '/voxel/faq', nav: 'FAQ', title: 'FAQ' },
-  { path: '/voxel/ios-app', nav: 'App', title: 'App' },
-  { path: '/voxel/ueber', nav: 'Über uns', title: 'Über uns' },
+  { path: '/', nav: 'Start', title: 'Start' },
+  { path: '/anleitung', nav: 'Anleitung', title: 'Anleitung' },
+  { path: '/strategie', nav: 'Strategie', title: 'Strategie' },
+  { path: '/glossar', nav: 'Glossar', title: 'Glossar' },
+  { path: '/faq', nav: 'FAQ', title: 'FAQ' },
+  { path: '/ios-app', nav: 'App', title: 'App' },
+  { path: '/ueber', nav: 'Über uns', title: 'Über uns' },
 ];
 
-export function VoxelSiteLayout({ path = '/voxel', wide = false, children }) {
+export function VoxelSiteLayout({ path = '/', wide = false, children }) {
   useEffect(() => {
     initKlaro();
   }, []);
 
   // Ziel für den "Classic 2D"-Umschalter: die exakte 2D-Entsprechung der aktuellen Seite
-  const classicPath = path === '/voxel' ? '/' : (path.replace(/^\/voxel/, '') || '/');
+  const classicPath = path === '/' ? '/classic' : `/classic${path}`;
 
   const navLink = (route, extra = '') => {
     const active = route.path === path;
@@ -84,7 +84,7 @@ export function VoxelSiteLayout({ path = '/voxel', wide = false, children }) {
       <header className="border-b-2 border-[#c8bb9f] bg-[#fffdf6]/95 backdrop-blur sticky top-0 z-40 shadow-[0_2px_0_#c8bb9f,0_4px_16px_rgba(28,42,56,0.04)]">
         <div className="max-w-6xl mx-auto px-4 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-3 relative z-10">
           <div className="flex items-center gap-2.5 shrink-0">
-            <a href="/voxel" className="flex items-center gap-2">
+            <a href="/" className="flex items-center gap-2">
               <VoxelHeaderLogo />
             </a>
             <a
@@ -152,15 +152,15 @@ export function VoxelSiteLayout({ path = '/voxel', wide = false, children }) {
               Classic Version (2D)
             </a>
             <span className="text-[#ded3bd]">•</span>
-            <a href="/voxel/impressum" className="text-[#22313f] hover:text-[#2f855a] underline">
+            <a href="/impressum" className="text-[#22313f] hover:text-[#2f855a] underline">
               Impressum
             </a>
             <span className="text-[#ded3bd]">•</span>
-            <a href="/voxel/datenschutz" className="text-[#22313f] hover:text-[#2f855a] underline">
+            <a href="/datenschutz" className="text-[#22313f] hover:text-[#2f855a] underline">
               Datenschutz
             </a>
             <span className="text-[#ded3bd]">•</span>
-            <a href="/voxel/ueber#kontakt" className="text-[#22313f] hover:text-[#2f855a] underline">
+            <a href="/ueber#kontakt" className="text-[#22313f] hover:text-[#2f855a] underline">
               Kontakt
             </a>
             <span className="text-[#ded3bd]">•</span>
