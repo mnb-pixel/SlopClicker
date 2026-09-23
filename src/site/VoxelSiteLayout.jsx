@@ -4,17 +4,12 @@ import { SITE_ROUTES } from './siteRoutes.js';
 import { VOXEL_PLAY_URL } from './ui.jsx';
 import { initKlaro, showKlaroManager } from '../monetization/klaroLoader';
 
-// Isometrisches Voxel-Logo im Farb-Stil der 3D-Insel (Gras, Ziegel, Fluss)
+// Kopfzeilen-Logo: dasselbe App-Icon wie im Classic-Header (SiteLayout.jsx), statt des
+// früheren eigenen Voxel-Würfel-SVGs - einheitliches Icon über beide Editionen hinweg.
 function VoxelHeaderLogo() {
   return (
     <div className="flex items-center gap-2.5 shrink-0">
-      <div className="w-8 h-8 rounded-lg bg-[#fffdf6] border-2 border-[#c8bb9f] shadow-[0_2px_0_#c8bb9f] flex items-center justify-center p-1">
-        <svg viewBox="0 0 32 32" className="w-6 h-6 shrink-0" fill="none">
-          <polygon points="16,3 29,10 16,17 3,10" fill="#48bb78" stroke="#2f855a" strokeWidth="1.5" strokeLinejoin="round" />
-          <polygon points="3,10 16,17 16,29 3,22" fill="#c05621" stroke="#8a4a2a" strokeWidth="1.5" strokeLinejoin="round" />
-          <polygon points="16,17 29,10 29,22 16,29" fill="#38bdf8" stroke="#0284c7" strokeWidth="1.5" strokeLinejoin="round" />
-        </svg>
-      </div>
+      <img src="/icon/app-icon.webp" alt="" width={28} height={28} className="w-7 h-7 rounded-lg" />
       <div className="flex flex-col">
         <span className="font-mono font-black text-sm tracking-wide text-[#22313f] leading-none">
           TOKEN FURNACE
