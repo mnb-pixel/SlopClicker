@@ -13,6 +13,7 @@ import {
   FaqItems,
   PhoneShot,
   AppStoreBadge,
+  PlayStoreBadge,
   PageEnd,
   BTN_PRIMARY,
   PLAY_URL,
@@ -41,9 +42,10 @@ export function HomePage() {
             </a>
             <VoxelButton variant="hero" />
             <AppStoreBadge />
+            <PlayStoreBadge />
           </div>
           <p className="mt-3 text-xs text-slate-500">
-            Kein Konto, keine Installation, keine Kosten. Als iOS-App unter dem Namen „Tokenkamin: AI Clicker“.
+            Kein Konto, keine Installation, keine Kosten. Als App unter dem Namen „Tokenkamin: AI Clicker“ für iOS und Android.
           </p>
         </div>
         <PhoneShot src="/screenshots/core.webp" alt={h.hero.shotAlt} priority className="justify-self-center" />

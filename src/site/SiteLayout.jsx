@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Menu, Play, ShieldCheck } from 'lucide-react';
 import { SITE_ROUTES } from './siteRoutes.js';
-import { APP_STORE_URL, PLAY_URL } from './ui.jsx';
+import { APP_STORE_URL, PLAY_STORE_URL, PLAY_URL } from './ui.jsx';
 import { VoxelButton } from './components/VoxelButton.jsx';
 import { initKlaro, showKlaroManager } from '../monetization/klaroLoader';
 
@@ -114,6 +114,15 @@ export function SiteLayout({ path, wide = false, children }) {
               className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
             >
               Tokenkamin im App Store
+            </a>
+            <span className="text-slate-700">•</span>
+            <a
+              href={PLAY_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-400 hover:text-cyan-400 underline underline-offset-2 font-semibold transition-colors"
+            >
+              Tokenkamin bei Google Play
             </a>
           </div>
           <p>Spielstand bleibt auf deinem Gerät • AI-Bubble-sicher</p>

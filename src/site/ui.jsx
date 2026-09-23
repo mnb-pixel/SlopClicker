@@ -9,12 +9,21 @@ export const VOXEL_PLAY_URL = '/voxel/play';
 // "Token Furnace") - gleiches Spiel wie die Web-Version.
 export const APP_STORE_URL = 'https://apps.apple.com/ch/app/tokenkamin-ai-clicker/id6801915828?l=de-DE';
 
+// Android-App im Google Play Store, gleiche App-ID (com.tokenfurnace.app) wie die iOS-App.
+export const PLAY_STORE_URL =
+  'https://play.google.com/store/apps/details?id=com.tokenfurnace.app&pcampaignid=web_share';
+
 // Offizielles "Laden im App Store"-Badge von Apples Marketing-Tools-API. Apples Guidelines
 // (developer.apple.com/app-store/marketing/guidelines) verbieten eigene Nachbauten, schreiben
 // die schwarze Variante als Standard vor und erlauben nur EIN Badge pro Layout - deshalb
 // gibt es das Badge nur auf der Startseite und der iOS-App-Seite, überall sonst Textlinks.
 export const APP_STORE_BADGE_SRC =
   'https://toolbox.marketingtools.apple.com/api/badges/download-on-the-app-store/black/de-de';
+
+// Offizielles "Jetzt bei Google Play"-Badge, von Google selbst gehostet (play.google.com/intl/.../badges) -
+// aus denselben Markenrechts-Gründen wie beim Apple-Badge kein eigener Nachbau.
+export const PLAY_STORE_BADGE_SRC =
+  'https://play.google.com/intl/de_de/badges/static/images/badges/de_badge_web_generic.png';
 
 // public/screenshots/*.webp - alle aus 1320x2868-Simulator-Aufnahmen auf 640 px Breite
 // skaliert, Statusleiste/Home-Indicator abgeschnitten (siehe Plan).
@@ -241,6 +250,14 @@ export function AppStoreBadge() {
   return (
     <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="inline-block">
       <img src={APP_STORE_BADGE_SRC} alt="Jetzt im App Store laden" className="h-11 w-auto" width={135} height={40} />
+    </a>
+  );
+}
+
+export function PlayStoreBadge() {
+  return (
+    <a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" className="inline-block">
+      <img src={PLAY_STORE_BADGE_SRC} alt="Jetzt bei Google Play" className="h-11 w-auto" width={114} height={44} />
     </a>
   );
 }
